@@ -27,7 +27,7 @@ namespace at.jku.ssw.CocoXml {
 public class XmlLangDefinition {
     // The following list must be same with OptionDecl in CocoXml.atg.
     public static readonly string[] OptStrings = new string[] {
-	"UNKNOWN_TAG", "TEXT", "WHITESPACE", "COMMENT", "PROCESS_INSTRUCTION"
+	"UNKNOWN_TAG", "TEXT", "WHITESPACE", "COMMENT", "PROCESSING_INSTRUCTION"
     };
     public const int numOptions = 5;
 
@@ -93,8 +93,8 @@ public class XmlLangDefinition {
 	de = Tags.GetEnumerator();
 	while (de.MoveNext()) {
 	    tagKinds = (int[])de.Value;
-	    gen.WriteLine("\tcurXLDef.Tags.Add({0}, {1}, {2});",
-			  de.Key, tagKinds[0], tagKinds[1]);
+	    gen.WriteLine("\tcurXLDef.Tags.Add({0}, new int[] {1} {2}, {3} {4});",
+			  de.Key, "{", tagKinds[0], tagKinds[1], "}");
 	}
 	de = Attrs.GetEnumerator();
 	while (de.MoveNext())
@@ -152,12 +152,14 @@ public class XmlScannerData {
     }
 
     void WriteOptionTokens() {
-	gen.WriteLine("    enum OptionTokens {");
+	gen.WriteLine("    public enum OptionTokens {");
 	gen.Write("        " + XmlLangDefinition.OptStrings[0]);
 	for (int option = 1; option < XmlLangDefinition.numOptions; ++option)
 	    gen.Write(", " + XmlLangDefinition.OptStrings[option]);
 	gen.WriteLine("");
-	gen.WriteLine("    };\n");
+	gen.WriteLine("    };");
+	gen.WriteLine("    public const int numOptions = {0};",
+		      XmlLangDefinition.numOptions);
     }
 
     int getOptionKind(int option) {
@@ -167,10 +169,11 @@ public class XmlScannerData {
     }
 
     void WriteDeclarations() {
-	gen.Write("    const int[] useKindVector = { " + getOptionKind(0));
+	gen.Write("    readonly int[] useKindVector = new int[] { " +
+		  getOptionKind(0));
 	for (int option = 1; option < XmlLangDefinition.numOptions; ++option)
 	    gen.Write(", " + getOptionKind(option));
-	gen.WriteLine(" };\n");
+	gen.WriteLine(" };");
     }
 
     void WriteInitialization() {
@@ -194,7 +197,8 @@ public class XmlScannerData {
 		throw new FatalError("Cannot find XmlScanner.frame");
 	}
 	try {
-	    fram = new FileStream(fr, FileMode.Open, FileAccess.Read, FileShare.Read);
+	    fram = new FileStream(fr, FileMode.Open,
+				  FileAccess.Read, FileShare.Read);
 	} catch (FileNotFoundException) {
 	    throw new FatalError("Cannot open XmlScanner.frame.");
 	}

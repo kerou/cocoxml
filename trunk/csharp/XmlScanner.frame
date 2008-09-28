@@ -24,6 +24,7 @@ CocoXml/R itself) does not fall under the GNU General Public License.
 -----------------------------------------------------------------------*/
 -->Begin
 using System;
+using System.IO;
 using System.Collections;
 using System.Xml;
 
@@ -37,26 +38,22 @@ public class Token {
     public string val;
 }
 
-public class XmlLangDefinitions {
-    public bool useVector[Token.numOptions];
+public class XmlLangDefinition {
+    public bool[] useVector = new bool[Token.numOptions];
     public Hashtable Tags;
     public Hashtable Attrs;
 }
 
-enum xml_scanner_status {
-    xss_common,
-    xss_first_attr,
-    xss_next_attr
-}
-
 public class XmlScanner {
+    enum XSStatus { XSCommon, XSFirstAttr, XSNextAttr };
+
     const char EOL = '\n';
     const int eofSym = 0;
     const int textSym = 1;
 
     Stream stream;
     XmlTextReader xmlreader;
-    xml_scanner_status status;
+    XSStatus status;
     string nsURI;
     ArrayList tokens;
     int peek;
@@ -64,7 +61,7 @@ public class XmlScanner {
     Hashtable XmlLangMap;
 -->Declarations
 
-    public XMLScanner (string fileName) {
+    public XmlScanner (string fileName) {
 	try {
 	    stream = new FileStream(fileName, FileMode.Open,
 				    FileAccess.Read, FileShare.Read);
@@ -74,98 +71,112 @@ public class XmlScanner {
 	}
     }
 
-    public XMLScanner (Stream s) {
+    public XmlScanner (Stream s) {
 	stream = s;
 	Init();
     }
 
     void Init() {
+	XmlLangDefinition curXLDef;
 	xmlreader = new XmlTextReader(stream);
-	status = xss_common;
+	status = XSStatus.XSCommon;
 	tokens = new ArrayList();
 	peek = 0;
 
 -->Initialization
     }
 
-    int Element2Kind() {
+    int StartElement2Kind(string NamespaceURI, string TagName) {
+	return 0;
     }
 
-    int Attribute2Kind() {
+    int EndElement2Kind(string NamespaceURI, string TagName) {
+	return 0;
+    }
+
+    int Attribute2Kind(string NamespaceURI, string AttrName) {
+	return 0;
     }
 
     void AppendToken() {
+	Token new_token = null;
 	switch (status) {
-	case xss_common:
+	case XSStatus.XSCommon:
 	    new_token = new Token();
 	    if (!xmlreader.Read()) {
 		new_token.kind = eofSym;
 	    } else {
 		switch (xmlreader.NodeType) {
 		case XmlNodeType.Element:
-		    new_token.kind = Element2Kind(xreader.NamespaceURI, xreader.Name);
+		    new_token.kind = StartElement2Kind(xmlreader.NamespaceURI,
+						       xmlreader.Name);
 		    nsURI = xmlreader.NamespaceURI;
-		    status = xss_first_attribute;
+		    status = XSStatus.XSFirstAttr;
 		    break;
 		case XmlNodeType.EndElement:
-		    new_token.kind = Element2Kind(xreader.NamespaceURI, "END_" + xreader.Name);
+		    new_token.kind = EndElement2Kind(xmlreader.NamespaceURI,
+						     xmlreader.Name);
 		    break;
 		case XmlNodeType.Text:
-		    if (useKindVector[(int)Token.OptionTokens.TEXT]) {
+		    if (useKindVector[(int)Token.OptionTokens.TEXT] >= 0) {
 		    }
 		    break;
 		case XmlNodeType.Whitespace:
-		    if (useKindVector[(int)Token.OptionTokens.WHITESPACE]) {
+		    if (useKindVector[(int)Token.OptionTokens.WHITESPACE] >= 0) {
 		    }
 		    break;
 		case XmlNodeType.Comment:
-		    if (useKindVector[(int)Token.OptionTokens.COMMENT]) {
+		    if (useKindVector[(int)Token.OptionTokens.COMMENT] >= 0) {
 		    }
 		    break;
-		case XmlNodeType.ProcessInstruction:
-		    if (useKindVector[(int)Token.OptionTokens.PROCESSING_INSTRUCTION]) {
+		case XmlNodeType.ProcessingInstruction:
+		    if (useKindVector[(int)Token.OptionTokens.PROCESSING_INSTRUCTION] >= 0) {
 		    }
 		    break;
 		default: // Omit the others.
 		    break;
+		}
 	    }
 	    break;
-	case xss_first_attr:
+	case XSStatus.XSFirstAttr:
 	    if (!xmlreader.MoveToFirstAttribute()) {
-		status = xss_common;
+		status = XSStatus.XSCommon;
 		AppendToken();
 		return;
 	    }
-	    status = xss_next_attr;
+	    status = XSStatus.XSNextAttr;
 	    new_token = new Token();
-	    new_token.kind = Attribute2Kind();
+	    new_token.kind = Attribute2Kind(xmlreader.NamespaceURI,
+					    xmlreader.Name);
 	    break;
-	case xss_next_attr:
+	case XSStatus.XSNextAttr:
 	    if (!xmlreader.MoveToNextAttribute()) {
-		status = xss_common;
+		status = XSStatus.XSCommon;
 		AppendToken();
 		return;
 	    }
 	    new_token = new Token();
-	    new_token.kind = Attribute2Kind();
+	    new_token.kind = Attribute2Kind(xmlreader.NamespaceURI,
+					    xmlreader.Name);
 	    break;
 	}
 	new_token.line = xmlreader.LineNumber;
 	new_token.col = xmlreader.LinePosition;
-	new_token.value = xmlreader.Value;
+	new_token.val = xmlreader.Value;
 	tokens.Add(new_token);
     }
 
     public Token Scan () {
+	Token token;
 	if (tokens.Count == 0) AppendToken();
-	token = tokens[0];
+	token = (Token)tokens[0];
 	tokens.Remove(0);
 	return token;
     }
 
     public Token Peek () {
 	if (peek == tokens.Count) AppendToken();
-	return tokens[peek ++];
+	return (Token)tokens[peek ++];
     }
 
     public void ResetPeek () { peek = 0; }
