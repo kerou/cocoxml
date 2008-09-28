@@ -30,7 +30,7 @@ using System.IO;
 using System.Collections;
 using System.Text;
 
-namespace at.jku.ssw.Coco {
+namespace at.jku.ssw.CocoXml {
 
 public class ParserGen {
 
@@ -54,7 +54,6 @@ public class ParserGen {
 	
 	Tab tab;          // other Coco objects
 	TextWriter trace;
-	Errors errors;
 	Buffer buffer;
 	
 	void Indent (int n) {
@@ -392,7 +391,7 @@ public class ParserGen {
 		foreach (Symbol sym in tab.terminals) GenErrorMsg(tErr, sym);
 		
 		CopyFramePart("-->begin");
-		if (!tab.srcName.ToLower().EndsWith("coco.atg")) {
+		if (!tab.srcName.ToLower().EndsWith("cocoxml.atg")) {
 			gen.Close(); OpenGen(false); /* pdt */
 		}
 		if (usingPos != null) {CopySourcePart(usingPos, 0); gen.WriteLine();}
@@ -430,7 +429,6 @@ public class ParserGen {
 
 	public ParserGen (Parser parser) {
 		tab = parser.tab;
-		errors = parser.errors;
 		trace = parser.trace;
 		buffer = parser.scanner.buffer;
 		errorNr = -1;
