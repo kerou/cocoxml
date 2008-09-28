@@ -31,9 +31,17 @@ Export('env')
 
 SConscript(os.path.join('coco', 'SConscript'))
 
-Import('coco_exe')
+Import('CocoExe')
 
-env.CLIProgram('cocoxml', ['CocoXml.cs', 'Scanner.cs', 'Tab.cs',
-                           'XSData.cs', 'ParserGen.cs', 'Parser.cs'])
-env.Command(['Scanner.cs', 'Parser.cs'], [coco_exe, 'CocoXml.atg'],
+CocoXmlExe = env.CLIProgram('cocoxml', ['CocoXml.cs', 'Scanner.cs', 'Tab.cs',
+                                        'XSData.cs', 'ParserGen.cs',
+                                        'Parser.cs'])
+env.Command(['Scanner.cs', 'Parser.cs'], [CocoExe, 'CocoXml.atg'],
             'mono $SOURCES -namespace at.jku.ssw.CocoXml')
+Export('CocoXmlExe')
+
+XmlScannerFrame = env.File('XmlScanner.frame')
+XmlParserFrame = env.File('XmlParser.frame')
+
+Export('XmlScannerFrame', 'XmlParserFrame')
+SConscript(os.path.join('samples', 'SConscript'))
