@@ -1,4 +1,8 @@
 # -*- python -*-
+# Author: Charles Wang <charlesw123456@gmail.com>
+# License: GPLv2.
+import os.path
+
 import SCons.Builder
 import SCons.Node.FS
 import SCons.Util
@@ -23,7 +27,13 @@ env['CSCFLAGS'] = SCons.Util.CLVar('')
 env['CSCCOM'] = SCons.Action.Action(csccom)
 env['CSCLIBCOM'] = SCons.Action.Action(csclibcom)
 
+Export('env')
+
+SConscript(os.path.join('coco', 'SConscript'))
+
+Import('coco_exe')
+
 env.CLIProgram('cocoxml', ['CocoXml.cs', 'Scanner.cs', 'Tab.cs',
                            'XSData.cs', 'ParserGen.cs', 'Parser.cs'])
-env.Command(['Scanner.cs', 'Parser.cs'], 'CocoXml.atg',
-            'mono ../coco/coco.exe $SOURCE -namespace at.jku.ssw.CocoXml')
+env.Command(['Scanner.cs', 'Parser.cs'], [coco_exe, 'CocoXml.atg'],
+            'mono $SOURCES -namespace at.jku.ssw.CocoXml')

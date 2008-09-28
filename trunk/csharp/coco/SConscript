@@ -1,0 +1,9 @@
+# -*- python -*-
+# Author: Charles Wang <charlesw123456@gmail.com>
+# license: GPLv2
+
+Import('env')
+
+coco_exe = env.CLIProgram('coco', ['Coco.cs', 'Scanner.cs', 'Tab.cs',
+                                   'DFA.cs', 'ParserGen.cs', 'Parser.cs'])
+Export('coco_exe')
