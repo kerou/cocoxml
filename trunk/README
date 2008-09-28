@@ -1,6 +1,41 @@
-CocoXml is modified from Coco/R. I shall commit the source of Coco/R firstly
-to show the difference from Coco/R to CocoXml. :)
+There are many libraries to parse XML text files, W3C define two API SAX and
+DOM for this task, we can recognize tag, attributes, comments etc through these
+API.
+
+If we define a XML language, the semantic of tags, attributes shall be assigned
+with the structure of various tags, attributes. So how can we parse this
+structures?
+
+There is no library for this work, we have to check the tag, attribute
+relationship manually. For the complex XML language, such as XSLT, this task
+is complex too.
+
+So I'm trying to use compilation technical which can deal which complex syntax
+structures with semantic actions. SAX XML API is used as lexical analysis tool
+to generate tokens such as TAG, END_TAG, TEXT, and so on. Then CocoXml is
+used to do the syntax analysis and semantic actions. The tag, attribute
+structure is described by EBNF, semantic actions are attached within EBNF too.
+So we can implement strict, complex XML language easily and convert it to
+the required data structure without DOM data structure is generated.
+
+The user of CocoXml have to compose a Name.atg to describe the required tags,
+attributes, and then write EBNF to define the tag, attribute structure and
+semantic actions. If Name.atg is ready, run "CocoXml Name.atg" to generate
+Parser.cs/Parser.java and XmlScanner.cs/XmlScanner.java. For the detail of
+usage, see "USAGE" and samples.
+
+CocoXml is modified from Coco/R which contain CocoSourcesCS.zip and
+CocoSourcesJava.zip. These two packages are written by Hanspeter Moessenboeck,
+University of Linz. Their homepage is http://www.ssw.uni-linz.act.at/coco/.
 
 Both CocoSourcesCS.zip and CocoSourcesJava.zip are released under GPLv2, so
-my modification is related under GPLv2 too. For the detail of GPLv2, read
-COPYING please.
+my modification CocoXml is related under GPLv2 too. For the detail of GPLv2,
+see COPYING please.
+ 
+The homepage of CocoXml is http://code.google.com/p/cocoxml/. The source of
+CocoXml can be checkout with the following command:
+
+svn checkout http://cocoxml.googlecode.com/svn/trunk cocoxml-read-only.
+
+I shall commit the source of Coco/R firstly to show the difference from Coco/R
+to CocoXml. :)
