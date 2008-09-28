@@ -4,6 +4,6 @@
 
 Import('env')
 
-coco_exe = env.CLIProgram('coco', ['Coco.cs', 'Scanner.cs', 'Tab.cs',
+CocoExe = env.CLIProgram('coco', ['Coco.cs', 'Scanner.cs', 'Tab.cs',
                                    'DFA.cs', 'ParserGen.cs', 'Parser.cs'])
-Export('coco_exe')
+Export('CocoExe')
