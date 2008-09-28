@@ -3,6 +3,7 @@ Compiler Generator Coco/R,
 Copyright (c) 1990, 2004 Hanspeter Moessenboeck, University of Linz
 extended by M. Loeberbauer & A. Woess, Univ. of Linz
 with improvements by Pat Terry, Rhodes University
+Modified to CocoXml.cs by Charles Wang in 2008.
 
 This program is free software; you can redistribute it and/or modify it 
 under the terms of the GNU General Public License as published by the 
@@ -108,7 +109,7 @@ public class CocoXml {
 			                  "  P  print statistics{0}" +
 			                  "  S  list symbol table{0}" +
 			                  "  X  list cross reference table{0}" +
-			                  "XmlScanner.frame and Parser.frame files needed in ATG directory{0}" +
+			                  "XmlScanner.frame and XmlParser.frame files needed in ATG directory{0}" +
                         "or in a directory specified in the -frames option.",
 			                  Environment.NewLine);
 		}

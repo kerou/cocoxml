@@ -365,7 +365,7 @@ public class ParserGen {
 	
 	void OpenGen(bool backUp) { /* pdt */
 		try {
-			string fn = Path.Combine(tab.outDir, "Parser.cs"); /* pdt */
+			string fn = Path.Combine(tab.outDir, "XmlParser.cs"); /* pdt */
 			if (File.Exists(fn) && backUp) File.Copy(fn, fn + ".old", true);
 			gen = new StreamWriter(new FileStream(fn, FileMode.Create)); /* pdt */
 		} catch (IOException) {
@@ -376,15 +376,15 @@ public class ParserGen {
 	public void WriteParser () {
 		int oldPos = buffer.Pos;  // Pos is modified by CopySourcePart
 		symSet.Add(tab.allSyncSets);
-		string fr = Path.Combine(tab.srcDir, "Parser.frame");
+		string fr = Path.Combine(tab.srcDir, "XmlParser.frame");
 		if (!File.Exists(fr)) {
-			if (tab.frameDir != null) fr = Path.Combine(tab.frameDir.Trim(), "Parser.frame");
-			if (!File.Exists(fr)) throw new FatalError("Cannot find Parser.frame");
+			if (tab.frameDir != null) fr = Path.Combine(tab.frameDir.Trim(), "XmlParser.frame");
+			if (!File.Exists(fr)) throw new FatalError("Cannot find XmlParser.frame");
 		}
 		try {
 			fram = new FileStream(fr, FileMode.Open, FileAccess.Read, FileShare.Read);
 		} catch (IOException) {
-			throw new FatalError("Cannot open Parser.frame.");
+			throw new FatalError("Cannot open XmlParser.frame.");
 		}
 		OpenGen(true); /* pdt */
 		err = new StringWriter();
