@@ -30,7 +30,7 @@ using System.IO;
 using System.Text;
 using System.Collections;
 
-namespace at.jku.ssw.Coco {
+namespace at.jku.ssw.CocoXml {
 
 public class Position {  // position of source code stretch (e.g. semantic action, resolver expressions)
 	public int beg;      // start relative to the beginning of the file
@@ -49,17 +49,10 @@ public class Position {  // position of source code stretch (e.g. semantic actio
 	
 public class Symbol : IComparable {
 	
-	// token kinds
-	public const int fixedToken    = 0; // e.g. 'a' ('b' | 'c') (structure of literals)
-	public const int classToken    = 1;	// e.g. digit {digit}   (at least one char class)
-	public const int litToken      = 2; // e.g. "while"
-	public const int classLitToken = 3; // e.g. letter {letter} but without literals that have the same structure
-	
 	public int      n;           // symbol number
 	public int      typ;         // t, nt, pr, unknown, rslv /* ML 29_11_2002 slv added */ /* AW slv --> rslv */
 	public string   name;        // symbol name
 	public Node     graph;       // nt: to first node of syntax graph
-	public int      tokenKind;   // t:  token kind (fixedToken, classToken, ...)
 	public bool     deletable;   // nt: true if nonterminal is deletable
 	public bool     firstReady;  // nt: true if terminal start symbols have already been computed
 	public BitArray first;       // nt: terminal start symbols
@@ -90,8 +83,6 @@ public class Node {
 	public const int t    =  1;  // terminal symbol
 	public const int pr   =  2;  // pragma
 	public const int nt   =  3;  // nonterminal symbol
-	public const int clas =  4;  // character class
-	public const int chr  =  5;  // character
 	public const int wt   =  6;  // weak terminal symbol
 	public const int any  =  7;  // 
 	public const int eps  =  8;  // empty
@@ -106,22 +97,17 @@ public class Node {
 	public const int contextTrans = 1;
 	
 	public int      n;			// node number
-	public int      typ;		// t, nt, wt, chr, clas, any, eps, sem, sync, alt, iter, opt, rslv
+	public int      typ;		// t, nt, wt, any, eps, sem, sync, alt, iter, opt, rslv
 	public Node     next;		// to successor node
 	public Node     down;		// alt: to next alternative
 	public Node     sub;		// alt, iter, opt: to first node of substructure
 	public bool     up;			// true: "next" leads to successor in enclosing structure
 	public Symbol   sym;		// nt, t, wt: symbol represented by this node
-	public int      val;		// chr:  ordinal character value
-													// clas: index of character class
-	public int      code;		// chr, clas: transition code
 	public BitArray set;		// any, sync: the set represented by this node
 	public Position pos;		// nt, t, wt: pos of actual attributes
 	                            // sem:       pos of semantic action in source text
 	                            // rslv:       pos of resolver in source text
 	public int      line;		// source text line number of item in this node
-	public State    state;	// DFA state corresponding to this node
-													// (only used in DFA.ConvertToStates)
 
 	public Node(int typ, Symbol sym, int line) {
 		this.typ = typ; this.sym = sym; this.line = line;
@@ -185,27 +171,11 @@ public class Sets {
 }
 
 //=====================================================================
-// CharClass
-//=====================================================================
-
-public class CharClass {	
-	public int n;       	// class number
-	public string name;		// class name
-	public CharSet set;	// set representing the class
-
-	public CharClass(string name, CharSet s) {
-		this.name = name; this.set = s;
-	}
-}
-
-
-//=====================================================================
 // Tab
 //=====================================================================
 
 public class Tab {
 	public Position semDeclPos;       // position of global semantic declarations
-	public CharSet ignored;           // characters ignored by the scanner
 	public bool[] ddt = new bool[10]; // debug and test switches
 	public Symbol gramSy;             // root nonterminal; filled by ATG
 	public Symbol eofSy;              // end of file symbol
@@ -231,7 +201,6 @@ public class Tab {
 		trace = parser.trace;
 		errors = parser.errors;
 		eofSy = NewSym(Node.t, "EOF", 0);
-		dummyNode = NewNode(Node.eps, null, 0);
 		literals = new Hashtable();
 	}
 
@@ -242,8 +211,6 @@ public class Tab {
 	public ArrayList terminals = new ArrayList();
 	public ArrayList pragmas = new ArrayList();
 	public ArrayList nonterminals = new ArrayList();
-	
-	string[] tKind = {"fixedToken", "classToken", "litToken", "classLitToken"};
 	
 	public Symbol NewSym(int typ, string name, int line) {
 		if (name.Length == 2 && name[0] == '"') {
@@ -278,13 +245,13 @@ public class Tab {
 			if (sym.deletable) trace.Write(" true  "); else trace.Write(" false ");
 		} else
 			trace.Write("            ");
-		trace.WriteLine("{0,5} {1}", sym.line, tKind[sym.tokenKind]);
+		trace.WriteLine("{0,5}", sym.line);
 	}
 
 	public void PrintSymbolTable() {
 		trace.WriteLine("Symbol Table:");
 		trace.WriteLine("------------"); trace.WriteLine();
-		trace.WriteLine(" nr name          typ  hasAt graph  del    line tokenKind");
+		trace.WriteLine(" nr name          typ  hasAt graph  del    line");
 		foreach (Symbol sym in terminals) PrintSym(sym);
 		foreach (Symbol sym in pragmas) PrintSym(sym);
 		foreach (Symbol sym in nonterminals) PrintSym(sym);
@@ -321,9 +288,8 @@ public class Tab {
 	
 	public ArrayList nodes = new ArrayList();
 	public string[] nTyp =
-		{"    ", "t   ", "pr  ", "nt  ", "clas", "chr ", "wt  ", "any ", "eps ",
+		{"    ", "t   ", "pr  ", "nt  ", "wt  ", "any ", "eps ",
 		 "sync", "sem ", "alt ", "iter", "opt ", "rslv"};
-	Node dummyNode;
 	
 	public Node NewNode(int typ, Symbol sym, int line) {
 		Node node = new Node(typ, sym, line);
@@ -338,12 +304,6 @@ public class Tab {
 		return node;
 	}
 	
-	public Node NewNode(int typ, int val, int line) {
-		Node node = NewNode(typ, null, line);
-		node.val = val;
-		return node;
-	}
-	
 	public void MakeFirstAlt(Graph g) {
 		g.l = NewNode(Node.alt, g.l); g.l.line = g.l.sub.line;
 		g.l.next = g.r;
@@ -355,10 +315,7 @@ public class Tab {
 		Node p = g1.l; while (p.down != null) p = p.down;
 		p.down = g2.l;
 		p = g1.r; while (p.next != null) p = p.next;
-		// append alternative to g1 end list
-		p.next = g2.l;
-		// append g2 end list to g1 end list
-		g2.l.next = g2.r;
+		p.next = g2.r;
 	}
 	
 	public void MakeSequence(Graph g1, Graph g2) {
@@ -395,27 +352,11 @@ public class Tab {
 	
 	public void DeleteNodes() {
 		nodes = new ArrayList();
-		dummyNode = NewNode(Node.eps, null, 0);
-	}
-	
-	public Graph StrToGraph(string str) {
-		string s = Unescape(str.Substring(1, str.Length-2));
-		if (s.Length == 0) parser.SemErr("empty token not allowed");
-		Graph g = new Graph();
-		g.r = dummyNode;
-		for (int i = 0; i < s.Length; i++) {
-			Node p = NewNode(Node.chr, (int)s[i], 0);
-			g.r.next = p; g.r = p;
-		}
-		g.l = dummyNode.next; dummyNode.next = null;
-		return g;
 	}
 	
   public void SetContextTrans(Node p) { // set transition code in the graph rooted at p
     while (p != null) {
-      if (p.typ == Node.chr || p.typ == Node.clas) {
-        p.code = Node.contextTrans;
-      } else if (p.typ == Node.opt || p.typ == Node.iter) {
+      if (p.typ == Node.opt || p.typ == Node.iter) {
         SetContextTrans(p.sub);
       } else if (p.typ == Node.alt) {
         SetContextTrans(p.sub); SetContextTrans(p.down);
@@ -427,17 +368,21 @@ public class Tab {
 	
 	//------------ graph deletability check -----------------
 
-	public static bool DelGraph(Node p) {
+	public bool DelGraph(Node p) {
 		return p == null || DelNode(p) && DelGraph(p.next);
 	}
 	
-	public static bool DelSubGraph(Node p) {
+	public bool DelSubGraph(Node p) {
 		return p == null || DelNode(p) && (p.up || DelSubGraph(p.next));
 	}
 	
-	public static bool DelNode(Node p) {
+	public bool DelAlt(Node p) {
+		return p == null || DelNode(p) && (p.up || DelAlt(p.next));
+	}
+	
+	public bool DelNode(Node p) {
 		if (p.typ == Node.nt) return p.sym.deletable;
-		else if (p.typ == Node.alt) return DelSubGraph(p.sub) || p.down != null && DelSubGraph(p.down);
+		else if (p.typ == Node.alt) return DelAlt(p.sub) || p.down != null && DelAlt(p.down);
 		else return p.typ == Node.iter || p.typ == Node.opt || p.typ == Node.sem 
 			|| p.typ == Node.eps || p.typ == Node.rslv || p.typ == Node.sync;
 	}
@@ -468,20 +413,13 @@ public class Tab {
 		trace.WriteLine("----------------------------------------------------");
 		foreach (Node p in nodes) {
 			trace.Write("{0,4} {1} ", p.n, nTyp[p.typ]);
-			if (p.sym != null)
+			if (p.sym != null) {
 				trace.Write("{0,12} ", Name(p.sym.name));
-			else if (p.typ == Node.clas) {
-				CharClass c = (CharClass)classes[p.val];
-				trace.Write("{0,12} ", Name(c.name));
 			} else trace.Write("             ");
 			trace.Write("{0,5} ", Ptr(p.next, p.up));
 			switch (p.typ) {
 				case Node.t: case Node.nt: case Node.wt:
 					trace.Write("             {0,5}", Pos(p.pos)); break;
-				case Node.chr:
-					trace.Write("{0,5} {1,5}       ", p.val, p.code); break;
-				case Node.clas:
-					trace.Write("      {0,5}       ", p.code); break;
 				case Node.alt: case Node.iter: case Node.opt:
 					trace.Write("{0,5} {1,5}       ", Ptr(p.down, false), Ptr(p.sub, false)); break;
 				case Node.sem:
@@ -490,60 +428,6 @@ public class Tab {
 					trace.Write("                  "); break;
 			}
 			trace.WriteLine("{0,5}", p.line);
-		}
-		trace.WriteLine();
-	}
-	
-
-	//---------------------------------------------------------------------
-	//  Character class management
-	//---------------------------------------------------------------------
-	
-	public ArrayList classes = new ArrayList();
-	public int dummyName = 'A';
-
-	public CharClass NewCharClass(string name, CharSet s) {
-		if (name == "#") name = "#" + (char)dummyName++;
-		CharClass c = new CharClass(name, s);
-		c.n = classes.Count;
-		classes.Add(c);
-		return c;
-	}
-
-	public CharClass FindCharClass(string name) {
-		foreach (CharClass c in classes)
-			if (c.name == name) return c;
-		return null;
-	}
-	
-	public CharClass FindCharClass(CharSet s) {
-		foreach (CharClass c in classes)
-			if (s.Equals(c.set)) return c;
-		return null;
-	}
-	
-	public CharSet CharClassSet(int i) {
-		return ((CharClass)classes[i]).set;
-	}
-	
-	//----------- character class printing
-
-	string Ch(int ch) {
-		if (ch < ' ' || ch >= 127 || ch == '\'' || ch == '\\') return ch.ToString();
-		else return String.Format("'{0}'", (char)ch);
-	}
-	
-	void WriteCharSet(CharSet s) {
-		for (CharSet.Range r = s.head; r != null; r = r.next)
-			if (r.from < r.to) { trace.Write(Ch(r.from) + ".." + Ch(r.to) + " "); }
-			else { trace.Write(Ch(r.from) + " "); }
-	}
-	
-	public void WriteCharClasses () {
-		foreach (CharClass c in classes) {
-			trace.Write("{0,-10}: ", c.name);
-			WriteCharSet(c.set);
-			trace.WriteLine();
 		}
 		trace.WriteLine();
 	}

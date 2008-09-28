@@ -1,1 +1,1 @@
-coco Coco.ATG -namespace at.jku.ssw.Coco
+coco CocoXml.atg -namespace at.jku.ssw.CocoXml

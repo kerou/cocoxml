@@ -43,12 +43,12 @@ Coco/R itself) does not fall under the GNU General Public License.
 using System;
 using System.IO;
 
-namespace at.jku.ssw.Coco {
+namespace at.jku.ssw.CocoXml {
 
-public class Coco {
+public class CocoXml {
 		
 	public static int Main (string[] arg) {
-		Console.WriteLine("Coco/R (Oct 1, 2008)");
+		Console.WriteLine("CocoXml/R (Sep 26, 2008)");
 		string srcName = null, nsName = null, frameDir = null, ddtString = null,
 		traceFileName = null, outDir = null;
 		int retVal = 1;
@@ -69,7 +69,7 @@ public class Coco {
 				traceFileName = Path.Combine(srcDir, "trace.txt");
 				parser.trace = new StreamWriter(new FileStream(traceFileName, FileMode.Create));
 				parser.tab = new Tab(parser);
-				parser.dfa = new DFA(parser);
+				parser.xsdata = new XmlScannerData(parser);
 				parser.pgen = new ParserGen(parser);
 
 				parser.tab.srcName = srcName;
@@ -93,7 +93,7 @@ public class Coco {
 				Console.WriteLine("-- " + e.Message);
 			}
 		} else {
-			Console.WriteLine("Usage: Coco Grammar.ATG {{Option}}{0}" +
+			Console.WriteLine("Usage: CocoXml Grammar.ATG {{Option}}{0}" +
 			                  "Options:{0}" +
 			                  "  -namespace <namespaceName>{0}" +
 			                  "  -frames    <frameFilesDirectory>{0}" +
@@ -108,13 +108,13 @@ public class Coco {
 			                  "  P  print statistics{0}" +
 			                  "  S  list symbol table{0}" +
 			                  "  X  list cross reference table{0}" +
-			                  "Scanner.frame and Parser.frame files needed in ATG directory{0}" +
+			                  "XmlScanner.frame and Parser.frame files needed in ATG directory{0}" +
                         "or in a directory specified in the -frames option.",
 			                  Environment.NewLine);
 		}
 		return retVal;
 	}
 		
-} // end Coco
+} // end CocoXml
 
 } // end namespace
