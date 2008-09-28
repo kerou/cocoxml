@@ -1,0 +1,225 @@
+/*-------------------------------------------------------------------------
+rss.atg -- RSS(Really Simple Syndication) Grammer
+Copyright (c) 2008 Charles Wang <charlesw123456@gmail.com>
+
+This program is free software; you can redistribute it and/or modify it 
+under the terms of the GNU General Public License as published by the 
+Free Software Foundation; either version 2, or (at your option) any 
+later version.
+
+This program is distributed in the hope that it will be useful, but 
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License 
+for more details.
+
+You should have received a copy of the GNU General Public License along 
+with this program; if not, write to the Free Software Foundation, Inc., 
+59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+-------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------
+ compile with:
+   CocoXml rss.atg
+-------------------------------------------------------------------------*/
+
+COMPILER Rss
+
+/*-------------------------------------------------------------------------*/
+OPTIONS TEXT
+
+TAGS
+	RSS = "rss"
+	CHANNEL = "channel"
+	ITEM = "item"
+	TITLE = "title"
+	LINK = "link"
+	DESCRIPTION = "description"
+	LANGUAGE = "language"
+	COPYRIGHT = "copyright"
+	MANAGING_EDITOR = "managingEditor"
+	WEB_MASTER = "webMaster"
+	PUB_DATE = "pubDate"
+	LAST_BUILD_DATE = "lastBuildDate"
+	CATEGORY = "category"
+	GENERATOR = "generator"
+	DOCS = "docs"
+	CLOUD = "cloud"
+	TTL = "ttl"
+	IMAGE = "image"
+	RATING = "rating"
+	TEXT_INPUT = "textInput"
+	NAME = "name"
+	SKIP_HOURS = "skipHours"
+	SKIP_DAYS = "skipDays"
+	URL = "url"
+	WIDTH = "width"
+	HEIGHT = "height"
+	AUTHOR = "author"
+	COMMENTS = "comments"
+	ENCLOSURE = "enclosure"
+	GUID = "guid"
+	SOURCE = "source"
+
+ATTRS
+	ATTR_DOMAIN = "domain"
+	ATTR_PORT = "port"
+	ATTR_PATH = "path"
+	ATTR_REGISTER_PROCEDURE = "registerProcedure"
+	ATTR_PROTOCOL = "protocol"
+
+/*-------------------------------------------------------------------------*/
+PRODUCTIONS
+
+Rss
+=
+	RSS
+	{ Channel
+	} END_RSS
+.
+
+Channel
+=
+	CHANNEL
+	{ ChannelProperty
+	| Item
+	} END_CHANNEL
+.
+
+ChannelProperty
+=
+	Title
+	| Link
+	| Description
+	| Language
+	| Copyright
+	| ManagingEditor
+	| WebMaster
+	| PubDate
+	| LastBuildDate
+	| Category
+	| Generator
+	| Docs
+	| Cloud
+	| Ttl
+	| Image
+	| Rating
+	| TextInput
+	| SkipHours
+	| SkipDays
+.
+
+Title = TITLE TEXT (. .) END_TITLE.
+
+Link = LINK TEXT (. .) END_LINK .
+
+Description = DESCRIPTION TEXT (. .) END_DESCRIPTION .
+
+Language = LANGUAGE TEXT (. .) END_LANGUAGE.
+
+Copyright = COPYRIGHT TEXT (. .) END_LANGUAGE.
+
+ManagingEditor = MANAGING_EDITOR TEXT (. .) END_MANAGING_EDITOR.
+
+WebMaster = WEB_MASTER TEXT (. .) END_WEB_MASTER.
+
+PubDate = PUB_DATE TEXT (. .) END_PUB_DATE.
+
+LastBuildDate =	LAST_BUILD_DATE	TEXT (. .) END_LAST_BUILD_DATE.
+
+Category = CATEGORY TEXT (. .) END_CATEGORY.
+
+Generator = GENERATOR TEXT (. .) END_GENERATOR.
+
+Docs = DOCS TEXT (. .) END_DOCS.
+
+Cloud
+=
+	CLOUD
+	{ ATTR_DOMAIN
+	| ATTR_PORT
+	| ATTR_PATH
+	| ATTR_REGISTER_PROCEDURE
+	| ATTR_PROTOCOL
+	} END_CLOUD
+.
+
+Ttl = TTL TEXT (. .) END_TTL.
+
+Image
+=
+	IMAGE
+	{ ImageProperty
+	} END_IMAGE
+.
+
+ImageProperty
+=
+	Url
+	| Title
+	| Link
+	| Width
+	| Height
+.
+
+Url = URL TEXT (. .) END_URL.
+
+Width = WIDTH TEXT (. .) END_WIDTH.
+
+Height = HEIGHT TEXT (. .) END_HEIGHT.
+
+Rating = RATING TEXT (. .) END_RATING.
+
+TextInput
+=
+	TEXT_INPUT
+	{ TextInputProperty
+	}
+	END_TEXT_INPUT
+.
+
+TextInputProperty
+=
+	Title
+	| Description
+	| Name
+	| Link
+.
+
+Name = NAME TEXT (. .) END_NAME.
+
+SkipHours = SKIP_HOURS TEXT (. .) END_SKIP_HOURS.
+
+SkipDays = SKIP_DAYS TEXT (. .) END_SKIP_DAYS.
+
+Item
+=
+	ITEM
+	{ ItemProperty
+	| Image
+	} END_ITEM
+.
+
+ItemProperty
+=
+	Title
+	| Link
+	| Description
+	| Author
+	| Category
+	| Comments
+	| Enclosure
+	| Guid
+	| PubDate
+	| Source
+.
+
+Author = AUTHOR TEXT (. .) END_AUTHOR.
+
+Comments = COMMENTS TEXT (. .) END_COMMENTS.
+
+Enclosure = ENCLOSURE TEXT (. .) END_ENCLOSURE.
+
+Guid = GUID TEXT (. .) END_GUID.
+
+Source = SOURCE TEXT (. .) END_SOURCE.
+
+END Rss.
