@@ -390,28 +390,28 @@ public class ParserGen {
 		err = new StringWriter();
 		foreach (Symbol sym in tab.terminals) GenErrorMsg(tErr, sym);
 		
-		CopyFramePart("-->begin");
+		CopyFramePart("/*---- begin ----*/");
 		if (!tab.srcName.ToLower().EndsWith("cocoxml.atg")) {
 			gen.Close(); OpenGen(false); /* pdt */
 		}
 		if (usingPos != null) {CopySourcePart(usingPos, 0); gen.WriteLine();}
-		CopyFramePart("-->namespace");
+		CopyFramePart("/*---- namespace ----*/");
 		/* AW open namespace, if it exists */
 		if (tab.nsName != null && tab.nsName.Length > 0) {
 			gen.WriteLine("namespace {0} {{", tab.nsName);
 			gen.WriteLine();
 		}
-		CopyFramePart("-->constants");
+		CopyFramePart("/*---- constants ----*/");
 		GenTokens(); /* ML 2002/09/07 write the token kinds */
 		gen.WriteLine("\tpublic const int maxT = {0};", tab.terminals.Count-1);
 		GenPragmas(); /* ML 2005/09/23 write the pragma kinds */
-		CopyFramePart("-->declarations"); CopySourcePart(tab.semDeclPos, 0);
-		CopyFramePart("-->pragmas"); GenCodePragmas();
-		CopyFramePart("-->productions"); GenProductions();
-		CopyFramePart("-->parseRoot"); gen.WriteLine("\t\t{0}();", tab.gramSy.name);
-		CopyFramePart("-->initialization"); InitSets();
-		CopyFramePart("-->errors"); gen.Write(err.ToString());
-		CopyFramePart("$$$");
+		CopyFramePart("/*---- declarations ----*/"); CopySourcePart(tab.semDeclPos, 0);
+		CopyFramePart("/*---- pragmas ----*/"); GenCodePragmas();
+		CopyFramePart("/*---- productions ----*/"); GenProductions();
+		CopyFramePart("/*---- parseRoot ----*/"); gen.WriteLine("\t\t{0}();", tab.gramSy.name);
+		CopyFramePart("/*---- initialization ----*/"); InitSets();
+		CopyFramePart("/*---- errors ----*/"); gen.Write(err.ToString());
+		CopyFramePart("/*---- $$$ ----*/");
 		/* AW 2002-12-20 close namespace, if it exists */
 		if (tab.nsName != null && tab.nsName.Length > 0) gen.Write("}");
 		gen.Close();
