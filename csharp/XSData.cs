@@ -174,7 +174,7 @@ public class XmlScannerData {
     }
 
     void WriteDeclarations() {
-	gen.Write("    readonly int[] useKindVector = new int[] { " +
+	gen.Write("    static readonly int[] useKindVector = new int[] { " +
 		  getOptionKind(0));
 	for (int option = 1; option < XmlLangDefinition.numOptions; ++option)
 	    gen.Write(", " + getOptionKind(option));
