@@ -2,8 +2,20 @@ using System;
 using System.IO;
 
 public class RssMain {
+    public static void ParseCSS(string filename) {
+	try {
+	    XmlScanner scanner = new XmlScanner(filename);
+	    XmlParser parser = new XmlParser(scanner);
+
+	    parser.Parse();
+	} catch (FatalError e) {
+	    Console.WriteLine("-- " + e.Message);
+	}
+    }
+
     public static int Main(string[] args) {
-	Console.WriteLine("RSS?");
+	for (int idx = 0; idx < args.Length; ++idx)
+	    ParseCSS(args[idx]);
 	return 0;
     }
 }
