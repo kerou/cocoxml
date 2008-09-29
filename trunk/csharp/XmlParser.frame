@@ -77,7 +77,7 @@ public class XmlParser {
 	bool StartOf (int s) {
 		return set[s, la.kind];
 	}
-	
+    /*
 	void ExpectWeak (int n, int follow) {
 		if (la.kind == n) Get();
 		else {
@@ -100,7 +100,7 @@ public class XmlParser {
 			return StartOf(syFol);
 		}
 	}
-
+    */
 	
 /*---- productions ----*/
 

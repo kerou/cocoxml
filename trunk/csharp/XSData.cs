@@ -27,9 +27,11 @@ namespace at.jku.ssw.CocoXml {
 public class XmlLangDefinition {
     // The following list must be same with OptionDecl in CocoXml.atg.
     public static readonly string[] OptStrings = new string[] {
-	"UNKNOWN_TAG", "TEXT", "WHITESPACE", "COMMENT", "PROCESSING_INSTRUCTION"
+	"UNKNOWN_NAMESPACE", "UNKNOWN_TAG", "UNKNOWN_ATTR",
+	"TEXT", "CDATA", "COMMENT",
+	"WHITESPACE", "PROCESSING_INSTRUCTION"
     };
-    public const int numOptions = 5;
+    public const int numOptions = 8;
 
     Tab       tab;
     Errors    errors;
@@ -38,6 +40,9 @@ public class XmlLangDefinition {
     Hashtable Attrs;
 
     public XmlLangDefinition(Tab tab, Errors errors) {
+	if (numOptions != OptStrings.Length)
+	    Console.WriteLine("numOptions:{0} != OptString.Length:{1}",
+			      numOptions, OptStrings.Length);
 	this.tab = tab;
 	this.errors = errors;
 	for (int option = 0; option < useVector.Length; ++option)
@@ -151,8 +156,8 @@ public class XmlScannerData {
 	throw new FatalError("incomplete or corrupt xml scanner frame file");
     }
 
-    void WriteOptionTokens() {
-	gen.WriteLine("    public enum OptionTokens {");
+    void WriteOptions() {
+	gen.WriteLine("    public enum Options {");
 	gen.Write("        " + XmlLangDefinition.OptStrings[0]);
 	for (int option = 1; option < XmlLangDefinition.numOptions; ++option)
 	    gen.Write(", " + XmlLangDefinition.OptStrings[option]);
@@ -210,7 +215,7 @@ public class XmlScannerData {
 	if (tab.nsName != null && tab.nsName.Length > 0)
 	    gen.Write("namespace {0} {", tab.nsName);
 
-	CopyFramePart("/*---- OptionTokens ----*/"); WriteOptionTokens();
+	CopyFramePart("/*---- Options ----*/"); WriteOptions();
 
 	CopyFramePart("/*---- Declarations ----*/"); WriteDeclarations();
 

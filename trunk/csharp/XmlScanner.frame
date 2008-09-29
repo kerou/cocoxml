@@ -32,7 +32,7 @@ using System.Xml;
 /*---- Namespace ----*/
 
 public class Token {
-/*---- OptionTokens ----*/
+/*---- Options ----*/
     public int kind;
     public int col;
     public int line;
@@ -54,8 +54,8 @@ public class XmlScanner {
 
     Stream stream;
     XmlTextReader xmlreader;
+    Stack nsstack;
     XSStatus status;
-    string nsURI;
     ArrayList tokens;
     int peek;
 
@@ -80,6 +80,7 @@ public class XmlScanner {
     void Init() {
 	XmlLangDefinition curXLDef;
 	xmlreader = new XmlTextReader(stream);
+	nsstack = new Stack();
 	status = XSStatus.XSCommon;
 	tokens = new ArrayList();
 	peek = 0;
@@ -88,79 +89,98 @@ public class XmlScanner {
     }
 
     int StartElement2Kind(string NamespaceURI, string TagName) {
-	return 0;
+	XmlLangDefinition curXLDef;
+	if (!XmlLangMap.Contains(NamespaceURI))
+	    return useKindVector[(int)Token.Options.UNKNOWN_NAMESPACE];
+	curXLDef = (XmlLangDefinition)XmlLangMap[NamespaceURI];
+	if (!curXLDef.Tags.Contains(TagName))
+	    return useKindVector[(int)Token.Options.UNKNOWN_TAG];
+	nsstack.Push(NamespaceURI);
+	return ((int[])(curXLDef.Tags[TagName]))[0];
     }
 
     int EndElement2Kind(string NamespaceURI, string TagName) {
-	return 0;
+	XmlLangDefinition curXLDef;
+	if (!XmlLangMap.Contains(NamespaceURI))
+	    return useKindVector[(int)Token.Options.UNKNOWN_NAMESPACE];
+	curXLDef = (XmlLangDefinition)XmlLangMap[NamespaceURI];
+	if (!curXLDef.Tags.Contains(TagName))
+	    return useKindVector[(int)Token.Options.UNKNOWN_TAG];
+	nsstack.Pop(); // popNS = nsstack.Pop(); assert(popNS = NamespaceURI);
+	return ((int[])(curXLDef.Tags[TagName]))[1];
     }
 
     int Attribute2Kind(string NamespaceURI, string AttrName) {
-	return 0;
+	XmlLangDefinition curXLDef;
+	if (NamespaceURI == "") NamespaceURI = (string)nsstack.Peek();
+	if (!XmlLangMap.Contains(NamespaceURI))
+	    return useKindVector[(int)Token.Options.UNKNOWN_NAMESPACE];
+	curXLDef = (XmlLangDefinition)XmlLangMap[NamespaceURI];
+	if (!curXLDef.Attrs.Contains(AttrName))
+	    return useKindVector[(int)Token.Options.UNKNOWN_ATTR];
+	return (int)(curXLDef.Attrs[AttrName]);
     }
 
     void AppendToken() {
+	int kind = -1;
 	Token new_token = null;
-	switch (status) {
-	case XSStatus.XSCommon:
-	    new_token = new Token();
-	    if (!xmlreader.Read()) {
-		new_token.kind = eofSym;
-	    } else {
+	while (kind < 0) {
+	    switch (status) {
+	    case XSStatus.XSCommon:
+		if (!xmlreader.Read()) { kind = eofSym; break; }
 		switch (xmlreader.NodeType) {
 		case XmlNodeType.Element:
-		    new_token.kind = StartElement2Kind(xmlreader.NamespaceURI,
-						       xmlreader.Name);
-		    nsURI = xmlreader.NamespaceURI;
-		    status = XSStatus.XSFirstAttr;
+		    kind = StartElement2Kind(xmlreader.NamespaceURI,
+					     xmlreader.LocalName);
+		    if (kind >= 0) status = XSStatus.XSFirstAttr;
 		    break;
 		case XmlNodeType.EndElement:
-		    new_token.kind = EndElement2Kind(xmlreader.NamespaceURI,
-						     xmlreader.Name);
+		    kind = EndElement2Kind(xmlreader.NamespaceURI,
+					   xmlreader.Name);
 		    break;
 		case XmlNodeType.Text:
-		    if (useKindVector[(int)Token.OptionTokens.TEXT] >= 0) {
-		    }
+		    kind = useKindVector[(int)Token.Options.TEXT];
+		    break;
+		case XmlNodeType.CDATA:
+		    kind = useKindVector[(int)Token.Options.CDATA];
 		    break;
 		case XmlNodeType.Whitespace:
-		    if (useKindVector[(int)Token.OptionTokens.WHITESPACE] >= 0) {
-		    }
+		    kind = useKindVector[(int)Token.Options.WHITESPACE];
 		    break;
 		case XmlNodeType.Comment:
-		    if (useKindVector[(int)Token.OptionTokens.COMMENT] >= 0) {
-		    }
+		    kind = useKindVector[(int)Token.Options.COMMENT];
 		    break;
 		case XmlNodeType.ProcessingInstruction:
-		    if (useKindVector[(int)Token.OptionTokens.PROCESSING_INSTRUCTION] >= 0) {
-		    }
+		    kind = useKindVector[(int)Token.Options.PROCESSING_INSTRUCTION];
 		    break;
 		default: // Omit the others.
+		    kind = -1;
 		    break;
 		}
+		break;
+	    case XSStatus.XSFirstAttr:
+		if (!xmlreader.MoveToFirstAttribute()) {
+		    status = XSStatus.XSCommon;
+		    kind = -1;
+		} else {
+		    status = XSStatus.XSNextAttr;
+		    kind = Attribute2Kind(xmlreader.NamespaceURI,
+					  xmlreader.LocalName);
+		}
+		break;
+	    case XSStatus.XSNextAttr:
+		if (!xmlreader.MoveToNextAttribute()) {
+		    status = XSStatus.XSCommon;
+		    kind = -1;
+		} else {
+		    kind = Attribute2Kind(xmlreader.NamespaceURI,
+					  xmlreader.LocalName);
+		}
+		break;
 	    }
-	    break;
-	case XSStatus.XSFirstAttr:
-	    if (!xmlreader.MoveToFirstAttribute()) {
-		status = XSStatus.XSCommon;
-		AppendToken();
-		return;
-	    }
-	    status = XSStatus.XSNextAttr;
-	    new_token = new Token();
-	    new_token.kind = Attribute2Kind(xmlreader.NamespaceURI,
-					    xmlreader.Name);
-	    break;
-	case XSStatus.XSNextAttr:
-	    if (!xmlreader.MoveToNextAttribute()) {
-		status = XSStatus.XSCommon;
-		AppendToken();
-		return;
-	    }
-	    new_token = new Token();
-	    new_token.kind = Attribute2Kind(xmlreader.NamespaceURI,
-					    xmlreader.Name);
-	    break;
 	}
+	new_token = new Token();
+	new_token.kind = kind;
 	new_token.line = xmlreader.LineNumber;
 	new_token.col = xmlreader.LinePosition;
 	new_token.val = xmlreader.Value;
