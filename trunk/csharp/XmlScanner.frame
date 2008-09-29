@@ -40,9 +40,15 @@ public class Token {
 }
 
 public class XmlLangDefinition {
-    public bool[] useVector = new bool[Token.numOptions];
+    public bool[] useVector;
     public Hashtable Tags;
     public Hashtable Attrs;
+
+    public XmlLangDefinition() {
+	useVector = new bool[Token.numOptions];
+	Tags = new Hashtable();
+	Attrs = new Hashtable();
+    }
 }
 
 public class XmlScanner {
@@ -50,17 +56,15 @@ public class XmlScanner {
 
     const char EOL = '\n';
     const int eofSym = 0;
-    const int textSym = 1;
+/*---- Declarations ----*/
 
     Stream stream;
     XmlTextReader xmlreader;
+    Hashtable XmlLangMap;
     Stack nsstack;
     XSStatus status;
     ArrayList tokens;
     int peek;
-
-    Hashtable XmlLangMap;
-/*---- Declarations ----*/
 
     public XmlScanner (string fileName) {
 	try {
@@ -79,7 +83,9 @@ public class XmlScanner {
 
     void Init() {
 	XmlLangDefinition curXLDef;
+
 	xmlreader = new XmlTextReader(stream);
+	XmlLangMap = new Hashtable();
 	nsstack = new Stack();
 	status = XSStatus.XSCommon;
 	tokens = new ArrayList();
@@ -121,6 +127,15 @@ public class XmlScanner {
 	return (int)(curXLDef.Attrs[AttrName]);
     }
 
+    int Others2Kind(Token.Options option) {
+	int iOption = (int)option;
+	XmlLangDefinition curXLDef;
+	// Omit all fragments which is out of the root element.
+	if (nsstack.Count == 0) return -1;
+	curXLDef = (XmlLangDefinition)nsstack.Peek();
+	return curXLDef.useVector[iOption] ? useKindVector[iOption] : -1;
+    }
+
     void AppendToken() {
 	int kind = -1;
 	Token new_token = null;
@@ -139,19 +154,19 @@ public class XmlScanner {
 					   xmlreader.Name);
 		    break;
 		case XmlNodeType.Text:
-		    kind = useKindVector[(int)Token.Options.TEXT];
+		    kind = Others2Kind(Token.Options.TEXT);
 		    break;
 		case XmlNodeType.CDATA:
-		    kind = useKindVector[(int)Token.Options.CDATA];
+		    kind = Others2Kind(Token.Options.CDATA);
 		    break;
 		case XmlNodeType.Whitespace:
-		    kind = useKindVector[(int)Token.Options.WHITESPACE];
+		    kind = Others2Kind(Token.Options.WHITESPACE);
 		    break;
 		case XmlNodeType.Comment:
-		    kind = useKindVector[(int)Token.Options.COMMENT];
+		    kind = Others2Kind(Token.Options.COMMENT);
 		    break;
 		case XmlNodeType.ProcessingInstruction:
-		    kind = useKindVector[(int)Token.Options.PROCESSING_INSTRUCTION];
+		    kind = Others2Kind(Token.Options.PROCESSING_INSTRUCTION);
 		    break;
 		default: // Omit the others.
 		    kind = -1;
