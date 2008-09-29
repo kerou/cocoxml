@@ -2,7 +2,7 @@ using System;
 using System.IO;
 
 public class RssMain {
-    public static void ParseCSS(string filename) {
+    public static void ParseRSS(string filename) {
 	try {
 	    XmlScanner scanner = new XmlScanner(filename);
 	    XmlParser parser = new XmlParser(scanner);
@@ -15,7 +15,7 @@ public class RssMain {
 
     public static int Main(string[] args) {
 	for (int idx = 0; idx < args.Length; ++idx)
-	    ParseCSS(args[idx]);
+	    ParseRSS(args[idx]);
 	return 0;
     }
 }
