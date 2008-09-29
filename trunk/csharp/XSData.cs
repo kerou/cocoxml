@@ -203,20 +203,20 @@ public class XmlScannerData {
 	    throw new FatalError("Cannot open XmlScanner.frame.");
 	}
 	OpenGen(true); /* pdt */
-	CopyFramePart("-->Begin");
+	CopyFramePart("/*---- Begin ----*/");
 	gen.Close();
 	OpenGen(true);
-	CopyFramePart("-->Namespace");
+	CopyFramePart("/*---- Namespace ----*/");
 	if (tab.nsName != null && tab.nsName.Length > 0)
 	    gen.Write("namespace {0} {", tab.nsName);
 
-	CopyFramePart("-->OptionTokens"); WriteOptionTokens();
+	CopyFramePart("/*---- OptionTokens ----*/"); WriteOptionTokens();
 
-	CopyFramePart("-->Declarations"); WriteDeclarations();
+	CopyFramePart("/*---- Declarations ----*/"); WriteDeclarations();
 
-	CopyFramePart("-->Initialization"); WriteInitialization();
+	CopyFramePart("/*---- Initialization ----*/"); WriteInitialization();
 
-	CopyFramePart("$$$");
+	CopyFramePart("/*---- $$$ ----*/");
 	if (tab.nsName != null && tab.nsName.Length > 0) gen.Write("}");
 	gen.Close();
     }
