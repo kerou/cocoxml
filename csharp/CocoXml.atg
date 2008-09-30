@@ -178,7 +178,7 @@ XmlLangDefinition<out XmlLangDefinition xldef>
 .
 
 /*------------------------------------------------------------------------------------*/
-/* The following list must be same with OptionTokens in XSData.cs. */
+/* For the possible values, ses XSData.cs. */
 OptionDecl<XmlLangDefinition xldef>
 =
   ident (. xldef.AddOption(t.val, t.line); .)
