@@ -26,7 +26,7 @@ CocoXml/R itself) does not fall under the GNU General Public License.
 /*---- Begin ----*/
 using System;
 using System.IO;
-using System.Collections;
+using System.Collections.Generic;
 using System.Xml;
 
 /*---- Namespace ----*/
@@ -39,16 +39,38 @@ public class Token {
     public string val;
 }
 
+public class TagInfo {
+    public int startToken;
+    public int endToken;
+}
+
 public class XmlLangDefinition {
-    public bool[] useVector;
-    public Hashtable Tags;
-    public Hashtable Attrs;
+    public bool[]                      useVector;
+    public Dictionary<string, TagInfo> Tags;
+    public Dictionary<string, int>     Attrs;
 
     public XmlLangDefinition() {
 	useVector = new bool[Token.numOptions];
-	Tags = new Hashtable();
-	Attrs = new Hashtable();
+	Tags = new Dictionary<string, TagInfo>();
+	Attrs = new Dictionary<string, int>();
     }
+
+    public void AddTag(string Name, int StartToken, int EndToken) {
+	TagInfo tinfo = new TagInfo();
+	tinfo.startToken = StartToken;
+	tinfo.endToken = EndToken;
+	Tags.Add(Name, tinfo);
+    }
+
+    public void AddAttr(string Name, int AttrToken) {
+	Attrs.Add(Name, AttrToken);
+    }
+}
+
+public class tagStackEle {
+    public bool unknownNamespace;
+    public bool unknownTag;
+    public XmlLangDefinition xldef;
 }
 
 public class XmlScanner {
@@ -59,12 +81,15 @@ public class XmlScanner {
 /*---- Declarations ----*/
 
     Stream stream;
-    XmlTextReader xmlreader;
-    Hashtable XmlLangMap;
-    Stack nsstack;
-    XSStatus status;
-    ArrayList tokens;
-    int peek;
+    XmlTextReader                         xmlreader;
+    Dictionary<string, XmlLangDefinition> XmlLangMap;
+    Stack<tagStackEle>                    tagStack;
+    XSStatus                              status;
+    bool                                  inEmptyElement;
+    string                                emptyNSURI;
+    string                                emptyLName;
+    List<Token>                           tokens;
+    int                                   peek;
 
     public XmlScanner (string fileName) {
 	try {
@@ -85,55 +110,104 @@ public class XmlScanner {
 	XmlLangDefinition curXLDef;
 
 	xmlreader = new XmlTextReader(stream);
-	XmlLangMap = new Hashtable();
-	nsstack = new Stack();
+	XmlLangMap = new Dictionary<string, XmlLangDefinition>();
+	tagStack = new Stack<tagStackEle>();
 	status = XSStatus.XSCommon;
-	tokens = new ArrayList();
+	inEmptyElement = false;
+	tokens = new List<Token>();
 	peek = 0;
 
 /*---- Initialization ----*/
+
+	tagStackEle  tsEle = new tagStackEle();
+	tsEle.unknownNamespace = false;
+	tsEle.unknownTag = false;
+	tsEle.xldef = XmlLangMap[""];
+	tagStack.Push(tsEle);
     }
 
     int StartElement2Kind(string NamespaceURI, string TagName) {
-	XmlLangDefinition curXLDef;
-	if (!XmlLangMap.Contains(NamespaceURI))
+	tagStackEle curEle = tagStack.Peek();
+	tagStackEle newEle = new tagStackEle();
+
+	if (!XmlLangMap.ContainsKey(NamespaceURI)) {
+	    newEle.unknownNamespace = true;
+	    newEle.unknownTag = false;
+	    newEle.xldef = curEle.xldef;
+	    tagStack.Push(newEle);
 	    return useKindVector[(int)Token.Options.UNKNOWN_NAMESPACE];
-	curXLDef = (XmlLangDefinition)XmlLangMap[NamespaceURI];
-	if (!curXLDef.Tags.Contains(TagName))
+	}
+	newEle.unknownNamespace = false;
+	newEle.xldef = XmlLangMap[NamespaceURI];
+	if (!newEle.xldef.Tags.ContainsKey(TagName)) {
+	    newEle.unknownTag = true;
+	    tagStack.Push(newEle);
 	    return useKindVector[(int)Token.Options.UNKNOWN_TAG];
-	nsstack.Push(NamespaceURI);
-	return ((int[])(curXLDef.Tags[TagName]))[0];
+	}
+	newEle.unknownTag = false;
+	tagStack.Push(newEle);
+	return newEle.xldef.Tags[TagName].startToken;
     }
 
     int EndElement2Kind(string NamespaceURI, string TagName) {
-	XmlLangDefinition curXLDef;
-	if (!XmlLangMap.Contains(NamespaceURI))
-	    return useKindVector[(int)Token.Options.UNKNOWN_NAMESPACE];
-	curXLDef = (XmlLangDefinition)XmlLangMap[NamespaceURI];
-	if (!curXLDef.Tags.Contains(TagName))
-	    return useKindVector[(int)Token.Options.UNKNOWN_TAG];
-	nsstack.Pop(); // popNS = nsstack.Pop(); assert(popNS = NamespaceURI);
-	return ((int[])(curXLDef.Tags[TagName]))[1];
+	tagStackEle curEle = tagStack.Pop();
+
+	if (curEle.unknownNamespace) {
+	    return useKindVector[(int)Token.Options.END_UNKNOWN_NAMESPACE];
+	}
+	if (curEle.unknownTag)
+	    return useKindVector[(int)Token.Options.END_UNKNOWN_TAG];
+	return curEle.xldef.Tags[TagName].endToken;
     }
 
     int Attribute2Kind(string NamespaceURI, string AttrName) {
-	XmlLangDefinition curXLDef;
-	if (NamespaceURI == "") NamespaceURI = (string)nsstack.Peek();
-	if (!XmlLangMap.Contains(NamespaceURI))
-	    return useKindVector[(int)Token.Options.UNKNOWN_NAMESPACE];
-	curXLDef = (XmlLangDefinition)XmlLangMap[NamespaceURI];
-	if (!curXLDef.Attrs.Contains(AttrName))
+	XmlLangDefinition xldef;
+	tagStackEle curEle = tagStack.Peek();
+
+	// assert(!curEle.unknownNamespace and !curEle.unknownTag);
+	if (NamespaceURI == "") xldef = curEle.xldef;
+	else if (!XmlLangMap.ContainsKey(NamespaceURI))
+	    return useKindVector[(int)Token.Options.UNKNOWN_ATTR_NAMESPACE];
+	else xldef = XmlLangMap[NamespaceURI];
+	if (!xldef.Attrs.ContainsKey(AttrName))
 	    return useKindVector[(int)Token.Options.UNKNOWN_ATTR];
-	return (int)(curXLDef.Attrs[AttrName]);
+	return xldef.Attrs[AttrName];
     }
 
-    int Others2Kind(Token.Options option) {
-	int iOption = (int)option;
-	XmlLangDefinition curXLDef;
-	// Omit all fragments which is out of the root element.
-	if (nsstack.Count == 0) return -1;
-	curXLDef = (XmlLangDefinition)nsstack.Peek();
-	return curXLDef.useVector[iOption] ? useKindVector[iOption] : -1;
+    int Others2Kind(XmlNodeType ntype) {
+	Token.Options opt;
+	tagStackEle curEle = tagStack.Peek();
+
+	switch (ntype) {
+	case XmlNodeType.Text:
+	    if (curEle.unknownNamespace) opt = Token.Options.UNS_TEXT;
+	    else if (curEle.unknownTag) opt = Token.Options.UT_TEXT;
+	    else opt = Token.Options.TEXT;
+	    break;
+	case XmlNodeType.CDATA:
+	    if (curEle.unknownNamespace) opt = Token.Options.UNS_CDATA;
+	    else if (curEle.unknownTag) opt = Token.Options.UT_CDATA;
+	    else opt = Token.Options.CDATA;
+	    break;
+	case XmlNodeType.Whitespace:
+	    if (curEle.unknownNamespace) opt = Token.Options.UNS_WHITESPACE;
+	    else if (curEle.unknownTag) opt = Token.Options.UT_WHITESPACE;
+	    else opt = Token.Options.WHITESPACE;
+	    break;
+	case XmlNodeType.Comment:
+	    if (curEle.unknownNamespace) opt = Token.Options.UNS_COMMENT;
+	    else if (curEle.unknownTag) opt = Token.Options.UT_COMMENT;
+	    else opt = Token.Options.COMMENT;
+	    break;
+	case XmlNodeType.ProcessingInstruction:
+	    if (curEle.unknownNamespace) opt = Token.Options.UNS_PROCESSING_INSTRUCTION;
+	    else if (curEle.unknownTag) opt = Token.Options.UT_PROCESSING_INSTRUCTION;
+	    else opt = Token.Options.PROCESSING_INSTRUCTION;
+	    break;
+	default:
+	    return -1;
+	}
+	return curEle.xldef.useVector[(int)opt] ? useKindVector[(int)opt] : -1;
     }
 
     void AppendToken() {
@@ -142,34 +216,28 @@ public class XmlScanner {
 	while (kind < 0) {
 	    switch (status) {
 	    case XSStatus.XSCommon:
-		if (!xmlreader.Read()) { kind = eofSym; break; }
+		if (inEmptyElement) {
+		    kind = EndElement2Kind(emptyNSURI, emptyLName);
+		    inEmptyElement = false;
+		    break;
+		} else if (!xmlreader.Read()) { kind = eofSym; break; }
 		switch (xmlreader.NodeType) {
 		case XmlNodeType.Element:
 		    kind = StartElement2Kind(xmlreader.NamespaceURI,
 					     xmlreader.LocalName);
+		    if (xmlreader.IsEmptyElement) {
+			emptyNSURI = xmlreader.NamespaceURI;
+			emptyLName = xmlreader.LocalName;
+			inEmptyElement = true;
+		    }
 		    if (kind >= 0) status = XSStatus.XSFirstAttr;
 		    break;
 		case XmlNodeType.EndElement:
 		    kind = EndElement2Kind(xmlreader.NamespaceURI,
 					   xmlreader.Name);
 		    break;
-		case XmlNodeType.Text:
-		    kind = Others2Kind(Token.Options.TEXT);
-		    break;
-		case XmlNodeType.CDATA:
-		    kind = Others2Kind(Token.Options.CDATA);
-		    break;
-		case XmlNodeType.Whitespace:
-		    kind = Others2Kind(Token.Options.WHITESPACE);
-		    break;
-		case XmlNodeType.Comment:
-		    kind = Others2Kind(Token.Options.COMMENT);
-		    break;
-		case XmlNodeType.ProcessingInstruction:
-		    kind = Others2Kind(Token.Options.PROCESSING_INSTRUCTION);
-		    break;
-		default: // Omit the others.
-		    kind = -1;
+		default:
+		    kind = Others2Kind(xmlreader.NodeType);
 		    break;
 		}
 		break;
@@ -205,14 +273,14 @@ public class XmlScanner {
     public Token Scan () {
 	Token token;
 	if (tokens.Count == 0) AppendToken();
-	token = (Token)tokens[0];
-	tokens.Remove(0);
+	token = tokens[0];
+	tokens.RemoveAt(0);
 	return token;
     }
 
     public Token Peek () {
 	if (peek == tokens.Count) AppendToken();
-	return (Token)tokens[peek ++];
+	return tokens[peek ++];
     }
 
     public void ResetPeek () { peek = 0; }
