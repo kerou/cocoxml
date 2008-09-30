@@ -27,21 +27,19 @@ public class TagInfo {
     public int endToken;
 }
 
-public class XmlLangDefinition {
-    // The following list must be same with OptionDecl in CocoXml.atg.
-    public static readonly string[] OptStrings = new string[] {
-	"UNKNOWN_NAMESPACE", "UNKNOWN_TAG", "UNKNOWN_ATTR",
-	"TEXT", "CDATA", "COMMENT",
-	"WHITESPACE", "PROCESSING_INSTRUCTION",
-	// For the nodes in Unknown namespaces.
-	"UNS_TEXT", "UNS_CDATA", "UNS_COMMENT",
-	"UNS_WHITESPACE", "UNS_PROCESSING_INSTRUCTION",
-	// For the nodes in Unknown tags.
-	"UT_TEXT", "UT_CDATA", "UT_COMMENT",
-	"UT_WHITESPACE", "UT_PROCESSING_INSTRUCTION"
-    };
-    public const int numOptions = 18;
+public enum Options {
+    UNKNOWN_NAMESPACE, END_UNKNOWN_NAMESPACE,
+    UNKNOWN_TAG, END_UNKNOWN_TAG,
+    UNKNOWN_ATTR_NAMESPACE, UNKNOWN_ATTR,
+    // For the nodes in common status.
+    TEXT, CDATA, COMMENT, WHITESPACE, PROCESSING_INSTRUCTION,
+    // For the nodes in Unknown namespaces.
+    UNS_TEXT, UNS_CDATA, UNS_COMMENT, UNS_WHITESPACE, UNS_PROCESSING_INSTRUCTION,
+    // For the nodes in Unknown tags.
+    UT_TEXT, UT_CDATA, UT_COMMENT, UT_WHITESPACE, UT_PROCESSING_INSTRUCTION
+};
 
+public class XmlLangDefinition {
     Tab                         tab;
     Errors                      errors;
     bool[]                      useVector;
@@ -49,26 +47,24 @@ public class XmlLangDefinition {
     Dictionary<string, int>     Attrs;
 
     public XmlLangDefinition(Tab tab, Errors errors) {
-	if (numOptions != OptStrings.Length)
-	    Console.WriteLine("numOptions:{0} != OptString.Length:{1}",
-			      numOptions, OptStrings.Length);
 	this.tab = tab;
 	this.errors = errors;
-	useVector = new bool[numOptions];
+	useVector = new bool[Enum.GetValues(typeof(Options)).Length];
 	Tags = new Dictionary<string, TagInfo>();
 	Attrs = new Dictionary<string, int>();
     }
 
     public void AddOption(string optname, int line) {
-	Symbol sym;
-	for (int option = 0; option < numOptions; ++option)
-	    if (optname == OptStrings[option]) {
-		useVector[option] = true;
-		sym = tab.FindSym(optname);
-		if (sym == null) tab.NewSym(Node.t, optname, line);
-		return;
-	    }
-	errors.SemErr("Unsupported option '" + optname + "' encountered.");
+	int optval; Symbol sym;
+	try {
+	    optval = (int)Enum.Parse(typeof(Options), optname);
+	} catch (System.ArgumentException) {
+	    errors.SemErr("Unsupported option '" + optname + "' encountered.");
+	    return;
+	}
+	useVector[optval] = true;
+	sym = tab.FindSym(optname);
+	if (sym == null) tab.NewSym(Node.t, optname, line);
     }
 
     int addUniqueToken(string tokenName, string typeName, int line) {
@@ -162,26 +158,20 @@ public class XmlScannerData {
 
     void WriteOptions() {
 	gen.WriteLine("    public enum Options {");
-	gen.Write("        " + XmlLangDefinition.OptStrings[0]);
-	for (int option = 1; option < XmlLangDefinition.numOptions; ++option)
-	    gen.Write(", " + XmlLangDefinition.OptStrings[option]);
-	gen.WriteLine("");
+	foreach (string optname in Enum.GetNames(typeof(Options)))
+	    gen.WriteLine("        {0},", optname);
 	gen.WriteLine("    };");
 	gen.WriteLine("    public const int numOptions = {0};",
-		      XmlLangDefinition.numOptions);
-    }
-
-    int getOptionKind(int option) {
-	Symbol sym = tab.FindSym(XmlLangDefinition.OptStrings[option]);
-	if (sym == null) return -1;
-	return sym.n;
+		      Enum.GetValues(typeof(Options)).Length);
     }
 
     void WriteDeclarations() {
-	gen.Write("    static readonly int[] useKindVector = new int[] { " +
-		  getOptionKind(0));
-	for (int option = 1; option < XmlLangDefinition.numOptions; ++option)
-	    gen.Write(", " + getOptionKind(option));
+	Symbol sym;
+	gen.WriteLine("    static readonly int[] useKindVector = new int[] {");
+	foreach (string optname in Enum.GetNames(typeof(Options))) {
+	    sym = tab.FindSym(optname);
+	    gen.WriteLine("        {0},", sym == null ? -1 : sym.n);
+	}
 	gen.WriteLine(" };");
     }
 
