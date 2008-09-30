@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
 XSData.cs -- XML Scanner Data
-Copyright (c) 2008, Charles Wang
+Copyright (c) 2008, Charles Wang <charlesw123456@gmail.com>
 
 This program is free software; you can redistribute it and/or modify it 
 under the terms of the GNU General Public License as published by the 
@@ -15,29 +15,38 @@ for more details.
 You should have received a copy of the GNU General Public License along 
 with this program; if not, write to the Free Software Foundation, Inc., 
 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-
 -------------------------------------------------------------------------*/
 using System;
 using System.IO;
-using System.Collections;
+using System.Collections.Generic;
 
 namespace at.jku.ssw.CocoXml {
 
+public class TagInfo {
+    public int startToken;
+    public int endToken;
+}
 
 public class XmlLangDefinition {
     // The following list must be same with OptionDecl in CocoXml.atg.
     public static readonly string[] OptStrings = new string[] {
 	"UNKNOWN_NAMESPACE", "UNKNOWN_TAG", "UNKNOWN_ATTR",
 	"TEXT", "CDATA", "COMMENT",
-	"WHITESPACE", "PROCESSING_INSTRUCTION"
+	"WHITESPACE", "PROCESSING_INSTRUCTION",
+	// For the nodes in Unknown namespaces.
+	"UNS_TEXT", "UNS_CDATA", "UNS_COMMENT",
+	"UNS_WHITESPACE", "UNS_PROCESSING_INSTRUCTION",
+	// For the nodes in Unknown tags.
+	"UT_TEXT", "UT_CDATA", "UT_COMMENT",
+	"UT_WHITESPACE", "UT_PROCESSING_INSTRUCTION"
     };
-    public const int numOptions = 8;
+    public const int numOptions = 18;
 
-    Tab       tab;
-    Errors    errors;
-    bool[]    useVector = new bool[numOptions];
-    Hashtable Tags;
-    Hashtable Attrs;
+    Tab                         tab;
+    Errors                      errors;
+    bool[]                      useVector;
+    Dictionary<string, TagInfo> Tags;
+    Dictionary<string, int>     Attrs;
 
     public XmlLangDefinition(Tab tab, Errors errors) {
 	if (numOptions != OptStrings.Length)
@@ -45,10 +54,9 @@ public class XmlLangDefinition {
 			      numOptions, OptStrings.Length);
 	this.tab = tab;
 	this.errors = errors;
-	for (int option = 0; option < useVector.Length; ++option)
-	    useVector[option] = false;
-	Tags = new Hashtable();
-	Attrs = new Hashtable();
+	useVector = new bool[numOptions];
+	Tags = new Dictionary<string, TagInfo>();
+	Attrs = new Dictionary<string, int>();
     }
 
     public void AddOption(string optname, int line) {
@@ -72,13 +80,13 @@ public class XmlLangDefinition {
     }
 
     public void AddTag(string tagname, string tokenname, int line) {
-	int[] value = new int [] {
-	    addUniqueToken(tokenname, "Tag", line),
-	    addUniqueToken("END_" + tokenname, "Tag", line)
-	};
+	TagInfo tinfo = new TagInfo();
+	tinfo.startToken = addUniqueToken(tokenname, "Tag", line);
+	tinfo.endToken = addUniqueToken("END_" + tokenname, "Tag", line);
+
 	if (Tags.ContainsKey(tagname))
 	    errors.SemErr("Tag '" + tagname + "' declared twice");
-	Tags.Add(tagname, value);
+	Tags.Add(tagname, tinfo);
     }
 
     public void AddAttr(string attrname, string tokenname, int line) {
@@ -89,21 +97,15 @@ public class XmlLangDefinition {
     }
 
     public void Write(StreamWriter gen) {
-	IDictionaryEnumerator de;
-	int[] tagKinds;
-
 	for (int option = 0; option < useVector.Length; ++option)
-	    gen.WriteLine("\tcurXLDef.useVector[{0}] = {1};",
-			  option, useVector[option] ? "true" : "false");
-	de = Tags.GetEnumerator();
-	while (de.MoveNext()) {
-	    tagKinds = (int[])de.Value;
-	    gen.WriteLine("\tcurXLDef.Tags.Add({0}, new int[] {1} {2}, {3} {4});",
-			  de.Key, "{", tagKinds[0], tagKinds[1], "}");
-	}
-	de = Attrs.GetEnumerator();
-	while (de.MoveNext())
-	    gen.WriteLine("\tcurXLDef.Attrs.Add({0}, {1});", de.Key, de.Value);
+	    if (useVector[option])
+		gen.WriteLine("\tcurXLDef.useVector[{0}] = true;", option);
+	foreach (KeyValuePair<string, TagInfo> entry in Tags)
+	    gen.WriteLine("\tcurXLDef.AddTag({0}, {1}, {2});", entry.Key,
+			  entry.Value.startToken, entry.Value.endToken);
+	foreach (KeyValuePair<string, int> entry in Attrs)
+	    gen.WriteLine("\tcurXLDef.AddAttr({0}, {1});", entry.Key,
+			  entry.Value);
     }
 }
 
@@ -111,19 +113,21 @@ public class XmlScannerData {
     public const int EOF = -1;
 
     Tab           tab;
-    //Errors        errors;
+    Errors        errors;
     FileStream    fram;
     StreamWriter  gen;
 
-    Hashtable     XmlLangMap;
+    Dictionary<string, XmlLangDefinition>  XmlLangMap;
 
     public XmlScannerData(Parser parser) {
 	tab = parser.tab;
-	//errors = parser.errors;
-	XmlLangMap = new Hashtable();
+	errors = parser.errors;
+	XmlLangMap = new Dictionary<string, XmlLangDefinition>();
     }
 
     public void Add(string NamespaceURI, XmlLangDefinition xldef) {
+	if (XmlLangMap.ContainsKey(NamespaceURI))
+	    errors.SemErr("Namespace '" + NamespaceURI + "' declared twice");
 	XmlLangMap.Add(NamespaceURI, xldef);
     }
 
@@ -182,14 +186,10 @@ public class XmlScannerData {
     }
 
     void WriteInitialization() {
-	XmlLangDefinition xldef;
-	IDictionaryEnumerator de;
-	de = XmlLangMap.GetEnumerator();
-	while (de.MoveNext()) {
+	foreach (KeyValuePair<string, XmlLangDefinition> entry in XmlLangMap) {
 	    gen.WriteLine("\tcurXLDef = new XmlLangDefinition();");
-	    xldef = (XmlLangDefinition)de.Value;
-	    xldef.Write(gen);
-	    gen.WriteLine("\tXmlLangMap.Add(\"{0}\", curXLDef);", de.Key);
+	    entry.Value.Write(gen);
+	    gen.WriteLine("\tXmlLangMap.Add(\"{0}\", curXLDef);", entry.Key);
 	}
     }
 
@@ -225,7 +225,6 @@ public class XmlScannerData {
 	if (tab.nsName != null && tab.nsName.Length > 0) gen.Write("}");
 	gen.Close();
     }
-
 }
 
 } // namespace.
