@@ -21,8 +21,13 @@ public class Cloud {
     public string domain;
     public string port;
     public string path;
-    public string register_procedure;
+    public string registerProcedure;
     public string protocol;
+
+    public override string ToString() {
+	return "Cloud('" + domain + "', '" + port + "', '" + path + "', '" +
+	    registerProcedure + "', '" + protocol + "')";
+    }
 }
 
 public class Image {
@@ -31,6 +36,11 @@ public class Image {
     public string link;
     public string width;
     public string height;
+
+    public override string ToString() {
+	return "Image('" + url + "', '" + title + "', '" + link + "', '" +
+	    width + "', '" + height + "')";
+    }
 }
 
 public class TextInput {
@@ -38,6 +48,11 @@ public class TextInput {
     public string description;
     public string name;
     public string link;
+
+    public override string ToString() {
+	return "TextInput('" + title + "', '" + description + "', '" +
+	    name + "', '" + link + "')";
+    }
 }
 
 public class Item {
@@ -52,6 +67,13 @@ public class Item {
     public string pubdate;
     public string source;
     public Image  image;
+
+    public override string ToString() {
+	return "Item('" + title + "', '" + link + "', '" + description +
+	    "', '" + author + "', '" + category + "', '" + comments +
+	    "', '" + enclosure + "', '" + guid + "', '" + pubdate +
+	    "', '" + source + "', '" + image + "')";
+    }
 }
 
 public class Channel {
@@ -84,6 +106,33 @@ public class Channel {
     public void AddItem(Item item) {
 	itemList.Add(item);
     }
+
+    public override string ToString() {
+	string s;
+	s = "Channel: '" + title + "'\n" +
+	    "\tlink: '" + link + "'\n" +
+	    "\tdescription: '" + description + "'\n" +
+	    "\tlanguage: '" + language + "'\n" +
+	    "\tcopyright: '" + copyright + "'\n" +
+	    "\tmanagingEditor: '" + managingEditor + "'\n" +
+	    "\twebMaster: '" + webMaster + "'\n" +
+	    "\tpubDate: '" + pubDate + "'\n" +
+	    "\tlastBuildDate: '" + lastBuildDate + "'\n" +
+	    "\tcategory: '" + category + "'\n" +
+	    "\tgenerator: '" + generator + "'\n" +
+	    "\tdocs: '" + docs + "'\n" +
+	    "\tcloud: '" + cloud + "'\n" +
+	    "\tttl: '" + ttl + "'\n" +
+	    "\timage: '" + image + "'\n" +
+	    "\trating: '" + rating + "'\n" +
+	    "\ttextInput: '" + textInput + "'\n" +
+	    "\tskipHours: '" + skipHours + "'\n" +
+	    "\tskipDays: '" + skipDays + "'\n";
+	foreach (Item i in itemList) {
+	    s = s + "\t" + i + "\n";
+	}
+	return s;
+    }
 }
 
 public class Rss {
@@ -95,5 +144,13 @@ public class Rss {
 
     public void AddChannel(Channel channel) {
 	channelList.Add(channel);
+    }
+
+    public override string ToString() {
+	string s = "";
+	foreach (Channel c in channelList) {
+	    s = s + c + "\n";
+	}
+	return s;
     }
 }
