@@ -111,7 +111,7 @@ Cloud<out Cloud cloud> = (. cloud = new Cloud(); .)
 	{ ATTR_DOMAIN              (. cloud.domain = t.val; .)
 	| ATTR_PORT                (. cloud.port = t.val; .)
 	| ATTR_PATH                (. cloud.path = t.val; .)
-	| ATTR_REGISTER_PROCEDURE  (. cloud.register_procedure = t.val; .)
+	| ATTR_REGISTER_PROCEDURE  (. cloud.registerProcedure = t.val; .)
 	| ATTR_PROTOCOL            (. cloud.protocol = t.val; .)
 	} END_CLOUD
 .

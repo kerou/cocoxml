@@ -8,6 +8,7 @@ public class RssMain {
 	    XmlParser parser = new XmlParser(scanner);
 
 	    parser.Parse();
+	    Console.WriteLine(parser.rss);
 	} catch (FatalError e) {
 	    Console.WriteLine("-- " + e.Message);
 	}
