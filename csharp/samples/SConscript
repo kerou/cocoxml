@@ -7,7 +7,7 @@ Import('env')
 Import('CocoXmlExe')
 Import('XmlScannerFrame', 'XmlParserFrame')
 
-env.CLIProgram('samples', ['Main.cs', 'XmlScanner.cs', 'XmlParser.cs'])
+env.CLIProgram('samples', ['Main.cs', 'RSSData.cs', 'XmlScanner.cs', 'XmlParser.cs'])
 env.Command(['XmlScanner.cs', 'XmlParser.cs'], [CocoXmlExe, 'rss.atg'],
             'mono ${SOURCES[0]} -frames ${SOURCES[0].srcdir} ${SOURCES[1]}')
 env.Depends('XmlScanner.cs', XmlScannerFrame)
