@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="Coco/R" default="distclean" basedir=".">
+<project name="CocoXml/R" default="distclean" basedir=".">
 	<target name="usage">
 		<echo message="Ant Targets:"/>
 		<echo message="    clean: Full clean up."/>
@@ -15,7 +15,7 @@
 	</target>
 	
 	<target name="build" depends="init">
-		<echo message="Building Coco/R..."/>
+		<echo message="Building CocoXml/R..."/>
 		<javac sourcepath="" srcdir="." destdir="." source="1.4" target="1.4">
 			<include name="*.java"/>
 			<compilerarg value="-Xlint"/>
@@ -23,12 +23,12 @@
 	</target>
 	
 	<target name="dist" depends="build">
-		<echo message="Generating Coco/R jar..."/>
+		<echo message="Generating CocoXml/R jar..."/>
 		<jar
-			destfile="Coco.jar"
+			destfile="CocoXml.jar"
 			basedir="."
-			includes="Coco/**/*.class"
-			manifest="Coco.manifest"
+			includes="CocoXml/**/*.class"
+			manifest="CocoXml.manifest"
 		/>
 	</target>
 	
@@ -36,28 +36,19 @@
 		<antcall target="cleantemps"/>
 	</target>	
 	
-	<target name="zip">
-		<echo message="Packing Coco/R..."/>
-		<zip
-			destfile="CocoSourcesJava.zip"
-			basedir="."
-			includes="*.atg *.frame *.bat *.java *.manifest *.xml"
-		/>
-	</target>
-	
 	<target name="self">
-		<java jar="Coco.jar" fork="true">
-			<arg line="-package Coco Coco.atg" />
+		<java jar="CocoXml.jar" fork="true">
+			<arg line="-package CocoXml CocoXml.atg" />
 		</java>
 	</target>
 
 	<target name="cleantemps">
-		<delete dir="Coco"/>
+		<delete dir="CocoXml"/>
 	</target>
 
 	<target name="clean">
 		<antcall target="cleantemps"/>
-		<delete file="Coco.jar"/>
+		<delete file="CocoXml.jar"/>
 	</target>
 
 	<target name="svn-diff">

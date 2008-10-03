@@ -28,10 +28,10 @@ Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------
  compile with:
-   javac Coco.Coco Coco.ATG -package Coco
+   javac Coco.Coco CocoXml.ATG -package CocoXml
 -------------------------------------------------------------------------*/
 
-COMPILER Coco
+COMPILER CocoXml
 
 	static final int id = 0;
 	static final int str = 1;
@@ -77,7 +77,7 @@ IGNORE cr + lf + tab
 
 PRODUCTIONS
 
-Coco                            (. Symbol sym; Graph g, g1, g2; String gramName; CharSet s; .)
+CocoXml                         (. Symbol sym; Graph g, g1, g2; String gramName; CharSet s; .)
 =
   [ Imports<out pgen.usingPos> ]
 
@@ -531,4 +531,4 @@ Imports<out Position pos>
   }                             (. pos = new Position(beg, end - beg + 1, 0); .)
 .
 
-END Coco.
+END CocoXml.

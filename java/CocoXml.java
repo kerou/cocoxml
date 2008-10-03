@@ -41,14 +41,14 @@ Coco/R itself) does not fall under the GNU General Public License.
   in the attributed grammar or as a command-line option
   -------------------------------------------------------------------------*/
 
-package Coco;
+package CocoXml;
 
 import java.io.File;
 
-public class Coco {
+public class CocoXml {
 
 	public static void main (String[] arg) {
-		System.out.println("Coco/R (Oct 1, 2008)");
+		System.out.println("CocoXml/R (Oct 1, 2008)");
 		String srcName = null, nsName = null, frameDir = null, ddtString = null, outDir = null;
 		int retVal = 1;
 		for (int i = 0; i < arg.length; i++) {
@@ -87,7 +87,7 @@ public class Coco {
 			}
 		} else {
 			System.out.println(
-				"Usage: Coco Grammar.ATG {Option}\n" +
+				"Usage: CocoXml Grammar.ATG {Option}\n" +
 				"Options:\n" +
 				"  -package <packageName>\n" +
 				"  -frames  <frameFilesDirectory>\n" +
@@ -109,4 +109,4 @@ public class Coco {
 		System.exit(retVal);
 	}
 
-} // end Coco
+} // end CocoXml
