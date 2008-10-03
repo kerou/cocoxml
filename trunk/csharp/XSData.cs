@@ -37,7 +37,7 @@ public enum Options {
     UNS_TEXT, UNS_CDATA, UNS_COMMENT, UNS_WHITESPACE, UNS_PROCESSING_INSTRUCTION,
     // For the nodes in Unknown tags.
     UT_TEXT, UT_CDATA, UT_COMMENT, UT_WHITESPACE, UT_PROCESSING_INSTRUCTION
-};
+}
 
 public class XmlLangDefinition {
     Tab                         tab;

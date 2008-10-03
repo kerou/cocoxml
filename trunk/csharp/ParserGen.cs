@@ -373,7 +373,7 @@ public class ParserGen {
 		}
 	}
 
-	public void WriteParser () {
+	public void WriteXmlParser () {
 		int oldPos = buffer.Pos;  // Pos is modified by CopySourcePart
 		symSet.Add(tab.allSyncSets);
 		string fr = Path.Combine(tab.srcDir, "XmlParser.frame");
