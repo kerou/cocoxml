@@ -67,7 +67,7 @@ public class CocoXml {
 
 				parser.trace = new Trace(srcDir);
 				parser.tab = new Tab(parser);
-				parser.dfa = new DFA(parser);
+				parser.xsdata = new XmlScannerData(parser);
 				parser.pgen = new ParserGen(parser);
 
 				parser.tab.srcName = srcName;
@@ -102,7 +102,7 @@ public class CocoXml {
 				"  P  print statistics\n" +
 				"  S  list symbol table\n" +
 				"  X  list cross reference table\n" +
-				"Scanner.frame and Parser.frame files needed in ATG directory\n" +
+				"XmlScanner.frame and XmlParser.frame files needed in ATG directory\n" +
 				"or in a directory specified in the -frames option.\n"
 			);
 		}
