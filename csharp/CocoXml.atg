@@ -60,7 +60,7 @@ CHARACTERS
 	hex       = "0123456789abcdef".
 
 TOKENS
-	ident     = letter { letter | digit | '_' }.
+	ident     = ( letter | '_' ) { letter | digit | '_' }.
 	number    = digit { digit }.
 	string    = '"' { stringCh | '\\' printable } '"'.
 	badString = '"' { stringCh | '\\' printable } (cr | lf).
@@ -141,7 +141,7 @@ CocoXml                         (. Symbol sym;
                                      if (tab.ddt[7]) tab.XRef();
                                      if (tab.GrammarOk()) {
                                        Console.Write("parser");
-                                       pgen.WriteParser();
+                                       pgen.WriteXmlParser();
                                        if (genScanner) {
                                          Console.Write(" + scanner");
                                          xsdata.WriteXmlScanner();
