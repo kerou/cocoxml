@@ -28,7 +28,7 @@ Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------
  compile with:
-   CocoXml CocoXml.atg -namespace at.jku.ssw.CocoXml
+   Coco CocoXml.atg -namespace at.jku.ssw.CocoXml
 -------------------------------------------------------------------------*/
 
 using System.IO;
