@@ -95,6 +95,7 @@ class XSHandler extends DefaultHandler {
 			     String QName, Attributes attrs)
 	throws SAXException
     {
+	String nsURI;
 	SAXRecord record = new SAXRecord();
 	record.typ = SAXRecordType.StartElement;
 	record.namespaceURI = namespaceURI;
@@ -103,8 +104,10 @@ class XSHandler extends DefaultHandler {
 	for (int idx = 0; idx < attrs.getLength(); ++idx) {
 	    record = new SAXRecord();
 	    record.typ = SAXRecordType.Attribute;
-	    record.namespaceURI = ''; // FIX ME! Calculate from attrs.getQName(idx);
+	    nsURI = attrs.getURI(idx);
+	    record.namespaceURI = (nsURI == '') ? namespaceURI : nsURI;
 	    record.localName = attrs.getLocalName(idx);
+	    record.value = attrs.getValue(idx);
 	    queue.add(record);
 	}
     }
@@ -121,8 +124,9 @@ class XSHandler extends DefaultHandler {
 
     public void characters(char[] ch, int start, int length) {
 	SAXRecord record = new SAXRecord();
-	record.typ = SAXRecordType.Text;
 	record.value = new String(ch, start, length);
+	record.typ = record.value.trim() == '' ?
+	    SAXRecordType.Text : SAXRecordType.Whitespace;
 	queue.add(record);
     }
 
