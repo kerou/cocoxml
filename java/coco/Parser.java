@@ -625,7 +625,7 @@ public class Parser {
 			s = Sym();
 			Symbol sym = tab.FindSym(s.name);
 			if (sym == null && s.kind == str)
-			  sym = (Symbol)tab.literals.get(s.name);
+			  sym = tab.literals.get(s.name);
 			boolean undef = sym == null;
 			if (undef) {
 			  if (s.kind == id)

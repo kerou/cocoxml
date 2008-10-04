@@ -288,7 +288,7 @@ public class Scanner {
 	int line;          // line number of current character
 	int oldEols;       // EOLs that appeared in a comment;
 	static final StartStates start; // maps initial token character to start state
-	static final Map literals;      // maps literal strings to literal kinds
+	static final Map<String, Integer> literals; // maps literal strings to literal kinds
 
 	Token tokens;      // list of tokens already peeked (first token is a dummy)
 	Token pt;          // current peek token
@@ -297,7 +297,7 @@ public class Scanner {
 	
 	static {
 		start = new StartStates();
-		literals = new HashMap();
+		literals = new HashMap<String, Integer>();
 		for (int i = 65; i <= 90; ++i) start.set(i, 1);
 		for (int i = 95; i <= 95; ++i) start.set(i, 1);
 		for (int i = 97; i <= 122; ++i) start.set(i, 1);
@@ -322,25 +322,25 @@ public class Scanner {
 		start.set(125, 27); 
 		start.set(59, 30); 
 		start.set(Buffer.EOF, -1);
-		literals.put("COMPILER", new Integer(6));
-		literals.put("IGNORECASE", new Integer(7));
-		literals.put("CHARACTERS", new Integer(8));
-		literals.put("TOKENS", new Integer(9));
-		literals.put("PRAGMAS", new Integer(10));
-		literals.put("COMMENTS", new Integer(11));
-		literals.put("FROM", new Integer(12));
-		literals.put("TO", new Integer(13));
-		literals.put("NESTED", new Integer(14));
-		literals.put("IGNORE", new Integer(15));
-		literals.put("PRODUCTIONS", new Integer(16));
-		literals.put("END", new Integer(19));
-		literals.put("ANY", new Integer(23));
-		literals.put("out", new Integer(26));
-		literals.put("WEAK", new Integer(34));
-		literals.put("SYNC", new Integer(39));
-		literals.put("IF", new Integer(40));
-		literals.put("CONTEXT", new Integer(41));
-		literals.put("import", new Integer(44));
+		literals.put("COMPILER", 6);
+		literals.put("IGNORECASE", 7);
+		literals.put("CHARACTERS", 8);
+		literals.put("TOKENS", 9);
+		literals.put("PRAGMAS", 10);
+		literals.put("COMMENTS", 11);
+		literals.put("FROM", 12);
+		literals.put("TO", 13);
+		literals.put("NESTED", 14);
+		literals.put("IGNORE", 15);
+		literals.put("PRODUCTIONS", 16);
+		literals.put("END", 19);
+		literals.put("ANY", 23);
+		literals.put("out", 26);
+		literals.put("WEAK", 34);
+		literals.put("SYNC", 39);
+		literals.put("IF", 40);
+		literals.put("CONTEXT", 41);
+		literals.put("import", 44);
 
 	}
 	
@@ -434,10 +434,7 @@ public class Scanner {
 	void CheckLiteral() {
 		String val = t.val;
 
-		Object kind = literals.get(val);
-		if (kind != null) {
-			t.kind = ((Integer) kind).intValue();
-		}
+		t.kind = literals.get(val);
 	}
 
 	Token NextToken() {

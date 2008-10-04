@@ -16,7 +16,7 @@
 	
 	<target name="build" depends="init">
 		<echo message="Building Coco/R..."/>
-		<javac sourcepath="" srcdir="." destdir="." source="1.4" target="1.4">
+		<javac sourcepath="" srcdir="." destdir="." source="5" target="5">
 			<include name="*.java"/>
 			<compilerarg value="-Xlint"/>
 		</javac>

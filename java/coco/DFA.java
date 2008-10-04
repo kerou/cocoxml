@@ -646,7 +646,7 @@ public class DFA {
       for (Action action = state.firstAction; action != null; action = action.next) {
         if (first) {trace.Write(" "); first = false;} else trace.Write("                   ");
         if (action.typ == Node.clas)
-          trace.Write(((CharClass)tab.classes.get(action.sym)).name);
+          trace.Write(tab.classes.get(action.sym).name);
         else trace.Write(Ch((char)action.sym), 3);
         for (Target targ = action.target; targ != null; targ = targ.next)
           trace.Write(Integer.toString(targ.state.nr), 3);
@@ -832,10 +832,10 @@ public class DFA {
   String SymName(Symbol sym) {
     if (Character.isLetter(sym.name.charAt(0))) { // real name value is stored in Tab.literals
       //foreach (DictionaryEntry e in Tab.literals)
-      java.util.Iterator iter = tab.literals.entrySet().iterator();
+      java.util.Iterator<Map.Entry<String, Symbol>> iter = tab.literals.entrySet().iterator();
       while (iter.hasNext()) {
-        Map.Entry me = (Map.Entry) iter.next();
-        if ((Symbol) me.getValue() == sym) return (String) me.getKey();
+	Map.Entry<String, Symbol> me = iter.next();
+        if (me.getValue() == sym) return me.getKey();
       }
     }
     return sym.name;
@@ -843,12 +843,12 @@ public class DFA {
 
   void GenLiterals () {
     for (int i = 0; i < tab.terminals.size(); i++) {
-      Symbol sym = (Symbol) tab.terminals.get(i);
+      Symbol sym = tab.terminals.get(i);
       if (sym.tokenKind == Symbol.litToken) {
         String name = SymName(sym);
         if (ignoreCase) name = name.toLowerCase();
         // sym.name stores literals with quotes, e.g. "\"Literal\"",
-        gen.println("\t\tliterals.put(" + name + ", new Integer(" + sym.n + "));");
+        gen.println("\t\tliterals.put(" + name + ", " + sym.n + ");");
       }
     }
   }

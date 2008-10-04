@@ -212,7 +212,7 @@ public class Tab {
 	public Symbol eofSy;               // end of file symbol
 	public Symbol noSym;               // used in case of an error
 	public BitSet allSyncSets;         // union of all synchronisation sets
-	public Hashtable literals;         // symbols that are used as literals
+        public Hashtable<String, Symbol> literals; // symbols that are used as literals
 
 	public String srcName;             // name of the atg file (including path)
 	public String srcDir;              // directory path of the atg file
@@ -233,16 +233,16 @@ public class Tab {
 		errors = parser.errors;
 		eofSy = NewSym(Node.t, "EOF", 0);
 		dummyNode = NewNode(Node.eps, null, 0);
-		literals = new Hashtable();
+		literals = new Hashtable<String, Symbol>();
 	}
 
 	//---------------------------------------------------------------------
 	//  Symbol list management
 	//---------------------------------------------------------------------
 
-	public ArrayList terminals = new ArrayList();
-	public ArrayList pragmas = new ArrayList();
-	public ArrayList nonterminals = new ArrayList();
+	public ArrayList<Symbol> terminals = new ArrayList<Symbol>();
+	public ArrayList<Symbol> pragmas = new ArrayList<Symbol>();
+	public ArrayList<Symbol> nonterminals = new ArrayList<Symbol>();
 
 	String[] tKind = {"fixedToken", "classToken", "litToken", "classLitToken"};
 
@@ -263,12 +263,12 @@ public class Tab {
 		Symbol s;
 		//foreach (Symbol s in terminals)
 		for (int i = 0; i < terminals.size(); i++) {
-			s = (Symbol)terminals.get(i);
+			s = terminals.get(i);
 			if (s.name.compareTo(name) == 0) return s;
 		}
 		//foreach (Symbol s in nonterminals)
 		for (int i = 0; i < nonterminals.size(); i++) {
-			s = (Symbol)nonterminals.get(i);
+			s = nonterminals.get(i);
 			if (s.name.compareTo(name) == 0) return s;
 		}
 		return null;
@@ -300,25 +300,25 @@ public class Tab {
 		trace.WriteLine(" nr name           typ  hasAt graph  del   line tokenKind");
 		//foreach (Symbol sym in Symbol.terminals)
 		for (int i = 0; i < terminals.size(); i++) {
-			PrintSym((Symbol)terminals.get(i));
+			PrintSym(terminals.get(i));
 		}
 		//foreach (Symbol sym in Symbol.pragmas)
 		for (int i = 0; i < pragmas.size(); i++) {
-			PrintSym((Symbol)pragmas.get(i));
+			PrintSym(pragmas.get(i));
 		}
 		//foreach (Symbol sym in Symbol.nonterminals)
 		for (int i = 0; i < nonterminals.size(); i++) {
-			PrintSym((Symbol)nonterminals.get(i));
+			PrintSym(nonterminals.get(i));
 		}
 		trace.WriteLine();
 		trace.WriteLine("Literal Tokens:");
 		trace.WriteLine("--------------");
-		java.util.Iterator iter = literals.entrySet().iterator();
-		Map.Entry me = null;
+		java.util.Iterator<Map.Entry<String, Symbol>> iter = literals.entrySet().iterator();
+		Map.Entry<String, Symbol> me = null;
 		//foreach (DictionaryEntry e in literals) {
 		while (iter.hasNext()) {
-			me = (Map.Entry)iter.next();
-			trace.WriteLine("_" + ((Symbol)me.getValue()).name + " = " + me.getKey() + ".");
+		        me = iter.next();
+			trace.WriteLine("_" + me.getValue().name + " = " + me.getKey() + ".");
 		}
 		trace.WriteLine();
 	}
@@ -327,7 +327,7 @@ public class Tab {
 		int col = indent;
 		//foreach (Symbol sym in Symbol.terminals) {
 		for (int i = 0; i < terminals.size(); i++) {
-			Symbol sym = (Symbol)terminals.get(i);
+			Symbol sym = terminals.get(i);
 			if (s.get(sym.n)) {
 				int len = sym.name.length();
 				if (col + len >= 80) {
@@ -346,7 +346,7 @@ public class Tab {
 	//  Syntax graph management
 	//---------------------------------------------------------------------
 
-	public ArrayList nodes = new ArrayList();
+	public ArrayList<Node> nodes = new ArrayList<Node>();
 	public String[] nTyp =
 	{"    ", "t   ", "pr  ", "nt  ", "clas", "chr ", "wt  ", "any ", "eps ",  /* AW 03-01-14 nTyp[0]: " " --> "    " */
 	"sync", "sem ", "alt ", "iter", "opt ", "rslv"};
@@ -423,7 +423,7 @@ public class Tab {
 	}
 
 	public void DeleteNodes() {
-		nodes = new ArrayList();
+		nodes = new ArrayList<Node>();
 		dummyNode = NewNode(Node.eps, null, 0);
 	}
 
@@ -498,14 +498,14 @@ public class Tab {
 		trace.WriteLine("----------------------------------------------------");
 		//foreach (Node p in nodes) {
 		for (int i = 0; i < nodes.size(); i++) {
-			Node p = (Node)nodes.get(i);
+			Node p = nodes.get(i);
 			trace.Write(Integer.toString(p.n), 4);
 			trace.Write(" " + nTyp[p.typ] + " ");
 			if (p.sym != null) {
 				trace.Write(Name(p.sym.name), 12);
 				trace.Write(" ");
 			} else if (p.typ == Node.clas) {
-				CharClass c = (CharClass)classes.get(p.val);
+				CharClass c = classes.get(p.val);
 				trace.Write(Name(c.name), 12);
 				trace.Write(" ");
 			} else trace.Write("             ");
@@ -549,7 +549,7 @@ public class Tab {
 	//  character class management
 	//---------------------------------------------------------------------
 
-	public ArrayList classes = new ArrayList();
+	public ArrayList<CharClass> classes = new ArrayList<CharClass>();
 	public int dummyName = 'A';
 
 	public CharClass NewCharClass(String name, CharSet s) {
@@ -563,7 +563,7 @@ public class Tab {
 	public CharClass FindCharClass(String name) {
 		//foreach (CharClass c in classes)
 		for (int i = 0; i < classes.size(); i++) {
-			CharClass c = (CharClass)classes.get(i);
+			CharClass c = classes.get(i);
 			if (c.name.compareTo(name) == 0) return c;
 		}
 		return null;
@@ -572,14 +572,14 @@ public class Tab {
 	public CharClass FindCharClass(CharSet s) {
 		//foreach (CharClass c in classes)
 		for (int i = 0; i < classes.size(); i++) {
-			CharClass c = (CharClass)classes.get(i);
+			CharClass c = classes.get(i);
 			if (s.Equals(c.set)) return c;
 		}
 		return null;
 	}
 
 	public CharSet CharClassSet(int i) {
-		return ((CharClass)classes.get(i)).set;
+		return classes.get(i).set;
 	}
 
 	//-------------------- character class printing -----------------------
@@ -599,7 +599,7 @@ public class Tab {
 	public void WriteCharClasses () {
 		//foreach (CharClass c in classes) {
 		for (int i = 0; i < classes.size(); i++) {
-			CharClass c = (CharClass)classes.get(i);
+			CharClass c = classes.get(i);
 			trace.Write(c.name + ": ", -10);
 			WriteCharSet(c.set);
 			trace.WriteLine();
@@ -660,13 +660,13 @@ public class Tab {
 		Symbol sym;
 		//foreach (Symbol sym in Symbol.nonterminals) {
 		for (int i = 0; i < nonterminals.size(); i++) {
-			sym = (Symbol)nonterminals.get(i);
+			sym = nonterminals.get(i);
 			sym.first = new BitSet(terminals.size());
 			sym.firstReady = false;
 		}
 		//foreach (Symbol sym in Symbol.nonterminals) {
 		for (int i = 0; i < nonterminals.size(); i++) {
-			sym = (Symbol)nonterminals.get(i);
+			sym = nonterminals.get(i);
 			sym.first = First(sym.graph);
 			sym.firstReady = true;
 		}
@@ -694,7 +694,7 @@ public class Tab {
 			visited.set(sym.n);
 			//foreach (Symbol s in Symbol.nonterminals) {
 			for (int i = 0; i < nonterminals.size(); i++) {
-				Symbol s = (Symbol)nonterminals.get(i);
+				Symbol s = nonterminals.get(i);
 				if (sym.nts.get(s.n)) {
 					Complete(s);
 					sym.follow.or(s.follow);
@@ -707,12 +707,12 @@ public class Tab {
 	void CompFollowSets() {
 		int nNonterminals = nonterminals.size();
 		int nTerminals = terminals.size();
-		Iterator iter;
+		Iterator<Symbol> iter;
 
 		// foreach (Symbol sym in Symbol.nonterminals) {
 		iter = nonterminals.iterator();
 		while (iter.hasNext()) {
-			Symbol sym = (Symbol) iter.next();
+			Symbol sym = iter.next();
 			sym.follow = new BitSet(nTerminals);
 			sym.nts = new BitSet(nNonterminals);
 		}
@@ -724,7 +724,7 @@ public class Tab {
 		iter = nonterminals.iterator();
 		while (iter.hasNext()) {
 			// get direct successors of nonterminals
-			curSy = (Symbol) iter.next();
+			curSy = iter.next();
 			CompFollow(curSy.graph);
 		}
 
@@ -732,7 +732,7 @@ public class Tab {
 		iter = nonterminals.iterator();
 		while (iter.hasNext()) {
 			// add indirect successors to followers
-			curSy = (Symbol) iter.next();
+			curSy = iter.next();
 			visited = new BitSet(nNonterminals);
 			Complete(curSy);
 		}
@@ -783,7 +783,7 @@ public class Tab {
 		Symbol sym;
 		//foreach (Symbol sym in Symbol.nonterminals)
 		for (int i = 0; i < nonterminals.size(); i++) {
-			sym = (Symbol)nonterminals.get(i);
+			sym = nonterminals.get(i);
 			FindAS(sym.graph);
 		}
 	}
@@ -816,13 +816,13 @@ public class Tab {
 		}
 	}
 
-void CompSyncSets() {
+        void CompSyncSets() {
 		allSyncSets = new BitSet(terminals.size());
 		allSyncSets.set(eofSy.n);
 		visited = new BitSet(nodes.size());
 		//foreach (Symbol sym in Symbol.nonterminals) {
 		for (int i = 0; i < nonterminals.size(); i++) {
-			curSy = (Symbol)nonterminals.get(i);
+			curSy = nonterminals.get(i);
 			CompSync(curSy.graph);
 		}
 	}
@@ -830,7 +830,7 @@ void CompSyncSets() {
 	public void SetupAnys() {
 		//foreach (Node p in Node.nodes)
 		for (int i = 0; i < nodes.size(); i++) {
-			Node p = (Node)nodes.get(i);
+			Node p = nodes.get(i);
 			if (p.typ == Node.any) {
 				p.set = new BitSet(terminals.size());
 				p.set.set(0, p.set.size());
@@ -846,7 +846,7 @@ void CompSyncSets() {
 			changed = false;
 			//foreach (Symbol sym in Symbol.nonterminals)
 			for (int i = 0; i < nonterminals.size(); i++) {
-				sym = (Symbol)nonterminals.get(i);
+				sym = nonterminals.get(i);
 				if (!sym.deletable && sym.graph != null && DelGraph(sym.graph)) {
 					sym.deletable = true; changed = true;
 				}
@@ -854,7 +854,7 @@ void CompSyncSets() {
 		} while (changed);
 		//foreach (Symbol sym in Symbol.nonterminals)
 		for (int i = 0; i < nonterminals.size(); i++) {
-			sym = (Symbol)nonterminals.get(i);
+			sym = nonterminals.get(i);
 			if (sym.deletable) errors.Warning("  " + sym.name + " deletable");
 		}
 	}
@@ -863,7 +863,7 @@ void CompSyncSets() {
 		int n = terminals.size();
 		//foreach (Symbol sym in Symbol.pragmas)
 		for (int i = 0; i < pragmas.size(); i++) {
-			Symbol sym = (Symbol)pragmas.get(i);
+			Symbol sym = pragmas.get(i);
 			sym.n = n++;
 		}
 	}
@@ -881,7 +881,7 @@ void CompSyncSets() {
 			Symbol sym;
 			//foreach (Symbol sym in Symbol.nonterminals) {
 			for (int i = 0; i < nonterminals.size(); i++) {
-				sym = (Symbol)nonterminals.get(i);
+				sym = nonterminals.get(i);
 				trace.WriteLine(sym.name);
 				trace.Write("first:   "); PrintSet(sym.first, 10);
 				trace.Write("follow:  "); PrintSet(sym.follow, 10);
@@ -894,7 +894,7 @@ void CompSyncSets() {
 			trace.WriteLine("-----------------");
 			//foreach (Node p in Node.nodes)
 			for (int i = 0; i < nodes.size(); i++) {
-				Node p = (Node)nodes.get(i);
+				Node p = nodes.get(i);
 				if (p.typ == Node.any || p.typ == Node.sync) {
 					trace.Write(Integer.toString(p.n), 4);
 					trace.Write(" ");
@@ -1005,7 +1005,7 @@ void CompSyncSets() {
 		}
 	}
 
-	void GetSingles(Node p, ArrayList singles) {
+	void GetSingles(Node p, ArrayList<Symbol> singles) {
 		if (p == null) return;  // end of graph
 		if (p.typ == Node.nt) {
 			if (p.up || DelGraph(p.next)) singles.add(p.sym);
@@ -1020,23 +1020,23 @@ void CompSyncSets() {
 
 	public boolean NoCircularProductions() {
 		boolean ok, changed, onLeftSide, onRightSide;
-		ArrayList list = new ArrayList();
+		ArrayList<CNode> list = new ArrayList<CNode>();
 		for (int i = 0; i < nonterminals.size(); i++) {
-			Symbol sym = (Symbol)nonterminals.get(i);
-			ArrayList singles = new ArrayList();
+			Symbol sym = nonterminals.get(i);
+			ArrayList<Symbol> singles = new ArrayList<Symbol>();
 			GetSingles(sym.graph, singles); // get nonterminals s such that sym-->s
 			for (int j = 0; j < singles.size(); j++) {
-				Symbol s = (Symbol)singles.get(j);
+				Symbol s = singles.get(j);
 				list.add(new CNode(sym, s));
 			}
 		}
 		do {
 			changed = false;
 			for (int i = 0; i < list.size(); i++) {
-				CNode n = (CNode)list.get(i);
+				CNode n = list.get(i);
 				onLeftSide = false; onRightSide = false;
 				for (int j = 0; j < list.size(); j++) {
-					CNode m = (CNode)list.get(j);
+					CNode m = list.get(j);
 					if (n.left == m.right) onRightSide = true;
 					if (n.right == m.left) onLeftSide = true;
 				}
@@ -1047,7 +1047,7 @@ void CompSyncSets() {
 		} while(changed);
 		ok = true;
 		for (int i = 0; i < list.size(); i++) {
-			CNode n = (CNode)list.get(i);
+			CNode n = list.get(i);
 			ok = false;
 			errors.SemErr("  " + n.left.name + " --> " + n.right.name);
 		}
@@ -1070,7 +1070,7 @@ void CompSyncSets() {
 
 	void CheckOverlap(BitSet s1, BitSet s2, int cond) {
 		for (int i = 0; i < terminals.size(); i++) {
-			Symbol sym = (Symbol) terminals.get(i);
+			Symbol sym = terminals.get(i);
 			if (s1.get(sym.n) && s2.get(sym.n)) LL1Error(cond, sym);
 		}
 	}
@@ -1107,7 +1107,7 @@ void CompSyncSets() {
 
 	public void CheckLL1() {
 		for (int i = 0; i < nonterminals.size(); i++) {
-			curSy = (Symbol)nonterminals.get(i);
+			curSy = nonterminals.get(i);
 			CheckAlts(curSy.graph);
 		}
 	}
@@ -1161,7 +1161,7 @@ void CompSyncSets() {
 	public void CheckResolvers() {
 		//foreach (Symbol sym in Symbol.nonterminals) {
 		for (int i = 0; i < nonterminals.size(); i++) {
-			curSy = (Symbol)nonterminals.get(i);
+			curSy = nonterminals.get(i);
 			CheckRes(curSy.graph, false);
 		}
 	}
@@ -1171,7 +1171,7 @@ void CompSyncSets() {
 	public boolean NtsComplete() {
 		boolean complete = true;
 		for (int i = 0; i < nonterminals.size(); i++) {
-			Symbol sym = (Symbol)nonterminals.get(i);
+			Symbol sym = nonterminals.get(i);
 			if (sym.graph == null) {
 				complete = false;
 				errors.SemErr("  No production for " + sym.name);
@@ -1202,7 +1202,7 @@ void CompSyncSets() {
 		visited.set(gramSy.n);
 		MarkReachedNts(gramSy.graph);
 		for (int i = 0; i < nonterminals.size(); i++) {
-			Symbol sym = (Symbol)nonterminals.get(i);
+			Symbol sym = nonterminals.get(i);
 			if (!visited.get(sym.n)) {
 				ok = false;
 				errors.Warning("  " + sym.name + " cannot be reached");
@@ -1231,14 +1231,14 @@ void CompSyncSets() {
 		do {
 			changed = false;
 			for (int i = 0; i < nonterminals.size(); i++) {
-				Symbol sym = (Symbol)nonterminals.get(i);
+				Symbol sym = nonterminals.get(i);
 				if (!mark.get(sym.n) && IsTerm(sym.graph, mark)) {
 					mark.set(sym.n); changed = true;
 				}
 			}
 		} while (changed);
 		for (int i = 0; i < nonterminals.size(); i++) {
-			Symbol sym = (Symbol)nonterminals.get(i);
+			Symbol sym = nonterminals.get(i);
 			if (!mark.get(sym.n)) {
 				ok = false;
 				errors.SemErr("  " + sym.name + " cannot be derived to terminals");
@@ -1252,23 +1252,23 @@ void CompSyncSets() {
 	//---------------------------------------------------------------------
 
 	public void XRef() {
-		TreeMap xref = new TreeMap();
+	        TreeMap<Symbol, ArrayList<Integer>> xref = new TreeMap<Symbol, ArrayList<Integer>>();
 		// collect lines where symbols have been defined
 		//foreach (Symbol sym in Symbol.nonterminals) {
 		for (int i = 0; i < nonterminals.size(); i++) {
-			Symbol sym = (Symbol)nonterminals.get(i);
-			ArrayList list = (ArrayList)xref.get(sym);
-			if (list == null) {list = new ArrayList(); xref.put(sym, list);}
-			list.add(new Integer(- sym.line));
+			Symbol sym = nonterminals.get(i);
+			ArrayList<Integer> list = xref.get(sym);
+			if (list == null) {list = new ArrayList<Integer>(); xref.put(sym, list);}
+			list.add(- sym.line);
 		}
 		// collect lines where symbols have been referenced
 		//foreach (Node n in Node.nodes) {
 		for (int i = 0; i < nodes.size(); i++) {
-			Node n = (Node)nodes.get(i);
+			Node n = nodes.get(i);
 			if (n.typ == Node.t || n.typ == Node.wt || n.typ == Node.nt) {
-				ArrayList list = (ArrayList)xref.get(n.sym);
-				if (list == null) {list = new ArrayList(); xref.put(n.sym, list);}
-				list.add(new Integer(n.line));
+				ArrayList<Integer> list = xref.get(n.sym);
+				if (list == null) {list = new ArrayList<Integer>(); xref.put(n.sym, list);}
+				list.add(n.line);
 			}
 		}
 		// print cross reference list
@@ -1276,16 +1276,16 @@ void CompSyncSets() {
 		trace.WriteLine("Cross reference list:");
 		trace.WriteLine("--------------------"); trace.WriteLine();
 		//foreach (Symbol sym in xref.Keys) {
-		java.util.Iterator iter = xref.keySet().iterator();
+		java.util.Iterator<Symbol> iter = xref.keySet().iterator();
 		while (iter.hasNext()) {
-			Symbol sym = (Symbol)iter.next();
+			Symbol sym = iter.next();
 			trace.Write("  ");
 			trace.Write(Name(sym.name), -12);
-			ArrayList list = (ArrayList)xref.get(sym);
+			ArrayList<Integer> list = xref.get(sym);
 			int col = 14;
 			//foreach (int line in list) {
 			for (int j = 0; j < list.size(); j++) {
-				Integer line = (Integer)list.get(j);
+				Integer line = list.get(j);
 				if (col + 5 > 80) {
 					trace.WriteLine();
 					for (col = 1; col <= 14; col++) trace.Write(" ");
