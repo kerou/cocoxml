@@ -137,7 +137,7 @@ class XmlScannerData {
 
     void OpenGen(boolean backUp) {
 	try {
-	    File f = new File(tab.outDir, "Scanner.java");
+	    File f = new File(tab.outDir, "XmlScanner.java");
 	    if (backUp && f.exists()) {
 		File old = new File(f.getPath() + ".old");
 		old.delete(); f.renameTo(old);
@@ -152,7 +152,7 @@ class XmlScannerData {
 	try {
 	    return fram.read();
 	} catch (java.io.IOException e) {
-	    throw new FatalError("Error reading Scanner.frame");
+	    throw new FatalError("Error reading XmlScanner.frame");
 	}
     }
 
@@ -204,17 +204,17 @@ class XmlScannerData {
 
     public void WriteXmlScanner() {
 	int i, j;
-	File fr = new File(tab.srcDir, "Scanner.frame");
+	File fr = new File(tab.srcDir, "XmlScanner.frame");
 	if (!fr.exists()) {
 	    if (tab.frameDir != null)
-		fr = new File(tab.frameDir.trim(), "Scanner.frame");
+		fr = new File(tab.frameDir.trim(), "XmlScanner.frame");
 	    if (!fr.exists())
-		throw new FatalError("Cannot find Scanner.frame");
+		throw new FatalError("Cannot find XmlScanner.frame");
 	}
 	try {
 	    fram = new BufferedReader(new FileReader(fr)); /* pdt */
 	} catch (FileNotFoundException e) {
-	    throw new FatalError("Cannot open Scanner.frame.");
+	    throw new FatalError("Cannot open XmlScanner.frame.");
 	}
 	OpenGen(true);
 	CopyFramePart("/*---- Begin ----*/");
