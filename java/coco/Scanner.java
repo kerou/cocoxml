@@ -434,7 +434,10 @@ public class Scanner {
 	void CheckLiteral() {
 		String val = t.val;
 
-		t.kind = literals.get(val);
+		try {
+		    t.kind = literals.get(val);
+		} catch (NullPointerException e) {
+		}
 	}
 
 	Token NextToken() {
