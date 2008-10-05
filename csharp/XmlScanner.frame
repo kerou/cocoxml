@@ -183,9 +183,9 @@ public class XmlScanner {
     int ProcessingInstruction2Kind(string PIName) {
 	tagStackEle curEle = tagStack.Peek();
 	// Should I always use 'XmlLangMap[""]' but not 'curEle.xldef' here?
-	return curEle.xldef.PInstructions.ContainsKey(PIName) ?
-	    curEle.xldef.PInstructions[PIName] :
-	    useKindVector[(int)Token.Options.UNKNOWN_PROCESSING_INSTRUCTION];
+	if (!curEle.xldef.PInstructions.ContainsKey(PIName))
+	    return useKindVector[(int)Token.Options.UNKNOWN_PROCESSING_INSTRUCTION];
+	return curEle.xldef.PInstructions[PIName];
     }
 
     int Others2Kind(XmlNodeType ntype) {

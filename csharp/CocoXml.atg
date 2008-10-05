@@ -173,9 +173,9 @@ XmlNamespaceDeclaration          (. string namespace_name;
 XmlLangDefinition<out XmlLangDefinition xldef>
 =  (. xldef = new XmlLangDefinition(tab, errors);  .)
   [ "OPTIONS" { OptionDecl<xldef> } ]
-  [ "PROCESSING_INSTRUCTIONS" { ProcessingInstruction<xldef> } ]
   [ "TAGS" { XmlTagDecl<xldef> } ]
   [ "ATTRS" { XmlAttrDecl<xldef> } ]
+  [ "PROCESSING_INSTRUCTIONS" { ProcessingInstruction<xldef> } ]
 .
 
 /*------------------------------------------------------------------------------------*/
@@ -183,15 +183,6 @@ XmlLangDefinition<out XmlLangDefinition xldef>
 OptionDecl<XmlLangDefinition xldef>
 =
   ident (. xldef.AddOption(t.val, t.line); .)
-.
-
-/*------------------------------------------------------------------------------------*/
-
-ProcessingInstruction<XmlLangDefinition xldef>   (. string tokenName; .)
-=
-  ident    (. tokenName = t.val; .)
-  "="
-  string   (. xldef.AddProcessingInstruction(t.val, tokenName, t.line); .)
 .
 
 /*------------------------------------------------------------------------------------*/
@@ -210,6 +201,15 @@ XmlAttrDecl<XmlLangDefinition xldef>  (. string tokenName; .)
   ident    (. tokenName = t.val; .)
   "="
   string   (. xldef.AddAttr(t.val, tokenName, t.line); .)
+.
+
+/*------------------------------------------------------------------------------------*/
+
+ProcessingInstruction<XmlLangDefinition xldef>   (. string tokenName; .)
+=
+  ident    (. tokenName = t.val; .)
+  "="
+  string   (. xldef.AddProcessingInstruction(t.val, tokenName, t.line); .)
 .
 
 /*------------------------------------------------------------------------------------*/
