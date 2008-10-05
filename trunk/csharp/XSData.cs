@@ -31,12 +31,13 @@ public enum Options {
     UNKNOWN_NAMESPACE, END_UNKNOWN_NAMESPACE,
     UNKNOWN_TAG, END_UNKNOWN_TAG,
     UNKNOWN_ATTR_NAMESPACE, UNKNOWN_ATTR,
+    UNKNOWN_PROCESSING_INSTRUCTION,
     // For the nodes in common status.
-    TEXT, CDATA, COMMENT, WHITESPACE, PROCESSING_INSTRUCTION,
+    TEXT, CDATA, COMMENT, WHITESPACE,
     // For the nodes in Unknown namespaces.
-    UNS_TEXT, UNS_CDATA, UNS_COMMENT, UNS_WHITESPACE, UNS_PROCESSING_INSTRUCTION,
+    UNS_TEXT, UNS_CDATA, UNS_COMMENT, UNS_WHITESPACE,
     // For the nodes in Unknown tags.
-    UT_TEXT, UT_CDATA, UT_COMMENT, UT_WHITESPACE, UT_PROCESSING_INSTRUCTION
+    UT_TEXT, UT_CDATA, UT_COMMENT, UT_WHITESPACE
 }
 
 public class XmlLangDefinition {
@@ -45,6 +46,7 @@ public class XmlLangDefinition {
     bool[]                      useVector;
     Dictionary<string, TagInfo> Tags;
     Dictionary<string, int>     Attrs;
+    Dictionary<string, int>     PInstructions;
 
     public XmlLangDefinition(Tab tab, Errors errors) {
 	this.tab = tab;
@@ -52,6 +54,7 @@ public class XmlLangDefinition {
 	useVector = new bool[Enum.GetValues(typeof(Options)).Length];
 	Tags = new Dictionary<string, TagInfo>();
 	Attrs = new Dictionary<string, int>();
+	PInstructions = new Dictionary<string, int>();
     }
 
     public void AddOption(string optname, int line) {
@@ -92,6 +95,15 @@ public class XmlLangDefinition {
 	Attrs.Add(attrname, value);
     }
 
+    public void AddProcessingInstruction(string pinstruction,
+					 string tokenname, int line) {
+	int value = addUniqueToken(tokenname, "Processing instruction", line);
+
+	if (PInstructions.ContainsKey(pinstruction))
+	    errors.SemErr("Processing Instruction '" + pinstruction + "' declared twice");
+	PInstructions.Add(pinstruction, value);
+    }
+
     public void Write(StreamWriter gen) {
 	for (int option = 0; option < useVector.Length; ++option)
 	    if (useVector[option])
@@ -102,6 +114,9 @@ public class XmlLangDefinition {
 	foreach (KeyValuePair<string, int> entry in Attrs)
 	    gen.WriteLine("\tcurXLDef.AddAttr({0}, {1});", entry.Key,
 			  entry.Value);
+	foreach (KeyValuePair<string, int> entry in PInstructions)
+	    gen.WriteLine("\tcurXLDef.AddProcessInstruction({0}, {1});",
+			  entry.Key, entry.Value);
     }
 }
 
