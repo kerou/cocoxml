@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<project name="Rss" default="build" basedir=".">
+  <target name="build">
+    <echo message="Building Rss..."/>
+    <javac sourcepath="." srcdir="." destdir="." source="5" target="5">
+      <include name="*.java"/>
+    </javac>
+  </target>
+</project>

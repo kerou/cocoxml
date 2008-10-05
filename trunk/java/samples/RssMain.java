@@ -17,7 +17,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 -------------------------------------------------------------------------*/
 
 public class RssMain {
-    public static void ParseRSS(string filename) {
+    static void ParseRSS(String filename) {
 	try {
 	    XmlScanner scanner = new XmlScanner(filename);
 	    XmlParser parser = new XmlParser(scanner);
@@ -25,13 +25,12 @@ public class RssMain {
 	    parser.Parse();
 	    System.out.println(parser.rss);
 	} catch (FatalError e) {
-	    System.out.println("-- " + e.Message);
+	    System.out.println("-- " + e);
 	}
     }
 
-    public static int main(String[] args) {
+    public static void main(String[] args) {
 	for (int idx = 0; idx < args.length; ++idx)
 	    ParseRSS(args[idx]);
-	return 0;
     }
 }
