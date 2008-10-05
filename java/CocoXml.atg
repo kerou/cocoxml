@@ -170,6 +170,7 @@ XmlLangDefinition<out XmlLangDefinition xldef>
   [ "OPTIONS" { OptionDecl<xldef> } ]
   [ "TAGS" { XmlTagDecl<xldef> } ]
   [ "ATTRS" { XmlAttrDecl<xldef> } ]
+  [ "PROCESSING_INSTRUCTIONS" { ProcessingInstruction<xldef> } ]
 .
 
 /*------------------------------------------------------------------------------------*/
@@ -195,6 +196,15 @@ XmlAttrDecl<XmlLangDefinition xldef>  (. String tokenName; .)
   ident  (. tokenName = t.val; .)
   "="
   string (. xldef.AddAttr(t.val, tokenName, t.line); .)
+.
+
+/*------------------------------------------------------------------------------------*/
+
+ProcessingInstruction<XmlLangDefinition xldef>  (. String tokenName; .)
+=
+  ident  (. tokenName = t.val; .)
+  "="
+  string (. xldef.AddProcessingInstruction(t.val, tokenName, t.line); .)
 .
 
 /*------------------------------------------------------------------------------------*/

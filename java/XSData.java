@@ -39,12 +39,13 @@ enum Options {
     UNKNOWN_NAMESPACE, END_UNKNOWN_NAMESPACE,
     UNKNOWN_TAG, END_UNKNOWN_TAG,
     UNKNOWN_ATTR_NAMESPACE, UNKNOWN_ATTR,
+    UNKNOWN_PROCESSING_INSTRUCTION,
     // For the nodes in common status.
-    TEXT, CDATA, COMMENT, WHITESPACE, PROCESSING_INSTRUCTION,
+    TEXT, CDATA, COMMENT, WHITESPACE,
     // For the nodes in Unknown namespaces.
-    UNS_TEXT, UNS_CDATA, UNS_COMMENT, UNS_WHITESPACE, UNS_PROCESSING_INSTRUCTION,
+    UNS_TEXT, UNS_CDATA, UNS_COMMENT, UNS_WHITESPACE,
     // For the nodes in Unknown tags.
-    UT_TEXT, UT_CDATA, UT_COMMENT, UT_WHITESPACE, UT_PROCESSING_INSTRUCTION
+    UT_TEXT, UT_CDATA, UT_COMMENT, UT_WHITESPACE
 }
 
 class XmlLangDefinition {
@@ -53,6 +54,7 @@ class XmlLangDefinition {
     boolean[]                  useVector;
     Hashtable<String, TagInfo> Tags;
     Hashtable<String, Integer> Attrs;
+    Hashtable<String, Integer> PInstructions;
 
     public XmlLangDefinition(Tab tab, Errors errors) {
 	this.tab = tab;
@@ -100,15 +102,25 @@ class XmlLangDefinition {
 	Attrs.put(attrName, value);
     }
 
+    public void AddProcessingInstruction(String PIName, String tokenName, int line) {
+	int value = addUniqueToken(tokenName, "Processing instruction", line);
+	if (Attrs.containsKey(PIName))
+	    errors.SemErr("Processing instruction '" + PIName + "' declared twice");
+	PInstructions.put(PIName, value);
+    }
+
     public void Write(PrintWriter gen) {
 	for (int option = 0; option < useVector.length; ++option)
 	    if (useVector[option])
 		gen.printf("\tcurXLDef.useVector[%d] = true;\n", option);
 	for (Map.Entry<String, TagInfo> me : Tags.entrySet())
-	    gen.printf("\tcurXLDef.AddTag(%s, %d, %d);\n", me.getKey(),
+	    gen.printf("\tcurXLDef.AddTag(\"%s\", %d, %d);\n", me.getKey(),
 		       me.getValue().startToken, me.getValue().endToken);
 	for (Map.Entry<String, Integer> me : Attrs.entrySet())
-	    gen.printf("\tcurXLDef.AddAttr(%s, %d);\n",
+	    gen.printf("\tcurXLDef.AddAttr(\"%s\", %d);\n",
+		       me.getKey(), me.getValue());
+	for (Map.Entry<String, Integer> me : PInstructions.entrySet())
+	    gen.printf("\tcurXLDef.AddProcessingInstruction(\"%s\", %d);\n",
 		       me.getKey(), me.getValue());
     }
 }
