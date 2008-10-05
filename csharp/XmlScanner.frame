@@ -48,11 +48,13 @@ public class XmlLangDefinition {
     public bool[]                      useVector;
     public Dictionary<string, TagInfo> Tags;
     public Dictionary<string, int>     Attrs;
+    public Dictionary<string, int>     PInstructions;
 
     public XmlLangDefinition() {
 	useVector = new bool[Token.numOptions];
 	Tags = new Dictionary<string, TagInfo>();
 	Attrs = new Dictionary<string, int>();
+	PInstructions = new Dictionary<string, int>();
     }
 
     public void AddTag(string Name, int StartToken, int EndToken) {
@@ -64,6 +66,10 @@ public class XmlLangDefinition {
 
     public void AddAttr(string Name, int AttrToken) {
 	Attrs.Add(Name, AttrToken);
+    }
+
+    public void AddProcessingInstruction(string PIName, int PIToken) {
+	PInstructions.Add(PIName, PIToken);
     }
 }
 
@@ -174,6 +180,14 @@ public class XmlScanner {
 	return xldef.Attrs[AttrName];
     }
 
+    int ProcessingInstruction2Kind(string PIName) {
+	tagStackEle curEle = tagStack.Peek();
+	// Should I always use 'XmlLangMap[""]' but not 'curEle.xldef' here?
+	return curEle.xldef.PInstructions.ContainsKey(PIName) ?
+	    curEle.xldef.PInstructions[PIName] :
+	    useKindVector[(int)Token.Options.UNKNOWN_PROCESSING_INSTRUCTION];
+    }
+
     int Others2Kind(XmlNodeType ntype) {
 	Token.Options opt;
 	tagStackEle curEle = tagStack.Peek();
@@ -198,11 +212,6 @@ public class XmlScanner {
 	    if (curEle.unknownNamespace) opt = Token.Options.UNS_COMMENT;
 	    else if (curEle.unknownTag) opt = Token.Options.UT_COMMENT;
 	    else opt = Token.Options.COMMENT;
-	    break;
-	case XmlNodeType.ProcessingInstruction:
-	    if (curEle.unknownNamespace) opt = Token.Options.UNS_PROCESSING_INSTRUCTION;
-	    else if (curEle.unknownTag) opt = Token.Options.UT_PROCESSING_INSTRUCTION;
-	    else opt = Token.Options.PROCESSING_INSTRUCTION;
 	    break;
 	default:
 	    return -1;
@@ -235,6 +244,9 @@ public class XmlScanner {
 		case XmlNodeType.EndElement:
 		    kind = EndElement2Kind(xmlreader.NamespaceURI,
 					   xmlreader.Name);
+		    break;
+		case XmlNodeType.ProcessingInstruction:
+		    kind = ProcessingInstruction2Kind(xmlreader.Name);
 		    break;
 		default:
 		    kind = Others2Kind(xmlreader.NodeType);
