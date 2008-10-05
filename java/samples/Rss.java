@@ -25,7 +25,7 @@ class Cloud {
     public String registerProcedure;
     public String protocol;
 
-    public override String toString() {
+    public String toString() {
 	return "Cloud('" + domain + "', '" + port + "', '" + path + "', '" +
 	    registerProcedure + "', '" + protocol + "')";
     }
@@ -38,7 +38,7 @@ class Image {
     public String width;
     public String height;
 
-    public override String toString() {
+    public String toString() {
 	return "Image('" + url + "', '" + title + "', '" + link + "', '" +
 	    width + "', '" + height + "')";
     }
@@ -50,7 +50,7 @@ class TextInput {
     public String name;
     public String link;
 
-    public override String toString() {
+    public String toString() {
 	return "TextInput('" + title + "', '" + description + "', '" +
 	    name + "', '" + link + "')";
     }
@@ -69,7 +69,7 @@ class Item {
     public String source;
     public Image  image;
 
-    public override String toString() {
+    public String toString() {
 	return "Item('" + title + "', '" + link + "', '" + description +
 	    "', '" + author + "', '" + category + "', '" + comments +
 	    "', '" + enclosure + "', '" + guid + "', '" + pubdate +
@@ -108,8 +108,8 @@ class Channel {
 	itemList.add(item);
     }
 
-    public override String toString() {
-	string s;
+    public String toString() {
+	String s;
 	s = "Channel: '" + title + "'\n" +
 	    "\tlink: '" + link + "'\n" +
 	    "\tdescription: '" + description + "'\n" +
@@ -147,8 +147,8 @@ public class Rss {
 	channelList.add(channel);
     }
 
-    public override String toString() {
-	string s = "";
+    public String toString() {
+	String s = "";
 	for (Channel c: channelList) {
 	    s = s + c + "\n";
 	}
