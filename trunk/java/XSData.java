@@ -62,6 +62,7 @@ class XmlLangDefinition {
 	useVector = new boolean[Options.values().length];
 	Tags = new Hashtable<String, TagInfo>();
 	Attrs = new Hashtable<String, Integer>();
+	PInstructions = new Hashtable<String, Integer>();
     }
 
     public void AddOption(String optName, int line) {
@@ -110,17 +111,18 @@ class XmlLangDefinition {
     }
 
     public void Write(PrintWriter gen) {
-	for (int option = 0; option < useVector.length; ++option)
-	    if (useVector[option])
-		gen.printf("\tcurXLDef.useVector[%d] = true;\n", option);
+	for (Options opt: Options.values())
+	    if (useVector[opt.ordinal()])
+		gen.printf("\tcurXLDef.useVector[%d] = true; // %s\n",
+			   opt.ordinal(), opt.name());
 	for (Map.Entry<String, TagInfo> me : Tags.entrySet())
-	    gen.printf("\tcurXLDef.AddTag(\"%s\", %d, %d);\n", me.getKey(),
+	    gen.printf("\tcurXLDef.AddTag(%s, %d, %d);\n", me.getKey(),
 		       me.getValue().startToken, me.getValue().endToken);
 	for (Map.Entry<String, Integer> me : Attrs.entrySet())
-	    gen.printf("\tcurXLDef.AddAttr(\"%s\", %d);\n",
+	    gen.printf("\tcurXLDef.AddAttr(%s, %d);\n",
 		       me.getKey(), me.getValue());
 	for (Map.Entry<String, Integer> me : PInstructions.entrySet())
-	    gen.printf("\tcurXLDef.AddProcessingInstruction(\"%s\", %d);\n",
+	    gen.printf("\tcurXLDef.AddProcessingInstruction(%s, %d);\n",
 		       me.getKey(), me.getValue());
     }
 }
@@ -192,16 +194,17 @@ class XmlScannerData {
 	for (Options opt: Options.values())
 	    gen.printf("        %s,\n", opt.name());
 	gen.println("    };");
-	gen.printf("    public final int numOptions = %d;\n",
+	gen.printf("    public static final int numOptions = %d;\n",
 		   Options.values().length);
     }
 
     void WriteDeclarations() {
 	Symbol sym;
-	gen.println("    static readonly int[] useKindVector = new int[] {");
+	gen.println("    static final int[] useKindVector = {");
 	for (Options opt: Options.values()) {
 	    sym = tab.FindSym(opt.name());
-	    gen.printf("        %d,\n", sym == null ? -1 : sym.n);
+	    gen.printf("        %d, // %s\n",
+		       sym == null ? -1 : sym.n, opt.name());
 	}
 	gen.println("    };");
     }
@@ -210,7 +213,7 @@ class XmlScannerData {
 	for (Map.Entry<String, XmlLangDefinition> me: XmlLangMap.entrySet()) {
 	    gen.println("\tcurXLDef = new XmlLangDefinition();");
 	    me.getValue().Write(gen);
-	    gen.printf("\tXmlLangMap.Add(\"%s\", curXLDef);\n", me.getKey());
+	    gen.printf("\tXmlLangMap.put(\"%s\", curXLDef);\n", me.getKey());
 	}
     }
 

@@ -79,7 +79,7 @@ Rss = (. Channel channel; rss = new Rss(); .)
 Channel<out Channel channel> = (. channel = new Channel(); .)
 	CHANNEL { ChannelProperty<channel> } END_CHANNEL.
 
-ChannelProperty<Channel channel>  (. string value;
+ChannelProperty<Channel channel>  (. String value;
 			             Cloud cloud;
 				     Image image;
 				     TextInput textInput;
@@ -119,7 +119,7 @@ Cloud<out Cloud cloud> = (. cloud = new Cloud(); .)
 Image<out Image image> = (. image = new Image(); .)
 	IMAGE { ImageProperty<image> } END_IMAGE.
 
-ImageProperty<Image image>  (. string value; .) =
+ImageProperty<Image image>  (. String value; .) =
 	Url<out value>      (. image.url = value; .)
 	| Title<out value>  (. image.title = value; .)
 	| Link<out value>   (. image.link = value; .)
@@ -130,7 +130,7 @@ ImageProperty<Image image>  (. string value; .) =
 TextInput<out TextInput textInput> = (. textInput = new TextInput(); .)
 	TEXT_INPUT { TextInputProperty<textInput> } END_TEXT_INPUT.
 
-TextInputProperty<TextInput textInput> (. string value; .) =
+TextInputProperty<TextInput textInput> (. String value; .) =
 	Title<out value>         (. textInput.title = value; .)
 	| Description<out value> (. textInput.description = value; .)
 	| Name<out value>        (. textInput.name = value; .)
@@ -140,7 +140,7 @@ TextInputProperty<TextInput textInput> (. string value; .) =
 Item<out Item item> = (. item = new Item(); .)
 	ITEM { ItemProperty<item> } END_ITEM.
 
-ItemProperty<Item item> (. string value; Image image; .) =
+ItemProperty<Item item> (. String value; Image image; .) =
 	Title<out value>          (. item.title = value; .)
 	| Link<out value>         (. item.link = value; .)
 	| Description<out value>  (. item.description = value; .)
@@ -155,54 +155,54 @@ ItemProperty<Item item> (. string value; Image image; .) =
 .
 
 
-Title<out string value> = TITLE TEXT (. value = t.val; .) END_TITLE.
+Title<out String value> = TITLE TEXT (. value = t.val; .) END_TITLE.
 
-Link<out string value> = LINK TEXT (. value = t.val; .) END_LINK .
+Link<out String value> = LINK TEXT (. value = t.val; .) END_LINK .
 
-Description<out string value> = DESCRIPTION TEXT (. value = t.val; .) END_DESCRIPTION .
+Description<out String value> = DESCRIPTION TEXT (. value = t.val; .) END_DESCRIPTION .
 
-Language<out string value> = LANGUAGE TEXT (. value = t.val; .) END_LANGUAGE.
+Language<out String value> = LANGUAGE TEXT (. value = t.val; .) END_LANGUAGE.
 
-Copyright<out string value> = COPYRIGHT TEXT (. value = t.val; .) END_COPYRIGHT.
+Copyright<out String value> = COPYRIGHT TEXT (. value = t.val; .) END_COPYRIGHT.
 
-ManagingEditor<out string value> = MANAGING_EDITOR TEXT (. value = t.val; .) END_MANAGING_EDITOR.
+ManagingEditor<out String value> = MANAGING_EDITOR TEXT (. value = t.val; .) END_MANAGING_EDITOR.
 
-WebMaster<out string value> = WEB_MASTER TEXT (. value = t.val; .) END_WEB_MASTER.
+WebMaster<out String value> = WEB_MASTER TEXT (. value = t.val; .) END_WEB_MASTER.
 
-PubDate<out string value> = PUB_DATE TEXT (. value = t.val; .) END_PUB_DATE.
+PubDate<out String value> = PUB_DATE TEXT (. value = t.val; .) END_PUB_DATE.
 
-LastBuildDate<out string value> = LAST_BUILD_DATE TEXT (. value = t.val; .) END_LAST_BUILD_DATE.
+LastBuildDate<out String value> = LAST_BUILD_DATE TEXT (. value = t.val; .) END_LAST_BUILD_DATE.
 
-Category<out string value> = CATEGORY TEXT (. value = t.val; .) END_CATEGORY.
+Category<out String value> = CATEGORY TEXT (. value = t.val; .) END_CATEGORY.
 
-Generator<out string value> = GENERATOR TEXT (. value = t.val; .) END_GENERATOR.
+Generator<out String value> = GENERATOR TEXT (. value = t.val; .) END_GENERATOR.
 
-Docs<out string value> = DOCS TEXT (. value = t.val; .) END_DOCS.
+Docs<out String value> = DOCS TEXT (. value = t.val; .) END_DOCS.
 
-Ttl<out string value> = TTL TEXT (. value = t.val; .) END_TTL.
+Ttl<out String value> = TTL TEXT (. value = t.val; .) END_TTL.
 
-Url<out string value> = URL TEXT (. value = t.val; .) END_URL.
+Url<out String value> = URL TEXT (. value = t.val; .) END_URL.
 
-Width<out string value> = WIDTH TEXT (. value = t.val; .) END_WIDTH.
+Width<out String value> = WIDTH TEXT (. value = t.val; .) END_WIDTH.
 
-Height<out string value> = HEIGHT TEXT (. value = t.val; .) END_HEIGHT.
+Height<out String value> = HEIGHT TEXT (. value = t.val; .) END_HEIGHT.
 
-Rating<out string value> = RATING TEXT (. value = t.val; .) END_RATING.
+Rating<out String value> = RATING TEXT (. value = t.val; .) END_RATING.
 
-Name<out string value> = NAME TEXT (. value = t.val; .) END_NAME.
+Name<out String value> = NAME TEXT (. value = t.val; .) END_NAME.
 
-SkipHours<out string value> = SKIP_HOURS TEXT (. value = t.val; .) END_SKIP_HOURS.
+SkipHours<out String value> = SKIP_HOURS TEXT (. value = t.val; .) END_SKIP_HOURS.
 
-SkipDays<out string value> = SKIP_DAYS TEXT (. value = t.val; .) END_SKIP_DAYS.
+SkipDays<out String value> = SKIP_DAYS TEXT (. value = t.val; .) END_SKIP_DAYS.
 
-Author<out string value> = AUTHOR TEXT (. value = t.val; .) END_AUTHOR.
+Author<out String value> = AUTHOR TEXT (. value = t.val; .) END_AUTHOR.
 
-Comments<out string value> = COMMENTS TEXT (. value = t.val; .) END_COMMENTS.
+Comments<out String value> = COMMENTS TEXT (. value = t.val; .) END_COMMENTS.
 
-Enclosure<out string value> = ENCLOSURE TEXT (. value = t.val; .) END_ENCLOSURE.
+Enclosure<out String value> = ENCLOSURE TEXT (. value = t.val; .) END_ENCLOSURE.
 
-Guid<out string value> = GUID TEXT (. value = t.val; .) END_GUID.
+Guid<out String value> = GUID TEXT (. value = t.val; .) END_GUID.
 
-Source<out string value> = SOURCE TEXT (. value = t.val; .) END_SOURCE.
+Source<out String value> = SOURCE TEXT (. value = t.val; .) END_SOURCE.
 
 END Rss.
