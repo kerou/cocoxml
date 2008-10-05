@@ -155,54 +155,59 @@ ItemProperty<Item item> (. String value; Image image; .) =
 .
 
 
-Title<out String value> = TITLE TEXT (. value = t.val; .) END_TITLE.
+Title<out String value> = TITLE text<out value> END_TITLE.
 
-Link<out String value> = LINK TEXT (. value = t.val; .) END_LINK .
+Link<out String value> = LINK text<out value> END_LINK .
 
-Description<out String value> = DESCRIPTION TEXT (. value = t.val; .) END_DESCRIPTION .
+Description<out String value> = DESCRIPTION text<out value> END_DESCRIPTION .
 
-Language<out String value> = LANGUAGE TEXT (. value = t.val; .) END_LANGUAGE.
+Language<out String value> = LANGUAGE text<out value> END_LANGUAGE.
 
-Copyright<out String value> = COPYRIGHT TEXT (. value = t.val; .) END_COPYRIGHT.
+Copyright<out String value> = COPYRIGHT text<out value> END_COPYRIGHT.
 
-ManagingEditor<out String value> = MANAGING_EDITOR TEXT (. value = t.val; .) END_MANAGING_EDITOR.
+ManagingEditor<out String value> = MANAGING_EDITOR text<out value> END_MANAGING_EDITOR.
 
-WebMaster<out String value> = WEB_MASTER TEXT (. value = t.val; .) END_WEB_MASTER.
+WebMaster<out String value> = WEB_MASTER text<out value> END_WEB_MASTER.
 
-PubDate<out String value> = PUB_DATE TEXT (. value = t.val; .) END_PUB_DATE.
+PubDate<out String value> = PUB_DATE text<out value> END_PUB_DATE.
 
-LastBuildDate<out String value> = LAST_BUILD_DATE TEXT (. value = t.val; .) END_LAST_BUILD_DATE.
+LastBuildDate<out String value> = LAST_BUILD_DATE text<out value> END_LAST_BUILD_DATE.
 
-Category<out String value> = CATEGORY TEXT (. value = t.val; .) END_CATEGORY.
+Category<out String value> = CATEGORY text<out value> END_CATEGORY.
 
-Generator<out String value> = GENERATOR TEXT (. value = t.val; .) END_GENERATOR.
+Generator<out String value> = GENERATOR text<out value> END_GENERATOR.
 
-Docs<out String value> = DOCS TEXT (. value = t.val; .) END_DOCS.
+Docs<out String value> = DOCS text<out value> END_DOCS.
 
-Ttl<out String value> = TTL TEXT (. value = t.val; .) END_TTL.
+Ttl<out String value> = TTL text<out value> END_TTL.
 
-Url<out String value> = URL TEXT (. value = t.val; .) END_URL.
+Url<out String value> = URL text<out value> END_URL.
 
-Width<out String value> = WIDTH TEXT (. value = t.val; .) END_WIDTH.
+Width<out String value> = WIDTH text<out value> END_WIDTH.
 
-Height<out String value> = HEIGHT TEXT (. value = t.val; .) END_HEIGHT.
+Height<out String value> = HEIGHT text<out value> END_HEIGHT.
 
-Rating<out String value> = RATING TEXT (. value = t.val; .) END_RATING.
+Rating<out String value> = RATING text<out value> END_RATING.
 
-Name<out String value> = NAME TEXT (. value = t.val; .) END_NAME.
+Name<out String value> = NAME text<out value> END_NAME.
 
-SkipHours<out String value> = SKIP_HOURS TEXT (. value = t.val; .) END_SKIP_HOURS.
+SkipHours<out String value> = SKIP_HOURS text<out value> END_SKIP_HOURS.
 
-SkipDays<out String value> = SKIP_DAYS TEXT (. value = t.val; .) END_SKIP_DAYS.
+SkipDays<out String value> = SKIP_DAYS text<out value> END_SKIP_DAYS.
 
-Author<out String value> = AUTHOR TEXT (. value = t.val; .) END_AUTHOR.
+Author<out String value> = AUTHOR text<out value> END_AUTHOR.
 
-Comments<out String value> = COMMENTS TEXT (. value = t.val; .) END_COMMENTS.
+Comments<out String value> = COMMENTS text<out value> END_COMMENTS.
 
-Enclosure<out String value> = ENCLOSURE TEXT (. value = t.val; .) END_ENCLOSURE.
+Enclosure<out String value> = ENCLOSURE text<out value> END_ENCLOSURE.
 
-Guid<out String value> = GUID TEXT (. value = t.val; .) END_GUID.
+Guid<out String value> = GUID text<out value> END_GUID.
 
-Source<out String value> = SOURCE TEXT (. value = t.val; .) END_SOURCE.
+Source<out String value> = SOURCE text<out value> END_SOURCE.
+
+text<out String value> =
+  TEXT   (. value = t.val; .)
+  { TEXT (. value = value + t.val; .) }
+.
 
 END Rss.
