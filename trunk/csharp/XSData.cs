@@ -107,7 +107,8 @@ public class XmlLangDefinition {
     public void Write(StreamWriter gen) {
 	for (int option = 0; option < useVector.Length; ++option)
 	    if (useVector[option])
-		gen.WriteLine("\tcurXLDef.useVector[{0}] = true;", option);
+		gen.WriteLine("\tcurXLDef.useVector[{0}] = true; // {1}",
+			      option, ((Options)option).ToString());
 	foreach (KeyValuePair<string, TagInfo> entry in Tags)
 	    gen.WriteLine("\tcurXLDef.AddTag({0}, {1}, {2});", entry.Key,
 			  entry.Value.startToken, entry.Value.endToken);
@@ -185,7 +186,8 @@ public class XmlScannerData {
 	gen.WriteLine("    static readonly int[] useKindVector = new int[] {");
 	foreach (string optname in Enum.GetNames(typeof(Options))) {
 	    sym = tab.FindSym(optname);
-	    gen.WriteLine("        {0},", sym == null ? -1 : sym.n);
+	    gen.WriteLine("        {0}, // {1}",
+			  sym == null ? -1 : sym.n, optname);
 	}
 	gen.WriteLine("    };");
     }
