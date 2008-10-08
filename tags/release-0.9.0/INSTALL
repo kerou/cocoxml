@@ -1,0 +1,2 @@
+For C# version, run "scons" in csharp.
+For java version, run "ant" in java.
