@@ -106,21 +106,20 @@ public:
 
 	Node* NewNode(int typ, Symbol *sym, int line);
 	Node* NewNode(int typ, Node* sub);
-	Node* NewNode(int typ, int val, int line);
 	void MakeFirstAlt(Graph *g);
 	void MakeAlternative(Graph *g1, Graph *g2);
 	void MakeSequence(Graph *g1, Graph *g2);
 	void MakeIteration(Graph *g);
 	void MakeOption(Graph *g);
 	void Finish(Graph *g);
-	void DeleteNodes();
-	Graph* StrToGraph(const wchar_t* str);
+    void DeleteNodes();
 	void SetContextTrans(Node *p); // set transition code in the graph rooted at p
 
 	//------------ graph deletability check -----------------
 
 	bool DelGraph(Node* p);
 	bool DelSubGraph(Node* p);
+    bool DelAlt(Node *p);
 	bool DelNode(Node* p);
 
 	//----------------- graph printing ----------------------
@@ -129,21 +128,6 @@ public:
 	wchar_t* Pos(Position *pos);
 	wchar_t* Name(const wchar_t* name);
 	void PrintNodes();
-
-	//---------------------------------------------------------------------
-	//  Character class management
-	//---------------------------------------------------------------------
-
-	CharClass* NewCharClass(const wchar_t* name, CharSet *s);
-	CharClass* FindCharClass(const wchar_t* name);
-	CharClass* FindCharClass(CharSet *s);
-	CharSet* CharClassSet(int i);
-
-	//----------- character class printing
-
-	wchar_t* Ch(const wchar_t ch);
-	void WriteCharSet(CharSet *s);
-	void WriteCharClasses ();
 
 	//---------------------------------------------------------------------
 	//  Symbol set computations

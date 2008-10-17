@@ -31,7 +31,6 @@ Coco/R itself) does not fall under the GNU General Public License.
 
 #include <stdio.h>
 #include "Position.h"
-#include "State.h"
 #include "Scanner.h"
 
 namespace CocoXml {
@@ -45,6 +44,8 @@ public:
 	static int t;      // terminal symbol
 	static int pr;     // pragma
 	static int nt;     // nonterminal symbol
+	static int clas;   // character class
+	static int chr;    // character
 	static int wt;     // weak terminal symbol
 	static int any;    // 
 	static int eps;    // empty
@@ -59,12 +60,15 @@ public:
 	static int contextTrans;
 
 	int      n;			// node number
-	int      typ;		// t, nt, wt, any, eps, sem, sync, alt, iter, opt, rslv
+	int      typ;		// t, nt, wt, chr, clas, any, eps, sem, sync, alt, iter, opt, rslv
 	Node     *next;		// to successor node
 	Node     *down;		// alt: to next alternative
 	Node     *sub;		// alt, iter, opt: to first node of substructure
 	bool     up;			// true: "next" leads to successor in enclosing structure
 	Symbol   *sym;		// nt, t, wt: symbol represented by this node
+	int      val;		// chr:  ordinal character value
+												// clas: index of character class
+	int      code;		// chr, clas: transition code
 	BitArray *set;		// any, sync: the set represented by this node
 	Position *pos;		// nt, t, wt: pos of actual attributes
 	                    // sem:       pos of semantic action in source text

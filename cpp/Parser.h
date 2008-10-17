@@ -10,6 +10,7 @@
 
 #include "Scanner.h"
 
+namespace CocoXml {
 
 
 class Errors {
@@ -80,7 +81,7 @@ int id;
 	void SemErr(const wchar_t* msg);
 
 	void CocoXml();
-	void XmlLangDefinition(XmlLangDefinition xldef);
+	void XmlLangDefinitionDecl(XmlLangDefinition* &xldef);
 	void XmlNamespaceDeclaration();
 	void AttrDecl(Symbol *sym);
 	void SemText(Position* &pos);
@@ -100,6 +101,7 @@ int id;
 
 }; // end Parser
 
+}; // namespace
 
 
 #endif // !defined(COCO_PARSER_H__)

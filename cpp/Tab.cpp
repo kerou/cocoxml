@@ -224,6 +224,10 @@ void Tab::Finish(Graph *g) {
 	}
 }
 
+void Tab::DeleteNodes() {
+    nodes = new ArrayList();
+}
+
 void Tab::SetContextTrans(Node *p) { // set transition code in the graph rooted at p
 	while (p != NULL) {
         if (p->typ == Node::opt || p->typ == Node::iter) {

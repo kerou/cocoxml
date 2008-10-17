@@ -177,6 +177,7 @@ void coco_string_delete(char* &data) {
 }
 
 
+namespace CocoXml {
 
 
 Token::Token() {
@@ -732,5 +733,6 @@ void Scanner::ResetPeek() {
 	pt = tokens;
 }
 
+}; // namespace
 
 
