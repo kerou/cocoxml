@@ -5,6 +5,7 @@
 #include "Scanner.h"
 
 
+namespace CocoXml {
 
 
 void Parser::SynErr(int n) {
@@ -85,8 +86,8 @@ void Parser::CocoXml() {
 			Get();
 		}
 		tab->semDeclPos = new Position(beg, la->pos-beg, 0); 
-		XmlLangDefinition(xldef);
-		xsdata->Add("", xldef); 
+		XmlLangDefinitionDecl(xldef);
+		xsdata->Add(L"", xldef); 
 		while (la->kind == 11) {
 			XmlNamespaceDeclaration();
 		}
@@ -160,7 +161,7 @@ void Parser::CocoXml() {
 		Expect(9);
 }
 
-void Parser::XmlLangDefinition(XmlLangDefinition xldef) {
+void Parser::XmlLangDefinitionDecl(XmlLangDefinition* &xldef) {
 		xldef = new XmlLangDefinition(tab, errors);  
 		if (la->kind == 14) {
 			Get();
@@ -189,13 +190,13 @@ void Parser::XmlLangDefinition(XmlLangDefinition xldef) {
 }
 
 void Parser::XmlNamespaceDeclaration() {
-		string namespace_name;
-		         XmlLangDefinition xldef; 
+		wchar_t* namespace_name;
+		         XmlLangDefinition *xldef; 
 		Expect(11);
 		Expect(3);
 		namespace_name = t->val; 
 		Expect(12);
-		XmlLangDefinition(xldef);
+		XmlLangDefinitionDecl(xldef);
 		xsdata->Add(namespace_name, xldef); 
 		Expect(13);
 }
@@ -268,27 +269,27 @@ void Parser::OptionDecl(XmlLangDefinition *xldef) {
 }
 
 void Parser::XmlTagDecl(XmlLangDefinition *xldef) {
-		string tokenName; 
+		wchar_t* tokenName; 
 		Expect(1);
-		tokenName = t->val; 
+		tokenName = coco_string_create(t->val); 
 		Expect(8);
 		Expect(3);
 		xldef->AddTag(t->val, tokenName, t->line); 
 }
 
 void Parser::XmlAttrDecl(XmlLangDefinition *xldef) {
-		string tokenName; 
+		wchar_t* tokenName; 
 		Expect(1);
-		tokenName = t->val; 
+		tokenName = coco_string_create(t->val); 
 		Expect(8);
 		Expect(3);
 		xldef->AddAttr(t->val, tokenName, t->line); 
 }
 
 void Parser::ProcessingInstruction(XmlLangDefinition *xldef) {
-		string tokenName; 
+		wchar_t* tokenName; 
 		Expect(1);
-		tokenName = t->val; 
+		tokenName = coco_string_create(t->val); 
 		Expect(8);
 		Expect(3);
 		xldef->AddProcessingInstruction(t->val, tokenName, t->line); 
@@ -619,5 +620,6 @@ void Errors::Exception(const wchar_t* s) {
 	exit(1);
 }
 
+}; // namespace
 
 

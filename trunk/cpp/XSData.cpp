@@ -3,74 +3,118 @@
 #include "XSData.h"
 #include "Tab.h"
 #include "Parser.h"
-#include "BitArray.h"
 #include "Scanner.h"
 
 namespace CocoXml{
 
-    XmlLangDefinition::XmlLangDefinition:eof(-1)(Tab *tab, Errors *errors){
+struct options_s enum_options[]={
+    {"UNKNOWN_NAMESPACE", UNKNOWN_NAMESPACE},
+    {"END_UNKNOWN_NAMESPACE", END_UNKNOWN_NAMESPACE},
+    {"UNKNOWN_TAG", UNKNOWN_TAG},
+    {"END_UNKNOWN_TAG", END_UNKNOWN_TAG},
+    {"UNKNOWN_ATTR_NAMESPACE", UNKNOWN_ATTR_NAMESPACE}, 
+    {"UNKNOWN_ATTR", UNKNOWN_ATTR},
+    {"UNKNOWN_PROCESSING_INSTRUCTION", UNKNOWN_PROCESSING_INSTRUCTION},
+    // For the nodes in common status.
+    {"TEXT", TEXT}, 
+    {"CDATA", CDATA}, 
+    {"COMMENT", COMMENT}, 
+    {"WHITESPACE", WHITESPACE},
+    // For the nodes in Unknown namespaces.
+    {"UNS_TEXT", UNS_TEXT}, 
+    {"UNS_CDATA", UNS_CDATA}, 
+    {"UNS_COMMENT", UNS_COMMENT}, 
+    {"UNS_WHITESPACE", UNS_WHITESPACE},
+    // For the nodes in Unknown tags.
+    {"UT_TEXT", UT_TEXT}, 
+    {"UT_CDATA", UT_CDATA}, 
+    {"UT_COMMENT", UT_COMMENT}, 
+    {"UT_WHITESPACE", UT_WHITESPACE},
+    {NULL, -1}
+};
+
+    XmlLangDefinition::XmlLangDefinition(Tab *tab, Errors *errors){
+        int i;
         this->tab = tab;
         this->errors = errors;
-
-        /*fix*/
-        useVector = new bool[Enum.GetValues(typeof(Options)).Length];
-        Tags = new Dictionary<const wchar_t, *TagInfo>();
-        Attrs = new Dictionary<const wchar_t*, int>();
-        PInstructions = new Dictionary<wchar_t*, int>();
+        
+        for (i=0; enum_options[i].value>=0; i++){
+            optionsMap.insert(make_pair(coco_string_create(enum_options[i].name), enum_options[i].value));
+        }
+        useVector.resize(optionsMap.size());
     }
-    void XmlLangDefinition::AddOption(const wchar_t* optname, int liane){
-        /*fix*/
-        int optval; Symbol sym;
-        try {
-            optval = (int)Enum.Parse(typeof(Options), optname);
-        } catch (System.ArgumentException) {
-            errors.SemErr("Unsupported option '" + optname + "' encountered.");
+
+    void XmlLangDefinition::AddOption(const wchar_t* optname, int line){
+#if 0
+        int optval; Symbol* sym;
+        
+        map<const wchar_t*, int>::iterator it = optionsMap.find(optname);
+        if(it != optionsMap.end()){
+            /* find it */
+            optval = it->second;
+        }else{
+            wchar_t fmt[200];
+            coco_swprintf(fmt, 200, L"Unsupported option '%ls' encountered.", optname);
+            /* unsupported option */
+            errors->Exception(fmt);
             return;
         }
         useVector[optval] = true;
-        sym = tab.FindSym(optname);
-        if (sym == null) tab.NewSym(Node.t, optname, line);
+
+        sym = tab->FindSym(optname);
+        if (sym == NULL) tab->NewSym(Node.t, optname, line);
+#endif
     }
-    void XmlLangDefinition::addUniqueToken(const wchar_t* tokenName, const wchar_t* typeName, int line){
+    int XmlLangDefinition::addUniqueToken(const wchar_t* tokenName, const wchar_t* typeName, int line){
+#if 0
         Symbol *sym = tab->FindSym(tokenName);
         if (sym != NULL){
             wprintf(L"typeName '%ls' declared twice\n", tokenName);
             errors->count ++;
         }
-        sym = tab->NewSym(Node->t, tokenName, line);
+        sym = tab->NewSym(Node.t, tokenName, line);
         return sym->n;
+#endif
     }
     void XmlLangDefinition::AddTag(const wchar_t* tagname, wchar_t* tokenname, int line){
-        /*fix*/
+#if 0        
         TagInfo *tinfo = new TagInfo();
         tinfo->startToken = addUniqueToken(tokenname, L"Tag", line);
-        tinfo.endToken = addUniqueToken("END_" + tokenname, "Tag", line);
+        
+        tinfo->endToken = addUniqueToken("END_" + tokenname, "Tag", line);
 
-        if (Tags->ContainsKey(tagname)){
+        map<const wchar_t*, int>::iterator it = Tags->find(tagname);
+        if (it!=Tags.end()){
             wprintf(L"Tag '%ls' declared twice\n", tagname);
             errors->count ++;
         }
-        Tags->Add(tagname, tinfo);
+        Tags.insert(make_pair(tagname, tinfo));
+#endif
     }
     void XmlLangDefinition::AddAttr(const wchar_t* attrname, const wchar_t* tokenname, int line){
+#if 0
         int value = addUniqueToken(tokenname, L"Attribute", line);
-        if (Attrs->ContainsKey(attrname)){
+        map<const wchar_t*, int>::iterator it = Attrs.find(attrname);
+        if (it!=Attrs.end()){
             wprintf(L"Attribute '%ls' declared twice\n", attrname);
             errors->count ++;
         }
-        Attrs->Add(attrname, value);
+        Attrs.insert(make_pair(attrname, value));
+#endif
     }
     void XmlLangDefinition::AddProcessingInstruction(const wchar_t* pinstruction, const wchar_t* tokenname, int line){
+#if 0
         int value = addUniqueToken(tokenname, L"Processing instruction", line);
-
-        if (PInstructions.ContainsKey(pinstruction)){
+        map<const wchar_t*, int>::iterator it = PInstructions->find(pinstruction);
+        if (it!=PInstructions.end()){
             wprintf(L"Processing Instruction '%ls' declared twice\n", pinstruction);
             errors->count ++;
         }
-        PInstructions->Add(pinstruction, value);
+        PInstructions.insert(make_pair(pinstruction, value));
+#endif
     }
     void XmlLangDefinition::Write(FILE* gen){
-        /*fix*/
+#if 0
         for (int option = 0; option < useVector.Length; ++option)
             if (useVector[option])
                 gen.WriteLine("\tcurXLDef.useVector[{0}] = true; // {1}", option, ((Options)option).ToString());
@@ -80,59 +124,77 @@ namespace CocoXml{
             gen.WriteLine("\tcurXLDef.AddAttr({0}, {1});", entry.Key, entry.Value);
         foreach (KeyValuePair<string, int> entry in PInstructions)
             gen.WriteLine("\tcurXLDef.AddProcessInstruction({0}, {1});", entry.Key, entry.Value);
+#endif
     }
 
 
     XmlScannerData::XmlScannerData(Parser *parser){
-        /*fix*/
-        tab = parser.tab;
-        errors = parser.errors;
-        XmlLangMap = new Dictionary<string, XmlLangDefinition>();
+        this->tab = parser->tab;
+        this->errors = parser->errors;
     }
     void XmlScannerData::Add(const wchar_t* NamespaceURI, XmlLangDefinition *xldef){
-        /*fix*/
-        if (XmlLangMap.ContainsKey(NamespaceURI))
-            errors.SemErr("Namespace '" + NamespaceURI + "' declared twice");
-        XmlLangMap.Add(NamespaceURI, xldef);
-    }
-    void XmlScannerData::OpenGen(bool backUp) { /* pdt */
-        /*fix*/
-        try {
-            string fn = Path.Combine(tab.outDir, "XmlScanner.cs"); /* pdt */
-            if (File.Exists(fn) && backUp) File.Copy(fn, fn + ".old", true);
-            gen = new StreamWriter(new FileStream(fn, FileMode.Create)); /* pdt */
-        } catch (IOException) {
-            throw new FatalError("Cannot generate xmlscanner file");
+        map<const wchar_t*, XmlLangDefinition*>::iterator it=XmlLangMap.find(NamespaceURI);
+        if (it != XmlLangMap.end()){
+            wchar_t fmt[200];
+            coco_swprintf(fmt, 200, L"Namespace '%ls' declared twice.", NamespaceURI);
+            /* unsupported option */
+            errors->Exception(fmt);
         }
+        XmlLangMap.insert(make_pair(NamespaceURI, xldef));
+    }
+    void XmlScannerData::OpenGen(const wchar_t *genName, bool backUp) { /* pdt */
+        wchar_t *fn = coco_string_create_append(tab->outDir, genName); /* pdt */
+        char *chFn = coco_string_create_char(fn);
+        FILE* tmp;
+        if (backUp && ((tmp = fopen(chFn, "r")) != NULL)) {
+            fclose(tmp);
+            wchar_t *oldName = coco_string_create_append(fn, L".old");
+            char *chOldName = coco_string_create_char(oldName);
+            remove(chOldName); rename(chFn, chOldName); // copy with overwrite
+            coco_string_delete(chOldName);
+            coco_string_delete(oldName);
+        }
+        if ((gen = fopen(chFn, "w")) == NULL) {
+            errors->Exception(L"-- Cannot generate scanner file");
+        }
+        coco_string_delete(chFn);
+        coco_string_delete(fn);
     }
     void XmlScannerData::CopyFramePart(const wchar_t * stop){
-        /*fix*/
-        char startCh = stop[0];
-        int endOfStopString = stop.Length - 1;
-        int ch = fram.ReadByte();
-        while (ch != EOF)
+        wchar_t startCh = stop[0];
+        int endOfStopString = coco_string_length(stop)-1;
+        wchar_t ch = 0;
+
+        fwscanf(fram, L"%lc", &ch); //fram.ReadByte();
+        while (!feof(fram)) // ch != EOF
             if (ch == startCh) {
                 int i = 0;
                 do {
                     if (i == endOfStopString) return; // stop[0..i] found
-                    ch = fram.ReadByte(); i++;
+                    fwscanf(fram, L"%lc", &ch); i++;
                 } while (ch == stop[i]);
                 // stop[0..i-1] found; continue with last read character
-                gen.Write(stop.Substring(0, i));
+                wchar_t *subStop = coco_string_create(stop, 0, i);
+                fwprintf(gen, L"%ls", subStop);
+                coco_string_delete(subStop);
             } else {
-                gen.Write((char)ch); ch = fram.ReadByte();
+                fwprintf(gen, L"%lc", ch);
+                fwscanf(fram, L"%lc", &ch);
             }
-        throw new FatalError("incomplete or corrupt xml scanner frame file");
+        errors->Exception(L" -- incomplete or corrupt scanner frame file");
     }
     void XmlScannerData::WriteOptions(){
+#if 0
         /*fix*/
         gen.WriteLine("    public enum Options {");
         foreach (string optname in Enum.GetNames(typeof(Options)))
             gen.WriteLine("        {0},", optname);
         gen.WriteLine("    };");
         gen.WriteLine("    public const int numOptions = {0};", Enum.GetValues(typeof(Options)).Length);
+#endif
     }
     void XmlScannerData::WriteDeclarations(){
+#if 0
         /*fix*/
         Symbol sym;
         gen.WriteLine("    static readonly int[] useKindVector = new int[] {");
@@ -142,47 +204,65 @@ namespace CocoXml{
                           sym == null ? -1 : sym.n, optname);
         }
         gen.WriteLine("    };");
+#endif
     }
     void XmlScannerData::WriteInitialization(){
+#if 0
         /*fix*/
         foreach (KeyValuePair<string, XmlLangDefinition> entry in XmlLangMap) {
             gen.WriteLine("\tcurXLDef = new XmlLangDefinition();");
             entry.Value.Write(gen);
             gen.WriteLine("\tXmlLangMap.Add(\"{0}\", curXLDef);", entry.Key);
         }
+#endif
     }
     void XmlScannerData::WriteXmlScanner(){
-        /*fix*/
-        string fr = Path.Combine(tab.srcDir, "XmlScanner.frame");
-        if (!File.Exists(fr)) {
-            if (tab.frameDir != null)
-                fr = Path.Combine(tab.frameDir.Trim(), "XmlScanner.frame");
-            if (!File.Exists(fr))
-                throw new FatalError("Cannot find XmlScanner.frame");
+        wchar_t *fr = coco_string_create_append(tab->srcDir, L"XmlScanner.frame");
+        char *chFr = coco_string_create_char(fr);
+
+        FILE* tmp;
+        if ((tmp = fopen(chFr, "r")) == NULL) {
+            if (coco_string_length(tab->frameDir) != 0) {
+                delete [] fr;
+                fr = coco_string_create(tab->frameDir);
+                coco_string_merge(fr, L"/");
+                coco_string_merge(fr, L"Scanner.frame");
+            }
+            coco_string_delete(chFr);
+            chFr = coco_string_create_char(fr);
+            if ((tmp = fopen(chFr, "r")) == NULL) {
+                errors->Exception(L"-- Cannot find Scanner.frame\n");
+            } else {
+                fclose(tmp);
+            }
+        } else {
+            fclose(tmp);
         }
-        try {
-            fram = new FileStream(fr, FileMode.Open,
-                                  FileAccess.Read, FileShare.Read);
-        } catch (FileNotFoundException) {
-            throw new FatalError("Cannot open XmlScanner.frame.");
+        if ((fram = fopen(chFr, "r")) == NULL) {
+            errors->Exception(L"-- Cannot open Scanner.frame.\n");
         }
-        OpenGen(true); /* pdt */
-        CopyFramePart("/*---- Begin ----*/");
-        gen.Close();
-        OpenGen(false);
-        gen.WriteLine("// THIS FILE IS GENERATED BY CocoXml AUTOMATICALLY, DO NOT EDIT IT MANUALLY.");
-        CopyFramePart("/*---- Namespace ----*/");
-        if (tab.nsName != null && tab.nsName.Length > 0)
-            gen.Write("namespace {0} {", tab.nsName);
+        coco_string_delete(chFr);
+        coco_string_delete(fr);
 
-        CopyFramePart("/*---- Options ----*/"); WriteOptions();
+        OpenGen(L"XmlScanner.h", true);
+        CopyFramePart(L"/*---- Begin ----*/");
+        fclose(gen);
 
-        CopyFramePart("/*---- Declarations ----*/"); WriteDeclarations();
+        OpenGen(L"XmlScanner.cpp", true);
+        CopyFramePart(L"/*---- Begin ----*/");
+        fwprintf(gen, L"// THIS FILE IS GENERATED BY CocoXml AUTOMATICALLY, DO NOT EDIT IT MANUALLY.");
+        CopyFramePart(L"/*---- Namespace Begin ----*/");
+//        nrOfNs = GenNamespaceOpen(tab->nsName);
 
-        CopyFramePart("/*---- Initialization ----*/"); WriteInitialization();
+        CopyFramePart(L"/*---- Options ----*/"); WriteOptions();
 
-        CopyFramePart("/*---- $$$ ----*/");
-        if (tab.nsName != null && tab.nsName.Length > 0) gen.Write("}");
-        gen.Close();
+        CopyFramePart(L"/*---- Declarations ----*/"); WriteDeclarations();
+
+        CopyFramePart(L"/*---- Initialization ----*/"); WriteInitialization();
+
+        CopyFramePart(L"/*---- $$$ ----*/");
+        CopyFramePart(L"/*---- Namespace End ----*/");
+//        GenNamespaceClose(nrOfNs);
+        fclose(gen);
     }
 } //namespace
