@@ -41,8 +41,7 @@ public:
     Tab                             *tab;
     Errors                          *errors;
     vector<bool>                    useVector;
-    map<const wchar_t*, int>        optionsMap;
-    map<const wchar_t*, TagInfo*>    Tags;
+    map<const wchar_t*, TagInfo*>   Tags;
     map<const wchar_t*, int>        Attrs;
     map<const wchar_t*, int>        PInstructions;
 
@@ -72,9 +71,10 @@ public:
     void WriteOptions();
     void WriteDeclarations();
     void WriteInitialization();
+	int GenNamespaceOpen(const wchar_t* nsName);
+	void GenNamespaceClose(int nrOfNs);
     void WriteXmlScanner();
 };
 
 } //namespace
-
 #endif

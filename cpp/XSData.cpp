@@ -6,32 +6,32 @@
 #include "Scanner.h"
 
 namespace CocoXml{
-
-struct options_s enum_options[]={
-    {"UNKNOWN_NAMESPACE", UNKNOWN_NAMESPACE},
-    {"END_UNKNOWN_NAMESPACE", END_UNKNOWN_NAMESPACE},
-    {"UNKNOWN_TAG", UNKNOWN_TAG},
-    {"END_UNKNOWN_TAG", END_UNKNOWN_TAG},
-    {"UNKNOWN_ATTR_NAMESPACE", UNKNOWN_ATTR_NAMESPACE}, 
-    {"UNKNOWN_ATTR", UNKNOWN_ATTR},
-    {"UNKNOWN_PROCESSING_INSTRUCTION", UNKNOWN_PROCESSING_INSTRUCTION},
-    // For the nodes in common status.
-    {"TEXT", TEXT}, 
-    {"CDATA", CDATA}, 
-    {"COMMENT", COMMENT}, 
-    {"WHITESPACE", WHITESPACE},
-    // For the nodes in Unknown namespaces.
-    {"UNS_TEXT", UNS_TEXT}, 
-    {"UNS_CDATA", UNS_CDATA}, 
-    {"UNS_COMMENT", UNS_COMMENT}, 
-    {"UNS_WHITESPACE", UNS_WHITESPACE},
-    // For the nodes in Unknown tags.
-    {"UT_TEXT", UT_TEXT}, 
-    {"UT_CDATA", UT_CDATA}, 
-    {"UT_COMMENT", UT_COMMENT}, 
-    {"UT_WHITESPACE", UT_WHITESPACE},
-    {NULL, -1}
-};
+    struct options_s enum_options[]={
+        {"UNKNOWN_NAMESPACE", UNKNOWN_NAMESPACE},
+        {"END_UNKNOWN_NAMESPACE", END_UNKNOWN_NAMESPACE},
+        {"UNKNOWN_TAG", UNKNOWN_TAG},
+        {"END_UNKNOWN_TAG", END_UNKNOWN_TAG},
+        {"UNKNOWN_ATTR_NAMESPACE", UNKNOWN_ATTR_NAMESPACE}, 
+        {"UNKNOWN_ATTR", UNKNOWN_ATTR},
+        {"UNKNOWN_PROCESSING_INSTRUCTION", UNKNOWN_PROCESSING_INSTRUCTION},
+        // For the nodes in common status.
+        {"TEXT", TEXT}, 
+        {"CDATA", CDATA}, 
+        {"COMMENT", COMMENT}, 
+        {"WHITESPACE", WHITESPACE},
+        // For the nodes in Unknown namespaces.
+        {"UNS_TEXT", UNS_TEXT}, 
+        {"UNS_CDATA", UNS_CDATA}, 
+        {"UNS_COMMENT", UNS_COMMENT}, 
+        {"UNS_WHITESPACE", UNS_WHITESPACE},
+        // For the nodes in Unknown tags.
+        {"UT_TEXT", UT_TEXT}, 
+        {"UT_CDATA", UT_CDATA}, 
+        {"UT_COMMENT", UT_COMMENT}, 
+        {"UT_WHITESPACE", UT_WHITESPACE},
+        {NULL, -1}
+    };
+    map<const wchar_t*, int>        optionsMap;
 
     XmlLangDefinition::XmlLangDefinition(Tab *tab, Errors *errors){
         int i;
@@ -107,20 +107,28 @@ struct options_s enum_options[]={
         PInstructions.insert(make_pair(pinstruction, value));
     }
     void XmlLangDefinition::Write(FILE* gen){
-#if 0
-        for (int option = 0; option < useVector.Length; ++option)
-            if (useVector[option])
-                gen.WriteLine("\tcurXLDef.useVector[{0}] = true; // {1}", option, ((Options)option).ToString());
-        foreach (KeyValuePair<string, TagInfo> entry in Tags)
-            gen.WriteLine("\tcurXLDef.AddTag({0}, {1}, {2});", entry.Key, entry.Value.startToken, entry.Value.endToken);
-        foreach (KeyValuePair<string, int> entry in Attrs)
-            gen.WriteLine("\tcurXLDef.AddAttr({0}, {1});", entry.Key, entry.Value);
-        foreach (KeyValuePair<string, int> entry in PInstructions)
-            gen.WriteLine("\tcurXLDef.AddProcessInstruction({0}, {1});", entry.Key, entry.Value);
-#endif
+        int option;
+        for (option = 0; option < useVector.size(); ++option)
+            if (useVector[option]){
+                /* fixme: ?????? */
+                map<const wchar_t*, int>::iterator iter=optionsMap.find(L" ???? ");
+                if(iter!=optionsMap.end()){
+                    fwprintf(gen, L"\tcurXLDef.useVector[%d] = true; // %ls", option, iter->first);
+                }else{
+                    errors->Exception(L"Why come here? it MUST have some error in somwhere?");
+                }
+            }
+        map<const wchar_t*, TagInfo*>::iterator iter;
+        for (iter=Tags.begin(); iter!=Tags.end(); ++iter)
+            fwprintf(gen, L"\tcurXLDef.AddTag(%ls, %d, %d);", 
+                     iter->first, iter->second->startToken, iter->second->endToken);
+        map<const wchar_t*, int>::iterator iter1;
+        for (iter1=Attrs.begin(); iter1!=Attrs.end(); ++iter1)
+            fwprintf(gen, L"\tcurXLDef.AddAttr(%ls, %d);", iter1->first, iter1->second);
+        map<const wchar_t*, int>::iterator iter2;
+        for (iter2=PInstructions.begin(); iter2!=PInstructions.end(); ++iter2)
+            fwprintf(gen, L"\tcurXLDef.AddProcessInstruction(%ls, %d);", iter2->first, iter2->second);
     }
-
-
     XmlScannerData::XmlScannerData(Parser *parser){
         this->tab = parser->tab;
         this->errors = parser->errors;
@@ -177,37 +185,53 @@ struct options_s enum_options[]={
         errors->Exception(L" -- incomplete or corrupt scanner frame file");
     }
     void XmlScannerData::WriteOptions(){
-#if 0
-        /*fix*/
-        gen.WriteLine("    public enum Options {");
-        foreach (string optname in Enum.GetNames(typeof(Options)))
-            gen.WriteLine("        {0},", optname);
-        gen.WriteLine("    };");
-        gen.WriteLine("    public const int numOptions = {0};", Enum.GetValues(typeof(Options)).Length);
-#endif
+        fwprintf(gen, L"    public enum Options {");
+        map<const wchar_t*, int>::iterator iter;
+        for (iter=optionsMap.begin(); iter!=optionsMap.end(); iter++)
+            fwprintf(gen, L"        %ls,", iter->first);
+        fwprintf(gen, L"    };");
+        fwprintf(gen, L"    public const int numOptions = %d;", optionsMap.size());
     }
     void XmlScannerData::WriteDeclarations(){
-#if 0
-        /*fix*/
-        Symbol sym;
-        gen.WriteLine("    static readonly int[] useKindVector = new int[] {");
-        foreach (string optname in Enum.GetNames(typeof(Options))) {
-            sym = tab.FindSym(optname);
-            gen.WriteLine("        {0}, // {1}",
-                          sym == null ? -1 : sym.n, optname);
+        Symbol *sym;
+        fwprintf(gen, L"    static readonly int[] useKindVector = new int[] {");
+        map<const wchar_t*, int>::iterator iter;
+        for (iter=optionsMap.begin(); iter!=optionsMap.end(); ++iter){
+            sym = tab->FindSym(iter->first);
+            fwprintf(gen, L"        %d, // %ls", sym == NULL ? -1 : sym->n, iter->first);
         }
-        gen.WriteLine("    };");
-#endif
+        fwprintf(gen, L"    };");
     }
     void XmlScannerData::WriteInitialization(){
-#if 0
-        /*fix*/
-        foreach (KeyValuePair<string, XmlLangDefinition> entry in XmlLangMap) {
-            gen.WriteLine("\tcurXLDef = new XmlLangDefinition();");
-            entry.Value.Write(gen);
-            gen.WriteLine("\tXmlLangMap.Add(\"{0}\", curXLDef);", entry.Key);
+        map<const wchar_t *, XmlLangDefinition*>::iterator iter;
+        for (iter=XmlLangMap.begin(); iter!=XmlLangMap.end(); ++iter){
+            fwprintf(gen, L"\tcurXLDef = new XmlLangDefinition();");
+            iter->second->Write(gen);
+            fwprintf(gen, L"\tXmlLangMap.Add(\"%ls\", curXLDef);", iter->first);
         }
-#endif
+    }
+    int XmlScannerData::GenNamespaceOpen(const wchar_t *nsName) {
+        if (nsName == NULL || coco_string_length(nsName) == 0) {
+            return 0;
+        }
+        int len = coco_string_length(nsName);
+        int startPos = 0, endPos;
+        int nrOfNs = 0;
+        do {
+            endPos = coco_string_indexof(nsName + startPos, COCO_CPP_NAMESPACE_SEPARATOR);
+            if (endPos == -1) { endPos = len; }
+            wchar_t *curNs = coco_string_create(nsName, startPos, endPos - startPos);
+            fwprintf(gen, L"namespace %ls {\n", curNs);
+            coco_string_delete(curNs);
+            startPos = endPos + 1;
+            ++nrOfNs;
+        } while (startPos < len);
+        return nrOfNs;
+    }
+    void XmlScannerData::GenNamespaceClose(int nrOfNs) {
+        for (int i = 0; i < nrOfNs; ++i) {
+            fwprintf(gen, L"}; // namespace\n");
+        }
     }
     void XmlScannerData::WriteXmlScanner(){
         wchar_t *fr = coco_string_create_append(tab->srcDir, L"XmlScanner.frame");
@@ -219,12 +243,12 @@ struct options_s enum_options[]={
                 delete [] fr;
                 fr = coco_string_create(tab->frameDir);
                 coco_string_merge(fr, L"/");
-                coco_string_merge(fr, L"Scanner.frame");
+                coco_string_merge(fr, L"XmlScanner.frame");
             }
             coco_string_delete(chFr);
             chFr = coco_string_create_char(fr);
             if ((tmp = fopen(chFr, "r")) == NULL) {
-                errors->Exception(L"-- Cannot find Scanner.frame\n");
+                errors->Exception(L"-- Cannot find XmlScanner.frame\n");
             } else {
                 fclose(tmp);
             }
@@ -232,7 +256,7 @@ struct options_s enum_options[]={
             fclose(tmp);
         }
         if ((fram = fopen(chFr, "r")) == NULL) {
-            errors->Exception(L"-- Cannot open Scanner.frame.\n");
+            errors->Exception(L"-- Cannot open XmlScanner.frame.\n");
         }
         coco_string_delete(chFr);
         coco_string_delete(fr);
@@ -245,7 +269,7 @@ struct options_s enum_options[]={
         CopyFramePart(L"/*---- Begin ----*/");
         fwprintf(gen, L"// THIS FILE IS GENERATED BY CocoXml AUTOMATICALLY, DO NOT EDIT IT MANUALLY.");
         CopyFramePart(L"/*---- Namespace Begin ----*/");
-//        nrOfNs = GenNamespaceOpen(tab->nsName);
+        int nrOfNs = GenNamespaceOpen(tab->nsName);
 
         CopyFramePart(L"/*---- Options ----*/"); WriteOptions();
 
@@ -255,7 +279,7 @@ struct options_s enum_options[]={
 
         CopyFramePart(L"/*---- $$$ ----*/");
         CopyFramePart(L"/*---- Namespace End ----*/");
-//        GenNamespaceClose(nrOfNs);
+        GenNamespaceClose(nrOfNs);
         fclose(gen);
     }
 } //namespace
