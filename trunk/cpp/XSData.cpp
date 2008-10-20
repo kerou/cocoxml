@@ -45,7 +45,6 @@ struct options_s enum_options[]={
     }
 
     void XmlLangDefinition::AddOption(const wchar_t* optname, int line){
-#if 0
         int optval; Symbol* sym;
         
         map<const wchar_t*, int>::iterator it = optionsMap.find(optname);
@@ -62,37 +61,34 @@ struct options_s enum_options[]={
         useVector[optval] = true;
 
         sym = tab->FindSym(optname);
-        if (sym == NULL) tab->NewSym(Node.t, optname, line);
-#endif
+        if (sym == NULL) tab->NewSym(Node::t, optname, line);
     }
     int XmlLangDefinition::addUniqueToken(const wchar_t* tokenName, const wchar_t* typeName, int line){
-#if 0
         Symbol *sym = tab->FindSym(tokenName);
         if (sym != NULL){
             wprintf(L"typeName '%ls' declared twice\n", tokenName);
             errors->count ++;
         }
-        sym = tab->NewSym(Node.t, tokenName, line);
+        sym = tab->NewSym(Node::t, tokenName, line);
         return sym->n;
-#endif
     }
     void XmlLangDefinition::AddTag(const wchar_t* tagname, wchar_t* tokenname, int line){
-#if 0        
         TagInfo *tinfo = new TagInfo();
+        wchar_t tmp[200];
+
         tinfo->startToken = addUniqueToken(tokenname, L"Tag", line);
         
-        tinfo->endToken = addUniqueToken("END_" + tokenname, "Tag", line);
+        coco_swprintf(tmp, 200, L"END_%ls", tokenname);
+        tinfo->endToken = addUniqueToken(tmp, L"Tag", line);
 
-        map<const wchar_t*, int>::iterator it = Tags->find(tagname);
-        if (it!=Tags.end()){
+        map<const wchar_t*, TagInfo*>::iterator it = Tags.find(tagname);
+        if (it != Tags.end()){
             wprintf(L"Tag '%ls' declared twice\n", tagname);
             errors->count ++;
         }
         Tags.insert(make_pair(tagname, tinfo));
-#endif
     }
     void XmlLangDefinition::AddAttr(const wchar_t* attrname, const wchar_t* tokenname, int line){
-#if 0
         int value = addUniqueToken(tokenname, L"Attribute", line);
         map<const wchar_t*, int>::iterator it = Attrs.find(attrname);
         if (it!=Attrs.end()){
@@ -100,18 +96,15 @@ struct options_s enum_options[]={
             errors->count ++;
         }
         Attrs.insert(make_pair(attrname, value));
-#endif
     }
     void XmlLangDefinition::AddProcessingInstruction(const wchar_t* pinstruction, const wchar_t* tokenname, int line){
-#if 0
         int value = addUniqueToken(tokenname, L"Processing instruction", line);
-        map<const wchar_t*, int>::iterator it = PInstructions->find(pinstruction);
+        map<const wchar_t*, int>::iterator it = PInstructions.find(pinstruction);
         if (it!=PInstructions.end()){
             wprintf(L"Processing Instruction '%ls' declared twice\n", pinstruction);
             errors->count ++;
         }
         PInstructions.insert(make_pair(pinstruction, value));
-#endif
     }
     void XmlLangDefinition::Write(FILE* gen){
 #if 0
