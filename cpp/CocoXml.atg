@@ -101,7 +101,7 @@ CocoXml                            (. Symbol *sym; Graph *g; wchar_t* gramName =
                                    beg = la->pos; 
                                  .)
   { ANY }                       (. tab->semDeclPos = new Position(beg, la->pos-beg, 0); .)
-  XmlLangDefinition<.xldef.>  (. xsdata->Add("", xldef); .)
+  XmlLangDefinitionDecl<.xldef.>  (. xsdata->Add(L"", xldef); .)
 
   { XmlNamespaceDeclaration }
 
@@ -167,19 +167,19 @@ CocoXml                            (. Symbol *sym; Graph *g; wchar_t* gramName =
 
 /*------------------------------------------------------------------------------------*/
 
-XmlNamespaceDeclaration          (. string namespace_name;
-                                              XmlLangDefinition xldef; .)
+XmlNamespaceDeclaration          (. wchar_t* namespace_name;
+                                              XmlLangDefinition *xldef; .)
 =
   "NAMESPACE"
   string                         (. namespace_name = t->val; .)
   "{"
-  XmlLangDefinition<.xldef.>   (. xsdata->Add(namespace_name, xldef); .)
+  XmlLangDefinitionDecl<.xldef.>   (. xsdata->Add(namespace_name, xldef); .)
   "}"
 .
 
 /*------------------------------------------------------------------------------------*/
 
-XmlLangDefinition<.XmlLangDefinition xldef.>
+XmlLangDefinitionDecl<.XmlLangDefinition* &xldef.>
 =  (. xldef = new XmlLangDefinition(tab, errors);  .)
   [ "OPTIONS" { OptionDecl<xldef> } ]
   [ "TAGS" { XmlTagDecl<xldef> } ]
@@ -197,27 +197,27 @@ OptionDecl<XmlLangDefinition *xldef>
 
 /*------------------------------------------------------------------------------------*/
 
-XmlTagDecl<XmlLangDefinition *xldef>   (. string tokenName; .)
+XmlTagDecl<XmlLangDefinition *xldef>   (. wchar_t* tokenName; .)
 =
-  ident    (. tokenName = t->val; .)
+  ident    (. tokenName = coco_string_create(t->val); .)
   "="
   string   (. xldef->AddTag(t->val, tokenName, t->line); .)
 .
 
 /*------------------------------------------------------------------------------------*/
 
-XmlAttrDecl<XmlLangDefinition *xldef>  (. string tokenName; .)
+XmlAttrDecl<XmlLangDefinition *xldef>  (. wchar_t* tokenName; .)
 =
-  ident    (. tokenName = t->val; .)
+  ident    (. tokenName = coco_string_create(t->val); .)
   "="
   string   (. xldef->AddAttr(t->val, tokenName, t->line); .)
 .
 
 /*------------------------------------------------------------------------------------*/
 
-ProcessingInstruction<XmlLangDefinition *xldef>   (. string tokenName; .)
+ProcessingInstruction<XmlLangDefinition *xldef>   (. wchar_t* tokenName; .)
 =
-  ident    (. tokenName = t->val; .)
+  ident    (. tokenName = coco_string_create(t->val); .)
   "="
   string   (. xldef->AddProcessingInstruction(t->val, tokenName, t->line); .)
 .

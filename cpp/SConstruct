@@ -1,2 +1,14 @@
-env = Environment()
+# -*- python -*-
+import os.path
+
+env = Environment(CCFLAGS = '-Wall')
+
+Export('env')
+
+SConscript(os.path.join('coco', 'SConscript'))
+Import('Coco')
+
+env.Command(['Scanner.cpp', 'Scanner.h', 'Parser.cpp', 'Parser.h'], [Coco, 'CocoXml.atg'],
+            '$SOURCES -frames coco -namespace CocoXml')
 env.Program('CocoXml', Glob('*.cpp'))
+
