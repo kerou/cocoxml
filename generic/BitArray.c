@@ -34,6 +34,8 @@ BitArray(BitArray_t * self, int numbits)
     if (numbits) {
 	if (!(self->data = malloc(NB2SZ(numbits)))) return NULL;
 	bzero(self->data, NB2SZ(numbits));
+    } else {
+	self->data = NULL;
     }
     return self;
 }
