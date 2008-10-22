@@ -39,6 +39,7 @@ struct State_s {
 };
 
 State_t * State(State_t * self);
+void State_Destruct(State_t * self);
 void State_AddAction(State_t * self, Action_t * act);
 void State_DetachAction(State_t * self, Action_t * act);
 void State_MeltWith(State_t * self, State_t * s);
@@ -52,6 +53,7 @@ struct Action_s {
 };
 
 Action_t * Action(Action_t * self, int typ, int sym, int tc);
+void Action_Destruct(Action_t * self);
 void Action_AddTarget(Action_t * self, Target_t * t);
 void Action_AddTargets(Action_t * self, Action_t * a);
 CharSet_t * Action_Symbols(Action_t * self, Tab_t * tab);
@@ -63,6 +65,7 @@ struct Target_s {
 };
 
 Target_t * Target(Target_t * self, State_t * s);
+void Target_Destruct(Target_t * self);
 
 EXTC_END
 

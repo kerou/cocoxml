@@ -34,6 +34,11 @@ State(State_t * self)
 }
 
 void
+State_Destruct(State_t * self)
+{
+}
+
+void
 State_AddAction(State_t * self, Action_t * act)
 {
     Action_t * lasta = NULL, * a = self->firstAction;
@@ -80,6 +85,11 @@ Action(Action_t * self, int typ, int sym, int tc)
     self->target = NULL;
     self->next = NULL;
     return self;
+}
+
+void
+Action_Destruct(Action_t * self)
+{
 }
 
 void
@@ -139,4 +149,9 @@ Target(Target_t * self, State_t * s)
     self->state = s;
     self->next = NULL;
     return self;
+}
+
+void
+Target_Destruct(Target_t * self)
+{
 }
