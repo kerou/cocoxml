@@ -26,6 +26,7 @@
 #include  "BitArray.h"
 
 #define NB2SZ(nb)   (((nb) + 7) & 0x07)
+static int bitmask[] = { 0xFF, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F };
 
 BitArray_t *
 BitArray(BitArray_t * self, int numbits)
@@ -60,12 +61,28 @@ BitArray_destruct(BitArray_t * self)
 	free(self->data);
 	self->data = NULL;
     }
+    self->numbits = 0;
 }
 
 int
 BitArray_getCount(BitArray_t * self)
 {
     return self->numbits;
+}
+
+int
+BitArray_Elements(const BitArray_t * self)
+{
+    int bit;
+    int elements = 0;
+    int bits = self->numbits;
+    const unsigned char * cur = self->data;
+    while (bits > 0) {
+	for (bit = 0; bit < 8; ++bit)
+	    if (bit < bits && (*cur & (1 << bit))) ++elements;
+	bits = bits - 8;
+    }
+    return elements;
 }
 
 int
@@ -100,7 +117,6 @@ BitArray_SetAll(BitArray_t * self, gboolean value)
     }
 }
 
-static int bitmask[] = { 0xFF, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F };
 int
 BitArray_Equal(const BitArray_t * self1, const BitArray_t * self2)
 {
@@ -158,4 +174,27 @@ BitArray_Xor(BitArray_t * self, const BitArray_t * value)
 	 cur0 - self->data < NB2SZ(self->numbits); ++cur0, ++cur1)
 	*cur0 ^= *cur1;
     return 0;
+}
+
+gboolean
+BitArray_Intersect(const BitArray_t * self1, const BitArray_t * self2)
+{
+    /* assert(self1->numbits == self2->numbits2); */
+    int idx, numbytes = NB2SZ(self1->numbits);
+    if (numbytes == 0) return 0;
+    for (idx = 0; idx < numbytes - 1; ++idx)
+	if ((self1->data[idx] & self2->data[idx])) return 1;
+    if ((self1->data[numbytes - 1] & self2->data[numbytes - 1] &
+	 bitmask[self1->numbits & 0x07]))
+	return 1;
+    return 0;
+}
+
+void
+BitArray_Substract(BitArray_t * self, const BitArray_t * b)
+{
+    /* assert(self->numbits == b->numbits); */
+    int idx;
+    for (idx = 0; idx < NB2SZ(self->numbits); ++idx)
+	self->data[idx] &= ~ b->data[idx];
 }
