@@ -6,6 +6,7 @@ import os.path
 
 env = Environment(CCFLAGS = ['-g', '-Wall'])
 env.ParseConfig('pkg-config --cflags --libs glib-2.0')
-Export('env')
 
-SConscript(os.path.join('coco', 'SConscript'))
+lib = env.Library('coco', ['BitArray.c'])
+env.Program('Coco', ['Coco.c', lib])
+env.Program('CocoXml', ['CocoXml.c', lib])

@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-  Copyright (C) 2008, Charles Wang <charlesw123456@gmail.com>
+  Author (C) 2008, Charles Wang <charlesw123456@gmail.com>
 
   This program is free software; you can redistribute it and/or modify it 
   under the terms of the GNU General Public License as published by the 
@@ -41,7 +41,7 @@ static const char * usage_format =
     "  S  list symbol table\n"
     "  X  list cross reference table\n"
     "Scanner[.lang].frame and Parser[.lang].frame files needed in ATG directory\n"
-    "or in a directory specified in the -frames option.";
+    "or in a directory specified in the -frames option.\n";
 
 int
 main(int argc, char * argv[])
