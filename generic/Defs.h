@@ -24,6 +24,8 @@
 #ifndef  COCO_DEFS_H
 #define  COCO_DEFS_H
 
+#include  <glib/gtypes.h>
+
 #ifdef  __cplusplus
 #define  EXTC_BEGIN  extern "C" {
 #else
@@ -38,10 +40,25 @@
 
 EXTC_BEGIN
 
-typedef struct BitArray_s BitArray_t;
-typedef struct State_s    State_t;
-typedef struct Action_s   Action_t;
-typedef struct Target_s   Target_t;
+typedef struct BitArray_s  BitArray_t;
+typedef struct State_s     State_t;
+typedef struct Action_s    Action_t;
+typedef struct Target_s    Target_t;
+typedef struct Position_s  Position_t;
+typedef struct CharClass_s CharClass_t;
+typedef struct CharSet_s   CharSet_t;
+typedef struct Symbol_s    Symbol_t;
+typedef struct Tab_s       Tab_t;
+
+typedef enum {
+    node_t = 1, node_pr = 2, node_nt = 3, node_clas = 4, node_chr = 5,
+    node_wt = 6, node_any = 7, node_eps = 8, node_sync = 9, node_sem = 10,
+    node_alt = 11, node_iter = 12, node_opt = 13, node_rslv = 14
+}  NodeKind_t;
+
+typedef enum {
+    node_normalTrans = 0, node_contextTrans = 1
+}  NodeTrans_t;
 
 EXTC_END
 
