@@ -30,10 +30,10 @@
 
 EXTC_BEGIN
 
-typedef struct {
+struct BitArray_s {
     int numbits;
     unsigned char * data;
-}  BitArray_t;
+};
 
 BitArray_t * BitArray(BitArray_t * self, int numbits);
 BitArray_t * BitArray_Clone(BitArray_t * self, const BitArray_t * value);
