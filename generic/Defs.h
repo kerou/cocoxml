@@ -41,14 +41,30 @@
 EXTC_BEGIN
 
 typedef struct BitArray_s  BitArray_t;
+
 typedef struct State_s     State_t;
 typedef struct Action_s    Action_t;
 typedef struct Target_s    Target_t;
-typedef struct Position_s  Position_t;
-typedef struct CharClass_s CharClass_t;
+typedef struct Melted_s    Melted_t;
+typedef struct Comment_s   Comment_t;
 typedef struct CharSet_s   CharSet_t;
+typedef struct DFA_s       DFA_t;
+
+typedef struct Position_s  Position_t;
 typedef struct Symbol_s    Symbol_t;
+typedef struct Node_s      Node_t;
+typedef struct Graph_t     Graph_t;
+typedef struct CharClass_s CharClass_t;
 typedef struct Tab_s       Tab_t;
+
+typedef struct Scanner_s   Scanner_t;
+typedef struct Parser_s    Parser_t;
+typedef struct Errors_s    Errors_t;
+
+typedef enum {
+    symbol_fixedToken = 0, symbol_classToken = 1,
+    symbol_litToken = 2, symbol_classLitToken = 3
+}  SymbolToken_t;
 
 typedef enum {
     node_t = 1, node_pr = 2, node_nt = 3, node_clas = 4, node_chr = 5,
@@ -59,6 +75,9 @@ typedef enum {
 typedef enum {
     node_normalTrans = 0, node_contextTrans = 1
 }  NodeTrans_t;
+
+void Unescape(char * buf, size_t szbuf, const char * s);
+void Escape(char * buf, size_t szbuf, const char * s);
 
 EXTC_END
 

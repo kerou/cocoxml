@@ -8,5 +8,5 @@ env = Environment(CCFLAGS = ['-g', '-Wall'])
 env.ParseConfig('pkg-config --cflags --libs glib-2.0')
 
 lib = env.Library('coco', ['BitArray.c'])
-env.Program('Coco', ['Coco.c', 'DFA.c', lib])
+env.Program('Coco', ['Coco.c', 'Defs.c', 'DFA.c', 'Tab.c', lib])
 env.Program('CocoXml', ['CocoXml.c', lib])

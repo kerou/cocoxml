@@ -24,6 +24,8 @@
 #ifndef  COCO_DFA_H
 #define  COCO_DFA_H
 
+#include <stdio.h>
+
 #ifndef  COCO_DEFS_H
 #include  "Defs.h"
 #endif
@@ -42,7 +44,7 @@ State_t * State(State_t * self);
 void State_Destruct(State_t * self);
 void State_AddAction(State_t * self, Action_t * act);
 void State_DetachAction(State_t * self, Action_t * act);
-void State_MeltWith(State_t * self, State_t * s);
+int State_MeltWith(State_t * self, State_t * s);
 
 struct Action_s {
     int        typ;
@@ -55,7 +57,7 @@ struct Action_s {
 Action_t * Action(Action_t * self, int typ, int sym, int tc);
 void Action_Destruct(Action_t * self);
 void Action_AddTarget(Action_t * self, Target_t * t);
-void Action_AddTargets(Action_t * self, Action_t * a);
+int Action_AddTargets(Action_t * self, Action_t * a);
 CharSet_t * Action_Symbols(Action_t * self, Tab_t * tab);
 void Action_ShiftWith(Action_t * self, CharSet_t * s, Tab_t * tab);
 
@@ -66,6 +68,79 @@ struct Target_s {
 
 Target_t * Target(Target_t * self, State_t * s);
 void Target_Destruct(Target_t * self);
+
+struct Melted_s {
+    BitArray_t * set;
+    State_t    * state;
+    Melted_t   * next;
+};
+
+Melted_t * Melted(Melted_t * self, BitArray_t * set, State_t * state);
+
+struct Comment_s {
+    char      * start;
+    char      * stop;
+    gboolean    nested;
+    Comment_t * next;
+};
+
+Comment_t *
+Comment(Comment_t * self, const char * start, const char * stop,
+	gboolean nested);
+
+struct CharSet_s {
+};
+
+CharSet_t * CharSet(CharSet_t * self);
+void CharSet_Set(CharSet_t * self, int i);
+CharSet_t * CharSet_Clone(CharSet_t * self, const CharSet_t * s);
+gboolean CharSet_Equals(const CharSet_t * self, const CharSet_t * s);
+int CharSet_Elements(const CharSet_t * self);
+int CharSet_First(const CharSet_t * self);
+void CharSet_Or(CharSet_t * self, const CharSet_t * s);
+void CharSet_And(CharSet_t * self, const CharSet_t * s);
+void CharSet_Subtract(CharSet_t * self, const CharSet_t * s);
+gboolean CharSet_Includes(CharSet_t * self, const CharSet_t * s);
+gboolean CharSet_Intersects(CharSet_t * self, const CharSet_t * s);
+void CharSet_Fill(CharSet_t * self);
+
+struct DFA_s {
+    /* Private members. */
+    int         maxStates;
+    int         lastStateNr;
+    State_t   * firstState;
+    State_t   * lastState;
+    int         lastSimState;
+    FILE      * fram;
+    FILE      * gen;
+    Symbol_t  * curSy;
+    gboolean    dirtyDFA;
+    gboolean    ignoreCase;
+    gboolean    hasCtxMoves;
+    Parser_t  * parser;
+    Tab_t     * tab;
+    Errors_t  * errors;
+    FILE      * trace;
+
+    Melted_t  * firstMelted;
+    Comment_t * firstComment;
+};
+
+DFA_t * DFA(DFA_t * self, Parser_t * parser);
+
+State_t * DFA_ConvertToStates(DFA_t * self, Node_t * p, Symbol_t * sym);
+void DFA_MatchLiteral(DFA_t * self, const char * s, Symbol_t * sym);
+void DFA_MakeDeterministic(DFA_t * self);
+void DFA_PrintStates(DFA_t * self);
+Action_t * DFA_FindAction(DFA_t * self, State_t * state, char ch);
+void DFA_GetTargetStates(DFA_t * self, Action_t * a, BitArray_t * targets,
+			 Symbol_t * endOf, gboolean * ctx);
+
+Melted_t * DFA_NewMelted(DFA_t * self, BitArray_t * set, State_t * state);
+BitArray_t * DFA_MeltedSet(DFA_t * self, int nr);
+Melted_t * DFA_StateWithSet(DFA_t * self, BitArray_t * s);
+void DFA_NewComment(DFA_t * self, Node_t * from, Node_t * to, gboolean nested);
+void DFA_WriteScanner(DFA_t * self);
 
 EXTC_END
 
