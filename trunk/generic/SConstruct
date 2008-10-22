@@ -1,0 +1,11 @@
+# -*- python -*-
+# Author: Charles Wang <charlesw123456@gmail.com>
+# License: GPLv2
+
+import os.path
+
+env = Environment(CCFLAGS = ['-g', '-Wall'])
+env.ParseConfig('pkg-config --cflags --libs glib-2.0')
+Export('env')
+
+SConscript(os.path.join('coco', 'SConscript'))
