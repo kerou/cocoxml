@@ -42,9 +42,9 @@ struct DFA_s {
     FILE      * fram;
     FILE      * gen;
     Symbol_t  * curSy;
-    gboolean    dirtyDFA;
-    gboolean    ignoreCase;
-    gboolean    hasCtxMoves;
+    Bool_t      dirtyDFA;
+    Bool_t      ignoreCase;
+    Bool_t      hasCtxMoves;
     Parser_t  * parser;
     Tab_t     * tab;
     Errors_t  * errors;
@@ -62,12 +62,12 @@ void DFA_MakeDeterministic(DFA_t * self);
 void DFA_PrintStates(DFA_t * self);
 Action_t * DFA_FindAction(DFA_t * self, State_t * state, char ch);
 void DFA_GetTargetStates(DFA_t * self, Action_t * a, BitArray_t * targets,
-			 Symbol_t * endOf, gboolean * ctx);
+			 Symbol_t * endOf, Bool_t * ctx);
 
 Melted_t * DFA_NewMelted(DFA_t * self, BitArray_t * set, State_t * state);
 BitArray_t * DFA_MeltedSet(DFA_t * self, int nr);
 Melted_t * DFA_StateWithSet(DFA_t * self, BitArray_t * s);
-void DFA_NewComment(DFA_t * self, Node_t * from, Node_t * to, gboolean nested);
+void DFA_NewComment(DFA_t * self, Node_t * from, Node_t * to, Bool_t nested);
 void DFA_WriteScanner(DFA_t * self);
 
 EXTC_END

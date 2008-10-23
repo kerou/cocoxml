@@ -43,7 +43,7 @@ DumpBuffer_Print(DumpBuffer_t * self, const char * format, ...)
     va_end(ap);
 }
 
-gboolean
+Bool_t
 DumpBuffer_Full(DumpBuffer_t * self)
 {
     return self->cur == self->last;

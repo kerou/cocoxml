@@ -25,45 +25,52 @@
 #define  COCO_TAB_H
 
 #include <stdio.h>
-#include <glib/ghash.h>
+
+#ifndef  COCO_ARRAYLIST_H
+#include "ArrayList.h"
+#endif
 
 #ifndef  COCO_BITARRAY_H
 #include "BitArray.h"
 #endif
 
+#ifndef  COCO_HASHTABLE_H
+#include "HashTable.h"
+#endif
+
 EXTC_BEGIN
 
 struct Tab_s {
-    Position_t * semDeclPos;
-    CharSet_t  * ignored;
-    gboolean     ddt[10];
-    Symbol_t   * gramSy;
-    Symbol_t   * eofSy;
-    Symbol_t   * noSym;
-    BitArray_t   allSyncSets;
-    GHashTable * literals;
-    char       * srcName;
-    char       * srcDir;
-    char       * nsName;
-    char       * frameDir;
-    char       * outDir;
+    Position_t  * semDeclPos;
+    CharSet_t   * ignored;
+    Bool_t        ddt[10];
+    Symbol_t    * gramSy;
+    Symbol_t    * eofSy;
+    Symbol_t    * noSym;
+    BitArray_t    allSyncSets;
+    HashTable_t   literals;
+    char        * srcName;
+    char        * srcDir;
+    char        * nsName;
+    char        * frameDir;
+    char        * outDir;
 
-    BitArray_t   visited;
-    Symbol_t   * curSy;
+    BitArray_t    visited;
+    Symbol_t    * curSy;
 
-    Parser_t   * parser;
-    FILE       * trace;
-    Errors_t   * errors;
+    Parser_t    * parser;
+    FILE        * trace;
+    Errors_t    * errors;
 
-    GList        terminals;
-    GList        pragmas;
-    GList        nonterminals;
+    ArrayList_t   terminals;
+    ArrayList_t   pragmas;
+    ArrayList_t   nonterminals;
 
-    GList        nodes;
-    Node_t     * dummyNode;
+    ArrayList_t   nodes;
+    Node_t      * dummyNode;
 
-    GList        classes;
-    int          dummyName;
+    ArrayList_t   classes;
+    int           dummyName;
 };
 
 Tab_t * Tab(Tab_t * self, Parser_t * parser);
@@ -87,11 +94,11 @@ void Tab_DeleteNodes(Tab_t * self);
 Graph_t * Tab_StrToGraph(Tab_t * self, const char * str);
 void Tab_SetContextTrans(Tab_t * self, Node_t * p);
 
-gboolean DelGraph(Node_t * p);
-gboolean DelSubGraph(Node_t * p);
-gboolean DelNode(Node_t * p);
+Bool_t DelGraph(Node_t * p);
+Bool_t DelSubGraph(Node_t * p);
+Bool_t DelNode(Node_t * p);
 
-int Ptr(Node_t * p, gboolean up);
+int Ptr(Node_t * p, Bool_t up);
 void Pos(char * buf, size_t szbuf, const Position_t * pos);
 void Name(char * buf, size_t szbuf, const char * name);
 
@@ -114,13 +121,13 @@ void Tab_CompDeletableSymbols(Tab_t * self);
 void Tab_RenumberPragmas(Tab_t * self);
 void Tab_CompSymbolSets(Tab_t * self);
 
-gboolean Tab_GrammerOk(Tab_t * self);
-gboolean Tab_NoCircularProductions(Tab_t * self);
+Bool_t Tab_GrammerOk(Tab_t * self);
+Bool_t Tab_NoCircularProductions(Tab_t * self);
 void Tab_CheckLL1(Tab_t * self);
 void Tab_CheckResolvers(Tab_t * self);
-gboolean Tab_NtsComplete(Tab_t * self);
-gboolean Tab_AllNtReached(Tab_t * self);
-gboolean Tab_AllNtToTerm(Tab_t * self);
+Bool_t Tab_NtsComplete(Tab_t * self);
+Bool_t Tab_AllNtReached(Tab_t * self);
+Bool_t Tab_AllNtToTerm(Tab_t * self);
 void Tab_XRef(Tab_t * self);
 void Tab_SetDDT(Tab_t * self, const char * s);
 

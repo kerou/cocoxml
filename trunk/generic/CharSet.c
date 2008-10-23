@@ -53,15 +53,15 @@ CharSet_Destruct(CharSet_t * self)
     CharSet_Clear(self);
 }
 
-gboolean
+Bool_t
 CharSet_Get(const CharSet_t * self, int i)
 {
     Range_t * cur = self->head;
     for (cur = self->head; cur; cur = cur->next) {
-	if (i < cur->from) return 0;
-	else if (i <= cur->to) return 1;
+	if (i < cur->from) return FALSE;
+	else if (i <= cur->to) return TRUE;
     }
-    return 0;
+    return FALSE;
 }
 
 int
@@ -116,13 +116,13 @@ CharSet_Clone(CharSet_t * self, const CharSet_t * s)
     return self;
 }
 
-gboolean
+Bool_t
 CharSet_Equals(const CharSet_t * self, const CharSet_t * s)
 {
     const Range_t * cur0, * cur1;
     cur0 = self->head; cur1 = s->head;
     while (cur0 && cur1) {
-	if (cur0->from != cur1->from || cur0->to != cur1->to) return 0;
+	if (cur0->from != cur1->from || cur0->to != cur1->to) return FALSE;
 	cur0 = cur0->next; cur1 = cur1->next;
     }
     return cur0 == cur1;
@@ -263,20 +263,21 @@ CharSet_Subtract(CharSet_t * self, const CharSet_t * s)
     return 0;
 }
 
-gboolean
+Bool_t
 CharSet_Includes(const CharSet_t * self, const CharSet_t * s)
 {
     const Range_t * cur0 = self->head, * cur1 = s->head;
 
     while (cur0 && cur1) {
 	if (cur0->to < cur1->from)  cur0 = cur0->next;
-	else if (cur0->from <= cur1->from && cur0->to >= cur1->to)  cur1 = cur1->next;
-	else  return 0;
+	else if (cur0->from <= cur1->from && cur0->to >= cur1->to)
+	    cur1 = cur1->next;
+	else  return FALSE;
     }
     return cur1 == NULL;
 }
 
-gboolean
+Bool_t
 CharSet_Intersects(const CharSet_t * self, const CharSet_t * s)
 {
     const Range_t * cur0 = self->head, * cur1 = s->head;
@@ -284,9 +285,9 @@ CharSet_Intersects(const CharSet_t * self, const CharSet_t * s)
     while (cur0 && cur1) {
 	if (cur0->from > cur1->to) cur1 = cur1->next;
 	else if (cur0->to < cur1->from) cur0 = cur0->next;
-	else return 1;
+	else return TRUE;
     }
-    return 0;
+    return FALSE;
 }
 
 void

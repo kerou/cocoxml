@@ -36,7 +36,7 @@ struct Node_s {
     Node_t     * next;
     Node_t     * down;
     Node_t     * sub;
-    gboolean     up;
+    Bool_t       up;
     Symbol_t   * sym;
     int          val;
     int          code;

@@ -43,14 +43,14 @@ void BitArray_Destruct(BitArray_t * self);
 int BitArray_getCount(const BitArray_t * self);
 int BitArray_Elements(const BitArray_t * self);
 int BitArray_Get(const BitArray_t * self, int index);
-int BitArray_Set(BitArray_t * self, int index, gboolean value);
-void BitArray_SetAll(BitArray_t * self, gboolean value);
+int BitArray_Set(BitArray_t * self, int index, Bool_t value);
+void BitArray_SetAll(BitArray_t * self, Bool_t value);
 int BitArray_Equal(const BitArray_t * self1, const BitArray_t * self2);
 void BitArray_Not(BitArray_t * self);
 int BitArray_And(BitArray_t * self, const BitArray_t * value);
 int BitArray_Or(BitArray_t * self, const BitArray_t * value);
 int BitArray_Xor(BitArray_t * self, const BitArray_t * value);
-gboolean BitArray_Intersect(const BitArray_t * self1, const BitArray_t * self2);
+Bool_t BitArray_Intersect(const BitArray_t * self1, const BitArray_t * self2);
 void BitArray_Subtract(BitArray_t * self, const BitArray_t * b);
 
 void BitArray_Dump(const BitArray_t * self, DumpBuffer_t * buf);

@@ -96,7 +96,7 @@ BitArray_Get(const BitArray_t * self, int index)
 }
 
 int
-BitArray_Set(BitArray_t * self, int index, gboolean value)
+BitArray_Set(BitArray_t * self, int index, Bool_t value)
 {
     /*
     if (NB2SZ(index) > NB2SZ(self->numbits)) {
@@ -112,7 +112,7 @@ BitArray_Set(BitArray_t * self, int index, gboolean value)
 }
 
 void
-BitArray_SetAll(BitArray_t * self, gboolean value)
+BitArray_SetAll(BitArray_t * self, Bool_t value)
 {
     if (self->data) {
 	if (value) memset(self->data, 1, NB2SZ(self->numbits));
@@ -120,21 +120,21 @@ BitArray_SetAll(BitArray_t * self, gboolean value)
     }
 }
 
-int
+Bool_t
 BitArray_Equal(const BitArray_t * self1, const BitArray_t * self2)
 {
     int boffset, bmask;
-    if (self1->numbits != self2->numbits) return 0;
-    if (!self1->data && !self2->data) return 1;
-    if (!self1->data || !self2->data) return 0;
+    if (self1->numbits != self2->numbits) return FALSE;
+    if (!self1->data && !self2->data) return TRUE;
+    if (!self1->data || !self2->data) return FALSE;
     if (self1->numbits > 8 &&
 	memcmp(self1->data, self2->data, NB2SZ(self1->numbits) - 1))
-	return 0;
+	return FALSE;
     boffset = NB2SZ(self1->numbits) - 1;
     bmask = bitmask[self1->numbits & 0x07];
     if ((self1->data[boffset] & bmask) != (self2->data[boffset] & bmask))
-	return 0;
-    return 1;
+	return FALSE;
+    return TRUE;
 }
 
 void
@@ -178,18 +178,18 @@ BitArray_Xor(BitArray_t * self, const BitArray_t * value)
     return 0;
 }
 
-gboolean
+Bool_t
 BitArray_Intersect(const BitArray_t * self1, const BitArray_t * self2)
 {
     /* assert(self1->numbits == self2->numbits2); */
     int idx, numbytes = NB2SZ(self1->numbits);
-    if (numbytes == 0) return 0;
+    if (numbytes == 0) return FALSE;
     for (idx = 0; idx < numbytes - 1; ++idx)
-	if ((self1->data[idx] & self2->data[idx])) return 1;
+	if ((self1->data[idx] & self2->data[idx])) return TRUE;
     if ((self1->data[numbytes - 1] & self2->data[numbytes - 1] &
 	 bitmask[self1->numbits & 0x07]))
-	return 1;
-    return 0;
+	return TRUE;
+    return FALSE;
 }
 
 void
