@@ -33,33 +33,6 @@
 
 EXTC_BEGIN
 
-struct Position_s {
-    int beg;
-    int len;
-    int col;
-};
-
-Position_t * Position(Position_t * self, int beg, int len, int col);
-
-struct Symbol_s {
-    int          n;
-    int          typ;
-    char       * name;
-    Node_t     * graph;
-    int          tokenKind;
-    gboolean     deletable;
-    gboolean     firstReady;
-    BitArray_t * first;
-    BitArray_t * follow;
-    BitArray_t * nts;
-    int          line;
-    Position_t * attrPos;
-    Position_t * semPos;
-};
-
-Symbol_t * Symbol(Symbol_t * self, int typ, const char * name, int line);
-int Symbol_CompareTo(Symbol_t * self, Symbol_t * x);
-
 struct Node_s {
     int          n;
     int          typ;
