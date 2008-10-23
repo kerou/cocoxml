@@ -29,7 +29,7 @@ void
 DumpBuffer(DumpBuffer_t * self, char * buf, size_t szbuf)
 {
     self->start = buf;
-    self->cur = self->start;
+    self->cur = self->start; *self->cur = 0;
     self->last = buf + szbuf;
 }
 
