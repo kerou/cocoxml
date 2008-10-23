@@ -292,3 +292,19 @@ CharSet_Fill(CharSet_t * self)
     CharSet_Clear(self);
     return (self->head = new_Range(0, COCO_WCHAR_MAX)) ? 0 : -1;
 }
+
+void
+CharSet_Dump(const CharSet_t * self, DumpBuffer_t * buf)
+{
+    const Range_t * cur;
+    for (cur = self->head; cur && !DumpBuffer_Full(buf); cur = cur->next) {
+	if (cur->from == cur->to) {
+	    DumpBuffer_Print(buf, "'"); EscapeCh(buf, cur->from); DumpBuffer_Print(buf, "'");
+	} else {
+	    DumpBuffer_Print(buf, "'"); EscapeCh(buf, cur->from); DumpBuffer_Print(buf, "'");
+	    DumpBuffer_Print(buf, "..");
+	    DumpBuffer_Print(buf, "'"); EscapeCh(buf, cur->to); DumpBuffer_Print(buf, "'");
+	}
+	if (cur->next) DumpBuffer_Print(buf, ", ");
+    }
+}
