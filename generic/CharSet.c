@@ -269,12 +269,9 @@ CharSet_Includes(const CharSet_t * self, const CharSet_t * s)
     const Range_t * cur0 = self->head, * cur1 = s->head;
 
     while (cur0 && cur1) {
-	if (cur0->to < cur1->from)
-	    cur0 = cur0->next;
-	else if (cur0->from <= cur1->from && cur0->to >= cur1->to)
-	    cur1 = cur1->next;
-	else /* cur0->to >= cur1->from &&  */
-	    return 0;
+	if (cur0->to < cur1->from)  cur0 = cur0->next;
+	else if (cur0->from <= cur1->from && cur0->to >= cur1->to)  cur1 = cur1->next;
+	else  return 0;
     }
     return cur1 == NULL;
 }
@@ -285,10 +282,9 @@ CharSet_Intersects(const CharSet_t * self, const CharSet_t * s)
     const Range_t * cur0 = self->head, * cur1 = s->head;
 
     while (cur0 && cur1) {
-	if (cur0->from <= cur1->from && cur1->to >= cur1->from) return 1;
-	if (cur0->from <= cur1->to && cur1->to >= cur1->to) return 1;
-	if (cur0->from < cur1->from) cur0 = cur0->next;
-	else cur1 = cur1->next;
+	if (cur0->from > cur1->to) cur1 = cur1->next;
+	else if (cur0->to < cur1->from) cur0 = cur0->next;
+	else return 1;
     }
     return 0;
 }
