@@ -40,6 +40,7 @@
 
 EXTC_BEGIN
 
+typedef struct ArrayList_s ArrayList_t;
 typedef struct BitArray_s  BitArray_t;
 
 typedef struct State_s     State_t;

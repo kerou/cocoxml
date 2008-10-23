@@ -29,4 +29,5 @@ Position(Position_t * self, int beg, int len, int col)
     self->beg = beg;
     self->len = len;
     self->col = col;
+    return self;
 }
