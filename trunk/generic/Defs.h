@@ -76,8 +76,19 @@ typedef enum {
     node_normalTrans = 0, node_contextTrans = 1
 }  NodeTrans_t;
 
-void Unescape(char * buf, size_t szbuf, const char * s);
-void Escape(char * buf, size_t szbuf, const char * s);
+typedef struct {
+    char * start;
+    char * cur;
+    char * last;
+}  DumpBuffer_t;
+
+void DumpBuffer(DumpBuffer_t * self, char * buf, size_t szbuf);
+void DumpBuffer_Print(DumpBuffer_t * self, const char * format, ...);
+gboolean DumpBuffer_Full(DumpBuffer_t * self);
+
+void Unescape(DumpBuffer_t * buf, const char * s);
+void EscapeCh(DumpBuffer_t * buf, int ch);
+void Escape(DumpBuffer_t * buf, const char * s);
 
 EXTC_END
 
