@@ -55,7 +55,7 @@ BitArray_Clone(BitArray_t * self, const BitArray_t * value)
 }
 
 void
-BitArray_destruct(BitArray_t * self)
+BitArray_Destruct(BitArray_t * self)
 {
     if (self->data) {
 	free(self->data);
@@ -65,7 +65,7 @@ BitArray_destruct(BitArray_t * self)
 }
 
 int
-BitArray_getCount(BitArray_t * self)
+BitArray_getCount(const BitArray_t * self)
 {
     return self->numbits;
 }
@@ -191,10 +191,18 @@ BitArray_Intersect(const BitArray_t * self1, const BitArray_t * self2)
 }
 
 void
-BitArray_Substract(BitArray_t * self, const BitArray_t * b)
+BitArray_Subtract(BitArray_t * self, const BitArray_t * b)
 {
     /* assert(self->numbits == b->numbits); */
     int idx;
     for (idx = 0; idx < NB2SZ(self->numbits); ++idx)
 	self->data[idx] &= ~ b->data[idx];
+}
+
+void
+BitArray_Dump(const BitArray_t * self, DumpBuffer_t * buf)
+{
+    int idx, numbits = BitArray_getCount(self);
+    for (idx = 0; idx < numbits; ++idx)
+	DumpBuffer_Print(buf, "%c", BitArray_Get(self, idx) ? "1" : ".");
 }
