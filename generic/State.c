@@ -28,6 +28,7 @@
 State_t *
 State(State_t * self)
 {
+    if (!self && !(self = malloc(sizeof(State_t)))) return NULL;
     self->nr = 0;
     self->firstAction = NULL;
     self->endOf = NULL;
@@ -67,14 +68,10 @@ State_MeltWith(State_t * self, State_t * s)
 {
     Action_t * action, * a;
     for (action = s->firstAction; action != NULL; action = action->next) {
-	if (!(a = malloc(sizeof(Action_t)))) goto errquit0;
-	if (!(Action(a, action->typ, action->sym, action->tc))) goto errquit1;
+	if (!(a = Action(NULL, action->typ, action->sym, action->tc)))
+	    return -1;
 	Action_AddTargets(a, action);
 	State_AddAction(self, a);
     }
     return 0;
- errquit1:
-    free(a);
- errquit0:
-    return -1;
 }

@@ -43,6 +43,7 @@ new_Range(int from, int to)
 CharSet_t *
 CharSet(CharSet_t * self)
 {
+    if (!self && !(self = malloc(sizeof(CharSet_t)))) return NULL;
     self->head = NULL;
     return self;
 }
@@ -101,12 +102,19 @@ CharSet_Set(CharSet_t * self, int i)
 CharSet_t *
 CharSet_Clone(CharSet_t * self, const CharSet_t * s)
 {
+    Bool_t malloced;
     Range_t * prev, * curnew;
     const Range_t * cur1;
+
+    if (!self) {
+	if (!(self = malloc(sizeof(CharSet_t)))) return NULL;
+	malloced = TRUE;
+    }
     self->head = NULL; prev = NULL;
     for (cur1 = s->head; cur1; cur1 = cur1->next) {
 	if (!(curnew = new_Range(cur1->from, cur1->to))) {
 	    CharSet_Clear(self);
+	    if (malloced) free(self);
 	    return NULL;
 	}
 	if (prev == NULL) self->head = curnew;

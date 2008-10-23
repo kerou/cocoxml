@@ -33,6 +33,7 @@
 Action_t *
 Action(Action_t * self, int typ, int sym, int tc)
 {
+    if (!self && !(self = malloc(sizeof(Action_t)))) return NULL;
     self->typ = typ;
     self->sym = sym;
     self->tc = tc;
@@ -65,28 +66,26 @@ Action_AddTargets(Action_t * self, Action_t * a)
 {
     Target_t * p, * t;
     for (p = a->target; p != NULL; p = p->next) {
-	if (!(t = malloc(sizeof(Target_t)))) goto errquit0;
-	if (!Target(t, p->state)) goto errquit1;
+	if (!(t = Target(NULL, p->state))) return -1;
 	Action_AddTarget(self, t);
     }
     if (a->tc == node_contextTrans) self->tc = node_contextTrans;
     return 0;
- errquit1:
-    free(t);
- errquit0:
-    return -1;
 }
 
 CharSet_t *
 Action_Symbols(Action_t * self, Tab_t * tab)
 {
     CharSet_t * s;
-    if (!(s = malloc(sizeof(CharSet_t)))) return NULL;
     if (self->typ == node_clas) {
-	s = CharSet_Clone(s, Tab_CharClassSet(tab, self->sym));
+	s = CharSet_Clone(NULL, Tab_CharClassSet(tab, self->sym));
     } else {
-	s = CharSet(s);
-	CharSet_Set(s, self->sym);
+	if ((s = CharSet(NULL))) {
+	    if (CharSet_Set(s, self->sym) < 0) {
+		CharSet_Destruct(s); free(s);
+		return NULL;
+	    }
+	}
     }
     return s;
 }
