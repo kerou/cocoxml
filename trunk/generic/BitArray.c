@@ -31,14 +31,22 @@ static int bitmask[] = { 0xFF, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F };
 BitArray_t *
 BitArray(BitArray_t * self, int numbits)
 {
+    Bool_t malloced;
+    if (!(self = (BitArray_t *)
+	  AllocObject(self, sizeof(BitArray_t), &malloced)))
+	goto errquit0;
     self->numbits = numbits;
     if (numbits) {
-	if (!(self->data = malloc(NB2SZ(numbits)))) return NULL;
+	if (!(self->data = malloc(NB2SZ(numbits)))) goto errquit1;
 	bzero(self->data, NB2SZ(numbits));
     } else {
 	self->data = NULL;
     }
     return self;
+ errquit1:
+    if (malloced) free(self);
+ errquit0:
+    return NULL;
 }
 
 BitArray_t *

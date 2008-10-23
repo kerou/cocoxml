@@ -28,10 +28,17 @@
 ArrayList_t *
 ArrayList(ArrayList_t * self)
 {
+    Bool_t malloced;
+    if (!(self = AllocObject(self, sizeof(ArrayList_t), &malloced)))
+	goto errquit0;
     self->Count = 0;
     self->Capacity = 16;
-    if (!(self->Data = malloc(sizeof(void *) * self->Capacity))) return NULL;
+    if (!(self->Data = malloc(sizeof(void *) * self->Capacity))) goto errquit1;
     return self;
+ errquit1:
+    if (malloced) free(self);
+ errquit0:
+    return NULL;
 }
 
 void

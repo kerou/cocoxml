@@ -28,11 +28,22 @@
 Comment_t *
 Comment(Comment_t * self, const char * start, const char * stop, Bool_t nested)
 {
-    self->start = strdup(start);
-    self->stop = strdup(stop);
+    Bool_t malloced;
+    if (!(self = AllocObject(self, sizeof(Comment_t), &malloced)))
+	goto errquit0;
+    if (!(self->start = strdup(start)))
+	goto errquit1;
+    if (!(self->stop = strdup(stop)))
+	goto errquit2;
     self->nested = nested;
     self->next = NULL;
     return self;
+ errquit2:
+    free(self->start);
+ errquit1:
+    if (malloced) free(self);
+ errquit0:
+    return NULL;
 }
 
 void

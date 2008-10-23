@@ -41,10 +41,17 @@ strhash(const char * str, int szhash)
 HashTable_t *
 HashTable(HashTable_t * self, size_t size)
 {
-    if (!(self->first = malloc(sizeof(HTEntry_t *) * size))) return NULL;
+    Bool_t malloced;
+    if (!(self = AllocObject(self, sizeof(HashTable_t), &malloced)))
+	goto errquit0;
+    if (!(self->first = malloc(sizeof(HTEntry_t *) * size))) goto errquit1;
     self->last = self->first + size;
     bzero(self->first, sizeof(HTEntry_t *) * size);
     return self;
+ errquit1:
+    if (malloced) free(self);
+ errquit0:
+    return NULL;
 }
 
 void HashTable_Destruct(HashTable_t * self)

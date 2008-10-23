@@ -47,6 +47,7 @@ struct Node_s {
 };
 
 Node_t * Node(Node_t * self, int typ, Symbol_t * sym, int line);
+void Node_Destruct(Node_t * self);
 
 Bool_t Node_DelGraph(Node_t * self);
 Bool_t Node_DelSubGraph(Node_t * self);
