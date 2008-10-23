@@ -82,6 +82,8 @@ typedef enum {
     node_normalTrans = 0, node_contextTrans = 1
 }  NodeTrans_t;
 
+void * AllocObject(void * self, size_t szobj, Bool_t * malloced);
+
 typedef struct {
     char * start;
     char * cur;

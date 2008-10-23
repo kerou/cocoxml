@@ -28,10 +28,17 @@
 CharClass_t *
 CharClass(CharClass_t * self, const char * name, CharSet_t * s)
 {
+    Bool_t malloced;
+    if (!(self = AllocObject(self, sizeof(CharClass_t), &malloced)))
+	goto errquit0;
     self->n = 0;
-    if (!(self->name = strdup(name))) return NULL;
+    if (!(self->name = strdup(name))) goto errquit1;
     self->set = s;
     return self;
+ errquit1:
+    if (malloced) free(self);
+ errquit0:
+    return NULL;
 }
 
 void

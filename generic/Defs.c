@@ -23,7 +23,20 @@
 -------------------------------------------------------------------------*/
 #include  <stdarg.h>
 #include  <stdio.h>
+#include  <stdlib.h>
 #include  "Defs.h"
+
+void *
+AllocObject(void * self, size_t szobj, Bool_t * malloced)
+{
+    if (self) {
+	*malloced = FALSE;
+    } else {
+	if (!(self = malloc(szobj))) return NULL;
+	*malloced = TRUE;
+    }
+    return self;
+}
 
 void
 DumpBuffer(DumpBuffer_t * self, char * buf, size_t szbuf)

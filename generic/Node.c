@@ -45,6 +45,11 @@ Node(Node_t * self, int typ, Symbol_t * sym, int line)
     return self;
 }
 
+void
+Node_Destruct(Node_t * self)
+{
+}
+
 Bool_t
 Node_DelGraph(Node_t * self)
 {
