@@ -40,11 +40,11 @@ static void
 CharSet_RandomSet(CharSet_t * self)
 {
     long int rnd;
-    int idx, bits;
+    int idx, bit;
     for (idx = 0; idx < NUMBITS; idx += 16) {
 	rnd = random();
-	for (bits = 0; bits < 16; ++bits)
-	    if ((rnd & (1 << bits))) CharSet_Set(self, idx + bits);
+	for (bit = 0; bit < 16; ++bit)
+	    if ((rnd & (1 << bit))) CharSet_Set(self, idx + bit);
     }
 }
 
@@ -129,29 +129,29 @@ TestCharSet(FILE * fp)
     CharSet_t cs0, cs1, cs2;
     int idx;
 
-    CharSet(&cs0);
-    CharSet(&cs1);
+    COCO_ASSERT((CharSet(&cs0)));
+    COCO_ASSERT((CharSet(&cs1)));
     ATest(fp, &cs0, &cs1);
     CharSet_Destruct(&cs0); CharSet_Destruct(&cs1);
 
-    CharSet(&cs0); CharSet_AllSet(&cs0);
-    CharSet(&cs1);
+    COCO_ASSERT((CharSet(&cs0))); CharSet_AllSet(&cs0);
+    COCO_ASSERT((CharSet(&cs1)));
     ATest(fp, &cs0, &cs1);
     CharSet_Destruct(&cs0); CharSet_Destruct(&cs1);
 
-    CharSet(&cs0);
-    CharSet(&cs1); CharSet_AllSet(&cs1);
+    COCO_ASSERT((CharSet(&cs0)));
+    COCO_ASSERT((CharSet(&cs1))); CharSet_AllSet(&cs1);
     ATest(fp, &cs0, &cs1);
     CharSet_Destruct(&cs0); CharSet_Destruct(&cs1);
 
-    CharSet(&cs0); CharSet_AllSet(&cs0);
-    CharSet(&cs1); CharSet_AllSet(&cs1);
+    COCO_ASSERT((CharSet(&cs0))); CharSet_AllSet(&cs0);
+    COCO_ASSERT((CharSet(&cs1))); CharSet_AllSet(&cs1);
     ATest(fp, &cs0, &cs1);
     CharSet_Destruct(&cs0); CharSet_Destruct(&cs1);
 
     for (idx = 0; idx < 128; ++idx) {
-	CharSet(&cs0); CharSet_RandomSet(&cs0);
-	CharSet(&cs1); CharSet_RandomSet(&cs1);
+	COCO_ASSERT((CharSet(&cs0))); CharSet_RandomSet(&cs0);
+	COCO_ASSERT((CharSet(&cs1))); CharSet_RandomSet(&cs1);
 	ATest(fp, &cs0, &cs1);
 
 	COCO_ASSERT((CharSet_Clone(&cs2, &cs0)));
