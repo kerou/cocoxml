@@ -36,6 +36,7 @@ main(void)
 	fprintf(stderr, "Open AutoTests.log for written failed.\n");
 	exit(-1);
     }
+    TestBitArray(fp);
     TestCharSet(fp);
     fclose(fp);
     return 0;

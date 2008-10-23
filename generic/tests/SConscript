@@ -4,4 +4,5 @@
 
 Import('env', 'lib')
 
-env.Program('AutoTests', ['AutoTests.c', 'TestCharSet.c', lib])
+env.Program('AutoTests', ['AutoTests.c', 'TestBitArray.c', 'TestCharSet.c',
+                          lib])
