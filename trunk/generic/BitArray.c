@@ -25,7 +25,7 @@
 #include  <string.h>
 #include  "BitArray.h"
 
-#define NB2SZ(nb)   (((nb) + 7) & 0x07)
+#define NB2SZ(nb)   (((nb) + 7) >> 3)
 static int bitmask[] = { 0xFF, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F };
 
 BitArray_t *
@@ -77,11 +77,14 @@ BitArray_Elements(const BitArray_t * self)
     int elements = 0;
     int bits = self->numbits;
     const unsigned char * cur = self->data;
-    while (bits > 0) {
+    while (bits >= 8) {
 	for (bit = 0; bit < 8; ++bit)
-	    if (bit < bits && (*cur & (1 << bit))) ++elements;
+	    if ((*cur & (1 << bit))) ++elements;
 	bits = bits - 8;
+	++cur;
     }
+    for (bit = 0; bit < bits; ++bit)
+	if ((*cur & (1 << bit))) ++elements;
     return elements;
 }
 
@@ -121,17 +124,16 @@ int
 BitArray_Equal(const BitArray_t * self1, const BitArray_t * self2)
 {
     int boffset, bmask;
-    if (self1->numbits != self2->numbits) return 1;
-    if (self1->data && self2->data) {
-	if (self1->numbits > 8 &&
-	    !memcmp(self1->data, self2->data, NB2SZ(self1->numbits) - 1))
-	    return 1;
-	boffset = NB2SZ(self1->numbits) - 1;
-	bmask = bitmask[self1->numbits & 0x07];
-	if ((self1->data[boffset] & bmask) != (self2->data[boffset] & bmask))
-	    return 1;
+    if (self1->numbits != self2->numbits) return 0;
+    if (!self1->data && !self2->data) return 1;
+    if (!self1->data || !self2->data) return 0;
+    if (self1->numbits > 8 &&
+	memcmp(self1->data, self2->data, NB2SZ(self1->numbits) - 1))
 	return 0;
-    }
+    boffset = NB2SZ(self1->numbits) - 1;
+    bmask = bitmask[self1->numbits & 0x07];
+    if ((self1->data[boffset] & bmask) != (self2->data[boffset] & bmask))
+	return 0;
     return 1;
 }
 
