@@ -53,7 +53,7 @@ typedef struct DFA_s       DFA_t;
 typedef struct Position_s  Position_t;
 typedef struct Symbol_s    Symbol_t;
 typedef struct Node_s      Node_t;
-typedef struct Graph_t     Graph_t;
+typedef struct Graph_s     Graph_t;
 typedef struct CharClass_s CharClass_t;
 typedef struct Tab_s       Tab_t;
 
