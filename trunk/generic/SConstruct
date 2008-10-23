@@ -9,8 +9,8 @@ env = Environment(CCFLAGS = ['-g', '-Wall'],
 env.ParseConfig('pkg-config --cflags --libs glib-2.0')
 lib = env.Library('coco', ['Defs.c', 'Action.c', 'ArrayList.c', 'BitArray.c',
                            'CharSet.c', 'CharClass.c', 'Comment.c', 'Graph.c',
-                           'Melted.c', 'Node.c', 'Position.c', 'State.c',
-                           'Symbol.c', 'Target.c'])
+                           'HashTable.c', 'Melted.c', 'Node.c', 'Position.c',
+                           'State.c', 'Symbol.c', 'Target.c'])
 
 Export('env', 'lib')
 SConscript(os.path.join('tests', 'SConscript'))
