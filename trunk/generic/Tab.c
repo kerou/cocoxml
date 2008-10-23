@@ -25,22 +25,27 @@
 #include  <stdlib.h>
 #include  <string.h>
 #include  "Tab.h"
+#include  "Graph.h"
+#include  "Node.h"
 #include  "Symbol.h"
 
 Tab_t *
 Tab(Tab_t * self, Parser_t * parser) {
-    if (!ArrayList(&self->terminals)) goto errquit0;
-    if (!ArrayList(&self->pragmas)) goto errquit1;
-    if (!ArrayList(&self->nonterminals)) goto errquit2;
+    Bool_t malloced;
+    if (!(self = AllocObject(self, sizeof(Tab_t), &malloced))) goto errquit0;
+    if (!ArrayList(&self->terminals)) goto errquit1;
+    if (!ArrayList(&self->pragmas)) goto errquit2;
+    if (!ArrayList(&self->nonterminals)) goto errquit3;
+    if (!ArrayList(&self->nodes)) goto errquit4;
     return self;
-#if 0
- errquit3:
+ errquit4:
     ArrayList_Destruct(&self->nonterminals);
-#endif
- errquit2:
+ errquit3:
     ArrayList_Destruct(&self->pragmas);
- errquit1:
+ errquit2:
     ArrayList_Destruct(&self->terminals);
+ errquit1:
+    if (malloced) free(self);
  errquit0:
     return NULL;
 }
@@ -127,6 +132,73 @@ Tab_PrintSymbolTable(Tab_t * self)
 		HTIterator_Key(&iter));
     }
     fprintf(self->trace, "\n");
+}
+
+void
+Tab_PrintSet(Tab_t * self, BitArray_t * s, int indent)
+{
+    int col, len, idx; Symbol_t * sym;
+    col = indent;
+    for (idx = 0; idx < self->terminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->terminals, idx);
+	if (!BitArray_Get(s, sym->n)) continue;
+	len = strlen(sym->name);
+	if (col + len >= 80) {
+	    fprintf(self->trace, "\n");
+	    for (col = 1; col < indent; ++col) fprintf(self->trace, " ");
+	}
+	fprintf(self->trace, "%s ", sym->name);
+	col += len + 1;
+    }
+    if (col == indent) fprintf(self->trace, "-- empty set --");
+    fprintf(self->trace, "\n");
+}
+
+Node_t *
+Tab_NewNodeTSL(Tab_t * self, int typ, Symbol_t * sym, int line)
+{
+    Node_t * node;
+    if (!(node = Node(NULL, typ, sym, line))) goto errquit0;
+    node->n = self->nodes.Count;
+    if (!ArrayList_Add(&self->nodes, node)) goto errquit1;
+    return node;
+ errquit1:
+    Node_Destruct(node); free(node);
+ errquit0:
+    return NULL;
+}
+
+Node_t *
+Tab_NewNodeTS(Tab_t * self, int typ, Node_t * sub)
+{
+    Node_t * node;
+    if (!(node = Tab_NewNodeTSL(self, typ, NULL, 0))) return NULL;
+    node->sub = sub;
+    return node;
+}
+
+Node_t *
+Tab_NewNodeTVL(Tab_t * self, int typ, int val, int line)
+{
+    Node_t * node;
+    if (!(node = Tab_NewNodeTSL(self, typ, NULL, line))) return NULL;
+    node->val = val;
+    return node;
+}
+
+void
+Tab_MakeFirstAlt(Tab_t * self, Graph_t * g)
+{
+    g->l = Tab_NewNodeTS(self, node_alt, g->l);
+    g->l->line = g->l->sub->line;
+    g->l->next = g->r;
+    g->r = g->l;
+}
+
+void
+Tab_MakeAlternative(Tab_t * self, Graph_t * g1, Graph_t * g2)
+{
+    /* HERE */
 }
 
 void
