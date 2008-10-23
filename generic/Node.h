@@ -48,6 +48,12 @@ struct Node_s {
 
 Node_t * Node(Node_t * self, int typ, Symbol_t * sym, int line);
 
+Bool_t Node_DelGraph(Node_t * self);
+Bool_t Node_DelSubGraph(Node_t * self);
+Bool_t Node_DelNode(Node_t * self);
+
+int Node_Num(Node_t * self);
+
 EXTC_END
 
 #endif /* COCO_NODE_H */

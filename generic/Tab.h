@@ -94,10 +94,6 @@ void Tab_DeleteNodes(Tab_t * self);
 Graph_t * Tab_StrToGraph(Tab_t * self, const char * str);
 void Tab_SetContextTrans(Tab_t * self, Node_t * p);
 
-Bool_t DelGraph(Node_t * p);
-Bool_t DelSubGraph(Node_t * p);
-Bool_t DelNode(Node_t * p);
-
 int Ptr(Node_t * p, Bool_t up);
 void Pos(char * buf, size_t szbuf, const Position_t * pos);
 void Name(char * buf, size_t szbuf, const char * name);
