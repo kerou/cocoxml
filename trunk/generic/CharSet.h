@@ -52,6 +52,7 @@ void CharSet_Clear(CharSet_t * self);
 int CharSet_Fill(CharSet_t * self);
 
 void CharSet_Dump(const CharSet_t * self, DumpBuffer_t * buf);
+void CharSet_DumpInt(const CharSet_t * self, DumpBuffer_t * buf);
 
 EXTC_END
 

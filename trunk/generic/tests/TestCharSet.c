@@ -29,6 +29,14 @@
 #define   NUMBITS  32
 
 static void
+CharSet_AllSet(CharSet_t * self)
+{
+    int idx;
+    for (idx = 0; idx < NUMBITS; ++idx)
+	CharSet_Set(self, idx);
+}
+
+static void
 CharSet_RandomSet(CharSet_t * self)
 {
     long int rnd;
@@ -40,45 +48,79 @@ CharSet_RandomSet(CharSet_t * self)
     }
 }
 
-void
-TestCharSet(void)
+static void
+DumpCharSet(FILE * fp, const char * format, const CharSet_t * cs)
 {
-    CharSet_t cs0, cs1, cs2;
     DumpBuffer_t dbuf; char buf[1024];
+    DumpBuffer(&dbuf, buf, sizeof(buf));
+    CharSet_DumpInt(cs, &dbuf);
+    fprintf(fp, format, buf);
+}
+
+static void
+ATest(FILE * fp, CharSet_t * cs0, CharSet_t * cs1)
+{
+    CharSet_t cs2;
     int idx;
 
-    COCO_ASSERT((CharSet(&cs0))); CharSet_RandomSet(&cs0);
-    DumpBuffer(&dbuf, buf, sizeof(buf)); CharSet_Dump(&cs0, &dbuf); printf("%s\n", buf);
-
-    COCO_ASSERT((CharSet(&cs1))); CharSet_RandomSet(&cs1);
-    DumpBuffer(&dbuf, buf, sizeof(buf)); CharSet_Dump(&cs1, &dbuf); printf("%s\n", buf);
-
-    COCO_ASSERT((CharSet_Clone(&cs2, &cs0)));
-    COCO_ASSERT((CharSet_Equals(&cs0, &cs2)));
+    COCO_ASSERT((CharSet_Clone(&cs2, cs0)));
+    COCO_ASSERT((CharSet_Equals(cs0, &cs2)));
     for (idx = 0; idx < NUMBITS; ++idx)
-	COCO_ASSERT(CharSet_Get(&cs0, idx) == CharSet_Get(&cs2, idx));
+	COCO_ASSERT(CharSet_Get(cs0, idx) == CharSet_Get(&cs2, idx));
 
-    COCO_ASSERT((CharSet_Or(&cs2, &cs1) == 0));
-    DumpBuffer(&dbuf, buf, sizeof(buf)); CharSet_Dump(&cs2, &dbuf); printf("%s\n", buf);
+    COCO_ASSERT((CharSet_Or(&cs2, cs1) == 0));
+    DumpCharSet(fp, "Or: %s\n", &cs2);
     for (idx = 0; idx < NUMBITS; ++idx)
-	COCO_ASSERT((CharSet_Get(&cs0, idx) || CharSet_Get(&cs1, idx)) == CharSet_Get(&cs2, idx));
+	COCO_ASSERT((CharSet_Get(cs0, idx) || CharSet_Get(cs1, idx)) == CharSet_Get(&cs2, idx));
     CharSet_Destruct(&cs2);
 
-#if 0
-    COCO_ASSERT((CharSet_Clone(&cs2, &cs0)));
-    COCO_ASSERT((CharSet_And(&cs2, &cs1) == 0));
-    DumpBuffer(&dbuf, buf, sizeof(buf)); CharSet_Dump(&cs2, &dbuf); printf("%s\n", buf);
+    COCO_ASSERT((CharSet_Clone(&cs2, cs0)));
+    COCO_ASSERT((CharSet_And(&cs2, cs1) == 0));
+    DumpCharSet(fp, "And: %s\n", &cs2);
     for (idx = 0; idx < NUMBITS; ++idx)
-	COCO_ASSERT((CharSet_Get(&cs0, idx) && CharSet_Get(&cs1, idx)) == CharSet_Get(&cs2, idx));
-    CharSet_Destruct(&cs2);
-#endif
-
-    COCO_ASSERT((CharSet_Clone(&cs2, &cs0)));
-    COCO_ASSERT((CharSet_Subtract(&cs2, &cs1) == 0));
-    DumpBuffer(&dbuf, buf, sizeof(buf)); CharSet_Dump(&cs2, &dbuf); printf("%s\n", buf);
-    for (idx = 0; idx < NUMBITS; ++idx)
-	COCO_ASSERT((CharSet_Get(&cs0, idx) && !CharSet_Get(&cs1, idx)) == CharSet_Get(&cs2, idx));
+	COCO_ASSERT((CharSet_Get(cs0, idx) && CharSet_Get(cs1, idx)) == CharSet_Get(&cs2, idx));
     CharSet_Destruct(&cs2);
 
+    COCO_ASSERT((CharSet_Clone(&cs2, cs0)));
+    COCO_ASSERT((CharSet_Subtract(&cs2, cs1) == 0));
+    DumpCharSet(fp, "Subtract: %s\n", &cs2);
+    for (idx = 0; idx < NUMBITS; ++idx)
+	COCO_ASSERT((CharSet_Get(cs0, idx) && !CharSet_Get(cs1, idx)) == CharSet_Get(&cs2, idx));
+    CharSet_Destruct(&cs2);
+
+    fprintf(fp, "\n");
+}
+
+void
+TestCharSet(FILE * fp)
+{
+    CharSet_t cs0, cs1;
+    int idx;
+
+    CharSet(&cs0); DumpCharSet(fp, "Charset 0: %s\n", &cs0);
+    CharSet(&cs1); DumpCharSet(fp, "Charset 1: %s\n", &cs1);
+    ATest(fp, &cs0, &cs1);
     CharSet_Destruct(&cs0); CharSet_Destruct(&cs1);
+
+    CharSet(&cs0); CharSet_AllSet(&cs0); DumpCharSet(fp, "Charset 0: %s\n", &cs0);
+    CharSet(&cs1); DumpCharSet(fp, "Charset 1: %s\n", &cs1);
+    ATest(fp, &cs0, &cs1);
+    CharSet_Destruct(&cs0); CharSet_Destruct(&cs1);
+
+    CharSet(&cs0); DumpCharSet(fp, "Charset 0: %s\n", &cs0);
+    CharSet(&cs1); CharSet_AllSet(&cs1); DumpCharSet(fp, "Charset 1: %s\n", &cs1);
+    ATest(fp, &cs0, &cs1);
+    CharSet_Destruct(&cs0); CharSet_Destruct(&cs1);
+
+    CharSet(&cs0); CharSet_AllSet(&cs0); DumpCharSet(fp, "Charset 0: %s\n", &cs0);
+    CharSet(&cs1); CharSet_AllSet(&cs1); DumpCharSet(fp, "Charset 1: %s\n", &cs1);
+    ATest(fp, &cs0, &cs1);
+    CharSet_Destruct(&cs0); CharSet_Destruct(&cs1);
+
+    for (idx = 0; idx < 128; ++idx) {
+	CharSet(&cs0); CharSet_RandomSet(&cs0); DumpCharSet(fp, "Charset 0: %s\n", &cs0);
+	CharSet(&cs1); CharSet_RandomSet(&cs1); DumpCharSet(fp, "Charset 1: %s\n", &cs1);
+	ATest(fp, &cs0, &cs1);
+	CharSet_Destruct(&cs0); CharSet_Destruct(&cs1);
+    }
 }

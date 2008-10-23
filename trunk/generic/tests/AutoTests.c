@@ -25,12 +25,19 @@
 #include  <stdlib.h>
 #include  "AutoTests.h"
 
-void TestCharSet(void);
+void TestCharSet(FILE * fp);
 
 int
 main(void)
 {
-    TestCharSet();
+    FILE * fp;
+
+    if (!(fp = fopen("AutoTests.log", "w"))) {
+	fprintf(stderr, "Open AutoTests.log for written failed.\n");
+	exit(-1);
+    }
+    TestCharSet(fp);
+    fclose(fp);
     return 0;
 }
 
