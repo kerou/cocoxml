@@ -32,25 +32,6 @@
 
 EXTC_BEGIN
 
-struct Melted_s {
-    BitArray_t * set;
-    State_t    * state;
-    Melted_t   * next;
-};
-
-Melted_t * Melted(Melted_t * self, BitArray_t * set, State_t * state);
-
-struct Comment_s {
-    char      * start;
-    char      * stop;
-    gboolean    nested;
-    Comment_t * next;
-};
-
-Comment_t *
-Comment(Comment_t * self, const char * start, const char * stop,
-	gboolean nested);
-
 struct DFA_s {
     /* Private members. */
     int         maxStates;
