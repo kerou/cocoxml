@@ -206,5 +206,5 @@ BitArray_Dump(const BitArray_t * self, DumpBuffer_t * buf)
 {
     int idx, numbits = BitArray_getCount(self);
     for (idx = 0; idx < numbits; ++idx)
-	DumpBuffer_Print(buf, "%c", BitArray_Get(self, idx) ? "1" : ".");
+	DumpBuffer_Print(buf, "%c", BitArray_Get(self, idx) ? '1' : '.');
 }
