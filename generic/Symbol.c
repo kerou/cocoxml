@@ -33,8 +33,8 @@ Symbol(Symbol_t * self, int typ, const char * name, int line)
     if (!(self->name = strdup(name))) return NULL;
     self->graph = NULL;
     self->tokenKind = 0;
-    self->deletable = 0;
-    self->firstReady = 0;
+    self->deletable = FALSE;
+    self->firstReady = FALSE;
     self->first = NULL;
     self->follow = NULL;
     self->nts = NULL;

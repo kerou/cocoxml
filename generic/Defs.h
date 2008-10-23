@@ -24,7 +24,7 @@
 #ifndef  COCO_DEFS_H
 #define  COCO_DEFS_H
 
-#include  <glib/gtypes.h>
+#include <stddef.h>
 
 #ifdef  __cplusplus
 #define  EXTC_BEGIN  extern "C" {
@@ -39,6 +39,10 @@
 #endif
 
 EXTC_BEGIN
+
+typedef int    Bool_t;
+#define TRUE   1
+#define FALSE  0
 
 typedef struct ArrayList_s ArrayList_t;
 typedef struct BitArray_s  BitArray_t;
@@ -86,7 +90,7 @@ typedef struct {
 
 void DumpBuffer(DumpBuffer_t * self, char * buf, size_t szbuf);
 void DumpBuffer_Print(DumpBuffer_t * self, const char * format, ...);
-gboolean DumpBuffer_Full(DumpBuffer_t * self);
+Bool_t DumpBuffer_Full(DumpBuffer_t * self);
 
 void Unescape(DumpBuffer_t * buf, const char * s);
 void EscapeCh(DumpBuffer_t * buf, int ch);

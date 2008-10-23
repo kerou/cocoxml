@@ -37,17 +37,17 @@ struct CharSet_s {
 
 CharSet_t * CharSet(CharSet_t * self);
 void CharSet_Destruct(CharSet_t * self);
-gboolean CharSet_Get(const CharSet_t * self, int i);
+Bool_t CharSet_Get(const CharSet_t * self, int i);
 int CharSet_Set(CharSet_t * self, int i);
 CharSet_t * CharSet_Clone(CharSet_t * self, const CharSet_t * s);
-gboolean CharSet_Equals(const CharSet_t * self, const CharSet_t * s);
+Bool_t CharSet_Equals(const CharSet_t * self, const CharSet_t * s);
 int CharSet_Elements(const CharSet_t * self);
 int CharSet_First(const CharSet_t * self);
 int CharSet_Or(CharSet_t * self, const CharSet_t * s);
 int CharSet_And(CharSet_t * self, const CharSet_t * s);
 int CharSet_Subtract(CharSet_t * self, const CharSet_t * s);
-gboolean CharSet_Includes(const CharSet_t * self, const CharSet_t * s);
-gboolean CharSet_Intersects(const CharSet_t * self, const CharSet_t * s);
+Bool_t CharSet_Includes(const CharSet_t * self, const CharSet_t * s);
+Bool_t CharSet_Intersects(const CharSet_t * self, const CharSet_t * s);
 void CharSet_Clear(CharSet_t * self);
 int CharSet_Fill(CharSet_t * self);
 

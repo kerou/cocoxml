@@ -31,7 +31,7 @@ Node(Node_t * self, int typ, Symbol_t * sym, int line)
     self->next = NULL;
     self->down = NULL;
     self->sub = NULL;
-    self->up = 0;
+    self->up = FALSE;
     self->sym = sym;
     self->val = 0;
     self->code = 0;

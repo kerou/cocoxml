@@ -33,13 +33,13 @@ EXTC_BEGIN
 struct Comment_s {
     char      * start;
     char      * stop;
-    gboolean    nested;
+    Bool_t      nested;
     Comment_t * next;
 };
 
 Comment_t *
 Comment(Comment_t * self, const char * start, const char * stop,
-	gboolean nested);
+	Bool_t nested);
 
 void
 Comment_Destruct(Comment_t * self);

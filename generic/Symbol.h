@@ -36,8 +36,8 @@ struct Symbol_s {
     char       * name;
     Node_t     * graph;
     int          tokenKind;
-    gboolean     deletable;
-    gboolean     firstReady;
+    Bool_t       deletable;
+    Bool_t       firstReady;
     BitArray_t * first;
     BitArray_t * follow;
     BitArray_t * nts;

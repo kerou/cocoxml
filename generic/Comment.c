@@ -26,8 +26,7 @@
 #include  "Comment.h"
 
 Comment_t *
-Comment(Comment_t * self, const char * start, const char * stop,
-	gboolean nested)
+Comment(Comment_t * self, const char * start, const char * stop, Bool_t nested)
 {
     self->start = strdup(start);
     self->stop = strdup(stop);
