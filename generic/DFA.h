@@ -26,8 +26,8 @@
 
 #include <stdio.h>
 
-#ifndef  COCO_DEFS_H
-#include  "Defs.h"
+#ifndef  COCO_CHARSET_H
+#include  "CharSet.h"
 #endif
 
 EXTC_BEGIN
@@ -87,22 +87,6 @@ struct Comment_s {
 Comment_t *
 Comment(Comment_t * self, const char * start, const char * stop,
 	gboolean nested);
-
-struct CharSet_s {
-};
-
-CharSet_t * CharSet(CharSet_t * self);
-void CharSet_Set(CharSet_t * self, int i);
-CharSet_t * CharSet_Clone(CharSet_t * self, const CharSet_t * s);
-gboolean CharSet_Equals(const CharSet_t * self, const CharSet_t * s);
-int CharSet_Elements(const CharSet_t * self);
-int CharSet_First(const CharSet_t * self);
-void CharSet_Or(CharSet_t * self, const CharSet_t * s);
-void CharSet_And(CharSet_t * self, const CharSet_t * s);
-void CharSet_Subtract(CharSet_t * self, const CharSet_t * s);
-gboolean CharSet_Includes(CharSet_t * self, const CharSet_t * s);
-gboolean CharSet_Intersects(CharSet_t * self, const CharSet_t * s);
-void CharSet_Fill(CharSet_t * self);
 
 struct DFA_s {
     /* Private members. */
