@@ -145,19 +145,104 @@ CharSet_First(const CharSet_t * self)
     return -1;
 }
 
-void
+int
 CharSet_Or(CharSet_t * self, const CharSet_t * s)
 {
+    Range_t * tmp, * cur0 = self->head, * prev = NULL;
+    const Range_t * cur1 = s->head;
+
+    while (cur0 && cur1) {
+	if (cur0->from > cur1->to + 1) {
+	    /* cur1 has to be inserted before cur0. */
+	    if (!(tmp = new_Range(cur1->from, cur1->to))) return -1;
+	    if (prev == NULL) self->head = tmp;
+	    else prev->next = tmp;
+	    tmp->next = cur0;
+	    prev = tmp; cur1 = cur1->next;
+	} else if (cur0->to + 1 >= cur1->from) {
+	    /* cur0, cur1 overlapped, expand cur0. */
+	    if (cur0->from > cur1->from) cur0->from = cur1->from;
+	    if (cur0->to < cur1->to) {
+		cur0->to = cur1->to;
+		/* Try to combine cur0->next. */
+		while (cur0->next && cur0->next->from <= cur0->to + 1) {
+		    tmp = cur0->next;
+		    cur0->next = cur0->next->next;
+		    if (cur0->to < tmp->to) cur0->to = tmp->to;
+		}
+	    }
+	    cur1 = cur1->next;
+	} else { /* cur0->to + 1 < cur1->from */
+	    prev = cur0; cur0 = cur0->next;
+	}
+    }
+    while (cur1) { /* Add all of the remaining. */
+	if (!(tmp = new_Range(cur1->from, cur1->to))) return -1;
+	if (prev == NULL) self->head = tmp;
+	else prev->next = tmp;
+	prev = tmp; cur1 = cur1->next;
+    }
+    return 0;
 }
 
-void
+int
 CharSet_And(CharSet_t * self, const CharSet_t * s)
 {
+    Range_t * tmp, * cur0 = self->head, * prev = NULL;
+    const Range_t * cur1 = s->head;
+
+    while (cur0 && cur1) {
+	if (cur0->from > cur1->to) {
+	    cur1 = cur1->next;
+	} else if (cur0->to <= cur1->from) {
+	    if (cur0->from < cur1->from) cur0->from = cur1->from;
+	    if (cur0->to > cur1->to) {
+		if (!(tmp = new_Range(cur1->to + 2, cur0->to))) return -1;
+		cur0->to = cur1->to;
+		tmp->next = cur0->next; cur0->next = tmp;
+		cur1 = cur1->next;
+	    }
+	    cur0 = cur0->next;
+	} else { /* cur0->to > cur1->from, Delete cur0 */
+	    tmp = cur0; cur0 = cur0->next;
+	    if (prev == NULL) self->head = cur0;
+	    else prev->next = cur0;
+	    Del_Range(tmp);
+	}
+    }
+    return 0;
 }
 
-void
+int
 CharSet_Subtract(CharSet_t * self, const CharSet_t * s)
 {
+    Range_t * tmp, * cur0 = self->head, * prev = NULL;
+    const Range_t * cur1 = s->head;
+
+    while (cur0 && cur1) {
+	if (cur0->from > cur1->to) {
+	    cur1 = cur1->next;
+	} else if (cur0->from < cur1->from && cur0->to <= cur1->to) {
+	    cur0->to = cur1->from - 1;
+	    prev = cur0; cur0 = cur0->next;
+	} else if (cur0->from < cur1->from && cur0->to > cur1->to) {
+	    if (!(tmp = new_Range(cur1->to + 1, cur0->to))) return -1;
+	    tmp->next = cur0->next; cur0->next = tmp;
+	    prev = cur0; cur0 = cur0->next;
+	    cur1 = cur1->next;
+	} else if (cur0->from >= cur1->from && cur0->to <= cur1->to) {
+	    tmp = cur0; cur0 = cur0->next;
+	    if (prev == NULL) self->head = cur0;
+	    else prev->next = cur0;
+	    Del_Range(tmp);
+	} else if (cur0->from >= cur1->from && cur0->to > cur1->to) {
+	    cur0->from = cur1->to + 1;
+	    cur1 = cur1->next;
+	} else { /* cur0->to < cur1->from */
+	    prev = cur0; cur0 = cur0->next;
+	}
+    }
+    return 0;
 }
 
 gboolean
