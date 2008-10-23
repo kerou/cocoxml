@@ -169,6 +169,7 @@ CharSet_Or(CharSet_t * self, const CharSet_t * s)
 		    tmp = cur0->next;
 		    cur0->next = cur0->next->next;
 		    if (cur0->to < tmp->to) cur0->to = tmp->to;
+		    Del_Range(tmp);
 		}
 	    }
 	    cur1 = cur1->next;
@@ -295,11 +296,11 @@ CharSet_Intersects(const CharSet_t * self, const CharSet_t * s)
 void
 CharSet_Clear(CharSet_t * self)
 {
-    Range_t * del;
+    Range_t * tmp;
     while (self->head != NULL) {
-	del = self->head;
+	tmp = self->head;
 	self->head = self->head->next;
-	free(del);
+	Del_Range(tmp);
     }
 }
 
