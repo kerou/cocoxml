@@ -22,6 +22,7 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "Node.h"
+#include  "Symbol.h"
 
 Node_t *
 Node(Node_t * self, int typ, Symbol_t * sym, int line)
@@ -40,4 +41,34 @@ Node(Node_t * self, int typ, Symbol_t * sym, int line)
     self->line = line;
     self->state = NULL;
     return self;
+}
+
+Bool_t
+Node_DelGraph(Node_t * self)
+{
+    return self == NULL || (Node_DelNode(self) && Node_DelGraph(self->next));
+}
+
+Bool_t
+Node_DelSubGraph(Node_t * self)
+{
+    return self == NULL || (Node_DelNode(self) && Node_DelSubGraph(self->next));
+}
+
+Bool_t
+Node_DelNode(Node_t * self)
+{
+    if (self->typ == node_nt) return self->sym->deletable;
+    else if (self->typ == node_alt)
+	return Node_DelSubGraph(self->sub) ||
+	    (self->down != NULL && Node_DelSubGraph(self->down));
+    return self->typ == node_iter || self->typ == node_opt ||
+	self->typ == node_sem || self->typ == node_eps ||
+	self->typ == node_rslv || self->typ == node_sync;
+}
+
+int
+Node_Num(Node_t * self)
+{
+    return self ? self->n : 0;
 }
