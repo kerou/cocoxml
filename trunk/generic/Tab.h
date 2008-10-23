@@ -33,42 +33,6 @@
 
 EXTC_BEGIN
 
-struct Node_s {
-    int          n;
-    int          typ;
-    Node_t     * next;
-    Node_t     * down;
-    Node_t     * sub;
-    gboolean     up;
-    Symbol_t   * sym;
-    int          val;
-    int          code;
-    BitArray_t * set;
-    Position_t * pos;
-    int          line;
-    State_t    * state;
-};
-
-Node_t * Node(Node_t * self, int typ, Symbol_t * sym, int line);
-
-struct Graph_s {
-    Node_t * l;
-    Node_t * r;
-};
-
-Graph_t * Graph(Graph_t * self);
-Graph_t * GraphLR(Graph_t * self, Node_t * left, Node_t * right);
-Graph_t * GraphP(Graph_t * self, Node_t * p);
-
-struct CharClass_s {
-    int n;
-    char * name;
-    CharSet_t * set;
-};
-
-CharClass_t *
-CharClass(CharClass_t * self, const char * name, CharSet_t * s);
-
 struct Tab_s {
     Position_t * semDeclPos;
     CharSet_t  * ignored;
