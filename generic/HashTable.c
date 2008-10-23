@@ -85,10 +85,6 @@ HashTable_Get(const HashTable_t * self, const char * key)
     return NULL;
 }
 
-struct HTIterator_s {
-    HTEntry_t ** cur, ** last;
-};
-
 HTIterator_t *
 HashTable_GetIterator(const HashTable_t * self, HTIterator_t * iter)
 {
