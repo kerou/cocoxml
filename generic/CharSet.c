@@ -194,19 +194,35 @@ CharSet_And(CharSet_t * self, const CharSet_t * s)
     while (cur0 && cur1) {
 	if (cur0->from > cur1->to) {
 	    cur1 = cur1->next;
-	} else if (cur0->to <= cur1->from) {
-	    if (cur0->from < cur1->from) cur0->from = cur1->from;
-	    if (cur0->to > cur1->to) {
-		if (!(tmp = new_Range(cur1->to + 2, cur0->to))) return -1;
-		cur0->to = cur1->to;
-		tmp->next = cur0->next; cur0->next = tmp;
-		cur1 = cur1->next;
-	    }
-	    cur0 = cur0->next;
-	} else { /* cur0->to > cur1->from, Delete cur0 */
+	} else if (cur0->to < cur1->from) {
 	    tmp = cur0; cur0 = cur0->next;
 	    if (prev == NULL) self->head = cur0;
 	    else prev->next = cur0;
+	    Del_Range(tmp);
+	} else if (cur0->from < cur1->from && cur0->to <= cur1->to) {
+	    cur0->from = cur1->from;
+	    prev = cur0; cur0 = cur0->next;
+	} else if (cur0->from < cur1->from && cur0->to > cur1->to) {
+	    if (!(tmp = new_Range(cur1->to + 2, cur0->to))) return -1;
+	    tmp->next = cur0->next; cur0->next = tmp;
+	    cur0->from = cur1->from; cur0->to = cur1->to;
+	    prev = cur0; cur0 = cur0->next;
+	    cur1 = cur1->next;
+	} else if (cur0->from >= cur1->from && cur0->to <= cur1->to) {
+	    prev = cur0; cur0 = cur0->next;
+	} else if (cur0->from >= cur1->from && cur0->to > cur1->to) {
+	    if (!(tmp = new_Range(cur1->to + 2, cur0->to))) return -1;
+	    tmp->next = cur0->next; cur0->next = tmp;
+	    cur0->to = cur1->to;
+	    prev = cur0; cur0 = cur0->next;
+	    cur1 = cur1->next;
+	}
+    }
+    if (cur0) {
+	if (prev == NULL) self->head = NULL;
+	else prev->next = NULL;
+	while (cur0) {
+	    tmp = cur0; cur0 = cur0->next;
 	    Del_Range(tmp);
 	}
     }
@@ -222,11 +238,14 @@ CharSet_Subtract(CharSet_t * self, const CharSet_t * s)
     while (cur0 && cur1) {
 	if (cur0->from > cur1->to) {
 	    cur1 = cur1->next;
+	} else if (cur0->to < cur1->from) {
+	    prev = cur0; cur0 = cur0->next;
 	} else if (cur0->from < cur1->from && cur0->to <= cur1->to) {
 	    cur0->to = cur1->from - 1;
 	    prev = cur0; cur0 = cur0->next;
 	} else if (cur0->from < cur1->from && cur0->to > cur1->to) {
 	    if (!(tmp = new_Range(cur1->to + 1, cur0->to))) return -1;
+	    cur0->to = cur1->from - 1;
 	    tmp->next = cur0->next; cur0->next = tmp;
 	    prev = cur0; cur0 = cur0->next;
 	    cur1 = cur1->next;
@@ -238,8 +257,6 @@ CharSet_Subtract(CharSet_t * self, const CharSet_t * s)
 	} else if (cur0->from >= cur1->from && cur0->to > cur1->to) {
 	    cur0->from = cur1->to + 1;
 	    cur1 = cur1->next;
-	} else { /* cur0->to < cur1->from */
-	    prev = cur0; cur0 = cur0->next;
 	}
     }
     return 0;
@@ -304,6 +321,20 @@ CharSet_Dump(const CharSet_t * self, DumpBuffer_t * buf)
 	    DumpBuffer_Print(buf, "'"); EscapeCh(buf, cur->from); DumpBuffer_Print(buf, "'");
 	    DumpBuffer_Print(buf, "..");
 	    DumpBuffer_Print(buf, "'"); EscapeCh(buf, cur->to); DumpBuffer_Print(buf, "'");
+	}
+	if (cur->next) DumpBuffer_Print(buf, ", ");
+    }
+}
+
+void
+CharSet_DumpInt(const CharSet_t * self, DumpBuffer_t * buf)
+{
+    const Range_t * cur;
+    for (cur = self->head; cur && !DumpBuffer_Full(buf); cur = cur->next) {
+	if (cur->from == cur->to) {
+	    DumpBuffer_Print(buf, "%d", cur->from);
+	} else {
+	    DumpBuffer_Print(buf, "%d..%d", cur->from, cur->to);
 	}
 	if (cur->next) DumpBuffer_Print(buf, ", ");
     }
