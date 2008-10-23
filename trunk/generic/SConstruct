@@ -7,7 +7,8 @@ import os.path
 env = Environment(CCFLAGS = ['-g', '-Wall'],
                   CPPPATH = [os.getcwd()])
 env.ParseConfig('pkg-config --cflags --libs glib-2.0')
-lib = env.Library('coco', ['Defs.c', 'BitArray.c', 'CharSet.c'])
+lib = env.Library('coco', ['Defs.c', 'BitArray.c', 'CharSet.c',
+                           'Position.c', 'Symbol.c'])
 
 Export('env', 'lib')
 SConscript(os.path.join('tests', 'SConscript'))
