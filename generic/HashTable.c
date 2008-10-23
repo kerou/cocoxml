@@ -97,13 +97,13 @@ HashTable_GetIterator(const HashTable_t * self, HTIterator_t * iter)
     return iter;
 }
 
-int
+Bool_t
 HTIterator_Forward(HTIterator_t * self)
 {
     while (self->cur < self->last)
-	if (*self->cur) return 0;
+	if (*self->cur) return TRUE;
 	else ++self->cur;
-    return -1;
+    return FALSE;
 }
 
 const char *

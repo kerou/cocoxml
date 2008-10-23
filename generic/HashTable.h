@@ -44,7 +44,7 @@ void * HashTable_Get(const HashTable_t * self, const char * key);
 HTIterator_t *
 HashTable_GetIterator(const HashTable_t * self, HTIterator_t * iter);
 
-int HTIterator_Forward(HTIterator_t * self);
+Bool_t HTIterator_Forward(HTIterator_t * self);
 const char * HTIterator_Key(HTIterator_t * iter);
 void * HTIterator_Value(HTIterator_t * iter);
 
