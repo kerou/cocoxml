@@ -29,7 +29,10 @@
 #endif
 
 typedef struct HTEntry_s HTEntry_t;
-typedef struct HTIterator_s HTIterator_t;
+
+typedef struct {
+    HTEntry_t ** cur, ** last;
+} HTIterator_t;
 
 struct HashTable_s {
     HTEntry_t ** first, ** last;
