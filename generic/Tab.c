@@ -130,19 +130,19 @@ Tab_PrintSymbolTable(Tab_t * self)
 }
 
 void
-Tab_SetDDT(const char * s)
+Tab_SetDDT(Tab_t * self, const char * s)
 {
     while (*s) {
-	if (*s >= '0' && *s <= '9') ddt[*s - '0'] = TRUE;
+	if (*s >= '0' && *s <= '9') self->ddt[*s - '0'] = TRUE;
 	else switch (*s) {
-	    case 'A': case 'a': ddt[0] = TRUE; break; /* trace automation */
-	    case 'F': case 'f': ddt[1] = TRUE; break; /* list first/follow sets */
-	    case 'G': case 'g': ddt[2] = TRUE; break; /* print syntax graph */
-	    case 'I': case 'i': ddt[3] = TRUE; break; /* trace computation of first sets */
-	    case 'J': case 'j': ddt[4] = TRUE; break; /* print ANY and SYNC sets */
-	    case 'P': case 'p': ddt[8] = TRUE; break; /* print statistics */
-	    case 'S': case 's': ddt[6] = TRUE; break; /* list symbol table */
-	    case 'X': case 'x': ddt[7] = TRUE; break; /* list cross reference table */
+	    case 'A': case 'a': self->ddt[0] = TRUE; break; /* trace automation */
+	    case 'F': case 'f': self->ddt[1] = TRUE; break; /* list first/follow sets */
+	    case 'G': case 'g': self->ddt[2] = TRUE; break; /* print syntax graph */
+	    case 'I': case 'i': self->ddt[3] = TRUE; break; /* trace computation of first sets */
+	    case 'J': case 'j': self->ddt[4] = TRUE; break; /* print ANY and SYNC sets */
+	    case 'P': case 'p': self->ddt[8] = TRUE; break; /* print statistics */
+	    case 'S': case 's': self->ddt[6] = TRUE; break; /* list symbol table */
+	    case 'X': case 'x': self->ddt[7] = TRUE; break; /* list cross reference table */
 	    default: break;
 	    }
 	++s;
