@@ -38,7 +38,7 @@ struct ArrayList_s {
 
 ArrayList_t * ArrayList(ArrayList_t * self);
 void ArrayList_Destruct(ArrayList_t * self);
-int ArrayList_Add(ArrayList_t * self, void * value);
+void ArrayList_Add(ArrayList_t * self, void * value);
 void ArrayList_Remove(ArrayList_t * self, void * value);
 void * ArrayList_Get(ArrayList_t * self, int index);
 void ArrayList_Clear(ArrayList_t * self);
