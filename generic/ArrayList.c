@@ -41,19 +41,16 @@ ArrayList_Destruct(ArrayList_t * self)
     if (self->Data)  CocoFree(self->Data);
 }
 
-int
+void
 ArrayList_Add(ArrayList_t * self, void * value)
 {
-    int newCapacity; void ** tmp;
+    int newCapacity;
     if (self->Count >= self->Capacity) {
 	newCapacity = self->Capacity + self->Capacity;
-	if (!(tmp = CocoRealloc(self->Data, sizeof(void *) * newCapacity)))
-	    return -1;
-	self->Data = tmp;
+	self->Data = CocoRealloc(self->Data, sizeof(void *) * newCapacity);
 	self->Capacity = newCapacity;
     }
     self->Data[self->Count++] = value;
-    return 0;
 }
 
 void

@@ -94,7 +94,7 @@ ATest(FILE * fp, CharSet_t * cs0, CharSet_t * cs1)
     }
     COCO_ASSERT((CharSet_Elements(cs0) == cnt));
 
-    COCO_ASSERT((CharSet_Or(&cs2, cs1) == 0));
+    CharSet_Or(&cs2, cs1);
     DumpCharSet(fp, "Or: %s\n", &cs2);
     for (idx = 0; idx < NUMBITS; ++idx)
 	COCO_ASSERT((CharSet_Get(cs0, idx) || CharSet_Get(cs1, idx)) == CharSet_Get(&cs2, idx));
@@ -103,7 +103,7 @@ ATest(FILE * fp, CharSet_t * cs0, CharSet_t * cs1)
     CharSet_Destruct(&cs2);
 
     COCO_ASSERT((CharSet_Clone(&cs2, cs0)));
-    COCO_ASSERT((CharSet_And(&cs2, cs1) == 0));
+    CharSet_And(&cs2, cs1);
     DumpCharSet(fp, "And: %s\n", &cs2);
     for (idx = 0; idx < NUMBITS; ++idx)
 	COCO_ASSERT((CharSet_Get(cs0, idx) && CharSet_Get(cs1, idx)) == CharSet_Get(&cs2, idx));
@@ -112,7 +112,7 @@ ATest(FILE * fp, CharSet_t * cs0, CharSet_t * cs1)
     CharSet_Destruct(&cs2);
 
     COCO_ASSERT((CharSet_Clone(&cs2, cs0)));
-    COCO_ASSERT((CharSet_Subtract(&cs2, cs1) == 0));
+    CharSet_Subtract(&cs2, cs1);
     DumpCharSet(fp, "Subtract: %s\n", &cs2);
     for (idx = 0; idx < NUMBITS; ++idx)
 	COCO_ASSERT((CharSet_Get(cs0, idx) && !CharSet_Get(cs1, idx)) == CharSet_Get(&cs2, idx));
@@ -155,7 +155,7 @@ TestCharSet(FILE * fp)
 	ATest(fp, &cs0, &cs1);
 
 	COCO_ASSERT((CharSet_Clone(&cs2, &cs0)));
-	COCO_ASSERT((CharSet_Subtract(&cs2, &cs1) == 0));
+	CharSet_Subtract(&cs2, &cs1);
 
 	ATest(fp, &cs0, &cs2);
 	ATest(fp, &cs2, &cs0);
