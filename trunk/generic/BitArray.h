@@ -36,6 +36,7 @@ struct BitArray_s {
 };
 
 BitArray_t * BitArray(BitArray_t * self, int numbits);
+BitArray_t * BitArray1(BitArray_t * self, int numbits);
 BitArray_t * BitArray_Clone(BitArray_t * self, const BitArray_t * value);
 void BitArray_Destruct(BitArray_t * self);
 
