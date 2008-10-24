@@ -55,12 +55,10 @@ Tab_NewSym(Tab_t * self, int typ, const char * name, int line)
 {
     Symbol_t * sym;
 
-#if 0  /* Is this possible */
     if (!strcmp(name, "\"\"")) {
-	self->parser->SemErr("empty token now allowed");
+	Parser_SemErr(self->parser, "empty token now allowed");
 	name = "???";
     }
-#endif
     if (!(sym = malloc(sizeof(Symbol_t)))) return NULL;
     if (!(Symbol(sym, typ, name, line))) { free(sym); return NULL; }
 
@@ -269,7 +267,8 @@ Tab_StrToGraph(Tab_t * self, const char * str)
 
     DumpBuffer(&dbuf, buf, sizeof(buf));
     Unescape(&dbuf, subStr);
-    if (strlen(buf) == 0) /* parser->SemErr("empty token not allowed") */;
+    if (strlen(buf) == 0)
+	Parser_SemErr(self->parser, "empty token not allowed");
     g = Graph(NULL);
     g->r = self->dummyNode;
     for (cur = buf; *cur; ++cur) {
@@ -278,6 +277,43 @@ Tab_StrToGraph(Tab_t * self, const char * str)
     }
     g->l = self->dummyNode->next; self->dummyNode->next = NULL;
     return g;
+}
+
+void
+Tab_SetContextTrans(Tab_t * self, Node_t * p)
+{
+    while (p != NULL) {
+	if (p->typ == node_chr || p->typ == node_clas) {
+	    p->code = node_contextTrans;
+	} else if (p->typ == node_opt || p->typ == node_iter) {
+	    Tab_SetContextTrans(self, p->sub);
+	} else if (p->typ == node_alt) {
+	    Tab_SetContextTrans(self, p->sub);
+	    Tab_SetContextTrans(self, p->down);
+	}
+	if (p->up) break;
+	p = p->next;
+    }
+}
+
+void
+Tab_PrintNodes(Tab_t * self)
+{
+    Node_t * p; int idx;
+    DumpBuffer_t dbuf; char lnbuf[256];
+    fprintf(self->trace, "Graph nodes:\n");
+    fprintf(self->trace, "----------------------------------------------------\n");
+    fprintf(self->trace, "   n type name          next  down   sub   pos  line\n");
+    fprintf(self->trace, "                               val  code\n");
+    fprintf(self->trace, "----------------------------------------------------\n");
+
+    for (idx = 0; idx < self->nodes.Count; ++idx) {
+	p = (Node_t *)ArrayList_Get(&self->nodes, idx);
+	DumpBuffer(&dbuf, lnbuf, sizeof(lnbuf));
+	Node_Dump(p, &dbuf, self);
+	fprintf(self->trace, "%s\n", lnbuf);
+    }
+    fprintf(self->trace, "\n");
 }
 
 void
