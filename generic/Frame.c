@@ -44,7 +44,8 @@ LocateMark(char ** b, char ** e, const char * lmark, const char * rmark)
 }
 
 static Bool_t
-CheckMark(char * lnbuf, char ** retCommand, char ** retParamStr)
+CheckMark(char * lnbuf, char * retIndent, size_t szRetIndent,
+	  char ** retCommand, char ** retParamStr)
 {
     char * b, * e, * cmdTerm;
     if (!*lnbuf) return FALSE;
@@ -55,6 +56,8 @@ CheckMark(char * lnbuf, char ** retCommand, char ** retParamStr)
     if (!LocateMark(&b, &e, "(", ")")) *retParamStr = NULL;
     else { *retParamStr = b; *e = 0; }
     *cmdTerm = 0;
+    for (b = lnbuf; isspace(*b); ++b); *b = 0;
+    strncpy(retIndent, lnbuf, szRetIndent);
     return TRUE;
 }
 
@@ -85,13 +88,14 @@ Frame(const char * frameFName, const char * outDir, const char * prefix,
       const char * license, void * cbData, frameCBFunc_t cbFunc)
 {
     FILE * framefp, * outfp; Bool_t enabled;
-    char outFName[4096], replacedPrefix[128];
+    char outFName[256], indentStr[128], replacedPrefix[128];
     char lnbuf[4096], * Command, * ParamStr;
 
     outfp = NULL; enabled = TRUE;
     if (!(framefp = fopen(frameFName, "r"))) goto errquit0;
     while (fgets(lnbuf, sizeof(lnbuf), framefp)) {
-	if (!CheckMark(lnbuf, &Command, &ParamStr)) {
+	if (!CheckMark(lnbuf, indentStr, sizeof(indentStr),
+		       &Command, &ParamStr)) {
 	    if (outfp && enabled &&
 		TextWritter(outfp, lnbuf, replacedPrefix, prefix) < 0)
 		goto errquit1;
@@ -109,7 +113,7 @@ Frame(const char * frameFName, const char * outDir, const char * prefix,
 	    enabled = TRUE;
 	} else if (!strcmp(Command, "disable")) {
 	    enabled = FALSE;
-	} else if (cbFunc(cbData, outfp, Command, ParamStr) < 0) {
+	} else if (cbFunc(cbData, outfp, indentStr, Command, ParamStr) < 0) {
 	    goto errquit1;
 	}
     }

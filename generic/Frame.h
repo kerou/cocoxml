@@ -33,7 +33,7 @@
 EXTC_BEGIN
 
 typedef int
-(* frameCBFunc_t)(void * cbData, FILE * outfp,
+(* frameCBFunc_t)(void * cbData, FILE * outfp, const char * identstr,
 		  const char * command, const char * paramstr);
 
 int
