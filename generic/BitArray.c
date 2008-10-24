@@ -50,6 +50,27 @@ BitArray(BitArray_t * self, int numbits)
 }
 
 BitArray_t *
+BitArray1(BitArray_t * self, int numbits)
+{
+    Bool_t malloced;
+    if (!(self = (BitArray_t *)
+	  AllocObject(self, sizeof(BitArray_t), &malloced)))
+	goto errquit0;
+    self->numbits = numbits;
+    if (numbits) {
+	if (!(self->data = malloc(NB2SZ(numbits)))) goto errquit1;
+	memset(self->data, 0xFF, NB2SZ(numbits));
+    } else {
+	self->data = NULL;
+    }
+    return self;
+ errquit1:
+    if (malloced) free(self);
+ errquit0:
+    return NULL;
+}
+
+BitArray_t *
 BitArray_Clone(BitArray_t * self, const BitArray_t * value)
 {
     if (value->data) {
@@ -100,7 +121,7 @@ Bool_t
 BitArray_Get(const BitArray_t * self, int index)
 {
     if (index < 0 || index >= self->numbits) return -1;
-    return self->data[index >> 3] & (1 << (index & 0x07)) != 0;
+    return (self->data[index >> 3] & (1 << (index & 0x07))) != 0;
 }
 
 void
