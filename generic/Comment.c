@@ -28,27 +28,17 @@
 Comment_t *
 Comment(Comment_t * self, const char * start, const char * stop, Bool_t nested)
 {
-    Bool_t malloced;
-    if (!(self = AllocObject(self, sizeof(Comment_t), &malloced)))
-	goto errquit0;
-    if (!(self->start = strdup(start)))
-	goto errquit1;
-    if (!(self->stop = strdup(stop)))
-	goto errquit2;
+    self = AllocObject(self, sizeof(Comment_t));
+    self->start = CocoStrdup(start);
+    self->stop = CocoStrdup(stop);
     self->nested = nested;
     self->next = NULL;
     return self;
- errquit2:
-    free(self->start);
- errquit1:
-    if (malloced) free(self);
- errquit0:
-    return NULL;
 }
 
 void
 Comment_Destruct(Comment_t * self)
 {
-    if (self->start) free(self->start);
-    if (self->stop) free(self->stop);
+    if (self->start) CocoFree(self->start);
+    if (self->stop) CocoFree(self->stop);
 }

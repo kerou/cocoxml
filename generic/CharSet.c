@@ -34,16 +34,16 @@ struct Range_s {
 Range_t *
 new_Range(int from, int to)
 {
-    Range_t * self = malloc(sizeof(Range_t));
-    if (self) { self->from = from; self->to = to; self->next = NULL; }
+    Range_t * self = CocoMalloc(sizeof(Range_t));
+    self->from = from; self->to = to; self->next = NULL;
     return self;
 }
-#define Del_Range(range)  free(range)
+#define Del_Range(range)  CocoFree(range)
 
 CharSet_t *
 CharSet(CharSet_t * self)
 {
-    if (!self && !(self = malloc(sizeof(CharSet_t)))) return NULL;
+    self = AllocObject(self, sizeof(CharSet_t));
     self->head = NULL;
     return self;
 }
@@ -65,7 +65,7 @@ CharSet_Get(const CharSet_t * self, int i)
     return FALSE;
 }
 
-int
+void
 CharSet_Set(CharSet_t * self, int i)
 {
     Range_t * cur, * prev = NULL, * tmp;
@@ -75,9 +75,9 @@ CharSet_Set(CharSet_t * self, int i)
 	    break;
 	} else if (i == cur->from - 1) { /* Extend cur->from is ok. */
 	    --cur->from;
-	    return 0;
+	    return;
 	} else if (i <= cur->to) { /* In cur already. */
-	    return 0;
+	    return;
 	} else if (i == cur->to + 1) { /* Extend cur->to is ok. */
 	    if (cur->next != NULL && i == cur->next->from - 1) {
 		/* Combine cur and cur->next. */
@@ -88,35 +88,26 @@ CharSet_Set(CharSet_t * self, int i)
 	    } else {
 		++cur->to;
 	    }
-	    return 0;
+	    return;
 	}
 	prev = cur;
     }
-    if (!(tmp = new_Range(i, i))) return -1;
+    tmp = new_Range(i, i);
     tmp->next = cur;
     if (prev == NULL) self->head = tmp;
     else prev->next = tmp;
-    return 0;
 }
 
 CharSet_t *
 CharSet_Clone(CharSet_t * self, const CharSet_t * s)
 {
-    Bool_t malloced;
     Range_t * prev, * curnew;
     const Range_t * cur1;
 
-    if (!self) {
-	if (!(self = malloc(sizeof(CharSet_t)))) return NULL;
-	malloced = TRUE;
-    }
+    self = AllocObject(self, sizeof(CharSet_t));
     self->head = NULL; prev = NULL;
     for (cur1 = s->head; cur1; cur1 = cur1->next) {
-	if (!(curnew = new_Range(cur1->from, cur1->to))) {
-	    CharSet_Clear(self);
-	    if (malloced) free(self);
-	    return NULL;
-	}
+	curnew = new_Range(cur1->from, cur1->to);
 	if (prev == NULL) self->head = curnew;
 	else prev->next = curnew;
 	prev = curnew;
@@ -153,7 +144,7 @@ CharSet_First(const CharSet_t * self)
     return -1;
 }
 
-int
+void
 CharSet_Or(CharSet_t * self, const CharSet_t * s)
 {
     Range_t * tmp, * cur0 = self->head, * prev = NULL;
@@ -162,7 +153,7 @@ CharSet_Or(CharSet_t * self, const CharSet_t * s)
     while (cur0 && cur1) {
 	if (cur0->from > cur1->to + 1) {
 	    /* cur1 has to be inserted before cur0. */
-	    if (!(tmp = new_Range(cur1->from, cur1->to))) return -1;
+	    tmp = new_Range(cur1->from, cur1->to);
 	    if (prev == NULL) self->head = tmp;
 	    else prev->next = tmp;
 	    tmp->next = cur0;
@@ -186,15 +177,14 @@ CharSet_Or(CharSet_t * self, const CharSet_t * s)
 	}
     }
     while (cur1) { /* Add all of the remaining. */
-	if (!(tmp = new_Range(cur1->from, cur1->to))) return -1;
+	tmp = new_Range(cur1->from, cur1->to);
 	if (prev == NULL) self->head = tmp;
 	else prev->next = tmp;
 	prev = tmp; cur1 = cur1->next;
     }
-    return 0;
 }
 
-int
+void
 CharSet_And(CharSet_t * self, const CharSet_t * s)
 {
     Range_t * tmp, * cur0 = self->head, * prev = NULL;
@@ -212,7 +202,7 @@ CharSet_And(CharSet_t * self, const CharSet_t * s)
 	    cur0->from = cur1->from;
 	    prev = cur0; cur0 = cur0->next;
 	} else if (cur0->from < cur1->from && cur0->to > cur1->to) {
-	    if (!(tmp = new_Range(cur1->to + 2, cur0->to))) return -1;
+	    tmp = new_Range(cur1->to + 2, cur0->to);
 	    tmp->next = cur0->next; cur0->next = tmp;
 	    cur0->from = cur1->from; cur0->to = cur1->to;
 	    prev = cur0; cur0 = cur0->next;
@@ -220,7 +210,7 @@ CharSet_And(CharSet_t * self, const CharSet_t * s)
 	} else if (cur0->from >= cur1->from && cur0->to <= cur1->to) {
 	    prev = cur0; cur0 = cur0->next;
 	} else if (cur0->from >= cur1->from && cur0->to > cur1->to) {
-	    if (!(tmp = new_Range(cur1->to + 2, cur0->to))) return -1;
+	    tmp = new_Range(cur1->to + 2, cur0->to);
 	    tmp->next = cur0->next; cur0->next = tmp;
 	    cur0->to = cur1->to;
 	    prev = cur0; cur0 = cur0->next;
@@ -235,10 +225,9 @@ CharSet_And(CharSet_t * self, const CharSet_t * s)
 	    Del_Range(tmp);
 	}
     }
-    return 0;
 }
 
-int
+void
 CharSet_Subtract(CharSet_t * self, const CharSet_t * s)
 {
     Range_t * tmp, * cur0 = self->head, * prev = NULL;
@@ -253,7 +242,7 @@ CharSet_Subtract(CharSet_t * self, const CharSet_t * s)
 	    cur0->to = cur1->from - 1;
 	    prev = cur0; cur0 = cur0->next;
 	} else if (cur0->from < cur1->from && cur0->to > cur1->to) {
-	    if (!(tmp = new_Range(cur1->to + 1, cur0->to))) return -1;
+	    tmp = new_Range(cur1->to + 1, cur0->to);
 	    cur0->to = cur1->from - 1;
 	    tmp->next = cur0->next; cur0->next = tmp;
 	    prev = cur0; cur0 = cur0->next;
@@ -268,7 +257,6 @@ CharSet_Subtract(CharSet_t * self, const CharSet_t * s)
 	    cur1 = cur1->next;
 	}
     }
-    return 0;
 }
 
 Bool_t
@@ -309,11 +297,11 @@ CharSet_Clear(CharSet_t * self)
     }
 }
 
-int
+void
 CharSet_Fill(CharSet_t * self)
 {
     CharSet_Clear(self);
-    return (self->head = new_Range(0, COCO_WCHAR_MAX)) ? 0 : -1;
+    self->head = new_Range(0, COCO_WCHAR_MAX);
 }
 
 void

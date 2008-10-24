@@ -28,7 +28,7 @@
 State_t *
 State(State_t * self)
 {
-    if (!self && !(self = malloc(sizeof(State_t)))) return NULL;
+    self = CocoMalloc(sizeof(State_t));
     self->nr = 0;
     self->firstAction = NULL;
     self->endOf = NULL;

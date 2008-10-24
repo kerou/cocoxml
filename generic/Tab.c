@@ -33,23 +33,12 @@
 
 Tab_t *
 Tab(Tab_t * self, Parser_t * parser) {
-    Bool_t malloced;
-    if (!(self = AllocObject(self, sizeof(Tab_t), &malloced))) goto errquit0;
-    if (!ArrayList(&self->terminals)) goto errquit1;
-    if (!ArrayList(&self->pragmas)) goto errquit2;
-    if (!ArrayList(&self->nonterminals)) goto errquit3;
-    if (!ArrayList(&self->nodes)) goto errquit4;
+    self = AllocObject(self, sizeof(Tab_t));
+    ArrayList(&self->terminals);
+    ArrayList(&self->pragmas);
+    ArrayList(&self->nonterminals);
+    ArrayList(&self->nodes);
     return self;
- errquit4:
-    ArrayList_Destruct(&self->nonterminals);
- errquit3:
-    ArrayList_Destruct(&self->pragmas);
- errquit2:
-    ArrayList_Destruct(&self->terminals);
- errquit1:
-    if (malloced) free(self);
- errquit0:
-    return NULL;
 }
 
 Symbol_t *
@@ -61,8 +50,8 @@ Tab_NewSym(Tab_t * self, int typ, const char * name, int line)
 	Parser_SemErr(self->parser, "empty token now allowed");
 	name = "???";
     }
-    if (!(sym = malloc(sizeof(Symbol_t)))) return NULL;
-    if (!(Symbol(sym, typ, name, line))) { free(sym); return NULL; }
+    sym = CocoMalloc(sizeof(Symbol_t));
+    Symbol(sym, typ, name, line);
 
     if (typ == node_t) {
 	sym->n = self->terminals.Count;
@@ -158,21 +147,17 @@ Node_t *
 Tab_NewNodeTSL(Tab_t * self, int typ, Symbol_t * sym, int line)
 {
     Node_t * node;
-    if (!(node = Node(NULL, typ, sym, line))) goto errquit0;
+    node = Node(NULL, typ, sym, line);
     node->n = self->nodes.Count;
-    if (!ArrayList_Add(&self->nodes, node)) goto errquit1;
+    ArrayList_Add(&self->nodes, node);
     return node;
- errquit1:
-    Node_Destruct(node); free(node);
- errquit0:
-    return NULL;
 }
 
 Node_t *
 Tab_NewNodeTS(Tab_t * self, int typ, Node_t * sub)
 {
     Node_t * node;
-    if (!(node = Tab_NewNodeTSL(self, typ, NULL, 0))) return NULL;
+    node = Tab_NewNodeTSL(self, typ, NULL, 0);
     node->sub = sub;
     return node;
 }
@@ -181,7 +166,7 @@ Node_t *
 Tab_NewNodeTVL(Tab_t * self, int typ, int val, int line)
 {
     Node_t * node;
-    if (!(node = Tab_NewNodeTSL(self, typ, NULL, line))) return NULL;
+    node = Tab_NewNodeTSL(self, typ, NULL, line);
     node->val = val;
     return node;
 }
@@ -195,18 +180,17 @@ Tab_MakeFirstAlt(Tab_t * self, Graph_t * g)
     g->r = g->l;
 }
 
-int
+void
 Tab_MakeAlternative(Tab_t * self, Graph_t * g1, Graph_t * g2)
 {
     Node_t * p;
-    if (!(g2->l = Tab_NewNodeTS(self, node_alt, g2->l))) return -1;
+    g2->l = Tab_NewNodeTS(self, node_alt, g2->l);
     g2->l->line = g2->l->sub->line;
     p = g1->l; while (p->down != NULL) p = p->down;
     p->down = g2->l;
     p = g1->r; while (p->next != NULL) p = p->next;
     p->next = g2->l;
     g2->l->next = g2->r;
-    return 0;
 }
 
 void
@@ -234,12 +218,11 @@ Tab_MakeIteration(Tab_t * self, Graph_t * g)
     }
 }
 
-int
+void
 Tab_MakeOption(Tab_t * self, Graph_t * g) {
-    if (!(g->l = Tab_NewNodeTS(self, node_opt, g->l))) return -1;
+    g->l = Tab_NewNodeTS(self, node_opt, g->l);
     g->l->next = g->r;
     g->r = g->l;
-    return 0;
 }
 
 void
@@ -251,13 +234,11 @@ Tab_Finish(Tab_t * self, Graph_t * g)
     }
 }
 
-int
+void
 Tab_DeleteNodes(Tab_t * self)
 {
     ArrayList_Clear(&self->nodes);
-    if (!(self->dummyNode = Tab_NewNodeTSL(self, node_eps, NULL, 0)))
-	return -1;
-    return 0;
+    self->dummyNode = Tab_NewNodeTSL(self, node_eps, NULL, 0);
 }
 
 Graph_t *
@@ -365,42 +346,37 @@ BitArray_t *
 Tab_First0(Tab_t * self, Node_t * p, BitArray_t * mark)
 {
     BitArray_t * fs, * fs0;
-    if (!(fs = BitArray(NULL, self->terminals.Count))) goto errquit0;
+    fs = BitArray(NULL, self->terminals.Count);
     while (p != NULL && !BitArray_Get(mark, p->n)) {
 	BitArray_Set(mark, p->n, TRUE);
 	if (p->typ == node_nt) {
 	    if (p->sym->firstReady) {
 		BitArray_Or(fs, p->sym->first);
 	    } else {
-		if (!(fs0 = Tab_First0(self, p->sym->graph, mark)))
-		    goto errquit1;
+		fs0 = Tab_First0(self, p->sym->graph, mark);
 		BitArray_Or(fs, fs0);
-		BitArray_Destruct(fs0); free(fs0);
+		BitArray_Destruct(fs0); CocoFree(fs0);
 	    }
 	} else if (p->typ == node_t || p->typ == node_wt) {
 	    BitArray_Set(fs, p->sym->n, TRUE);
 	} else if (p->typ == node_any) {
 	    BitArray_Or(fs, p->set);
 	} else if (p->typ == node_alt) {
-	    if (!(fs0 = Tab_First0(self, p->sub, mark))) goto errquit1;
+	    fs0 = Tab_First0(self, p->sub, mark);
 	    BitArray_Or(fs, fs0);
-	    BitArray_Destruct(fs0); free(fs0);
-	    if (!(fs0 = Tab_First0(self, p->down, mark))) goto errquit1;
+	    BitArray_Destruct(fs0); CocoFree(fs0);
+	    fs0 = Tab_First0(self, p->down, mark);
 	    BitArray_Or(fs, fs0);
-	    BitArray_Destruct(fs0); free(fs0);
+	    BitArray_Destruct(fs0); CocoFree(fs0);
 	} else if (p->typ == node_iter || p->typ == node_opt) {
-	    if (!(fs0 = Tab_First0(self, p->sub, mark))) goto errquit1;
+	    fs0 = Tab_First0(self, p->sub, mark);
 	    BitArray_Or(fs, fs0);
-	    BitArray_Destruct(fs0); free(fs0);
+	    BitArray_Destruct(fs0); CocoFree(fs0);
 	}
 	if (!Node_DelNode(p)) break;
 	p = p->next;
     }
     return fs;
- errquit1:
-    BitArray_Destruct(fs); free(fs);
- errquit0:
-    return NULL;
 }
 
 BitArray_t *
@@ -408,10 +384,9 @@ Tab_First(Tab_t * self, Node_t * p)
 {
     BitArray_t * mark, * fs;
 
-    if (!(mark = BitArray(NULL, self->nodes.Count))) return NULL;
+    mark = BitArray(NULL, self->nodes.Count);
     fs = Tab_First0(self, p, mark);
-    BitArray_Destruct(mark); free(mark);
-    if (!fs) return NULL;
+    BitArray_Destruct(mark); CocoFree(mark);
     if (self->ddt[3]) {
 	fprintf(self->trace, "\n");
 	if (p != NULL) fprintf(self->trace, "First: node = %d\n", p->n);
@@ -612,7 +587,8 @@ Tab_CompDeletableSymbols(Tab_t * self)
 	changed = FALSE;
 	for (idx = 0; idx < self->nonterminals.Count; ++idx) {
 	    sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
-	    if (!sym->deletable && sym->graph != NULL && Node_DelGraph(sym->graph)) {
+	    if (!sym->deletable && sym->graph != NULL &&
+		Node_DelGraph(sym->graph)) {
 		sym->deletable = TRUE; changed = TRUE;
 	    }
 	}
@@ -653,8 +629,10 @@ Tab_CompSymbolSets(Tab_t * self)
 	for (idx = 0; idx < self->nonterminals.Count; ++idx) {
 	    sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
 	    fprintf(self->trace, "%s\n", sym->name);
-	    fprintf(self->trace, "first:   "); Tab_PrintSet(self, sym->first, 10);
-	    fprintf(self->trace, "follow:  "); Tab_PrintSet(self, sym->follow, 10);
+	    fprintf(self->trace, "first:   ");
+	    Tab_PrintSet(self, sym->first, 10);
+	    fprintf(self->trace, "follow:  ");
+	    Tab_PrintSet(self, sym->follow, 10);
 	    fprintf(self->trace, "\n");
 	}
     }

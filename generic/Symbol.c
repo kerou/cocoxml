@@ -30,12 +30,10 @@
 Symbol_t *
 Symbol(Symbol_t * self, int typ, const char * name, int line)
 {
-    Bool_t malloced;
-    if (!(self = AllocObject(self, sizeof(Symbol_t), &malloced)))
-	goto errquit0;
+    self = AllocObject(self, sizeof(Symbol_t));
     self->n = 0;
     self->typ = typ;
-    if (!(self->name = strdup(name))) goto errquit1;
+    self->name = CocoStrdup(name);
     self->graph = NULL;
     self->tokenKind = 0;
     self->deletable = FALSE;
@@ -47,16 +45,12 @@ Symbol(Symbol_t * self, int typ, const char * name, int line)
     self->attrPos = NULL;
     self->semPos = NULL;
     return self;
- errquit1:
-    if (malloced) free(self);
- errquit0:
-    return NULL;
 }
 
 void
 Symbol_Destruct(Symbol_t * self)
 {
-    if (self->name) free(self->name);
+    if (self->name) CocoFree(self->name);
 }
 
 int

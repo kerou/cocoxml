@@ -27,7 +27,7 @@
 Graph_t *
 Graph(Graph_t * self)
 {
-    if (!self && !(self = malloc(sizeof(Graph_t)))) return NULL;
+    self = AllocObject(self, sizeof(Graph_t));
     self->l = self->r = NULL;
     return self;
 }
@@ -35,7 +35,7 @@ Graph(Graph_t * self)
 Graph_t *
 GraphLR(Graph_t * self, Node_t * left, Node_t * right)
 {
-    if (!self && !(self = malloc(sizeof(Graph_t)))) return NULL;
+    self = AllocObject(self, sizeof(Graph_t));
     self->l = left; self->r = right;
     return self;
 }
@@ -43,7 +43,7 @@ GraphLR(Graph_t * self, Node_t * left, Node_t * right)
 Graph_t *
 GraphP(Graph_t * self, Node_t * p)
 {
-    if (!self && !(self = malloc(sizeof(Graph_t)))) return NULL;
+    self = AllocObject(self, sizeof(Graph_t));
     self->l = self->r = p;
     return self;
 }

@@ -28,7 +28,7 @@
 Position_t *
 Position(Position_t * self, int beg, int len, int col)
 {
-    if (!self && !(self = malloc(sizeof(Position_t)))) return NULL;
+    self = CocoMalloc(sizeof(Position_t));
     self->beg = beg;
     self->len = len;
     self->col = col;
