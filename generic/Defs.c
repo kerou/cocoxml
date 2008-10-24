@@ -89,3 +89,8 @@ Escape(DumpBuffer_t * buf, const char * s)
 {
     while (*s && !DumpBuffer_Full(buf)) EscapeCh(buf, *s);
 }
+
+const char * nTyp[] = {
+    "    ", "t   ", "pr  ", "nt  ", "clas", "chr ", "wt  ", "any ", "eps ",
+    "sync", "sem ", "alt ", "iter", "opt ", "rslv"
+};
