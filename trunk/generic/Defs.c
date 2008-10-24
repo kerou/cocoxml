@@ -27,6 +27,29 @@
 #include  "Defs.h"
 
 void *
+_CocoMalloc_(size_t size, const char * fname, int line)
+{
+    void * ptr;
+    if ((ptr = malloc(size))) return ptr;
+    fprintf(stderr, "malloc failed in %s#%d!\n", fname, line);
+    exit(-1);
+}
+
+void *
+_CocoRealloc_(void * ptr, size_t size, const char * fname, int line)
+{
+    if ((ptr = realloc(ptr, size))) return ptr;
+    fprintf(stderr, "realloc failed in %s#%d!\n", fname, line);
+    exit(-1);
+}
+
+void
+_CocoFree_(void * ptr, const char * fname, int line)
+{
+    free(ptr);
+}
+
+void *
 AllocObject(void * self, size_t szobj, Bool_t * malloced)
 {
     if (self) {
