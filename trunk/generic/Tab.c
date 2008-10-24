@@ -195,10 +195,88 @@ Tab_MakeFirstAlt(Tab_t * self, Graph_t * g)
     g->r = g->l;
 }
 
-void
+int
 Tab_MakeAlternative(Tab_t * self, Graph_t * g1, Graph_t * g2)
 {
-    /* HERE */
+    Node_t * p;
+    if (!(g2->l = Tab_NewNodeTL(self, node_alt, g2->l))) return -1;
+    g2->l->line = g2->l->sub->line;
+    p = g1->l; while (p->down != NULL) p = p->down;
+    p->down = g2->l;
+    p = g1->r; while (p->next != NULL) p = p->next;
+    p->next = g2->l;
+    g2->l->next = g2->r;
+    return 0;
+}
+
+int
+Tab_MakeSequence(Tab_t * self, Graph_t * g1, Graph_t * g2)
+{
+    Node_t * q, * p = g1->r->next;
+    g1->r->next = g2->l;
+    while (p != NULL) {
+	q = p->next; p->next = g2->l; p->up = true;
+	p = q;
+    }
+    g1->r = g2->r;
+}
+
+void
+Tab_MakeIteration(Tab_t * self, Graph_t * g)
+{
+    Node_t * p, * q;
+    g->l = Tab_NewNode(self, node_iter, g->l);
+    p = g->r;
+    g->r = g->l;
+    while (p != NULL) {
+	q = p->next; p->next = g->l; p->up = true;
+	p = q;
+    }
+}
+
+int
+Tab_MakeOption(Tab_t * self, Graph_t * g) {
+    if (!(g->l = Tab_NewNode(self, node_opt, g->l))) return -1;
+    g->l->next = g->r;
+    g->r = g->l;
+    return 0;
+}
+
+void
+Tab_Finish(Tab_t * self, Graph_t * g)
+{
+    Node_t * q, * p = g->r;
+    while (p != NULL) {
+	q = p->next; p->next = NULL; p = q;
+    }
+}
+
+int
+Tab_DeleteNodes(Tab_t * self)
+{
+    ArrayList_Clear(&self->nodes);
+    if (!(self->dummyNode = Tab_NewNodeTSL(self, node_eps, NULL, 0)))
+	return -1;
+    return 0;
+}
+
+Graph_t *
+Tab_StrToGraph(const char * str)
+{
+    Graph_t * g; Node_t * p;
+    DumpBuffer dbuf; char buf[128], *cur;
+    char * subStr = strndupa(str + 1, strlen(str) - 2);
+
+    DumpBuffer(&dbuf, buf, sizeof(buf));
+    Unescape(&dbuf, subStr);
+    if (strlen(buf) == 0) /* parser->SemErr("empty token not allowed") */;
+    g = Graph(NULL);
+    g->r = dummyNode;
+    for (cur buf; *cur; ++cur) {
+	p = Tab_NewNodeTVL(self, node_chr, (int)*cur, 0);
+	g->r->next = p; g->r = p;
+    }
+    g->l = self->dummyNode->next; self->dummyNode->next = NULL;
 }
 
 void
