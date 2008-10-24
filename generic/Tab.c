@@ -30,6 +30,7 @@
 #include  "Symbol.h"
 #include  "CharClass.h"
 #include  "CharSet.h"
+#include  "SortedList.h"
 
 Tab_t *
 Tab(Tab_t * self, Parser_t * parser) {
@@ -492,7 +493,7 @@ Tab_LeadingAny(Tab_t * self, Node_t * p)
 void
 Tab_FindAS(Tab_t * self, Node_t * p)
 {
-    Node_t * a; BitArray_t * s1;
+    Node_t * a, * q; BitArray_t * s1, * tmp, * f;
     while (p != NULL) {
 	if (p->typ == node_opt || p->typ == node_iter) {
 	    Tab_FindAS(self, p->sub);
@@ -500,9 +501,26 @@ Tab_FindAS(Tab_t * self, Node_t * p)
 	    if (a != NULL)
 		BitArray_Subtract(a->set, Tab_First(self, p->next));
 	} else if (p->typ == node_alt) {
+	    s1 = BitArray(NULL, self->terminals.Count);
+	    q = p;
+	    while (q != NULL) {
+		Tab_FindAS(self, q->sub);
+		a = Tab_LeadingAny(self, q->sub);
+		if (a != NULL) {
+		    tmp = Tab_First(self, q->down);
+		    BitArray_Or(tmp, s1);
+		    BitArray_Subtract(a->set, tmp);
+		} else {
+		    f = Tab_First(self, q->sub);
+		    BitArray_Or(s1, f);
+		    BitArray_Destruct(f); CocoFree(f);
+		}
+		q = q->down;
+	    }
 	}
+	if (p->up) break;
+	p = p->next;
     }
-    /* NOT FINISH YET */
 }
 
 void
@@ -658,6 +676,342 @@ Tab_GrammarOk(Tab_t * self)
 	Tab_NoCircularProductions(self) && Tab_AllNtToTerm(self);
     if (ok) { Tab_CheckResolvers(self); Tab_CheckLL1(self); }
     return ok;
+}
+
+typedef struct {
+    Symbol_t * left, * right;
+}  CNode_t;
+
+static CNode_t *
+CNode(Symbol_t * l, Symbol_t * r)
+{
+    CNode_t * self = CocoMalloc(sizeof(CNode_t));
+    self->left = l; self->right = r;
+    return self;
+}
+
+void
+Tab_GetSingles(Tab_t * self, Node_t * p, ArrayList_t * singles)
+{
+    if (p == NULL) return;
+    if (p->typ == node_nt) {
+	if (p->up || Node_DelGraph(p->next)) ArrayList_Add(singles, p->sym);
+    } else if (p->typ == node_alt || p->typ == node_iter ||
+	       p->typ == node_opt) {
+	if (p->up || Node_DelGraph(p->next)) {
+	    Tab_GetSingles(self, p->sub, singles);
+	    if (p->typ == node_alt) Tab_GetSingles(self, p->down, singles);
+	}
+    }
+    if (!p->up && Node_DelNode(p)) Tab_GetSingles(self, p->next, singles);
+}
+
+Bool_t
+Tab_NoCircularProductions(Tab_t * self)
+{
+    Bool_t ok, changed, onLeftSide, onRightSide;
+    Symbol_t * sym, * s; int idx, idxj;
+    CNode_t * m, * n;
+    ArrayList_t list, singles;
+
+    ArrayList(&list);
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	ArrayList(&singles);
+	Tab_GetSingles(self, sym->graph, &singles);
+	for (idxj = 0; idxj < singles.Count; ++idxj) {
+	    s = (Symbol_t *)ArrayList_Get(&singles, idxj);
+	    ArrayList_Add(&list, CNode(sym, s));
+	}
+    }
+
+    do {
+	changed = FALSE;
+	for (idx = 0; idx < list.Count; ++idx) {
+	    n = (CNode_t *)ArrayList_Get(&list, idx);
+	    onLeftSide = FALSE; onRightSide = FALSE;
+	    for (idxj = 0; idxj < list.Count; ++idxj) {
+		m = (CNode_t *)ArrayList_Get(&list, idxj);
+		if (n->left == m->right) onRightSide = TRUE;
+		if (n->right == m->left) onLeftSide = TRUE;
+	    }
+	    if (!onLeftSide || !onRightSide) {
+		ArrayList_Remove(&list, n); --idx; changed = TRUE;
+	    }
+	}
+    } while (changed);
+    ok = TRUE;
+
+    for (idx = 0; idx < list.Count; ++idx) {
+	n = (CNode_t *)ArrayList_Get(&list, idx);
+	ok = FALSE; self->errors->count++;
+	fprintf(stderr, "  %s --> %s", n->left->name, n->right->name);
+    }
+    return ok;
+}
+
+void
+Tab_LL1Error(Tab_t * self, int cond, Symbol_t * sym)
+{
+    fprintf(stderr, "  LL1 warning in %s: ", self->curSy->name);
+    if (sym != NULL) fprintf(stderr, "%s is ", sym->name);
+    switch (cond) {
+    case 1: fprintf(stderr, "start of several alternatives\n"); break;
+    case 2: fprintf(stderr, "start & successor of deletable structure\n"); break;
+    case 3: fprintf(stderr, "an ANY node that matches no symbol\n"); break;
+    case 4: fprintf(stderr, "contents of [...] or {...} must not be deletable\n"); break;
+    }
+}
+
+void
+Tab_CheckOverlap(Tab_t * self, BitArray_t * s1, BitArray_t * s2, int cond)
+{
+    int idx; Symbol_t * sym;
+    for (idx = 0; idx < self->terminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->terminals, idx);
+	if (BitArray_Get(s1, sym->n) && BitArray_Get(s2, sym->n)) {
+	    Tab_LL1Error(self, cond, sym);
+	}
+    }
+}
+
+void
+Tab_CheckAlts(Tab_t * self, Node_t * p)
+{
+    BitArray_t * s1, * s2; Node_t * q;
+    while (p != NULL) {
+	if (p->typ == node_alt) {
+	    q = p;
+	    s1 = BitArray(NULL, self->terminals.Count);
+	    while (q != NULL) {
+		s2 = Tab_Expected0(self, q->sub, self->curSy);
+		Tab_CheckOverlap(self, s1, s2, 1);
+		BitArray_Or(s1, s2);
+		Tab_CheckAlts(self, q->sub);
+		q = q->down;
+	    }
+	} else if (p->typ == node_opt || p->typ == node_iter) {
+	    if (Node_DelSubGraph(p->sub)) Tab_LL1Error(self, 4, NULL);
+	    else {
+		s1 = Tab_Expected0(self, p->sub, self->curSy);
+		s2 = Tab_Expected(self, p->next, self->curSy);
+		Tab_CheckOverlap(self, s1, s2, 2);
+	    }
+	    Tab_CheckAlts(self, p->sub);
+	} else if (p->typ == node_any) {
+	    if (BitArray_Elements(p->set) == 0) Tab_LL1Error(self, 3, NULL);
+	}
+	if (p->up) break;
+	p = p->next;
+    }
+}
+
+void
+Tab_CheckLL1(Tab_t * self)
+{
+    int idx; Symbol_t * sym;
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	self->curSy = sym;
+	Tab_CheckAlts(self, self->curSy->graph);
+    }
+}
+
+void
+Tab_ResErr(Tab_t * self, Node_t * p, const char * msg)
+{
+    Errors_Warning(self->errors, p->line, p->pos->col, msg);
+}
+
+void
+Tab_CheckRes(Tab_t * self, Node_t * p, Bool_t rslvAllowed)
+{
+    Node_t * q; BitArray_t * expected, * soFar, * fs;
+    while (p != NULL) {
+	if (p->typ == node_alt) {
+	    expected = BitArray(NULL, self->terminals.Count);
+	    for (q = p; q != NULL; q = q->down)
+		BitArray_Or(expected, Tab_Expected0(self, q->sub, self->curSy));
+	    soFar = BitArray(NULL, self->terminals.Count);
+	    for (q = p; q != NULL; q = q->down) {
+		if (q->sub->typ == node_rslv) {
+		    fs = Tab_Expected(self, q->sub->next, self->curSy);
+		    if (BitArray_Intersect(fs, soFar))
+			Tab_ResErr(self, q->sub, "Warning: Resolver will never be evaluated. Place it at previous conflicting alternative.");
+		    if (!BitArray_Intersect(fs, expected))
+			Tab_ResErr(self, q->sub, "Warning: Misplaced resolver: no LL(1) conflict.");
+		} else
+		    BitArray_Or(soFar, Tab_Expected(self, q->sub, self->curSy));
+		Tab_CheckRes(self, q->sub, TRUE);
+	    }
+	} else if (p->typ == node_iter || p->typ == node_opt) {
+	    if (p->sub->typ == node_rslv) {
+		BitArray_t * fs = Tab_First(self, p->sub->next);
+		BitArray_t * fsNext = Tab_Expected(self, p->next, self->curSy);
+		if (!BitArray_Intersect(fs, fsNext))
+		    Tab_ResErr(self, p->sub, "Warning: Misplaced resolver: no LL(1) conflict.");
+	    }
+	    Tab_CheckRes(self, p->sub, TRUE);
+	} else if (p->typ == node_rslv) {
+	    if (rslvAllowed)
+		Tab_ResErr(self, p, "Warning: Misplaced resolver: no alternative.");
+	}
+	if (p->up) break;
+	p = p->next;
+	rslvAllowed = FALSE;
+    }
+}
+
+void
+Tab_CheckResolvers(Tab_t * self)
+{
+    int idx;
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	self->curSy = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	Tab_CheckRes(self, self->curSy->graph, FALSE);
+    }
+}
+
+Bool_t
+Tab_NtsComplete(Tab_t * self)
+{
+    Bool_t complete = TRUE;
+    int idx; Symbol_t * sym;
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	if (sym->graph == NULL) {
+	    complete = FALSE; self->errors->count++;
+	    fprintf(stderr, "  No production for %s\n", sym->name);
+	}
+    }
+    return complete;
+}
+
+void
+Tab_MarkReachedNts(Tab_t * self, Node_t * p)
+{
+    while (p != NULL) {
+	if (p->typ == node_nt && BitArray_Get(&self->visited, p->sym->n)) {
+	    BitArray_Set(&self->visited, p->sym->n, TRUE);
+	    Tab_MarkReachedNts(self, p->sym->graph);
+	} else if (p->typ == node_alt || p->typ == node_iter || p->typ == node_opt) {
+	    Tab_MarkReachedNts(self, p->sub);
+	    if (p->typ == node_alt) Tab_MarkReachedNts(self, p->down);
+	}
+	if (p->up) break;
+	p = p->next;
+    }
+}
+
+Bool_t
+Tab_AllNtReached(Tab_t * self)
+{
+    Bool_t ok = TRUE;
+    int idx; Symbol_t * sym;
+
+    BitArray(&self->visited, self->nonterminals.Count);
+    BitArray_Set(&self->visited, self->gramSy->n, TRUE);
+    Tab_MarkReachedNts(self, self->gramSy->graph);
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	if (!BitArray_Get(&self->visited, sym->n)) {
+	    ok = FALSE; self->errors->count++;
+	    fprintf(stderr, "  %s cannot be reached\n", sym->name);
+	}
+    }
+    return ok;
+}
+
+Bool_t
+Tab_IsTerm(Tab_t * self, Node_t * p, BitArray_t * mark)
+{
+    while (p != NULL) {
+	if (p->typ == node_nt && BitArray_Get(mark, p->sym->n)) return FALSE;
+	if (p->typ == node_alt && !Tab_IsTerm(self, p->sub, mark) &&
+	    (p->down == NULL || !Tab_IsTerm(self, p->down, mark)))
+	    return FALSE;
+	if (p->up) break;
+	p = p->next;
+    }
+    return TRUE;
+}
+
+Bool_t
+Tab_AllNtToTerm(Tab_t * self)
+{
+    Bool_t changed, ok = TRUE;
+    BitArray_t mark;
+    Symbol_t * sym;
+    int idx;
+
+    BitArray(&mark, self->nonterminals.Count);
+    do {
+	changed = FALSE;
+	for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	    sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	    if (!BitArray_Get(&mark, sym->n) &&
+		Tab_IsTerm(self, sym->graph, &mark)) {
+		BitArray_Set(&mark, sym->n, TRUE); changed = TRUE;
+	    }
+	}
+    } while (changed);
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	if (!BitArray_Get(&mark, sym->n)) {
+	    ok = FALSE; self->errors->count++;
+	    fprintf(stderr, "  %s cannot be derived to terminals\n", sym->name);
+	}
+    }
+    return ok;
+}
+
+void
+Tab_XRef(Tab_t * self)
+{
+    SortedList_t xref;
+    Symbol_t * sym;
+    int idx, idxj;
+    ArrayList_t * list;
+    Node_t * n;
+    char paddedName[13];
+    int col, line;
+
+    SortedList(&xref);
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	list = (ArrayList_t *)SortedList_Get(&xref, sym);
+	if (list == NULL) SortedList_Set(&xref, sym, list = ArrayList(NULL));
+	ArrayList_Add(list, (void *)(-sym->line));
+    }
+    for (idx = 0; idx < self->nodes.Count; ++idx) {
+	n = (Node_t *)ArrayList_Get(&self->nodes, idx);
+	if (n->typ == node_t || n->typ == node_wt || n->typ == node_nt) {
+	    list = (ArrayList_t *)SortedList_Get(&xref, n->sym);
+	    if (list == NULL) SortedList_Set(&xref, sym, list = ArrayList(NULL));
+	    ArrayList_Add(list, (void *)(n->line));
+	}
+    }
+    fprintf(self->trace, "\n");
+    fprintf(self->trace, "Cross reference list:\n");
+    fprintf(self->trace, "--------------------\n\n");
+    for (idx = 0; idx < xref.Count; ++idx) {
+	sym = (Symbol_t *)SortedList_GetKey(&xref, idx);
+	snprintf(paddedName, sizeof(paddedName), "%s            ", sym->name);
+	fprintf(self->trace, "  %12s", paddedName);
+	list = (ArrayList_t *)SortedList_Get(&xref, sym);
+	col = 14;
+	for (idxj = 0; idxj < list->Count; ++idxj) {
+	    line = (int)ArrayList_Get(list, idx);
+	    if (col + 5 > 80) {
+		fprintf(self->trace, "\n");
+		for (col = 1; col <= 14; ++col)
+		    fprintf(self->trace, " ");
+	    }
+	    fprintf(self->trace, "%5d", line); col += 5;
+	}
+	fprintf(self->trace, "\n");
+    }
+    fprintf(self->trace, "\n\n");
 }
 
 void
