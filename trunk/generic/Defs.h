@@ -98,6 +98,8 @@ void Unescape(DumpBuffer_t * buf, const char * s);
 void EscapeCh(DumpBuffer_t * buf, int ch);
 void Escape(DumpBuffer_t * buf, const char * s);
 
+extern const char * nTyp[];
+
 EXTC_END
 
 #endif  /* COCO_DEFS_H */
