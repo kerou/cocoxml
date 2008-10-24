@@ -96,27 +96,18 @@ BitArray_Elements(const BitArray_t * self)
     return elements;
 }
 
-int
+Bool_t
 BitArray_Get(const BitArray_t * self, int index)
 {
     if (index < 0 || index >= self->numbits) return -1;
-    return self->data[index >> 3] & (1 << (index & 0x07));
+    return self->data[index >> 3] & (1 << (index & 0x07)) != 0;
 }
 
-int
+void
 BitArray_Set(BitArray_t * self, int index, Bool_t value)
 {
-    /*
-    if (NB2SZ(index) > NB2SZ(self->numbits)) {
-	if (!(newdata = realloc(self->data, NB2SZ(index)))) return -1;
-	bzero(newdata + NB2SZ(self->numbits),
-	      NB2SZ(index) - NB2SZ(self->numbits));
-    }
-    if (index > self->numbits) self->numbits = index;
-    */
     if (value) self->data[index >> 3] |= 1 << (index & 0x07);
     else self->data[index >> 3] &= ~(1 << (index & 0x07));
-    return 0;
 }
 
 void
