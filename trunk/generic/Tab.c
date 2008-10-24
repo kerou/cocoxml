@@ -316,6 +316,370 @@ Tab_PrintNodes(Tab_t * self)
     fprintf(self->trace, "\n");
 }
 
+CharClass_t *
+Tab_NewCharClass(Tab_t * self, const char * name, CharSet_t * s)
+{
+    CharClass_t * c; char namebuf[8];
+    if (!strcmp(name, "#")) {
+	snprintf(namebuf, sizeof(namebuf), "#%c", self->dummyName++);
+	if (!(c = CharClass(NULL, namebuf, s))) return NULL;
+    } else {
+	if (!(c = CharClass(NULL, name, s))) return NULL;
+    }
+    c->n = self->classes.Count;
+    ArrayList_Add(&self->classes, c);
+    return c;
+}
+
+CharClass_t *
+Tab_FindCharClass(Tab_t * self, const char * name)
+{
+    int idx; CharClass_t * c;
+    for (idx = 0; idx < self->classes.Count; ++idx) {
+	c = (CharClass_t *)ArrayList_Get(&self->classes, idx);
+	if (!strcmp(c->name, name)) return c;
+    }
+    return NULL;
+}
+
+CharClass_t *
+Tab_FindCharClass(Tab_t * self, CharSet_t * s)
+{
+    int idx; CharClass_t * c;
+    for (idx = 0; idx < self->classes.Count; ++idx) {
+	c = (CharClass_t *)ArrayList_Get(&self->classes, idx);
+	if (CharSet_Equals(s, c->set)) return c;
+    }
+    return NULL;
+}
+
+CharSet_t *
+Tab_CharClassSet(Tab_t * self, int idx)
+{
+    return ((CharClass_t *)ArrayList_Get(&self->classes, idx))->set;
+}
+
+BitArray_t *
+Tab_First0(Tab_t * self, Node_t * p, BitArray_t * mark)
+{
+    BitArray_t * fs, * fs0;
+    if (!(fs = BitArray(NULL, self->terminals.Count))) goto errquit0;
+    while (p != NULL && !BitArray_Get(mark, p->n)) {
+	BitArray_Set(mark, p->n, TRUE);
+	if (p->typ == node_nt) {
+	    if (p->sym->firstReady) {
+		BitArray_Or(fs, p->sym->first);
+	    } else {
+		if (!(fs0 = Tab_First0(self, p->sym->graph, mark)))
+		    goto errquit1;
+		BitArray_Or(fs, fs0);
+		BitArray_Destruct(fs0); free(fs0);
+	    }
+	} else if (p->typ == node_t || p->typ == node_wt) {
+	    BitArray_Set(fs, p->sym->n, TRUE);
+	} else if (p->typ == node_any) {
+	    BitArray_Or(fs, p->set);
+	} else if (p->typ == node_alt) {
+	    if (!(fs0 = Tab_First0(self, p->sub, mark))) goto errquit1;
+	    BitArray_Or(fs, fs0);
+	    BitArray_Destruct(fs0); free(fs0);
+	    if (!(fs0 = Tab_First0(self, p->down, mark))) goto errquit1;
+	    BitArray_Or(fs, fs0);
+	    BitArray_Destruct(fs0); free(fs0);
+	} else if (p->typ == node_iter || p->typ == node_opt) {
+	    if (!(fs0 = Tab_First0(self, p->sub, mark))) goto errquit1;
+	    BitArray_Or(fs, fs0);
+	    BitArray_Destruct(fs0); free(fs0);
+	}
+	if (!Node_DelNode(p)) break;
+	p = p->next;
+    }
+    return fs;
+ errquit1:
+    BitArray_Destruct(fs); free(fs);
+ errquit0:
+    return NULL;
+}
+
+BitArray_t *
+Tab_First(Tab_t * self, Node_t * p)
+{
+    BitArray_t * mark, * fs;
+
+    if (!(mark = BitArray(NULL, self->nodes.Count))) return NULL;
+    fs = Tab_First0(self, p, mark);
+    BitArray_Destruct(mark); free(mark);
+    if (!fs) return NULL;
+    if (self->ddt[3]) {
+	fprintf(self->trace, "\n");
+	if (p != NULL) fprintf(self->trace, "First: node = %d\n", p->n);
+	else fprintf(self->trace, "First: node = null\n");
+	Tab_PrintSet(fs, 0);
+    }
+    return fs;
+}
+
+void
+Tab_CompFirstSets(Tab_t * self)
+{
+    Symbol_t * sym; int idx;
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	sym->first = BitArrary(NULL, self->terminals.Count);
+	sym->firstReady = FALSE;
+    }
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	sym->first = Tab_First(self, sym->graph);
+	sym->firstReady = TRUE;
+    }
+}
+
+void
+Tab_CompFollow(Tab_t * self, Node_t * p)
+{
+    BitArray * s;
+    while (p != NULL && !BitArray_Get(&self->visited, p->n)) {
+	BitArray_Set(&self->visited, p->n, TRUE);
+	if (p->typ == node_nt) {
+	    s = Tab_First(self, p->next);
+	    p->sym->follow->Or(s);
+	    if (Node_DelGraph(p->next))
+		BitArray_Set(p->sym->nts, curSy->n, TRUE);
+	} else if (p->typ == node_opt || p->typ == node_iter) {
+	    Tab_CompFollow(self, p->sub);
+	} else if (p->typ == node_alt) {
+	    Tab_CompFollow(self, p->sub); Tab_CompFollow(self, p->down);
+	}
+	p = p->next;
+    }
+}
+
+void
+Tab_Complete(Tab_t * self, Symbol_t * sym)
+{
+    int idx; Symbol_t * s;
+    if (BitArray_Get(&self->visited, sym->n)) return;
+    BitArray_Set(&self->visited, sym->n, TRUE);
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	s = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	if (BitArray_Get(sym->nts, s->n)) {
+	    Tab_Complete(self, s);
+	    sym->follow->Or(s->follow);
+	    if (sym == self->curSy) BitArray_Set(sym->nts, s->n, FALSE);
+	}
+    }
+}
+
+void
+Tab_CompFollowSets(Tab_t * self)
+{
+    int idx; Symbol_t * sym;
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	sym->follow = BitArray(NULL, self->terminals.Count);
+	sym->nts = BitArray(NULL, self->nonterminals.Count);
+    }
+    BitArray_Set(self->gramSy->follow, self->eofSy->n, TRUE);
+    BitArray(&self->visited, self->nodes.Count);
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	curSy = sym;
+	Tab_CompFollow(self, sym->graph);
+    }
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	BitArray(&self->visited, self->nonterminals.Count);
+	curSy = sym;
+	Tab_Complete(self, sym);
+    }
+}
+
+Node_t *
+Tab_LeadingAny(Tab_t * self, Node_t * p)
+{
+    Node_t * a = NULL;
+    if (p == NULL) return NULL;
+    if (p->typ == node_any) a = p;
+    else if (p->typ == node_alt) {
+	a = Tab_LeadingAny(self, p->sub);
+	if (a == NULL) a = Tab_LeadingAny(self, p->down);
+    } else if (p->typ == node_opt || p->typ == node_iter) {
+	a = Tab_LeadingAny(self, p->sub);
+    } else if (Node_DelNode(p) && !p->up) {
+	a = Tab_LeadingAny(self, p->next);
+    }
+    return a;
+}
+
+void
+Tab_FindAS(Tab_t * self, Node_t * p)
+{
+    Node_t * a; BitArray_t * s1;
+    while (p != NULL) {
+	if (p->typ == node_opt || p->typ == node_iter) {
+	    Tab_FindAS(self, p->sub);
+	    a = Tab_LeadingAny(self, p->sub);
+	    if (a != NULL)
+		BitArray_Subtract(a->set, Tab_First(self, p->next));
+	} else if (p->typ == node_alt) {
+	}
+    }
+    /* NOT FINISH YET */
+}
+
+void
+Tab_CompAnySets(Tab_t * self)
+{
+    int idx; Symbol_t * sym;
+    for (idx = 0; idx < self->nonterminals.Count; ++i) {
+	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	Tab_FindAS(self, sym->graph);
+    }
+}
+
+BitArray_t *
+Tab_Expected(Tab_t * self, Node_t * p, Symbol_t * curSy)
+{
+    BitArray * s = Tab_First(self, p);
+    if (Node_DelGraph(p)) BitArray_Or(s, curSy->follow);
+    return s;
+}
+
+BitArray_t *
+Tab_Expected0(Tab_t * self, Node_t * p, Symbol_t * curSy)
+{
+    if (p->typ == node_rslv) return BitArray(NULL, self->terminals.Count);
+    else return Tab_Expected(self, p, curSy);
+}
+
+void
+Tab_CompSync(Tab_t * self, Node_t * p)
+{
+    BitArray_t * s;
+    while (p != NULL && !BitArray_Get(&self->visited, p->n)) {
+	BitArray_Set(&self->visited, p->n, TRUE);
+	if (p->typ == node_sync) {
+	    s = Tab_Expected(self, p->next, curSy);
+	    BitArray_Set(s, eofSy->n, TRUE);
+	    BitArray_Or(self->allSyncSets, s);
+	    p->set = s;
+	} else if (p->typ == node_alt) {
+	    Tab_CompSync(self, p->sub); Tab_CompSync(self, p->down);
+	} else if (p->typ == node_opt || p->typ == node_iter) {
+	    CompSync(self, p->sub);
+	}
+	p = p->next;
+    }
+}
+
+void
+Tab_CompSyncSets(Tab_t * self)
+{
+    int idx; Symbol_t * sym;
+
+    BitArray(&self->allSyncSets, self->terminals.Count);
+    BitArray_Set(&self->allSyncSets, self->eofSy->n, TRUE);
+    BitArray(&self->visited, self->nodes.Count);
+
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	self->curSy = sym;
+	Tab_CompSync(self->curSy->graph);
+    }
+}
+
+void
+Tab_SetupAnys(Tab_t * self)
+{
+    int idx; Node_t * p;
+    for (idx = 0; idx < self->nodes.Count; ++idx) {
+	p = (Node_t *)ArrayList_Get(&self->nodes, idx);
+	if (p->typ == node_any) {
+	    p->set = BitArray(NULL, self->terminals.Count, TRUE);
+	    BitArray_Set(p->set, eofSy->n, FALSE);
+	}
+    }
+}
+
+void
+Tab_CompDeletableSymbols(Tab_t * self)
+{
+    Bool_t changed; Symbol_t * sym; int idx;
+    do {
+	changed = FALSE;
+	for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	    sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	    if (!sym->deletable && sym->graph != NULL && Node_DelGraph(sym->graph)) {
+		sym->deletable = TRUE; changed = TRUE;
+	    }
+	}
+    } while (changed);
+
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	if (sym->deletable)
+	    fprintf(stderr, "  %s deletable\n", sym->name);
+    }
+}
+
+void
+Tab_RenumberPragmas(Tab_t * self)
+{
+    int idx, n; Symbol_t * sym;
+    n = self->terminals.Count;
+    for (idx = 0; idx < self->pragmas.Count; ++idx) {
+	sym = (Symbol_t *)ArrayList_Get(&self->pragmas, idx);
+	sym->n = n++;
+    }
+}
+
+void
+Tab_CompSymbolSets(Tab_t * self)
+{
+    int idx; Symbol_t * sym; Node_t * p;
+    Tab_CompDeletableSymbols(self);
+    Tab_CompFirstSets(self);
+    Tab_CompFollowSets(self);
+    Tab_CompAnySets(self);
+    Tab_CompSyncSets(self);
+    if (self->ddt[1]) {
+	fprintf(self->trace, "\n");
+	fprintf(self->trace, "First & follow symbols:\n");
+	fprintf(self->trace, "----------------------\n\n");
+
+	for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	    sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
+	    fprintf(self->trace, "%s\n", sym->name);
+	    fprintf(self->trace, "first:   "); Tab_PrintSet(self, sym->first, 10);
+	    fprintf(self->trace, "follow:  "); Tab_PrintSet(self, sym->follow, 10);
+	    fprintf(self->trace, "\n");
+	}
+    }
+    if (self->ddt[4]) {
+	fprintf(self->trace, "\n");
+	fprintf(self->trace, "ANY and SYNC sets:\n");
+	fprintf(self->trace, "-----------------\n");
+
+	for (idx = 0; idx < self->nodes.Count; ++idx) {
+	    p = (Node_t *)ArrayList_Get(&self->nodes, idx);
+	    if (p->typ == node_any || p->typ == node_sync) {
+		fprintf(self->trace, "%4d %4s ", p->n, nTyp[p->typ]);
+		Tab_PrintSet(self, p->set, 11);
+	    }
+	}
+    }
+}
+
+Bool_t
+Tab_GrammarOk(Tab_t * self)
+{
+    Bool_t ok = Tab_NtsComplete(self) && Tab_AllNtReached(self) &&
+	Tab_NoCircularProductions(self) && Tab_AllNtToTerm(self);
+    if (ok) { Tab_CheckResolvers(self); Tab_CheckLL1(self); }
+    return ok;
+}
+
 void
 Tab_SetDDT(Tab_t * self, const char * s)
 {
