@@ -44,6 +44,7 @@ ArrayList(ArrayList_t * self)
 void
 ArrayList_Destruct(ArrayList_t * self)
 {
+    ArrayList_Clear();
     if (self->Data)  free(self->Data);
 }
 
@@ -79,4 +80,9 @@ void *
 ArrayList_Get(ArrayList_t * self, int index)
 {
     return (index >= 0 && index < self->Count) ? self->Data[index] : NULL;
+}
+
+void
+ArrayList_Clear(ArrayList_t * self)
+{
 }
