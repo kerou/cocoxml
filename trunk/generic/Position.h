@@ -38,6 +38,9 @@ struct Position_s {
 
 Position_t * Position(Position_t * self, int beg, int len, int col);
 
+const char *
+Position_Dump(Position_t * self, char * buf, size_t szbuf);
+
 EXTC_END
 
 #endif /* COCO_POSITION_H */
