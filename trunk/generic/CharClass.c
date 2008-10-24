@@ -28,21 +28,15 @@
 CharClass_t *
 CharClass(CharClass_t * self, const char * name, CharSet_t * s)
 {
-    Bool_t malloced;
-    if (!(self = AllocObject(self, sizeof(CharClass_t), &malloced)))
-	goto errquit0;
+    self = AllocObject(self, sizeof(CharClass_t));
     self->n = 0;
-    if (!(self->name = strdup(name))) goto errquit1;
+    self->name = CocoStrdup(name);
     self->set = s;
     return self;
- errquit1:
-    if (malloced) free(self);
- errquit0:
-    return NULL;
 }
 
 void
 CharClass_Destruct(CharClass_t * self)
 {
-    if (self->name) free(self->name);
+    if (self->name) CocoFree(self->name);
 }

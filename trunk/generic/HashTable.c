@@ -41,22 +41,16 @@ strhash(const char * str, int szhash)
 HashTable_t *
 HashTable(HashTable_t * self, size_t size)
 {
-    Bool_t malloced;
-    if (!(self = AllocObject(self, sizeof(HashTable_t), &malloced)))
-	goto errquit0;
-    if (!(self->first = malloc(sizeof(HTEntry_t *) * size))) goto errquit1;
+    self = AllocObject(self, sizeof(HashTable_t));
+    self->first = CocoMalloc(sizeof(HTEntry_t *) * size);
     self->last = self->first + size;
     bzero(self->first, sizeof(HTEntry_t *) * size);
     return self;
- errquit1:
-    if (malloced) free(self);
- errquit0:
-    return NULL;
 }
 
 void HashTable_Destruct(HashTable_t * self)
 {
-    if (self->first)  free(self->first);
+    if (self->first)  CocoFree(self->first);
 }
 
 int
@@ -66,8 +60,7 @@ HashTable_Set(HashTable_t * self, const char * key, void * value)
     start = cur = self->first + strhash(key, self->last - self->first);
     for (;;) {
 	if (*cur == NULL) {
-	    if (!(*cur = malloc(sizeof(HTEntry_t) + strlen(key) + 1)))
-		return -1;
+	    *cur = CocoMalloc(sizeof(HTEntry_t) + strlen(key) + 1);
 	    (*cur)->key = (char *)(*cur + 1); strcpy((*cur)->key, key);
 	    (*cur)->value = value;
 	    return 0;

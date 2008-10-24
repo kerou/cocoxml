@@ -27,7 +27,7 @@
 Melted_t *
 Melted(Melted_t * self, BitArray_t * set, State_t * state)
 {
-    if (!self && !(self = malloc(sizeof(Melted_t)))) return NULL;
+    self = CocoMalloc(sizeof(Melted_t));
     self->set = set;
     self->state = state;
     self->next = NULL;

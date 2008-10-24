@@ -27,7 +27,7 @@
 Target_t *
 Target(Target_t * self, State_t * s)
 {
-    if (!self && !(self = malloc(sizeof(Target_t)))) return NULL;
+    self = AllocObject(self, sizeof(Target_t));
     self->state = s;
     self->next = NULL;
     return self;

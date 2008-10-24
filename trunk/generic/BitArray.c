@@ -31,50 +31,37 @@ static int bitmask[] = { 0xFF, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F };
 BitArray_t *
 BitArray(BitArray_t * self, int numbits)
 {
-    Bool_t malloced;
-    if (!(self = (BitArray_t *)
-	  AllocObject(self, sizeof(BitArray_t), &malloced)))
-	goto errquit0;
+    self = AllocObject(self, sizeof(BitArray_t));
     self->numbits = numbits;
     if (numbits) {
-	if (!(self->data = malloc(NB2SZ(numbits)))) goto errquit1;
+	self->data = CocoMalloc(NB2SZ(numbits));
 	bzero(self->data, NB2SZ(numbits));
     } else {
 	self->data = NULL;
     }
     return self;
- errquit1:
-    if (malloced) free(self);
- errquit0:
-    return NULL;
 }
 
 BitArray_t *
 BitArray1(BitArray_t * self, int numbits)
 {
-    Bool_t malloced;
-    if (!(self = (BitArray_t *)
-	  AllocObject(self, sizeof(BitArray_t), &malloced)))
-	goto errquit0;
+    self = AllocObject(self, sizeof(BitArray_t));
     self->numbits = numbits;
     if (numbits) {
-	if (!(self->data = malloc(NB2SZ(numbits)))) goto errquit1;
+	self->data = CocoMalloc(NB2SZ(numbits));
 	memset(self->data, 0xFF, NB2SZ(numbits));
     } else {
 	self->data = NULL;
     }
     return self;
- errquit1:
-    if (malloced) free(self);
- errquit0:
-    return NULL;
 }
 
 BitArray_t *
 BitArray_Clone(BitArray_t * self, const BitArray_t * value)
 {
+    self = AllocObject(self, sizeof(BitArray_t));
     if (value->data) {
-	if (!(self->data = malloc(NB2SZ(value->numbits)))) return NULL;
+	self->data = CocoMalloc(NB2SZ(value->numbits));
 	memcpy(self->data, value->data, NB2SZ(value->numbits));
     } else {
 	self->data = NULL;
@@ -87,7 +74,7 @@ void
 BitArray_Destruct(BitArray_t * self)
 {
     if (self->data) {
-	free(self->data);
+	CocoFree(self->data);
 	self->data = NULL;
     }
     self->numbits = 0;

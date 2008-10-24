@@ -33,7 +33,7 @@
 Node_t *
 Node(Node_t * self, int typ, Symbol_t * sym, int line)
 {
-    if (!self && !(self = malloc(sizeof(Node_t)))) return NULL;
+    self = CocoMalloc(sizeof(Node_t));
     self->n = 0;
     self->typ = typ;
     self->next = NULL;
