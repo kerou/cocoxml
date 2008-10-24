@@ -44,9 +44,10 @@ typedef int    Bool_t;
 #define TRUE   1
 #define FALSE  0
 
-typedef struct ArrayList_s ArrayList_t;
-typedef struct BitArray_s  BitArray_t;
-typedef struct HashTable_s HashTable_t;
+typedef struct ArrayList_s  ArrayList_t;
+typedef struct BitArray_s   BitArray_t;
+typedef struct HashTable_s  HashTable_t;
+typedef struct SortedList_s SortedList_t;
 
 typedef struct State_s     State_t;
 typedef struct Action_s    Action_t;
