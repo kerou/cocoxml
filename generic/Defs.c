@@ -24,6 +24,7 @@
 #include  <stdarg.h>
 #include  <stdio.h>
 #include  <stdlib.h>
+#include  <string.h>
 #include  "Defs.h"
 
 void *
@@ -49,16 +50,20 @@ _CocoFree_(void * ptr, const char * fname, int line)
     free(ptr);
 }
 
-void *
-AllocObject(void * self, size_t szobj, Bool_t * malloced)
+char *
+_CocoStrdup_(const char * str, const char * fname, int line)
 {
-    if (self) {
-	*malloced = FALSE;
-    } else {
-	if (!(self = malloc(szobj))) return NULL;
-	*malloced = TRUE;
-    }
-    return self;
+    char * ptr;
+    if ((ptr = strdup(str))) return ptr;
+    fprintf(stderr, "strdup failed in %s#%d!", fname, line);
+    exit(-1);
+}
+
+void *
+_AllocObject_(void * self, size_t szobj, const char * fname, int line)
+{
+    if (self) return self;
+    return _CocoMalloc_(szobj, fname, line);
 }
 
 void
