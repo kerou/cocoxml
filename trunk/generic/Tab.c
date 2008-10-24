@@ -28,6 +28,8 @@
 #include  "Graph.h"
 #include  "Node.h"
 #include  "Symbol.h"
+#include  "CharClass.h"
+#include  "CharSet.h"
 
 Tab_t *
 Tab(Tab_t * self, Parser_t * parser) {
@@ -332,7 +334,7 @@ Tab_NewCharClass(Tab_t * self, const char * name, CharSet_t * s)
 }
 
 CharClass_t *
-Tab_FindCharClass(Tab_t * self, const char * name)
+Tab_FindCharClassS(Tab_t * self, const char * name)
 {
     int idx; CharClass_t * c;
     for (idx = 0; idx < self->classes.Count; ++idx) {
@@ -343,7 +345,7 @@ Tab_FindCharClass(Tab_t * self, const char * name)
 }
 
 CharClass_t *
-Tab_FindCharClass(Tab_t * self, CharSet_t * s)
+Tab_FindCharClassC(Tab_t * self, CharSet_t * s)
 {
     int idx; CharClass_t * c;
     for (idx = 0; idx < self->classes.Count; ++idx) {
@@ -414,7 +416,7 @@ Tab_First(Tab_t * self, Node_t * p)
 	fprintf(self->trace, "\n");
 	if (p != NULL) fprintf(self->trace, "First: node = %d\n", p->n);
 	else fprintf(self->trace, "First: node = null\n");
-	Tab_PrintSet(fs, 0);
+	Tab_PrintSet(self, fs, 0);
     }
     return fs;
 }
@@ -425,7 +427,7 @@ Tab_CompFirstSets(Tab_t * self)
     Symbol_t * sym; int idx;
     for (idx = 0; idx < self->nonterminals.Count; ++idx) {
 	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
-	sym->first = BitArrary(NULL, self->terminals.Count);
+	sym->first = BitArray(NULL, self->terminals.Count);
 	sym->firstReady = FALSE;
     }
     for (idx = 0; idx < self->nonterminals.Count; ++idx) {
@@ -438,14 +440,14 @@ Tab_CompFirstSets(Tab_t * self)
 void
 Tab_CompFollow(Tab_t * self, Node_t * p)
 {
-    BitArray * s;
+    BitArray_t * s;
     while (p != NULL && !BitArray_Get(&self->visited, p->n)) {
 	BitArray_Set(&self->visited, p->n, TRUE);
 	if (p->typ == node_nt) {
 	    s = Tab_First(self, p->next);
-	    p->sym->follow->Or(s);
+	    BitArray_Or(p->sym->follow, s);
 	    if (Node_DelGraph(p->next))
-		BitArray_Set(p->sym->nts, curSy->n, TRUE);
+		BitArray_Set(p->sym->nts, self->curSy->n, TRUE);
 	} else if (p->typ == node_opt || p->typ == node_iter) {
 	    Tab_CompFollow(self, p->sub);
 	} else if (p->typ == node_alt) {
@@ -465,7 +467,7 @@ Tab_Complete(Tab_t * self, Symbol_t * sym)
 	s = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
 	if (BitArray_Get(sym->nts, s->n)) {
 	    Tab_Complete(self, s);
-	    sym->follow->Or(s->follow);
+	    BitArray_Or(sym->follow, s->follow);
 	    if (sym == self->curSy) BitArray_Set(sym->nts, s->n, FALSE);
 	}
     }
@@ -484,13 +486,13 @@ Tab_CompFollowSets(Tab_t * self)
     BitArray(&self->visited, self->nodes.Count);
     for (idx = 0; idx < self->nonterminals.Count; ++idx) {
 	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
-	curSy = sym;
+	self->curSy = sym;
 	Tab_CompFollow(self, sym->graph);
     }
     for (idx = 0; idx < self->nonterminals.Count; ++idx) {
 	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
 	BitArray(&self->visited, self->nonterminals.Count);
-	curSy = sym;
+	self->curSy = sym;
 	Tab_Complete(self, sym);
     }
 }
@@ -532,7 +534,7 @@ void
 Tab_CompAnySets(Tab_t * self)
 {
     int idx; Symbol_t * sym;
-    for (idx = 0; idx < self->nonterminals.Count; ++i) {
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
 	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
 	Tab_FindAS(self, sym->graph);
     }
@@ -541,7 +543,7 @@ Tab_CompAnySets(Tab_t * self)
 BitArray_t *
 Tab_Expected(Tab_t * self, Node_t * p, Symbol_t * curSy)
 {
-    BitArray * s = Tab_First(self, p);
+    BitArray_t * s = Tab_First(self, p);
     if (Node_DelGraph(p)) BitArray_Or(s, curSy->follow);
     return s;
 }
@@ -560,14 +562,14 @@ Tab_CompSync(Tab_t * self, Node_t * p)
     while (p != NULL && !BitArray_Get(&self->visited, p->n)) {
 	BitArray_Set(&self->visited, p->n, TRUE);
 	if (p->typ == node_sync) {
-	    s = Tab_Expected(self, p->next, curSy);
-	    BitArray_Set(s, eofSy->n, TRUE);
-	    BitArray_Or(self->allSyncSets, s);
+	    s = Tab_Expected(self, p->next, self->curSy);
+	    BitArray_Set(s, self->eofSy->n, TRUE);
+	    BitArray_Or(&self->allSyncSets, s);
 	    p->set = s;
 	} else if (p->typ == node_alt) {
 	    Tab_CompSync(self, p->sub); Tab_CompSync(self, p->down);
 	} else if (p->typ == node_opt || p->typ == node_iter) {
-	    CompSync(self, p->sub);
+	    Tab_CompSync(self, p->sub);
 	}
 	p = p->next;
     }
@@ -585,7 +587,7 @@ Tab_CompSyncSets(Tab_t * self)
     for (idx = 0; idx < self->nonterminals.Count; ++idx) {
 	sym = (Symbol_t *)ArrayList_Get(&self->nonterminals, idx);
 	self->curSy = sym;
-	Tab_CompSync(self->curSy->graph);
+	Tab_CompSync(self, self->curSy->graph);
     }
 }
 
@@ -596,8 +598,8 @@ Tab_SetupAnys(Tab_t * self)
     for (idx = 0; idx < self->nodes.Count; ++idx) {
 	p = (Node_t *)ArrayList_Get(&self->nodes, idx);
 	if (p->typ == node_any) {
-	    p->set = BitArray(NULL, self->terminals.Count, TRUE);
-	    BitArray_Set(p->set, eofSy->n, FALSE);
+	    p->set = BitArray1(NULL, self->terminals.Count);
+	    BitArray_Set(p->set, self->eofSy->n, FALSE);
 	}
     }
 }
