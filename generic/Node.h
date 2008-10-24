@@ -53,7 +53,9 @@ Bool_t Node_DelGraph(Node_t * self);
 Bool_t Node_DelSubGraph(Node_t * self);
 Bool_t Node_DelNode(Node_t * self);
 
-int Node_Num(Node_t * self);
+int Node_Num(const Node_t * self);
+
+void Node_Dump(const Node_t * self, DumpBuffer_t * buf, Tab_t * tab);
 
 EXTC_END
 
