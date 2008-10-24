@@ -82,6 +82,13 @@ typedef enum {
     node_normalTrans = 0, node_contextTrans = 1
 }  NodeTrans_t;
 
+#define CocoMalloc(size)  _CocoMalloc_(size, __FILE__, __LINE__)
+#define CocoRealloc(ptr, size) _CocoRealloc_(ptr, size, __FILE__, __LINE__)
+#define CocoFree(ptr) _CocoFree_(ptr, __FILE__, __LINE__)
+void * _CocoMalloc_(size_t size, const char * fname, int line);
+void * _CocoRealloc_(void * ptr, size_t size, const char * fname, int line);
+void _CocoFree_(void * ptr, const char * fname, int line);
+
 void * AllocObject(void * self, size_t szobj, Bool_t * malloced);
 
 typedef struct {
