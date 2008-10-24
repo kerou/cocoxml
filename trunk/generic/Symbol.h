@@ -47,6 +47,7 @@ struct Symbol_s {
 };
 
 Symbol_t * Symbol(Symbol_t * self, int typ, const char * name, int line);
+void Symbol_Destruct(Symbol_t * self);
 int Symbol_CompareTo(const Symbol_t * self, const Symbol_t * x);
 
 void Symbol_Dump(const Symbol_t * self, DumpBuffer_t * buf);
