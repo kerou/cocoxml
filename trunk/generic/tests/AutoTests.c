@@ -25,6 +25,7 @@
 #include  <stdlib.h>
 #include  "AutoTests.h"
 
+void TestBitArray(FILE * fp);
 void TestCharSet(FILE * fp);
 
 int

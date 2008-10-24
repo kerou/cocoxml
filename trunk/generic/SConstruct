@@ -5,6 +5,7 @@
 import os.path
 
 env = Environment(CCFLAGS = ['-g', '-Wall'],
+                  CPPDEFINES = ['_GNU_SOURCE'],
                   CPPPATH = [os.getcwd()])
 lib = env.Library('coco', ['Defs.c', 'Action.c', 'ArrayList.c', 'BitArray.c',
                            'CharSet.c', 'CharClass.c', 'Comment.c', 'Frame.c',

@@ -44,7 +44,7 @@ ArrayList(ArrayList_t * self)
 void
 ArrayList_Destruct(ArrayList_t * self)
 {
-    ArrayList_Clear();
+    ArrayList_Clear(self);
     if (self->Data)  free(self->Data);
 }
 

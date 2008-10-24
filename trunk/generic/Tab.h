@@ -85,12 +85,12 @@ Node_t * Tab_NewNodeTSL(Tab_t * self, int typ, Symbol_t * sym, int line);
 Node_t * Tab_NewNodeTS(Tab_t * self, int typ, Node_t * sub);
 Node_t * Tab_NewNodeTVL(Tab_t * self, int typ, int val, int line);
 void Tab_MakeFirstAlt(Tab_t * self, Graph_t * g);
-void Tab_MakeAlternative(Tab_t * self, Graph_t * g1, Graph_t * g2);
+int Tab_MakeAlternative(Tab_t * self, Graph_t * g1, Graph_t * g2);
 void Tab_MakeSequence(Tab_t * self, Graph_t * g1, Graph_t * g2);
 void Tab_MakeIteration(Tab_t * self, Graph_t * g);
-void Tab_MakeOption(Tab_t * self, Graph_t * g);
+int Tab_MakeOption(Tab_t * self, Graph_t * g);
 void Tab_Finish(Tab_t * self, Graph_t * g);
-void Tab_DeleteNodes(Tab_t * self);
+int Tab_DeleteNodes(Tab_t * self);
 Graph_t * Tab_StrToGraph(Tab_t * self, const char * str);
 void Tab_SetContextTrans(Tab_t * self, Node_t * p);
 
