@@ -60,22 +60,17 @@ Symbol_Destruct(Symbol_t * self)
 }
 
 int
-Symbol_CompareTo(Symbol_t * self, Symbol_t * x)
+Symbol_CompareTo(const Symbol_t * self, const Symbol_t * x)
 {
     return strcmp(self->name, x->name);
 }
-
-static const char * nTyp[] = {
-    "    ", "t   ", "pr  ", "nt  ", "clas", "chr ", "wt  ", "any ", "eps ",
-    "sync", "sem ", "alt ", "iter", "opt ", "rslv"
-};
 
 static const char * tKind[] = {
     "fixedToken", "classToken", "litToken", "classLitToken"
 };
 
 void
-Symbol_Dump(Symbol_t * self, DumpBuffer_t * buf)
+Symbol_Dump(const Symbol_t * self, DumpBuffer_t * buf)
 {
     char name[13];
     snprintf(name, sizeof(name), "%s             ", self->name);
