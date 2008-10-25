@@ -56,6 +56,5 @@ main(int argc, const char * argv[])
 	fprintf(stderr, "Usage: %s OUTDIR INFILE ...\n", argv[0]);
 	return 0;
     }
-    return Frames("/*====", "====*/", argv[1], NULL, license,
-		  NULL, NULL, argc - 2, argv + 2);
+    return Frames('F', argv[1], NULL, license, NULL, NULL, argc - 2, argv + 2);
 }
