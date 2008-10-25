@@ -63,7 +63,7 @@ struct Parser_s {
 
 Parser_t * Parser(Parser_t * self, Scannr_t * scanner);
 void Parser_Destruct(Parser_t * self);
-void Parser_SemErr(Parser_t * self, const char * msg);
+void Parser_SemErr(Parser_t * self, const char * format, ...);
 void Parser_Parse();
 
 /*---- productionsheader ----*/
@@ -73,6 +73,7 @@ EXTC_END
 #endif /* COCO_PARSER_H */
 /*---- open(Parser.c) ----*/
 /*---- license ----*/
+#include  <stdarg.h>
 #include  <stdio.h>
 #include  <stdlib.h>
 #include  "Parser.h"
@@ -107,9 +108,11 @@ Errors_SynErr(Errors_t * self, int line, int col, int n)
 }
 
 void
-Errors_Error(Errors_t * self, int line, int col, const char * s)
+Errors_Error(Errors_t * self, int line, int col, const char * format, va_list ap)
 {
-    fprintf(self->fp, "-- line %d col %d: %s\n", line, col, s);
+    fprintf(self->fp, "-- line %d col %d: ", line, col);
+    vfprintf(self->fp, format, ap);
+    fprintf(self->fp, "\n");
     ++self->count;
 }
 
@@ -203,10 +206,14 @@ Parser_WeakSeparator(Parser_t * self, int n, int syFol, int repFol)
 
 
 void
-Parser_SemErr(Parser_t * self, const char * msg)
+Parser_SemErr(Parser_t * self, const char * format, ...)
 {
-    if (self->errDist >= self->minErrDist)
-	Errors_SynErr(self->errors, self->t->line, self->t->col, msg);
+    va_list ap;
+    if (self->errDist >= self->minErrDist) {
+	va_start(ap, format);
+	Errors_SynErr(self->errors, self->t->line, self->t->col, format, ap);
+	va_end(ap);
+    }
     self->errDist = 0;
 }
 
