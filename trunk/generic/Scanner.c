@@ -52,6 +52,7 @@ typedef struct {
 
 static const Char2State_t c2sArr[] = {
     /*---- chars2states ----*/
+    /*---- enable ----*/
 };
 static const int c2sNum = sizeof(c2sArr) / sizeof(c2sArr[0]);
 
@@ -75,7 +76,8 @@ typedef struct {
 }  Identifier2KWKind_t;
 
 static const Identifier2KWKind_t i2kArr[] = {
-    /*----  identifiers2keywordkinds ----*/
+    /*---- identifiers2keywordkinds ----*/
+    /*---- enable ----*/
 };
 static const int i2kNum = sizeof(i2kArr) / sizeof(i2kArr[0]);
 

@@ -135,7 +135,7 @@ Frames(char          secChr,
     char outFName[256], lnbuf[4096];
     char indentStr[128], Command[128], ParamStr[128], Sections[8];
     char replacedPrefix[128];
-    DumpBuffer_t dbuf; char dbufspace[4096];
+    DumpBuffer_t dbuf; char dbufspace[16384];
 
     outfp = NULL; DumpBuffer(&dbuf, dbufspace, sizeof(dbufspace));
     for (curframefn = frameNames;
@@ -185,18 +185,20 @@ Frames(char          secChr,
 		    else strncpy(replacedPrefix, ParamStr,
 				 sizeof(replacedPrefix));
 		} else if (!strcmp(Command, "enable")) {
-		    if (outfp && *dbufspace) fputs(dbufspace, outfp);
-		    DumpBuffer_Clear(&dbuf);
 		    enabled = TRUE;
 		} else if (!strcmp(Command, "disable")) {
-		    if (outfp && *dbufspace) fputs(dbufspace, outfp);
-		    DumpBuffer_Clear(&dbuf);
-		    enabled = FALSE; 
-		} else if (enabled && outfp && cbFunc) {
-		    if (outfp && *dbufspace) fputs(dbufspace, outfp);
-		    DumpBuffer_Clear(&dbuf);
-		    if (cbFunc(cbData, outfp, indentStr, Command, ParamStr) < 0)
-			goto errquit1;
+		    enabled = FALSE;
+		} else { /* Caller specific commands. */
+		    if (outfp) {
+			if (*dbufspace) {
+			    fputs(dbufspace, outfp); DumpBuffer_Clear(&dbuf);
+			}
+			if (cbFunc &&
+			    cbFunc(cbData, outfp,
+				   indentStr, Command, ParamStr) < 0)
+			    goto errquit1;
+		    }
+		    enabled = FALSE;
 		}
 	    }
 	}
