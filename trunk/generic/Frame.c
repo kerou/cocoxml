@@ -115,10 +115,11 @@ Frames(const char  * leftmark,
     char indentStr[128], Command[128], ParamStr[128];
     char replacedPrefix[128];
 
-    outfp = NULL; enabled = TRUE;
+    outfp = NULL;
     for (curframefn = frameNames;
 	 curframefn - frameNames < numFrames; ++curframefn) {
 	if (!(framefp = fopen(*curframefn, "r"))) goto errquit0;
+	enabled = FALSE;
 	while (fgets(lnbuf, sizeof(lnbuf), framefp)) {
 	    if (!CheckMark(lnbuf, leftmark, rightmark,
 			   indentStr, sizeof(indentStr),
@@ -135,6 +136,7 @@ Frames(const char  * leftmark,
 		snprintf(outFName, sizeof(outFName),
 			 "%s/%s", outDir, ParamStr);
 		if (!(outfp = fopen(outFName, "w"))) goto errquit1;
+		enabled = TRUE;
 	    } else if (!strcmp(Command, "prefix")) {
 		if (ParamStr == NULL) replacedPrefix[0] = 0;
 		else strncpy(replacedPrefix, ParamStr, sizeof(replacedPrefix));
