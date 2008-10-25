@@ -16,6 +16,12 @@ struct options_s{
     const int   value;
 };
 
+struct wcharCmp {
+	bool operator()(const wchar_t* s1, const wchar_t* s2 ) const{
+        return coco_string_compareto(s1, s2) < 0;
+	}
+};
+
 typedef enum {
     UNKNOWN_NAMESPACE, END_UNKNOWN_NAMESPACE,
     UNKNOWN_TAG, END_UNKNOWN_TAG,
@@ -41,9 +47,9 @@ public:
     Tab                             *tab;
     Errors                          *errors;
     vector<bool>                    useVector;
-    map<const wchar_t*, TagInfo*>   Tags;
-    map<const wchar_t*, int>        Attrs;
-    map<const wchar_t*, int>        PInstructions;
+    map<const wchar_t*, TagInfo*, wcharCmp>   Tags;
+    map<const wchar_t*, int, wcharCmp>        Attrs;
+    map<const wchar_t*, int, wcharCmp>        PInstructions;
 
     XmlLangDefinition(Tab *tab, Errors *errors);
     
@@ -62,7 +68,7 @@ public:
     FILE        *fram;
     FILE        *gen;
 
-    map<const wchar_t*, XmlLangDefinition*>  XmlLangMap;
+    map<const wchar_t*, XmlLangDefinition*, wcharCmp>  XmlLangMap;
 
     XmlScannerData(Parser *parser);
     void Add(const wchar_t* NamespaceURI, XmlLangDefinition *xldef);
@@ -71,8 +77,8 @@ public:
     void WriteOptions();
     void WriteDeclarations();
     void WriteInitialization();
-	int GenNamespaceOpen(const wchar_t* nsName);
-	void GenNamespaceClose(int nrOfNs);
+    int GenNamespaceOpen(const wchar_t* nsName);
+    void GenNamespaceClose(int nrOfNs);
     void WriteXmlScanner();
 };
 
