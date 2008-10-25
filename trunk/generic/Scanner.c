@@ -27,6 +27,8 @@
 #include  <string.h>
 #include  "Scanner.h"
 
+static int utf8get(char ** str);
+
 Token_t *
 Token(Token_t * self)
 {
@@ -96,37 +98,98 @@ Identifier2KWKind(const char * key, int defaultVal)
     return i2k ? i2k->val : defaultVal;
 }
 
+/* Now we support seekable file for simplicity. */
 Buffer_t *
 Buffer(Buffer_t * self, FILE * fp)
 {
+    long len;
+    fseek(fp, 0, SEEK_END);
+    len = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    if (!(self->buf = malloc(len))) return NULL;
+    self->cur = self->buf;
+    self->last = self->buf + len;
+    return self;
 }
 
 void
 Buffer_Destruct(Buffer_t * self)
 {
+    free(self->buf);
 }
 
 int
 Buffer_Read(Buffer_t * self)
 {
+    return self->cur < self->last ? utf8get(&self->cur) : EoF;
 }
 
 int
 Buffer_Peek(Buffer_t * self)
 {
+    char * cur = self->cur;
+    return cur < self->last ? utf8get(&cur) : EoF;
 }
 
 const char *
 Buffer_GetString(Buffer_t * self, int start)
 {
+    return self->buf + start;
 }
 
 int
 Buffer_GetPos(Buffer_t * self)
 {
+    return self->cur - self->buf;
 }
 
 void
 Buffer_SetPos(Buffer_t * self, int pos)
 {
+    self->cur = self->buf + pos;
+}
+
+static int
+utf8get(char ** str)
+{
+    int ch, c1, c2, c3, c4;
+    char * cur = *str;
+    ch = *cur++;
+    if (ch >= 128 && ((ch & 0xC0) != 0xC0)) {
+	fprintf(stderr, "Inside UTF-8 character!\n");
+	exit(-1);
+    }
+    if (ch < 128) return ch;
+    if ((ch & 0xF0) == 0xF0) {
+	/* 1110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
+	c1 = ch & 0x07;
+	ch = *cur++; if (ch == 0) goto broken;
+	c2 = ch & 0x3F;
+	ch = *cur++; if (ch == 0) goto broken;
+	c3 = ch & 0x3F;
+	ch = *cur++; if (ch == 0) goto broken;
+	c4 = ch & 0x3F;
+	*str = cur;
+	return (((((c1 << 6) | c2) << 6) | c3) << 6) | c4;
+    }
+    if ((ch & 0xE0) == 0xE0) {
+	/* 1110xxxx 10xxxxxx 10xxxxxx */
+	c1 = ch & 0x0F;
+	ch = *cur++; if (ch == 0) goto broken;
+	c2 = ch & 0x3F;
+	ch = *cur++; if (ch == 0) goto broken;
+	c3 = ch & 0x3F;
+	*str = cur;
+	return (((c1 << 6) | c2) << 6) | c3;
+    }
+    /* (ch & 0xC0) == 0xC0 */
+    /* 110xxxxx 10xxxxxx */
+    c1 = ch & 0x1F;
+    ch = *cur++; if (ch == 0) goto broken;
+    c2 = ch & 0x3F;
+    *str = cur;
+    return (c1 << 6) | c2;
+ broken:
+    fprintf(stderr, "Broken in UTF8 character.\n");
+    exit(-1);
 }
