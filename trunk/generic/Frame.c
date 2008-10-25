@@ -28,7 +28,8 @@
 #include  "Frame.h"
 
 static Bool_t
-LocateMark(char ** b, char ** e, const char * lmark, const char * rmark)
+LocateMark(const char ** b, const char ** e,
+	   const char * lmark, const char * rmark)
 {
     int llen = strlen(lmark), rlen = strlen(rmark);
     int tlen = llen + rlen;
@@ -43,22 +44,31 @@ LocateMark(char ** b, char ** e, const char * lmark, const char * rmark)
     return TRUE;
 }
 
-static Bool_t
-CheckMark(char * lnbuf, const char * leftmark, const char * rightmark,
-	  char * retIndent, size_t szRetIndent,
-	  char ** retCommand, char ** retParamStr)
+static void
+GetResult(char * dest, size_t destlen, const char * src, size_t srclen)
 {
-    char * b, * e, * cmdTerm;
+    if (srclen < destlen) strncpy(dest, src, srclen);
+    else strncpy(dest, src, destlen);
+}
+
+static Bool_t
+CheckMark(const char * lnbuf,
+	  const char * leftmark, const char * rightmark,
+	  char * retIndent, size_t szRetIndent,
+	  char * retCommand, size_t szRetCommand,
+	  char * retParamStr, size_t szRetParamStr)
+{
+    const char * b, * e, * tmp;
     if (!*lnbuf) return FALSE;
     b = lnbuf; e = lnbuf + strlen(lnbuf) - 1;
     if (!LocateMark(&b, &e, leftmark, rightmark)) return FALSE;
-    *retCommand = b;
-    while (b < e && isalnum(*b)) ++b; cmdTerm = b;
-    if (!LocateMark(&b, &e, "(", ")")) *retParamStr = NULL;
-    else { *retParamStr = b; *e = 0; }
-    *cmdTerm = 0;
-    for (b = lnbuf; isspace(*b); ++b); *b = 0;
-    strncpy(retIndent, lnbuf, szRetIndent);
+    tmp = b;
+    while (b < e && isalnum(*b)) ++b;
+    GetResult(retCommand, szRetCommand, tmp, b - tmp);
+    if (!LocateMark(&b, &e, "(", ")")) *retParamStr = 0;
+    else GetResult(retParamStr, szRetParamStr, b, e - b);
+    for (b = lnbuf; isspace(*b); ++b);
+    GetResult(retIndent, szRetIndent, lnbuf, b - lnbuf);
     return TRUE;
 }
 
@@ -101,8 +111,9 @@ Frames(const char  * leftmark,
 {
     const char ** curframefn;
     FILE * framefp, * outfp; Bool_t enabled;
-    char outFName[256], indentStr[128], replacedPrefix[128];
-    char lnbuf[4096], * Command, * ParamStr;
+    char outFName[256], lnbuf[4096];
+    char indentStr[128], Command[128], ParamStr[128];
+    char replacedPrefix[128];
 
     outfp = NULL; enabled = TRUE;
     for (curframefn = frameNames;
@@ -111,11 +122,15 @@ Frames(const char  * leftmark,
 	while (fgets(lnbuf, sizeof(lnbuf), framefp)) {
 	    if (!CheckMark(lnbuf, leftmark, rightmark,
 			   indentStr, sizeof(indentStr),
-			   &Command, &ParamStr)) {
+			   Command, sizeof(Command),
+			   ParamStr, sizeof(ParamStr))) {
 		if (outfp && enabled &&
 		    TextWritter(outfp, lnbuf, replacedPrefix, prefix) < 0)
 		    goto errquit1;
-	    } else if (!strcmp(Command, "open")) {
+		continue;
+	    }
+	    fputs(lnbuf, outfp);
+	    if (!strcmp(Command, "open")) {
 		if (outfp != NULL) fclose(outfp);
 		snprintf(outFName, sizeof(outFName),
 			 "%s/%s", outDir, ParamStr);
