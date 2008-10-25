@@ -193,3 +193,28 @@ utf8get(char ** str)
     fprintf(stderr, "Broken in UTF8 character.\n");
     exit(-1);
 }
+
+Scanner_t *
+Scanner(Scanner_t * self, const char * filename)
+{
+}
+
+void
+Scanner_Destruct(Scanner_t * self)
+{
+}
+
+Token_t *
+Scanner_Scan(Scanner_t * self)
+{
+}
+
+Token_t *
+Scanner_Peek(Scanner_t * self)
+{
+}
+
+void
+Scanner_ResetPeek(Scanner_t * self)
+{
+}

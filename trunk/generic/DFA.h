@@ -30,8 +30,13 @@
 #include  "CharSet.h"
 #endif
 
+#ifndef  COCO_PARSER_H
+#include "Parser.h"
+#endif
+
 EXTC_BEGIN
 
+typedef struct DFA_s DFA_t;
 struct DFA_s {
     /* Private members. */
     int         maxStates;

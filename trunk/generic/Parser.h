@@ -1,6 +1,6 @@
 /* -*- c -*- */
-/*---- open(Scanner.h) S ----*/
-/*---- open(c.Scanner.frame) F ----*/
+/*---- open(Parser.h) S ----*/
+/*---- open(c.Parser.frame) F ----*/
 /*-------------------------------------------------------------------------
   Author (C) 2008, Charles Wang <charlesw123456@gmail.com>
 
@@ -25,63 +25,51 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
-#ifndef  COCO_SCANNER_H
-#define  COCO_SCANNER_H
+#ifndef  COCO_PARSER_H
+#define  COCO_PARSER_H
 
 #include  <stdio.h>
-
-#ifdef __cplusplus
-#define  EXTC_BEGIN extern "C" {
-#define  EXTC_END   }
-#else
-#define  EXTC_BEGIN
-#define  EXTC_END
-#endif
+#include  "Scanner.h"
 
 EXTC_BEGIN
 
-#define COCO_WCHAR_MAX 65535
-#define EoF            -1
+/*---- headerdef ----*/
 
-typedef struct Token_s Token_t;
-struct Token_s
-{
-    int kind;
-    int pos;
-    int col;
-    int line;
-    char * val;
-    Token_t * next;
+typedef struct {
+    FILE * fp;
+    int count;
+}  Errors_t;
+
+Errors_t * Errors(Errors_t * self, FILE * fp);
+void Errors_Destruct(Errors_t * self);
+void Errors_SynErr(Errors_t * self, int line, int col, int n);
+void Errors_Warning(Errors_t * self, int line, int col, const char * s);
+void Errors_WarningS(Errors_t * self, const char * s);
+void Errors_Exception(Errors_t * self, const char * s);
+
+typedef struct Parser_s Parser_t;
+struct Parser_s {
+    /*---- constantsheader ----*/
+    Token_t * dummyToken;
+    int errDist;
+    int minErrDist;
+
+    Scanner_t * scanner;
+    Errors_t errors;
+    Token_t * t;
+    Token_t * la;
+
+    int maxT;
+    /*---- declarations ----*/
 };
 
-Token_t * Token(Token_t * self);
-void Token_Destruct(Token_t * self);
+Parser_t * Parser(Parser_t * self, Scanner_t * scanner);
+void Parser_Destruct(Parser_t * self);
+void Parser_SemErr(Parser_t * self, const char * format, ...);
+void Parser_Parse();
 
-typedef struct Buffer_s Buffer_t;
-struct Buffer_s {
-    char * buf;
-    char * cur;
-    char * last;
-};
-
-Buffer_t * Buffer(Buffer_t * self, FILE * fp);
-void Buffer_Destruct(Buffer_t * self);
-int Buffer_Read(Buffer_t * self);
-int Buffer_Peek(Buffer_t * self);
-const char * Buffer_GetString(Buffer_t * self, int start);
-int Buffer_GetPos(Buffer_t * self);
-void Buffer_SetPos(Buffer_t * self, int pos);
-
-typedef struct Scanner_s Scanner_t;
-struct Scanner_s {
-};
-
-Scanner_t * Scanner(Scanner_t * self, const char * filename);
-void Scanner_Destruct(Scanner_t * self);
-Token_t * Scanner_Scan(Scanner_t * self);
-Token_t * Scanner_Peek(Scanner_t * self);
-void Scanner_ResetPeek(Scanner_t * self);
+/*---- productionsheader ----*/
 
 EXTC_END
 
-#endif /* COCO_SCANNER_H */
+#endif  /* COCO_PARSER_H */
