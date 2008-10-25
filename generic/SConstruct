@@ -17,5 +17,5 @@ Export('env', 'lib')
 SConscript(os.path.join('tests', 'SConscript'))
 
 env.Program('Src2Frame', ['Src2Frame.c', lib])
-env.Program('Coco', ['Coco.c', 'DFA.c', 'Tab.c', lib])
+env.Program('Coco', ['Coco.c', 'DFA.c', 'Tab.c', 'Scanner.c', 'Parser.c', lib])
 env.Program('CocoXml', ['CocoXml.c', lib])
