@@ -4,18 +4,17 @@
 
 import os.path
 
+topsrc = os.getcwd()
 env = Environment(CCFLAGS = ['-g', '-Wall'],
                   CPPDEFINES = ['_GNU_SOURCE'],
-                  CPPPATH = [os.getcwd()])
-lib = env.Library('coco', ['Defs.c', 'Action.c', 'ArrayList.c', 'BitArray.c',
-                           'CharSet.c', 'CharClass.c', 'Comment.c', 'Frame.c',
-                           'Graph.c', 'HashTable.c', 'Melted.c', 'Node.c',
-                           'ParserGen.c', 'Position.c', 'SortedList.c',
-                           'State.c', 'Symbol.c', 'Target.c'])
+                  CPPPATH = [topsrc,
+                             os.path.join(topsrc, 'lib')])
 
-Export('env', 'lib')
+Export('env')
+SConscript(os.path.join('lib', 'SConscript'))
+Import('lib')
 SConscript(os.path.join('tests', 'SConscript'))
 
 env.Program('Src2Frame', ['Src2Frame.c', lib])
-env.Program('Coco', ['Coco.c', 'DFA.c', 'Tab.c', 'Scanner.c', 'Parser.c', lib])
+env.Program('Coco', ['Coco.c', 'Scanner.c', 'Parser.c', 'DFA.c', 'Tab.c', lib])
 env.Program('CocoXml', ['CocoXml.c', lib])

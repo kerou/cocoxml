@@ -50,7 +50,7 @@ static const char * license =
 "-------------------------------------------------------------------------*/\n";
 
 int
-main(int argc, char * argv[])
+main(int argc, const char * argv[])
 {
     if (argc < 3) {
 	fprintf(stderr, "Usage: %s OUTDIR INFILE ...\n", argv[0]);
