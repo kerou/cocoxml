@@ -27,7 +27,6 @@
 #include  "CharSet.h"
 #include  "Target.h"
 #include  "State.h"
-#include  "Tab.h"
 
 Action_t *
 Action(Action_t * self, int typ, int sym, int tc)
@@ -72,6 +71,7 @@ Action_AddTargets(Action_t * self, Action_t * a)
     return 0;
 }
 
+/*
 CharSet_t *
 Action_Symbols(Action_t * self, Tab_t * tab)
 {
@@ -96,3 +96,4 @@ Action_ShiftWith(Action_t * self, CharSet_t * s, Tab_t * tab)
 	self->typ = node_clas; self->sym = c->n;
     }
 }
+*/

@@ -55,7 +55,6 @@ typedef struct Target_s    Target_t;
 typedef struct Melted_s    Melted_t;
 typedef struct Comment_s   Comment_t;
 typedef struct CharSet_s   CharSet_t;
-typedef struct DFA_s       DFA_t;
 
 typedef struct Position_s  Position_t;
 typedef struct Symbol_s    Symbol_t;
@@ -65,10 +64,6 @@ typedef struct CharClass_s CharClass_t;
 typedef struct Tab_s       Tab_t;
 
 typedef struct ParserGen_s ParserGen_t;
-
-typedef struct Scanner_s   Scanner_t;
-typedef struct Parser_s    Parser_t;
-typedef struct Errors_s    Errors_t;
 
 typedef enum {
     symbol_fixedToken = 0, symbol_classToken = 1,

@@ -279,6 +279,54 @@ Tab_SetContextTrans(Tab_t * self, Node_t * p)
     }
 }
 
+static int
+Ptr(Node_t * self, Bool_t up)
+{
+    if (self == NULL) return 0;
+    else if (up) return -(self->n);
+    return self->n;
+}
+
+static void
+Tab_DumpNode(Tab_t * self, const Node_t * _n_, DumpBuffer_t * buf)
+{
+    char name[12]; CharClass_t * cc;
+    DumpBuffer_Print(buf, "%4d %s ", _n_->n, nTyp[_n_->typ]);
+    if (_n_->sym != NULL) {
+	snprintf(name, sizeof(name), "%s            ", _n_->sym->name);
+	DumpBuffer_Print(buf, "%12s ", name);
+    } else if (_n_->typ == node_clas) {
+	cc = (CharClass_t *)ArrayList_Get(&self->classes, _n_->val);
+	snprintf(name, sizeof(name), "%s            ", cc->name);
+	DumpBuffer_Print(buf, "%12s ", name);
+    } else {
+	DumpBuffer_Print(buf, "             ");
+    }
+    DumpBuffer_Print(buf, "%5d ", Ptr(_n_->next, _n_->up));
+
+    if (_n_->typ == node_t || _n_->typ == node_nt || _n_->typ == node_wt) {
+	DumpBuffer_Print(buf, "             %5s",
+			 Position_Dump(_n_->pos, name, sizeof(name)));
+    } else if (_n_->typ == node_chr) {
+	DumpBuffer_Print(buf, "%5d %5d       ", _n_->val, _n_->code);
+    } else if (_n_->typ == node_clas) {
+	DumpBuffer_Print(buf, "      %5d       ", _n_->code);
+    } else if (_n_->typ == node_alt ||
+	       _n_->typ == node_iter ||
+	       _n_->typ == node_opt) {
+	DumpBuffer_Print(buf, "%5d %5d       ",
+			 Ptr(_n_->down, FALSE), Ptr(_n_->sub, FALSE));
+    } else if (_n_->typ == node_sem) {
+	DumpBuffer_Print(buf, "             %5s",
+			 Position_Dump(_n_->pos, name, sizeof(name)));
+    } else if (_n_->typ == node_eps ||
+	       _n_->typ == node_any ||
+	       _n_->typ == node_sync) {
+	DumpBuffer_Print(buf, "                  ");
+    }
+    DumpBuffer_Print(buf, "%5d", _n_->line);
+}
+
 void
 Tab_PrintNodes(Tab_t * self)
 {
@@ -293,7 +341,7 @@ Tab_PrintNodes(Tab_t * self)
     for (idx = 0; idx < self->nodes.Count; ++idx) {
 	p = (Node_t *)ArrayList_Get(&self->nodes, idx);
 	DumpBuffer(&dbuf, lnbuf, sizeof(lnbuf));
-	Node_Dump(p, &dbuf, self);
+	Tab_DumpNode(self, p, &dbuf);
 	fprintf(self->trace, "%s\n", lnbuf);
     }
     fprintf(self->trace, "\n");
