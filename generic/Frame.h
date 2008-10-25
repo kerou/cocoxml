@@ -32,13 +32,34 @@
 
 EXTC_BEGIN
 
-typedef int
-(* frameCBFunc_t)(void * cbData, FILE * outfp, const char * identstr,
-		  const char * command, const char * paramstr);
+int
+Frames(const char  * leftmark,
+       const char  * rightmark,
+       const char  * outDir,
+       const char  * prefix,
+       const char  * license,
+       void        * cbData,
+       int        (* cbFunc)(void * cbData,
+			     FILE * outfp,
+			     const char * indentstr,
+			     const char * command,
+			     const char * paramstr),
+       int           numFrames,
+       const char ** frameNames);
 
 int
-Frame(const char * frameFName, const char * outDir, const char * prefix,
-      const char * license, void * cbData, frameCBFunc_t cbFunc);
+Frame(const char * leftmark,
+      const char * rightmark,
+      const char * outDir,
+      const char * prefix,
+      const char * license,
+      void       * cbData,
+      int       (* cbFunc)(void       * cbData,
+			   FILE       * outfp,
+			   const char * indentstr,
+			   const char * command,
+			   const char * paramstr),
+      const char * frameName);
 
 EXTC_END
 

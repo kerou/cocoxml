@@ -44,13 +44,14 @@ LocateMark(char ** b, char ** e, const char * lmark, const char * rmark)
 }
 
 static Bool_t
-CheckMark(char * lnbuf, char * retIndent, size_t szRetIndent,
+CheckMark(char * lnbuf, const char * leftmark, const char * rightmark,
+	  char * retIndent, size_t szRetIndent,
 	  char ** retCommand, char ** retParamStr)
 {
     char * b, * e, * cmdTerm;
     if (!*lnbuf) return FALSE;
     b = lnbuf; e = lnbuf + strlen(lnbuf) - 1;
-    if (!LocateMark(&b, &e, "/*----", "----*/")) return FALSE;
+    if (!LocateMark(&b, &e, leftmark, rightmark)) return FALSE;
     *retCommand = b;
     while (b < e && isalnum(*b)) ++b; cmdTerm = b;
     if (!LocateMark(&b, &e, "(", ")")) *retParamStr = NULL;
@@ -84,45 +85,83 @@ TextWritter(FILE * outfp, char * lnbuf,
 }
 
 int
-Frame(const char * frameFName, const char * outDir, const char * prefix,
-      const char * license, void * cbData, frameCBFunc_t cbFunc)
+Frames(const char  * leftmark,
+       const char  * rightmark,
+       const char  * outDir,
+       const char  * prefix,
+       const char  * license,
+       void        * cbData,
+       int        (* cbFunc)(void * cbData,
+			     FILE * outfp,
+			     const char * indentstr,
+			     const char * command,
+			     const char * paramstr),
+       int           numFrames,
+       const char ** frameNames)
 {
+    const char ** curframefn;
     FILE * framefp, * outfp; Bool_t enabled;
     char outFName[256], indentStr[128], replacedPrefix[128];
     char lnbuf[4096], * Command, * ParamStr;
 
     outfp = NULL; enabled = TRUE;
-    if (!(framefp = fopen(frameFName, "r"))) goto errquit0;
-    while (fgets(lnbuf, sizeof(lnbuf), framefp)) {
-	if (!CheckMark(lnbuf, indentStr, sizeof(indentStr),
-		       &Command, &ParamStr)) {
-	    if (outfp && enabled &&
-		TextWritter(outfp, lnbuf, replacedPrefix, prefix) < 0)
+    for (curframefn = frameNames;
+	 curframefn - frameNames < numFrames; ++curframefn) {
+	if (!(framefp = fopen(*curframefn, "r"))) goto errquit0;
+	while (fgets(lnbuf, sizeof(lnbuf), framefp)) {
+	    if (!CheckMark(lnbuf, leftmark, rightmark,
+			   indentStr, sizeof(indentStr),
+			   &Command, &ParamStr)) {
+		if (outfp && enabled &&
+		    TextWritter(outfp, lnbuf, replacedPrefix, prefix) < 0)
+		    goto errquit1;
+	    } else if (!strcmp(Command, "open")) {
+		if (outfp != NULL) fclose(outfp);
+		snprintf(outFName, sizeof(outFName),
+			 "%s/%s", outDir, ParamStr);
+		if (!(outfp = fopen(outFName, "w"))) goto errquit1;
+	    } else if (!strcmp(Command, "prefix")) {
+		if (ParamStr == NULL) replacedPrefix[0] = 0;
+		else strncpy(replacedPrefix, ParamStr, sizeof(replacedPrefix));
+	    } else if (!strcmp(Command, "license")) {
+		if (outfp && fputs(license, outfp) < 0)
+		    goto errquit1;
+	    } else if (!strcmp(Command, "enable")) {
+		enabled = TRUE;
+	    } else if (!strcmp(Command, "disable")) {
+		enabled = FALSE;
+	    } else if (cbFunc(cbData, outfp,
+			      indentStr, Command, ParamStr) < 0) {
 		goto errquit1;
-	} else if (!strcmp(Command, "open")) {
-	    if (outfp != NULL) fclose(outfp);
-	    snprintf(outFName, sizeof(outFName), "%s/%s", outDir, ParamStr);
-	    if (!(outfp = fopen(outFName, "w"))) goto errquit1;
-	} else if (!strcmp(Command, "prefix")) {
-	    if (ParamStr == NULL) replacedPrefix[0] = 0;
-	    else strncpy(replacedPrefix, ParamStr, sizeof(replacedPrefix));
-	} else if (!strcmp(Command, "license")) {
-	    if (outfp && TextWritter(outfp, lnbuf, NULL, NULL) < 0)
-		goto errquit1;
-	} else if (!strcmp(Command, "enable")) {
-	    enabled = TRUE;
-	} else if (!strcmp(Command, "disable")) {
-	    enabled = FALSE;
-	} else if (cbFunc(cbData, outfp, indentStr, Command, ParamStr) < 0) {
-	    goto errquit1;
+	    }
 	}
+	fclose(framefp);
     }
     if (outfp != NULL)  fclose(outfp);
-    fclose(framefp);
     return 0;
  errquit1:
     if (outfp != NULL) fclose(outfp);
     fclose(framefp);
  errquit0:
     return -1;
+}
+
+int
+Frame(const char * leftmark,
+      const char * rightmark,
+      const char * outDir,
+      const char * prefix,
+      const char * license,
+      void       * cbData,
+      int       (* cbFunc)(void       * cbData,
+			   FILE       * outfp,
+			   const char * indentstr,
+			   const char * command,
+			   const char * paramstr),
+      const char * frameName)
+{
+    const char * frameNames[1];
+    frameNames[0] = frameName;
+    return Frames(leftmark, rightmark, outDir, prefix, license,
+		  cbData, cbFunc, 1, frameNames);
 }
