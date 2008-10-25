@@ -95,6 +95,8 @@ void _CocoFree_(void * ptr, const char * fname, int line);
 char * _CocoStrdup_(const char * str, const char * fname, int line);
 void * _AllocObject_(void * self, size_t szobj, const char * fname, int line);
 
+int UTF8Get(const char ** str, int EoF);
+
 typedef struct {
     char * start;
     char * cur;

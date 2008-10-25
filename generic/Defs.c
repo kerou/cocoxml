@@ -55,7 +55,7 @@ _CocoStrdup_(const char * str, const char * fname, int line)
 {
     char * ptr;
     if ((ptr = strdup(str))) return ptr;
-    fprintf(stderr, "strdup failed in %s#%d!", fname, line);
+    fprintf(stderr, "strdup failed in %s#%d!\n", fname, line);
     exit(-1);
 }
 
@@ -64,6 +64,51 @@ _AllocObject_(void * self, size_t szobj, const char * fname, int line)
 {
     if (self) return self;
     return _CocoMalloc_(szobj, fname, line);
+}
+
+int
+UTF8Get(const char ** str, int EoF)
+{
+    int ch, c1, c2, c3, c4;
+    const char * cur = *str;
+    ch = *cur++;
+    if (ch >= 128 && ((ch & 0xC0) != 0xC0) && (ch != EoF)) {
+	fprintf(stderr, "Inside UTF-8 character!\n");
+	exit(-1);
+    }
+    if (ch < 128 || ch == EoF) return ch;
+    if ((ch & 0xF0) == 0xF0) {
+	/* 1110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
+	c1 = ch & 0x07;
+	ch = *cur++; if (ch == 0) goto broken;
+	c2 = ch & 0x3F;
+	ch = *cur++; if (ch == 0) goto broken;
+	c3 = ch & 0x3F;
+	ch = *cur++; if (ch == 0) goto broken;
+	c4 = ch & 0x3F;
+	*str = cur;
+	return (((((c1 << 6) | c2) << 6) | c3) << 6) | c4;
+    }
+    if ((ch & 0xE0) == 0xE0) {
+	/* 1110xxxx 10xxxxxx 10xxxxxx */
+	c1 = ch & 0x0F;
+	ch = *cur++; if (ch == 0) goto broken;
+	c2 = ch & 0x3F;
+	ch = *cur++; if (ch == 0) goto broken;
+	c3 = ch & 0x3F;
+	*str = cur;
+	return (((c1 << 6) | c2) << 6) | c3;
+    }
+    /* (ch & 0xC0) == 0xC0 */
+    /* 110xxxxx 10xxxxxx */
+    c1 = ch & 0x1F;
+    ch = *cur++; if (ch == 0) goto broken;
+    c2 = ch & 0x3F;
+    *str = cur;
+    return (c1 << 6) | c2;
+ broken:
+    fprintf(stderr, "Broken in UTF8 character.\n");
+    exit(-1);
 }
 
 void
