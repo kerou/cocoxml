@@ -240,7 +240,9 @@ SimSet<CharSet ** s>            (. int n1, n2; .)
 				       CharSet_Set(*s, i);
 				.)
   ]
-| "ANY"                         (. *s = CharSet(); CharSet_Fill(*s); .)
+| "ANY"                         (. *s = CharSet();
+                                   CharSet_Fill(*s, COCO_WCHAR_MAX);
+			        .)
 )
 .
 

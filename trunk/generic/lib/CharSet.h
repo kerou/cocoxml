@@ -49,7 +49,7 @@ void CharSet_Subtract(CharSet_t * self, const CharSet_t * s);
 Bool_t CharSet_Includes(const CharSet_t * self, const CharSet_t * s);
 Bool_t CharSet_Intersects(const CharSet_t * self, const CharSet_t * s);
 void CharSet_Clear(CharSet_t * self);
-void CharSet_Fill(CharSet_t * self);
+void CharSet_Fill(CharSet_t * self, int maxchar);
 
 void CharSet_Dump(const CharSet_t * self, DumpBuffer_t * buf);
 void CharSet_DumpInt(const CharSet_t * self, DumpBuffer_t * buf);
