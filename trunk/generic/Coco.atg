@@ -222,11 +222,11 @@ SimSet<CharSet ** s>            (. int n1, n2; .)
 				   else CharSet_Or(*s, c->set);
                                 .)
 | string                        (.
-				   char * name = Unescape(self->t->val);
                                    int ch;
-				   int idx = 0, len = strlen(name);
-				   while (idx < len) {
-				       ch = UTF8Get(name, &idx);
+				   char * cur, * name;
+				   cur = name = Unescape(self->t->val);
+				   while (*cur) {
+				       ch = UTF8Get(&cur, EoF);
 				       if (self->dfa->ignoreCase) {
 					   ch = tolower(ch);
 				       }
@@ -249,9 +249,10 @@ SimSet<CharSet ** s>            (. int n1, n2; .)
 Char<int * n>
 =
   char                          (. *n = 0;
-				   int idx = 0; char * name = Unescape(self->t->val);
-				   *n = UTF8Get(name, &idx);
-				   if (name[idx] != 0)
+  				   char * cur, * name;
+				   cur = name = Unescape(self->t->val);
+				   *n = UTF8Get(&cur, EoF);
+				   if (*cur != 0)
 				       Parser_SemErr(self, "unacceptable character value: %s", self->t->val);
 				   CocoFree(name);
 				   if (self->dfa->ignoreCase) *n = tolower(*n);
