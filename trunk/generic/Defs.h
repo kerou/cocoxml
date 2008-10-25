@@ -64,6 +64,8 @@ typedef struct Graph_s     Graph_t;
 typedef struct CharClass_s CharClass_t;
 typedef struct Tab_s       Tab_t;
 
+typedef struct ParserGen_s ParserGen_t;
+
 typedef struct Scanner_s   Scanner_t;
 typedef struct Parser_s    Parser_t;
 typedef struct Errors_s    Errors_t;
