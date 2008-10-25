@@ -107,6 +107,7 @@ typedef struct {
 
 void DumpBuffer(DumpBuffer_t * self, char * buf, size_t szbuf);
 void DumpBuffer_Print(DumpBuffer_t * self, const char * format, ...);
+void DumpBuffer_Clear(DumpBuffer_t * self);
 Bool_t DumpBuffer_Full(DumpBuffer_t * self);
 
 char * Unescape(const char * s);
