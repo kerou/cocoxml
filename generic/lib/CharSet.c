@@ -24,9 +24,6 @@
 #include  <stdlib.h>
 #include  "CharSet.h"
 
-/* Define COCO_WCHAR_MAX here now, it should be placed in Scanner.frame. */
-#define   COCO_WCHAR_MAX  65535
-
 struct Range_s {
     int from, to;
     Range_t * next;
@@ -298,10 +295,10 @@ CharSet_Clear(CharSet_t * self)
 }
 
 void
-CharSet_Fill(CharSet_t * self)
+CharSet_Fill(CharSet_t * self, int maxchar)
 {
     CharSet_Clear(self);
-    self->head = new_Range(0, COCO_WCHAR_MAX);
+    self->head = new_Range(0, maxchar);
 }
 
 void
