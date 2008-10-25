@@ -51,116 +51,116 @@ Coco/R itself) does not fall under the GNU General Public License.
 int wmain(int argc, wchar_t *argv[]) {
 #elif defined __GNUC__
 int main(int argc, char *argv_[]) {
-	wchar_t ** argv = new wchar_t*[argc];
-	for (int i = 0; i < argc; ++i) {
-		argv[i] = coco_string_create(argv_[i]);
-	}
+    wchar_t ** argv = new wchar_t*[argc];
+    for (int i = 0; i < argc; ++i) {
+        argv[i] = coco_string_create(argv_[i]);
+    }
 #else
 #error unknown compiler!
 #endif
 
-  	wprintf(L"CocoXml/R (Oct 11, 2008)\n");
+    wprintf(L"CocoXml/R (Oct 11, 2008)\n");
 
-	wchar_t *srcName = NULL, *nsName = NULL, *frameDir = NULL, *ddtString = NULL, *traceFileName = NULL;
-	wchar_t *outDir = NULL;
-	char *chTrFileName = NULL;
+    wchar_t *srcName = NULL, *nsName = NULL, *frameDir = NULL, *ddtString = NULL, *traceFileName = NULL;
+    wchar_t *outDir = NULL;
+    char *chTrFileName = NULL;
 
-	for (int i = 1; i < argc; i++) {
-		if (coco_string_equal(argv[i], L"-namespace") && i < argc - 1) nsName = coco_string_create(argv[++i]);
-		else if (coco_string_equal(argv[i], L"-frames") && i < argc - 1) frameDir = coco_string_create(argv[++i]);
-		else if (coco_string_equal(argv[i], L"-trace") && i < argc - 1) ddtString = coco_string_create(argv[++i]);
-		else if (coco_string_equal(argv[i], L"-o") && i < argc - 1) outDir = coco_string_create_append(argv[++i], L"/");
-		else srcName = coco_string_create(argv[i]);
-	}
+    for (int i = 1; i < argc; i++) {
+        if (coco_string_equal(argv[i], L"-namespace") && i < argc - 1) nsName = coco_string_create(argv[++i]);
+        else if (coco_string_equal(argv[i], L"-frames") && i < argc - 1) frameDir = coco_string_create(argv[++i]);
+        else if (coco_string_equal(argv[i], L"-trace") && i < argc - 1) ddtString = coco_string_create(argv[++i]);
+        else if (coco_string_equal(argv[i], L"-o") && i < argc - 1) outDir = coco_string_create_append(argv[++i], L"/");
+        else srcName = coco_string_create(argv[i]);
+    }
 
 #if defined __GNUC__
-	for (int i = 0; i < argc; ++i) {
-		coco_string_delete(argv[i]);
-	}
-	delete [] argv; argv = NULL;
+    for (int i = 0; i < argc; ++i) {
+        coco_string_delete(argv[i]);
+    }
+    delete [] argv; argv = NULL;
 #endif
 
-	if (argc > 0 && srcName != NULL) {
-		int pos = coco_string_lastindexof(srcName, '/');
-		if (pos < 0) pos = coco_string_lastindexof(srcName, '\\');
-		wchar_t* file = coco_string_create(srcName);
-		wchar_t* srcDir = coco_string_create(srcName, 0, pos+1);
+    if (argc > 0 && srcName != NULL) {
+        int pos = coco_string_lastindexof(srcName, '/');
+        if (pos < 0) pos = coco_string_lastindexof(srcName, '\\');
+        wchar_t* file = coco_string_create(srcName);
+        wchar_t* srcDir = coco_string_create(srcName, 0, pos+1);
 
-		CocoXml::Scanner *scanner = new CocoXml::Scanner(file);
-		CocoXml::Parser  *parser  = new CocoXml::Parser(scanner);
+        CocoXml::Scanner *scanner = new CocoXml::Scanner(file);
+        CocoXml::Parser  *parser  = new CocoXml::Parser(scanner);
 
-		traceFileName = coco_string_create_append(srcDir, L"trace.txt");
-		chTrFileName = coco_string_create_char(traceFileName);
+        traceFileName = coco_string_create_append(srcDir, L"trace.txt");
+        chTrFileName = coco_string_create_char(traceFileName);
 
-		if ((parser->trace = fopen(chTrFileName, "w")) == NULL) {
-			wprintf(L"-- could not open %ls\n", chTrFileName);
-			exit(1);
-		}
+        if ((parser->trace = fopen(chTrFileName, "w")) == NULL) {
+            wprintf(L"-- could not open %ls\n", chTrFileName);
+            exit(1);
+        }
 
-		parser->tab  = new CocoXml::Tab(parser);
-		parser->xsdata  = new CocoXml::XmlScannerData(parser);
-		parser->pgen = new CocoXml::ParserGen(parser);
+        parser->tab  = new CocoXml::Tab(parser);
+        parser->xsdata  = new CocoXml::XmlScannerData(parser);
+        parser->pgen = new CocoXml::ParserGen(parser);
 
-		parser->tab->srcName  = coco_string_create(srcName);
-		parser->tab->srcDir   = coco_string_create(srcDir);
-		parser->tab->nsName   = coco_string_create(nsName);
-		parser->tab->frameDir = coco_string_create(frameDir);
-		parser->tab->outDir   = coco_string_create(outDir != NULL ? outDir : srcDir);
+        parser->tab->srcName  = coco_string_create(srcName);
+        parser->tab->srcDir   = coco_string_create(srcDir);
+        parser->tab->nsName   = coco_string_create(nsName);
+        parser->tab->frameDir = coco_string_create(frameDir);
+        parser->tab->outDir   = coco_string_create(outDir != NULL ? outDir : srcDir);
 
-		if (ddtString != NULL) parser->tab->SetDDT(ddtString);
+        if (ddtString != NULL) parser->tab->SetDDT(ddtString);
 
-		parser->Parse();
+        parser->Parse();
 
-		fclose(parser->trace);
+        fclose(parser->trace);
 
-		// obtain the FileSize
-		parser->trace = fopen(chTrFileName, "r");
-		fseek(parser->trace, 0, SEEK_END);
-		long fileSize = ftell(parser->trace);
-		fclose(parser->trace);
-		if (fileSize == 0)
-			remove(chTrFileName);
-		else
-			wprintf(L"trace output is in %ls\n", chTrFileName);
+        // obtain the FileSize
+        parser->trace = fopen(chTrFileName, "r");
+        fseek(parser->trace, 0, SEEK_END);
+        long fileSize = ftell(parser->trace);
+        fclose(parser->trace);
+        if (fileSize == 0)
+            remove(chTrFileName);
+        else
+            wprintf(L"trace output is in %ls\n", chTrFileName);
 
-		wprintf(L"%d errors detected\n", parser->errors->count);
-		if (parser->errors->count != 0) {
-			exit(1);
-		}
+        wprintf(L"%d errors detected\n", parser->errors->count);
+        if (parser->errors->count != 0) {
+            exit(1);
+        }
 
-		delete parser->pgen;
-		delete parser->xsdata;
-		delete parser->tab;
-		delete parser;
-		delete scanner;
-		coco_string_delete(file);
-		coco_string_delete(srcDir);
-	} else {
-		wprintf(L"Usage: CocoXml Grammar.ATG {Option}\n");
-		wprintf(L"Options:\n");
-		wprintf(L"  -namespace <namespaceName>\n");
-		wprintf(L"  -frames    <frameFilesDirectory>\n");
-		wprintf(L"  -trace     <traceString>\n");
-		wprintf(L"  -o         <outputDirectory>\n");
-		wprintf(L"Valid characters in the trace string:\n");
-		wprintf(L"  A  trace automaton\n");
-		wprintf(L"  F  list first/follow sets\n");
-		wprintf(L"  G  print syntax graph\n");
-		wprintf(L"  I  trace computation of first sets\n");
-		wprintf(L"  J  list ANY and SYNC sets\n");
-		wprintf(L"  P  print statistics\n");
-		wprintf(L"  S  list symbol table\n");
-		wprintf(L"  X  list cross reference table\n");
-		wprintf(L"XmlScanner.frame and XmlParser.frame files needed in ATG directory\n");
-		wprintf(L"or in a directory specified in the -frames option.\n");
-	}
+        delete parser->pgen;
+        delete parser->xsdata;
+        delete parser->tab;
+        delete parser;
+        delete scanner;
+        coco_string_delete(file);
+        coco_string_delete(srcDir);
+    } else {
+        wprintf(L"Usage: CocoXml Grammar.ATG {Option}\n");
+        wprintf(L"Options:\n");
+        wprintf(L"  -namespace <namespaceName>\n");
+        wprintf(L"  -frames    <frameFilesDirectory>\n");
+        wprintf(L"  -trace     <traceString>\n");
+        wprintf(L"  -o         <outputDirectory>\n");
+        wprintf(L"Valid characters in the trace string:\n");
+        wprintf(L"  A  trace automaton\n");
+        wprintf(L"  F  list first/follow sets\n");
+        wprintf(L"  G  print syntax graph\n");
+        wprintf(L"  I  trace computation of first sets\n");
+        wprintf(L"  J  list ANY and SYNC sets\n");
+        wprintf(L"  P  print statistics\n");
+        wprintf(L"  S  list symbol table\n");
+        wprintf(L"  X  list cross reference table\n");
+        wprintf(L"XmlScanner.frame and XmlParser.frame files needed in ATG directory\n");
+        wprintf(L"or in a directory specified in the -frames option.\n");
+    }
 
-	coco_string_delete(srcName);
-	coco_string_delete(nsName);
-	coco_string_delete(frameDir);
-	coco_string_delete(ddtString);
-	coco_string_delete(chTrFileName);
-	coco_string_delete(traceFileName);
+    coco_string_delete(srcName);
+    coco_string_delete(nsName);
+    coco_string_delete(frameDir);
+    coco_string_delete(ddtString);
+    coco_string_delete(chTrFileName);
+    coco_string_delete(traceFileName);
 
-	return 0;
+    return 0;
 }
