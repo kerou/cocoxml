@@ -40,6 +40,9 @@
 
 EXTC_BEGIN
 
+#define COCO_WCHAR_MAX 65535
+#define EoF            -1
+
 typedef struct Token_s Token_t;
 struct Token_s
 {
