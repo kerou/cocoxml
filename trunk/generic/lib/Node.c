@@ -28,7 +28,6 @@
 #include  "ArrayList.h"
 #include  "Position.h"
 #include  "CharClass.h"
-#include  "Tab.h"
 
 Node_t *
 Node(Node_t * self, int typ, Symbol_t * sym, int line)
@@ -83,52 +82,4 @@ int
 Node_Num(const Node_t * self)
 {
     return self ? self->n : 0;
-}
-
-static int
-Ptr(Node_t * self, Bool_t up)
-{
-    if (self == NULL) return 0;
-    else if (up) return -(self->n);
-    return self->n;
-}
-
-void
-Node_Dump(const Node_t * self, DumpBuffer_t * buf, Tab_t * tab)
-{
-    char name[12]; CharClass_t * cc;
-    DumpBuffer_Print(buf, "%4d %s ", self->n, nTyp[self->typ]);
-    if (self->sym != NULL) {
-	snprintf(name, sizeof(name), "%s            ", self->sym->name);
-	DumpBuffer_Print(buf, "%12s ", name);
-    } else if (self->typ == node_clas) {
-	cc = (CharClass_t *)ArrayList_Get(&tab->classes, self->val);
-	snprintf(name, sizeof(name), "%s            ", cc->name);
-	DumpBuffer_Print(buf, "%12s ", name);
-    } else {
-	DumpBuffer_Print(buf, "             ");
-    }
-    DumpBuffer_Print(buf, "%5d ", Ptr(self->next, self->up));
-
-    if (self->typ == node_t || self->typ == node_nt || self->typ == node_wt) {
-	DumpBuffer_Print(buf, "             %5s",
-			 Position_Dump(self->pos, name, sizeof(name)));
-    } else if (self->typ == node_chr) {
-	DumpBuffer_Print(buf, "%5d %5d       ", self->val, self->code);
-    } else if (self->typ == node_clas) {
-	DumpBuffer_Print(buf, "      %5d       ", self->code);
-    } else if (self->typ == node_alt ||
-	       self->typ == node_iter ||
-	       self->typ == node_opt) {
-	DumpBuffer_Print(buf, "%5d %5d       ",
-			 Ptr(self->down, FALSE), Ptr(self->sub, FALSE));
-    } else if (self->typ == node_sem) {
-	DumpBuffer_Print(buf, "             %5s",
-			 Position_Dump(self->pos, name, sizeof(name)));
-    } else if (self->typ == node_eps ||
-	       self->typ == node_any ||
-	       self->typ == node_sync) {
-	DumpBuffer_Print(buf, "                  ");
-    }
-    DumpBuffer_Print(buf, "%5d", self->line);
 }

@@ -38,6 +38,10 @@
 #include "HashTable.h"
 #endif
 
+#ifndef  COCO_PARSER_H
+#include "Parser.h"
+#endif
+
 EXTC_BEGIN
 
 struct Tab_s {
