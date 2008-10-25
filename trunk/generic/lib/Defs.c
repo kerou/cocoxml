@@ -129,6 +129,12 @@ DumpBuffer_Print(DumpBuffer_t * self, const char * format, ...)
     va_end(ap);
 }
 
+void
+DumpBuffer_Clear(DumpBuffer_t * self)
+{
+    self->cur = self->start; *self->cur = 0;
+}
+
 Bool_t
 DumpBuffer_Full(DumpBuffer_t * self)
 {
