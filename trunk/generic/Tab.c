@@ -246,11 +246,10 @@ Graph_t *
 Tab_StrToGraph(Tab_t * self, const char * str)
 {
     Graph_t * g; Node_t * p;
-    DumpBuffer_t dbuf; char buf[128], * cur;
-    char * subStr = strndupa(str + 1, strlen(str) - 2);
+    char * s, * cur;
 
     DumpBuffer(&dbuf, buf, sizeof(buf));
-    Unescape(&dbuf, subStr);
+    s = Unescape(subStr);
     if (strlen(buf) == 0)
 	Parser_SemErr(self->parser, "empty token not allowed");
     g = Graph(NULL);
@@ -260,6 +259,7 @@ Tab_StrToGraph(Tab_t * self, const char * str)
 	g->r->next = p; g->r = p;
     }
     g->l = self->dummyNode->next; self->dummyNode->next = NULL;
+    CocoFree(s);
     return g;
 }
 

@@ -105,7 +105,7 @@ void DumpBuffer(DumpBuffer_t * self, char * buf, size_t szbuf);
 void DumpBuffer_Print(DumpBuffer_t * self, const char * format, ...);
 Bool_t DumpBuffer_Full(DumpBuffer_t * self);
 
-void Unescape(DumpBuffer_t * buf, const char * s);
+char * Unescape(const char * s);
 void EscapeCh(DumpBuffer_t * buf, int ch);
 void Escape(DumpBuffer_t * buf, const char * s);
 
