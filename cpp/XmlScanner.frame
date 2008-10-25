@@ -82,7 +82,7 @@ char* coco_string_create_char(const wchar_t *value);
 void  coco_string_delete(char* &data);
 
 
-/*---- Namespace ----*/
+/*---- Namespace Begin ----*/
 
 class Token  
 {
@@ -567,7 +567,6 @@ void XMLCALL XmlScanner::commentHandler(void *userData,
 }
 
 void XMLCALL XmlScanner::cdataHandler(void *userData);
-
 
 
 void XmlScanner::AppendToken() {
