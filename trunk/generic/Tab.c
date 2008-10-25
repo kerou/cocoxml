@@ -31,6 +31,7 @@
 #include  "CharClass.h"
 #include  "CharSet.h"
 #include  "SortedList.h"
+#include  "Position.h"
 
 Tab_t *
 Tab(Tab_t * self, Parser_t * parser) {
@@ -248,13 +249,11 @@ Tab_StrToGraph(Tab_t * self, const char * str)
     Graph_t * g; Node_t * p;
     char * s, * cur;
 
-    DumpBuffer(&dbuf, buf, sizeof(buf));
-    s = Unescape(subStr);
-    if (strlen(buf) == 0)
-	Parser_SemErr(self->parser, "empty token not allowed");
+    s = Unescape(str);
+    if (strlen(s) == 0)	Parser_SemErr(self->parser, "empty token not allowed");
     g = Graph(NULL);
     g->r = self->dummyNode;
-    for (cur = buf; *cur; ++cur) {
+    for (cur = s; *cur; ++cur) {
 	p = Tab_NewNodeTVL(self, node_chr, (int)*cur, 0);
 	g->r->next = p; g->r = p;
     }
