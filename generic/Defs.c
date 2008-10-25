@@ -90,9 +90,10 @@ DumpBuffer_Full(DumpBuffer_t * self)
     return self->cur == self->last;
 }
 
-void
-Unescape(DumpBuffer_t * buf, const char * s)
+char *
+Unescape(const char * s)
 {
+    /* The first " and the last " have to be cut out. */
 }
 
 void
