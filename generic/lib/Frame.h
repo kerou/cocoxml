@@ -33,8 +33,7 @@
 EXTC_BEGIN
 
 int
-Frames(const char  * leftmark,
-       const char  * rightmark,
+Frames(char          secChr,
        const char  * outDir,
        const char  * prefix,
        const char  * license,
@@ -48,8 +47,7 @@ Frames(const char  * leftmark,
        const char ** frameNames);
 
 int
-Frame(const char * leftmark,
-      const char * rightmark,
+Frame(char         secChr,
       const char * outDir,
       const char * prefix,
       const char * license,
