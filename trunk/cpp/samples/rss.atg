@@ -23,135 +23,135 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 COMPILER Rss
 
-	 public Rss rss;
+    Rss rss;
 
 /*-------------------------------------------------------------------------*/
 OPTIONS TEXT
 
 TAGS
-	RSS = "rss"
-	CHANNEL = "channel"
-	ITEM = "item"
-	TITLE = "title"
-	LINK = "link"
-	DESCRIPTION = "description"
-	LANGUAGE = "language"
-	COPYRIGHT = "copyright"
-	MANAGING_EDITOR = "managingEditor"
-	WEB_MASTER = "webMaster"
-	PUB_DATE = "pubDate"
-	LAST_BUILD_DATE = "lastBuildDate"
-	CATEGORY = "category"
-	GENERATOR = "generator"
-	DOCS = "docs"
-	CLOUD = "cloud"
-	TTL = "ttl"
-	IMAGE = "image"
-	RATING = "rating"
-	TEXT_INPUT = "textInput"
-	NAME = "name"
-	SKIP_HOURS = "skipHours"
-	SKIP_DAYS = "skipDays"
-	URL = "url"
-	WIDTH = "width"
-	HEIGHT = "height"
-	AUTHOR = "author"
-	COMMENTS = "comments"
-	ENCLOSURE = "enclosure"
-	GUID = "guid"
-	SOURCE = "source"
+    RSS = "rss"
+    CHANNEL = "channel"
+    ITEM = "item"
+    TITLE = "title"
+    LINK = "link"
+    DESCRIPTION = "description"
+    LANGUAGE = "language"
+    COPYRIGHT = "copyright"
+    MANAGING_EDITOR = "managingEditor"
+    WEB_MASTER = "webMaster"
+    PUB_DATE = "pubDate"
+    LAST_BUILD_DATE = "lastBuildDate"
+    CATEGORY = "category"
+    GENERATOR = "generator"
+    DOCS = "docs"
+    CLOUD = "cloud"
+    TTL = "ttl"
+    IMAGE = "image"
+    RATING = "rating"
+    TEXT_INPUT = "textInput"
+    NAME = "name"
+    SKIP_HOURS = "skipHours"
+    SKIP_DAYS = "skipDays"
+    URL = "url"
+    WIDTH = "width"
+    HEIGHT = "height"
+    AUTHOR = "author"
+    COMMENTS = "comments"
+    ENCLOSURE = "enclosure"
+    GUID = "guid"
+    SOURCE = "source"
 
 ATTRS
-	ATTR_DOMAIN = "domain"
-	ATTR_PORT = "port"
-	ATTR_PATH = "path"
-	ATTR_REGISTER_PROCEDURE = "registerProcedure"
-	ATTR_PROTOCOL = "protocol"
+    ATTR_DOMAIN = "domain"
+    ATTR_PORT = "port"
+    ATTR_PATH = "path"
+    ATTR_REGISTER_PROCEDURE = "registerProcedure"
+    ATTR_PROTOCOL = "protocol"
 
 /*-------------------------------------------------------------------------*/
 PRODUCTIONS
 
 Rss = (. Channel channel; rss = new Rss(); .)
-	RSS {
-	Channel<.channel.> (. rss.AddChannel(channel); .)
-	} END_RSS.
+    RSS {
+    Channel<.channel.> (. rss.AddChannel(channel); .)
+    } END_RSS.
 
 Channel<.Channel channel.> = (. channel = new Channel(); .)
-	CHANNEL { ChannelProperty<channel> } END_CHANNEL.
+    CHANNEL { ChannelProperty<channel> } END_CHANNEL.
 
 ChannelProperty<Channel channel>  (. string value;
-			             Cloud cloud;
-				     Image image;
-				     TextInput textInput;
-				     Item item; .) =
-	Title<.value.>            (. channel.title = value; .)
-	| Link<.value.>           (. channel.link = value; .)
-	| Description<.value.>    (. channel.description = value; .)
-	| Language<.value.>       (. channel.language = value; .)
-	| Copyright<.value.>      (. channel.copyright = value; .)
-	| ManagingEditor<.value.> (. channel.managingEditor = value; .)
-	| WebMaster<.value.>      (. channel.webMaster = value; .)
-	| PubDate<.value.>        (. channel.pubDate = value; .)
-	| LastBuildDate<.value.>  (. channel.lastBuildDate = value; .)
-	| Category<.value.>       (. channel.category = value; .)
-	| Generator<.value.>      (. channel.generator = value; .)
-	| Docs<.value.>           (. channel.docs = value; .)
-	| Cloud<.cloud.>          (. channel.cloud = cloud; .)
-	| Ttl<.value.>            (. channel.ttl = value; .)
-	| Image<.image.>          (. channel.image = image; .)
-	| Rating<.value.>         (. channel.rating = value; .)
-	| TextInput<.textInput.>  (. channel.textInput = textInput; .)
-	| SkipHours<.value.>      (. channel.skipHours = value; .)
-	| SkipDays<.value.>       (. channel.skipDays = value; .)
+                         Cloud cloud;
+                     Image image;
+                     TextInput textInput;
+                     Item item; .) =
+    Title<.value.>            (. channel.title = value; .)
+    | Link<.value.>           (. channel.link = value; .)
+    | Description<.value.>    (. channel.description = value; .)
+    | Language<.value.>       (. channel.language = value; .)
+    | Copyright<.value.>      (. channel.copyright = value; .)
+    | ManagingEditor<.value.> (. channel.managingEditor = value; .)
+    | WebMaster<.value.>      (. channel.webMaster = value; .)
+    | PubDate<.value.>        (. channel.pubDate = value; .)
+    | LastBuildDate<.value.>  (. channel.lastBuildDate = value; .)
+    | Category<.value.>       (. channel.category = value; .)
+    | Generator<.value.>      (. channel.generator = value; .)
+    | Docs<.value.>           (. channel.docs = value; .)
+    | Cloud<.cloud.>          (. channel.cloud = cloud; .)
+    | Ttl<.value.>            (. channel.ttl = value; .)
+    | Image<.image.>          (. channel.image = image; .)
+    | Rating<.value.>         (. channel.rating = value; .)
+    | TextInput<.textInput.>  (. channel.textInput = textInput; .)
+    | SkipHours<.value.>      (. channel.skipHours = value; .)
+    | SkipDays<.value.>       (. channel.skipDays = value; .)
     | Item<.item.>            (. channel.AddItem(item); .)
 .
 
 Cloud<.Cloud cloud.> = (. cloud = new Cloud(); .)
-	CLOUD
-	{ ATTR_DOMAIN              (. cloud.domain = t.val; .)
-	| ATTR_PORT                (. cloud.port = t.val; .)
-	| ATTR_PATH                (. cloud.path = t.val; .)
-	| ATTR_REGISTER_PROCEDURE  (. cloud.registerProcedure = t.val; .)
-	| ATTR_PROTOCOL            (. cloud.protocol = t.val; .)
-	} END_CLOUD
+    CLOUD
+    { ATTR_DOMAIN              (. cloud.domain = t.val; .)
+    | ATTR_PORT                (. cloud.port = t.val; .)
+    | ATTR_PATH                (. cloud.path = t.val; .)
+    | ATTR_REGISTER_PROCEDURE  (. cloud.registerProcedure = t.val; .)
+    | ATTR_PROTOCOL            (. cloud.protocol = t.val; .)
+    } END_CLOUD
 .
 
 Image<.Image image.> = (. image = new Image(); .)
-	IMAGE { ImageProperty<image> } END_IMAGE.
+    IMAGE { ImageProperty<image> } END_IMAGE.
 
 ImageProperty<Image image>  (. string value; .) =
-	Url<.value.>      (. image.url = value; .)
-	| Title<.value.>  (. image.title = value; .)
-	| Link<.value.>   (. image.link = value; .)
-	| Width<.value.>  (. image.width = value; .)
-	| Height<.value.> (. image.height = value; .)
+    Url<.value.>      (. image.url = value; .)
+    | Title<.value.>  (. image.title = value; .)
+    | Link<.value.>   (. image.link = value; .)
+    | Width<.value.>  (. image.width = value; .)
+    | Height<.value.> (. image.height = value; .)
 .
 
 TextInput<.TextInput textInput.> = (. textInput = new TextInput(); .)
-	TEXT_INPUT { TextInputProperty<textInput> } END_TEXT_INPUT.
+    TEXT_INPUT { TextInputProperty<textInput> } END_TEXT_INPUT.
 
 TextInputProperty<TextInput textInput> (. string value; .) =
-	Title<.value.>         (. textInput.title = value; .)
-	| Description<.value.> (. textInput.description = value; .)
-	| Name<.value.>        (. textInput.name = value; .)
-	| Link<.value.>        (. textInput.link = value; .)
+    Title<.value.>         (. textInput.title = value; .)
+    | Description<.value.> (. textInput.description = value; .)
+    | Name<.value.>        (. textInput.name = value; .)
+    | Link<.value.>        (. textInput.link = value; .)
 .
 
 Item<.Item item.> = (. item = new Item(); .)
-	ITEM { ItemProperty<item> } END_ITEM.
+    ITEM { ItemProperty<item> } END_ITEM.
 
 ItemProperty<Item item> (. string value; Image image; .) =
-	Title<.value.>          (. item.title = value; .)
-	| Link<.value.>         (. item.link = value; .)
-	| Description<.value.>  (. item.description = value; .)
-	| Author<.value.>       (. item.author = value; .)
-	| Category<.value.>     (. item.category = value; .)
-	| Comments<.value.>     (. item.comments = value; .)
-	| Enclosure<.value.>    (. item.enclosure = value; .)
-	| Guid<.value.>         (. item.guid = value; .)
-	| PubDate<.value.>      (. item.pubdate = value; .)
-	| Source<.value.>       (. item.source = value; .)
-	| Image<.image.>        (. item.image = image; .)
+    Title<.value.>          (. item.title = value; .)
+    | Link<.value.>         (. item.link = value; .)
+    | Description<.value.>  (. item.description = value; .)
+    | Author<.value.>       (. item.author = value; .)
+    | Category<.value.>     (. item.category = value; .)
+    | Comments<.value.>     (. item.comments = value; .)
+    | Enclosure<.value.>    (. item.enclosure = value; .)
+    | Guid<.value.>         (. item.guid = value; .)
+    | PubDate<.value.>      (. item.pubdate = value; .)
+    | Source<.value.>       (. item.source = value; .)
+    | Image<.image.>        (. item.image = image; .)
 .
 
 
