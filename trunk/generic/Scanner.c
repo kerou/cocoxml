@@ -23,37 +23,409 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
+#include  <assert.h>
 #include  <stdlib.h>
 #include  <string.h>
 #include  "Scanner.h"
 
-static int utf8get(char ** str);
-
-Token_t *
-Token(Token_t * self)
+/*------------------------------ Token_t ------------------------------*/
+static Token_t *
+Token(int kind, int pos, int col, int line, const char * val, size_t vallen)
 {
-    if (!self && !(self = malloc(sizeof(Token_t)))) return NULL;
-    self->kind = 0;
-    self->pos = 0;
-    self->col = 0;
-    self->line = 0;
-    self->val = NULL;
+    Token_t * self;
+    if (!(self = malloc(sizeof(Token_t) + vallen + 1))) return NULL;
     self->next = NULL;
+    self->kind = kind;
+    self->pos = pos;
+    self->col = col;
+    self->line = line;
+    self->val = (char *)(self + 1);
+    memcpy(self->val, val, vallen);  self->val[vallen] = 0;
     return self;
 }
 
-void
+static void
 Token_Destruct(Token_t * self)
 {
-    if (self->val) free(self->val);
+    free(self);
 }
 
+/*------------------------------ Buffer_t ------------------------------*/
+/* Buffer_t members for Scanner_t. */
+/* fp should be opened with 'r' mode to deal with CR/LF. */
+static Buffer_t * Buffer(Buffer_t * self, FILE * fp);
+static void Buffer_Destruct(Buffer_t * self);
+static long Buffer_GetPos(Buffer_t * self);
+static int Buffer_Read(Buffer_t * self, int * retBytes);
+static const char * Buffer_GetString(Buffer_t * self, long start);
+static void Buffer_SetBusy(Buffer_t * self, long startBusy);
+static void Buffer_ClearBusy(Buffer_t * self);
+static void Buffer_Lock(Buffer_t * self);
+static void Buffer_LockReset(Buffer_t * self);
+static void Buffer_Unlock(Buffer_t * self);
+
+/* Buffer_t private members. */
+#define BUFSTEP  4096
+static int Buffer_Load(Buffer_t * self);
+static int Buffer_ReadByte(Buffer_t * self, int * value);
+
+static Buffer_t *
+Buffer(Buffer_t * self, FILE * fp)
+{
+    self->fp = fp;
+    self->start = 0;
+    if (!(self->buf = malloc(BUFSTEP))) goto errquit0;
+    self->busyFirst = self->lockFirst = NULL;
+    self->cur = self->loaded = self->buf;
+    self->last = self->buf + BUFSTEP;
+    if (Buffer_Load(self) < 0) goto errquit1;
+    return self;
+ errquit1:
+    free(self->buf);
+ errquit0:
+    return NULL;
+}
+
+static void
+Buffer_Destruct(Buffer_t * self)
+{
+    fclose(self->fp);
+    free(self->buf);
+}
+
+static long
+Buffer_GetPos(Buffer_t * self)
+{
+    return self->start + (self->cur - self->buf);
+}
+
+static int
+Buffer_Read(Buffer_t * self, int * retBytes)
+{
+    int ch, c1, c2, c3, c4;
+    int cur = self->cur - self->buf;
+
+    if (Buffer_ReadByte(self, &ch) < 0) return ch;
+
+    if (ch < 128) return ch;
+
+    if ((ch & 0xC0) != 0xC0) /* Inside UTF-8 character! */
+	return ErrorChr;
+    if ((ch & 0xF0) == 0xF0) {
+	/* 1110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
+	c1 = ch & 0x07;
+	if (Buffer_ReadByte(self, &ch) < 0) return ch;
+	c2 = ch & 0x3F;
+	if (Buffer_ReadByte(self, &ch) < 0) return ch;
+	c3 = ch & 0x3F;
+	if (Buffer_ReadByte(self, &ch) < 0) return ch;
+	c4 = ch & 0x3F;
+	ch = (((((c1 << 6) | c2) << 6) | c3) << 6) | c4;
+    } else if ((ch & 0xE0) == 0xE0) {
+	/* 1110xxxx 10xxxxxx 10xxxxxx */
+	c1 = ch & 0x0F;
+	if (Buffer_ReadByte(self, &ch) < 0) return ch;
+	c2 = ch & 0x3F;
+	if (Buffer_ReadByte(self, &ch) < 0) return ch;
+	c3 = ch & 0x3F;
+	ch = (((c1 << 6) | c2) << 6) | c3;
+    } else {
+	/* (ch & 0xC0) == 0xC0 */
+	/* 110xxxxx 10xxxxxx */
+	c1 = ch & 0x1F;
+	if (Buffer_ReadByte(self, &ch) < 0) return ch;
+	c2 = ch & 0x3F;
+	ch = (c1 << 6) | c2;
+    }
+    if (retBytes) *retBytes = (self->cur - self->buf) - cur;
+    return ch;
+}
+
+const char *
+Buffer_GetString(Buffer_t * self, long start)
+{
+    if (start < self->start || start >= self->start + (self->cur - self->buf)){
+	fprintf(stderr, "start is out of range!\n");
+	exit(-1);
+    }
+    return self->buf + (start - self->start);
+}
+
+static void
+Buffer_SetBusy(Buffer_t * self, long startBusy)
+{
+    assert(startBusy >= self->start);
+    self->busyFirst = self->buf + (startBusy - self->start);
+    assert(self->busyFirst <= self->cur);
+}
+
+static void
+Buffer_ClearBusy(Buffer_t * self)
+{
+    self->busyFirst = NULL;
+}
+
+static void
+Buffer_Lock(Buffer_t * self)
+{
+    assert(self->lockFirst == NULL);
+    self->lockFirst = self->cur;
+}
+
+static void
+Buffer_LockReset(Buffer_t * self)
+{
+    assert(self->lockFirst != NULL);
+    self->cur = self->lockFirst;
+    self->lockFirst = NULL;
+}
+
+static void
+Buffer_Unlock(Buffer_t * self)
+{
+    assert(self->lockFirst != NULL);
+    self->lockFirst = NULL;
+}
+
+static int
+Buffer_Load(Buffer_t * self)
+{
+    size_t rc = fread(self->loaded, 1, self->last - self->loaded, self->fp);
+    if (rc > 0) self->loaded += rc;
+    else if (ferror(self->fp)) return -1;
+    return 0;
+}
+
+static int
+Buffer_ReadByte(Buffer_t * self, int * value)
+{
+    int delta; char * keptFirst, * newbuf;
+    while (self->cur >= self->loaded) {
+	/* Calculate keptFirst */
+	keptFirst = self->cur;
+	if (self->busyFirst && self->busyFirst < keptFirst)
+	    keptFirst = self->busyFirst;
+	if (self->lockFirst && self->lockFirst < keptFirst)
+	    keptFirst = self->lockFirst;
+	if (self->buf < keptFirst) { /* Remove the unprotected data. */
+	    delta = keptFirst - self->buf;
+	    memmove(self->buf, keptFirst, self->loaded - keptFirst);
+	    self->start += delta;
+	    if (self->busyFirst) self->busyFirst -= delta;
+	    if (self->lockFirst) self->lockFirst -= delta;
+	    self->cur -= delta;
+	    self->loaded -= delta;
+	}
+	if (feof(self->fp)) { *value = EoF; return -1; }
+	/* Try to extend the storage space */
+	while (self->loaded >= self->last) {
+	    if (!(newbuf =
+		  realloc(self->buf, self->last - self->buf + BUFSTEP))) {
+		*value = ErrorChr;
+		return -1;
+	    }
+	    if (self->busyFirst)
+		self->busyFirst = newbuf + (self->busyFirst - self->buf);
+	    if (self->lockFirst)
+		self->lockFirst = newbuf + (self->lockFirst - self->buf);
+	    self->cur = newbuf + (self->cur - self->buf);
+	    self->loaded = newbuf + (self->loaded - self->buf);
+	    self->last = newbuf + (self->last - self->buf + BUFSTEP);
+	    self->buf = newbuf;
+	}
+	if (Buffer_Load(self) < 0) { *value = ErrorChr; return -1; }
+    }
+    *value = *self->cur++;
+    return 0;
+}
+
+/*------------------------------ Scanner_t ------------------------------*/
+static int Char2State(int chr);
+static int Identifier2KWKind(const char * key, size_t keylen, int defaultVal);
+static void Scanner_Init(Scanner_t * self);
+static Token_t * Scanner_NextToken(Scanner_t * self);
+
+Scanner_t *
+Scanner(Scanner_t * self, const char * filename)
+{
+    FILE * fp;
+    if (!(fp = fopen(filename, "r"))) goto errquit0;
+    if (Buffer(&self->buffer, fp) == NULL) goto errquit1;
+    Scanner_Init(self);
+    return self;
+ errquit1:
+    fclose(fp);
+ errquit0:
+    return NULL;
+}
+
+static void
+Scanner_Init(Scanner_t * self)
+{
+    self->eofSym = 0;
+    /*---- declarations ----*/
+    self->maxT = 41;
+    self->noSym = 41;
+    /*---- enable ----*/
+
+    self->busyTokenList = NULL;
+    self->curToken = &self->busyTokenList;
+    self->peekToken = &self->busyTokenList;
+
+    self->pos = -1; self->line = 1; self->col = 0;
+    self->oldEols = 0;
+}
+
+void
+Scanner_Destruct(Scanner_t * self)
+{
+    Token_t * cur, * next;
+    for (cur = self->busyTokenList; cur; cur = next) {
+	next = cur->next;
+	Token_Destruct(cur);
+    }
+    Buffer_Destruct(&self->buffer);
+}
+
+void
+Scanner_Release(Scanner_t * self, Token_t * token)
+{
+    /* Only the first token in busyTokenList can be released. */
+    assert(self->busyTokenList == token);
+    /* If the first token in busyTokenList is not consumed yet, failed! */
+    assert(self->curToken != &self->busyTokenList);
+    self->busyTokenList = self->busyTokenList->next;
+    Token_Destruct(token);
+    if (self->busyTokenList) {
+	Buffer_SetBusy(&self->buffer, self->busyTokenList->pos);
+    } else {
+	Buffer_ClearBusy(&self->buffer);
+    }
+}
+
+Token_t *
+Scanner_Scan(Scanner_t * self)
+{
+    Token_t * cur;
+    if (*self->curToken == NULL) {
+	*self->curToken = Scanner_NextToken(self);
+	if (self->curToken == &self->busyTokenList)
+	    Buffer_SetBusy(&self->buffer, self->busyTokenList->pos);
+    }
+    cur = *self->curToken;
+    self->peekToken = self->curToken = &cur->next;
+    return cur;
+}
+
+Token_t *
+Scanner_Peek(Scanner_t * self)
+{
+    Token_t * cur;
+    do {
+	if (*self->peekToken == NULL) {
+	    *self->peekToken = Scanner_NextToken(self);
+	    if (self->peekToken == &self->busyTokenList)
+		Buffer_SetBusy(&self->buffer, self->busyTokenList->pos);
+	}
+	cur = *self->peekToken;
+	self->peekToken = &cur->next;
+    } while (cur->kind > self->maxT); /* Skip pragmas */
+    return cur;
+}
+
+void
+Scanner_ResetPeek(Scanner_t * self)
+{
+    *self->peekToken = *self->curToken;
+}
+
+/* All the following things are used by Scanner_NextToken. */
 typedef struct {
     int key, val;
 }  Char2State_t;
 
 static const Char2State_t c2sArr[] = {
     /*---- chars2states ----*/
+    { EoF, -1 },
+    { 34, 11 },
+    { 36, 10 },
+    { 39, 5 },
+    { 40, 30 },
+    { 41, 21 },
+    { 43, 14 },
+    { 45, 15 },
+    { 46, 28 },
+    { 48, 2 },
+    { 49, 2 },
+    { 50, 2 },
+    { 51, 2 },
+    { 52, 2 },
+    { 53, 2 },
+    { 54, 2 },
+    { 55, 2 },
+    { 56, 2 },
+    { 57, 2 },
+    { 60, 29 },
+    { 61, 13 },
+    { 62, 17 },
+    { 65, 1 },
+    { 66, 1 },
+    { 67, 1 },
+    { 68, 1 },
+    { 69, 1 },
+    { 70, 1 },
+    { 71, 1 },
+    { 72, 1 },
+    { 73, 1 },
+    { 74, 1 },
+    { 75, 1 },
+    { 76, 1 },
+    { 77, 1 },
+    { 78, 1 },
+    { 79, 1 },
+    { 80, 1 },
+    { 81, 1 },
+    { 82, 1 },
+    { 83, 1 },
+    { 84, 1 },
+    { 85, 1 },
+    { 86, 1 },
+    { 87, 1 },
+    { 88, 1 },
+    { 89, 1 },
+    { 90, 1 },
+    { 91, 22 },
+    { 93, 23 },
+    { 95, 1 },
+    { 97, 1 },
+    { 98, 1 },
+    { 99, 1 },
+    { 100, 1 },
+    { 101, 1 },
+    { 102, 1 },
+    { 103, 1 },
+    { 104, 1 },
+    { 105, 1 },
+    { 106, 1 },
+    { 107, 1 },
+    { 108, 1 },
+    { 109, 1 },
+    { 110, 1 },
+    { 111, 1 },
+    { 112, 1 },
+    { 113, 1 },
+    { 114, 1 },
+    { 115, 1 },
+    { 116, 1 },
+    { 117, 1 },
+    { 118, 1 },
+    { 119, 1 },
+    { 120, 1 },
+    { 121, 1 },
+    { 122, 1 },
+    { 123, 24 },
+    { 124, 20 },
+    { 125, 25 },
     /*---- enable ----*/
 };
 static const int c2sNum = sizeof(c2sArr) / sizeof(c2sArr[0]);
@@ -79,6 +451,23 @@ typedef struct {
 
 static const Identifier2KWKind_t i2kArr[] = {
     /*---- identifiers2keywordkinds ----*/
+    { "ANY", 23 },
+    { "CHARACTERS", 8 },
+    { "COMMENTS", 11 },
+    { "COMPILER", 6 },
+    { "CONTEXT", 38 },
+    { "END", 19 },
+    { "FROM", 12 },
+    { "IF", 37 },
+    { "IGNORE", 15 },
+    { "IGNORECASE", 7 },
+    { "NESTED", 14 },
+    { "PRAGMAS", 10 },
+    { "PRODUCTIONS", 16 },
+    { "SYNC", 36 },
+    { "TO", 13 },
+    { "TOKENS", 9 },
+    { "WEAK", 29 },
     /*---- enable ----*/
 };
 static const int i2kNum = sizeof(i2kArr) / sizeof(i2kArr[0]);
@@ -90,131 +479,239 @@ i2kCmp(const void * key, const void * i2k)
 }
 
 static int
-Identifier2KWKind(const char * key, int defaultVal)
+Identifier2KWKind(const char * key, size_t keylen, int defaultVal)
 {
+    char * keystr;
     Identifier2KWKind_t * i2k;
 
-    i2k = bsearch(key, i2kArr, i2kNum, sizeof(Identifier2KWKind_t), i2kCmp);
+    keystr = alloca(keylen + 1);
+    memcpy(keystr, key, keylen);
+    keystr[keylen] = 0;
+    i2k = bsearch(keystr, i2kArr, i2kNum, sizeof(Identifier2KWKind_t), i2kCmp);
     return i2k ? i2k->val : defaultVal;
 }
 
-/* Now we support seekable file for simplicity. */
-Buffer_t *
-Buffer(Buffer_t * self, FILE * fp)
+static void
+Scanner_NextCh(Scanner_t * self)
 {
-    long len;
-    fseek(fp, 0, SEEK_END);
-    len = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    if (!(self->buf = malloc(len))) return NULL;
-    self->cur = self->buf;
-    self->last = self->buf + len;
-    return self;
+    int bytes;
+    if (self->oldEols > 0) { self->ch = '\n'; --self->oldEols; }
+    else {
+	self->ch = Buffer_Read(&self->buffer, &bytes); self->col += bytes;
+	if (self->ch == '\n') { ++self->line; self->col = 0; }
+    }
 }
 
-void
-Buffer_Destruct(Buffer_t * self)
+/*---- comments ----*/
+static int
+Scanner_Comment0(Scanner_t * self)
 {
-    free(self->buf);
-}
-
-int
-Buffer_Read(Buffer_t * self)
-{
-    return self->cur < self->last ? utf8get(&self->cur) : EoF;
-}
-
-int
-Buffer_Peek(Buffer_t * self)
-{
-    char * cur = self->cur;
-    return cur < self->last ? utf8get(&cur) : EoF;
-}
-
-const char *
-Buffer_GetString(Buffer_t * self, int start)
-{
-    return self->buf + start;
-}
-
-int
-Buffer_GetPos(Buffer_t * self)
-{
-    return self->cur - self->buf;
-}
-
-void
-Buffer_SetPos(Buffer_t * self, int pos)
-{
-    self->cur = self->buf + pos;
+    int level = 1, pos0 = self->pos, line0 = self->line, col0 = self->col;
+    Buffer_Lock(&self->buffer);
+    Scanner_NextCh(self);
+    if (self->ch == '/') {
+	Buffer_Unlock(&self->buffer);
+	Scanner_NextCh(self);
+	for (;;) {
+	    if (self->ch == 10) {
+		--level;
+		if (level == 0) {
+		    self->oldEols = self->line - line0;
+		    Scanner_NextCh(self);
+		    return 1;
+		}
+		Scanner_NextCh(self);
+	    } else if (self->ch == EoF) {
+		return 0;
+	    } else {
+		Scanner_NextCh(self);
+	    }
+	}
+    } else {
+	Buffer_LockReset(&self->buffer); Scanner_NextCh(self);
+	self->pos = pos0; self->line = line0; self->col = col0;
+    }
+    return 0;
 }
 
 static int
-utf8get(char ** str)
+Scanner_Comment1(Scanner_t * self)
 {
-    int ch, c1, c2, c3, c4;
-    char * cur = *str;
-    ch = *cur++;
-    if (ch >= 128 && ((ch & 0xC0) != 0xC0)) {
-	fprintf(stderr, "Inside UTF-8 character!\n");
-	exit(-1);
+    int level = 1, pos0 = self->pos, line0 = self->line, col0 = self->col;
+    Buffer_Lock(&self->buffer);
+    Scanner_NextCh(self);
+    if (self->ch == '*') {
+	Buffer_Unlock(&self->buffer);
+	Scanner_NextCh(self);
+	for (;;) {
+	    if (self->ch == '*') {
+		Scanner_NextCh(self);
+		if (self->ch == '/') {
+		    --level;
+		    if (level == 0) {
+			self->oldEols = self->line - line0;
+			Scanner_NextCh(self);
+			return 1;
+		    }
+		    Scanner_NextCh(self);
+		}
+	    } else if (self->ch == '/') {
+		Scanner_NextCh(self);
+		if (self->ch == '*') {
+		    ++level; Scanner_NextCh(self);
+		}
+	    } else if (self->ch == EoF) {
+		return 0;
+	    } else {
+		Scanner_NextCh(self);
+	    }
+	}
+    } else {
+	Buffer_LockReset(&self->buffer); Scanner_NextCh(self);
+	self->pos = pos0; self->line = line0; self->col = col0;
     }
-    if (ch < 128) return ch;
-    if ((ch & 0xF0) == 0xF0) {
-	/* 1110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
-	c1 = ch & 0x07;
-	ch = *cur++; if (ch == 0) goto broken;
-	c2 = ch & 0x3F;
-	ch = *cur++; if (ch == 0) goto broken;
-	c3 = ch & 0x3F;
-	ch = *cur++; if (ch == 0) goto broken;
-	c4 = ch & 0x3F;
-	*str = cur;
-	return (((((c1 << 6) | c2) << 6) | c3) << 6) | c4;
-    }
-    if ((ch & 0xE0) == 0xE0) {
-	/* 1110xxxx 10xxxxxx 10xxxxxx */
-	c1 = ch & 0x0F;
-	ch = *cur++; if (ch == 0) goto broken;
-	c2 = ch & 0x3F;
-	ch = *cur++; if (ch == 0) goto broken;
-	c3 = ch & 0x3F;
-	*str = cur;
-	return (((c1 << 6) | c2) << 6) | c3;
-    }
-    /* (ch & 0xC0) == 0xC0 */
-    /* 110xxxxx 10xxxxxx */
-    c1 = ch & 0x1F;
-    ch = *cur++; if (ch == 0) goto broken;
-    c2 = ch & 0x3F;
-    *str = cur;
-    return (c1 << 6) | c2;
- broken:
-    fprintf(stderr, "Broken in UTF8 character.\n");
-    exit(-1);
+    return 0;
 }
-
-Scanner_t *
-Scanner(Scanner_t * self, const char * filename)
-{
-}
-
-void
-Scanner_Destruct(Scanner_t * self)
-{
-}
+/*---- enable ----*/
 
 Token_t *
-Scanner_Scan(Scanner_t * self)
+Scanner_NextToken(Scanner_t * self)
 {
-}
-
-Token_t *
-Scanner_Peek(Scanner_t * self)
-{
-}
-
-void
-Scanner_ResetPeek(Scanner_t * self)
-{
+    int pos, line, col, state, kind;
+    Token_t * t;
+    while (self->ch == ' ' ||
+	   /*---- scan1 ----*/
+	   (self->ch >= 9 && self->ch <= 10) || self->ch == 13
+	   /*---- enable ----*/
+	   ) Scanner_NextCh(self);
+    /*---- scan2 ----*/
+    if ((self->ch == '/' && Scanner_Comment0(self)) ||
+	(self->ch =='/' && Scanner_Comment1(self)))
+	return Scanner_NextToken(self);
+    /*---- enable ----*/
+    pos = self->pos; line = self->line; col = self->col;
+    Buffer_Lock(&self->buffer);
+    state = Char2State(self->ch);
+    Scanner_NextCh(self);
+    switch (state) {
+    case -1: kind = self->eofSym; break;
+    case 0: kind = self->noSym; break;
+	/*---- scan3 ----*/
+    case 1: case_1:
+	if ((self->ch >= '0' && self->ch <= '9') ||
+	    (self->ch >= 'A' && self->ch <= 'Z') ||
+	    self->ch == '_' ||
+	    (self->ch >= 'a' && self->ch <= 'z')) {
+	    Scanner_NextCh(self); goto case_1;
+	} else {
+	    kind = 1;
+	    kind = Identifier2KWKind(Buffer_GetString(&self->buffer, pos), self->pos - pos, kind);
+	    break;
+	}
+    case 2: case_2:
+	if ((self->ch >= '0' && self->ch <= '9')) {
+	    Scanner_NextCh(self); goto case_2;
+	} else {
+	    kind = 2;
+	    break;
+	}
+    case 3: case_3: {kind = 3; break;}
+    case 4: case_4: {kind = 4; break;}
+    case 5:
+	if (self->ch <= 9 ||
+	    (self->ch >= 11 && self->ch <= 12) ||
+	    (self->ch >= 14 && self->ch <= '&') ||
+	    (self->ch >= '(' && self->ch <= '[') ||
+	    (self->ch >= ']' && self->ch <= 65535)) {
+	    Scanner_NextCh(self); goto case_6;
+	} else if (self->ch == 92) {
+	    Scanner_NextCh(self); goto case_7;
+	} else {
+	    kind = self->noSym; break;
+	}
+    case 6: case_6:
+	if (self->ch == 39) {
+	    Scanner_NextCh(self); goto case_9;
+	} else {
+	    kind = self->noSym; break;
+	}
+    case 7: case_7:
+	if (self->ch >= ' ' && self->ch <= '~') {
+	    Scanner_NextCh(self); goto case_8;
+	} else {
+	    kind = self->noSym; break;
+	}
+    case 8: case_8:
+	if ((self->ch >= '0' && self->ch <= '9') ||
+	    (self->ch >= 'a' && self->ch <= 'f')) {
+	    Scanner_NextCh(self); goto case_8;
+	} else if (self->ch == 39) {
+	    Scanner_NextCh(self); goto case_9;
+	} else {
+	    kind = self->noSym; break;
+	}
+    case 9: case_9: {kind = 5; break;}
+    case 10: case_10:
+	if ((self->ch >= '0' && self->ch <= '9') ||
+	    (self->ch >= 'A' && self->ch <= 'Z') ||
+	    self->ch == '_' ||
+	    (self->ch >= 'a' && self->ch <= 'z')) {
+	    Scanner_NextCh(self); goto case_10;
+	} else {
+	    kind = 42; break;
+	}
+    case 11: case_11:
+	if (self->ch <= 9 ||
+	    (self->ch >= 11 && self->ch <= 12) ||
+	    (self->ch >= 14 && self->ch <= '!') ||
+	    (self->ch >= '#' && self->ch <= '[') ||
+	    (self->ch >= ']' && self->ch <= 65535)) {
+	    Scanner_NextCh(self); goto case_11;
+	} else if (self->ch == 10 || self->ch == 13) {
+	    Scanner_NextCh(self); goto case_4;
+	} else if (self->ch == '"') {
+	    Scanner_NextCh(self); goto case_3;
+	} else if (self->ch == 92) {
+	    Scanner_NextCh(self); goto case_12;
+	} else {
+	    kind = self->noSym; break;
+	}
+    case 12: case_12:
+	if (self->ch >= ' ' && self->ch <= '~') {
+	    Scanner_NextCh(self); goto case_11;
+	} else {
+	    kind = self->noSym; break;
+	}
+    case 13: {kind = 17; break;}
+    case 14: {kind = 20; break;}
+    case 15: {kind = 21; break;}
+    case 16: case_16: {kind = 22; break;}
+    case 17: {kind = 25; break;}
+    case 18: case_18: {kind = 26; break;}
+    case 19: case_19: {kind = 27; break;}
+    case 20: {kind = 28; break;}
+    case 21: {kind = 31; break;}
+    case 22: {kind = 32; break;}
+    case 23: {kind = 33; break;}
+    case 24: {kind = 34; break;}
+    case 25: {kind = 35; break;}
+    case 26: case_26: {kind = 39; break;}
+    case 27: case_27: {kind = 40; break;}
+    case 28:
+	if (self->ch == '.') {Scanner_NextCh(self); goto case_16;}
+	else if (self->ch == '>') {Scanner_NextCh(self); goto case_19;}
+	else if (self->ch == ')') {Scanner_NextCh(self); goto case_27;}
+	else {kind = 18; break;}
+    case 29:
+	if (self->ch == '.') {Scanner_NextCh(self); goto case_18;}
+	else {kind = 24; break;}
+    case 30:
+	if (self->ch == '.') {Scanner_NextCh(self); goto case_26;}
+	else {kind = 30; break;}
+	/*---- enable ----*/
+    }
+    t = Token(kind, pos, col, line,
+	      Buffer_GetString(&self->buffer, pos), self->pos - pos);
+    Buffer_Unlock(&self->buffer);
+    return t;
 }
