@@ -73,6 +73,8 @@ typedef struct {
     int        noSym;
     int        maxT;
 
+    Token_t  * dummyToken;
+
     Token_t  * busyTokenList;
     Token_t ** curToken;
     Token_t ** peekToken;
@@ -90,6 +92,7 @@ typedef struct {
 
 Scanner_t * Scanner(Scanner_t * self, const char * filename);
 void Scanner_Destruct(Scanner_t * self);
+const Token_t * Scanner_GetDummy(Scanner_t * self);
 void Scanner_Release(Scanner_t * self, const Token_t * token);
 const Token_t * Scanner_Scan(Scanner_t * self);
 const Token_t * Scanner_Peek(Scanner_t * self);

@@ -262,16 +262,21 @@ static void Scanner_Init(Scanner_t * self);
 static Token_t * Scanner_NextToken(Scanner_t * self);
 static void Scanner_GetCh(Scanner_t * self);
 
+static const char * dummyval = "dummy";
 Scanner_t *
 Scanner(Scanner_t * self, const char * filename)
 {
     FILE * fp;
     if (!(fp = fopen(filename, "r"))) goto errquit0;
-    if (Buffer(&self->buffer, fp) == NULL) goto errquit1;
+    if (!(self->dummyToken = Token(0, 0, 0, 0, dummyval, strlen(dummyval))))
+	goto errquit1;
+    if (Buffer(&self->buffer, fp) == NULL) goto errquit2;
     Scanner_Init(self);
     return self;
- errquit1:
+ errquit2:
     fclose(fp);
+ errquit1:
+    Token_Destruct(self->dummyToken);
  errquit0:
     return NULL;
 }
@@ -303,13 +308,21 @@ Scanner_Destruct(Scanner_t * self)
 	next = cur->next;
 	Token_Destruct(cur);
     }
+    Token_Destruct(self->dummyToken);
     Buffer_Destruct(&self->buffer);
+}
+
+const Token_t *
+Scanner_GetDummy(Scanner_t * self)
+{
+    return self->dummyToken;
 }
 
 void
 Scanner_Release(Scanner_t * self, const Token_t * token)
 {
     Token_t ** curToken, * token0;
+    if (token == self->dummyToken) return;
     assert(self->busyTokenList != NULL);
     for (curToken = &self->busyTokenList;
 	 *curToken != token; curToken = &(*curToken)->next)
