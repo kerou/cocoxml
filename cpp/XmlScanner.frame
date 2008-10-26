@@ -128,16 +128,12 @@ class XmlScanner {
 /*---- Declarations ----*/
     map<const wchar_t*, XmlLangDefinition*> XmlLangMap;
     stack<tagStackEle*>                    tagStack;
-    bool                                   inEmptyElement;
-    wchar_t*                               emptyNSURI;
-    wchar_t*                               emptyLName;
     vector<Token*>                         tokens;
     int                                    peek;
     FILE*                                  xmlstream;                                   
     XML_Parser                             xmlparser;
     
-    XmlScanner (const char* fileName);
-    XmlScanner (Stream s);
+    XmlScanner (const wchar_t* fileName);
     void Init();
     int StartElement2Kind(wchar_t* NamespaceURI, wchar_t* TagName);
     int EndElement2Kind(wchar_t* NamespaceURI, wchar_t* TagName);
