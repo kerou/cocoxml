@@ -59,9 +59,11 @@ typedef struct {
     FILE * fp;
     long   start;
     char * buf;
-    char * busyFirst;
-    char * lockFirst;
-    char * cur;
+    char * busyFirst; /* The first char used by Token_t. */
+    char * lockCur;   /* The value of of cur when locked. */
+    char * lockNext;  /* The value of next when locked. */
+    char * cur;    /* The first char of the current char in Scanner_t.*/
+    char * next;   /* The first char of the next char in Scanner_t. */
     char * loaded;
     char * last;
 } Buffer_t;
