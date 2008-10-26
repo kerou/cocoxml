@@ -23,16 +23,28 @@ struct wcharCmp {
 };
 
 typedef enum {
-    UNKNOWN_NAMESPACE, END_UNKNOWN_NAMESPACE,
-    UNKNOWN_TAG, END_UNKNOWN_TAG,
-    UNKNOWN_ATTR_NAMESPACE, UNKNOWN_ATTR,
+    UNKNOWN_NAMESPACE, 
+    END_UNKNOWN_NAMESPACE,
+    UNKNOWN_TAG, 
+    END_UNKNOWN_TAG,
+    UNKNOWN_ATTR_NAMESPACE, 
+    UNKNOWN_ATTR,
     UNKNOWN_PROCESSING_INSTRUCTION,
     // For the nodes in common status.
-    TEXT, CDATA, COMMENT, WHITESPACE,
+    TEXT, 
+    CDATA, 
+    COMMENT, 
+    WHITESPACE,
     // For the nodes in Unknown namespaces.
-    UNS_TEXT, UNS_CDATA, UNS_COMMENT, UNS_WHITESPACE,
+    UNS_TEXT, 
+    UNS_CDATA, 
+    UNS_COMMENT, 
+    UNS_WHITESPACE,
     // For the nodes in Unknown tags.
-    UT_TEXT, UT_CDATA, UT_COMMENT, UT_WHITESPACE
+    UT_TEXT, 
+    UT_CDATA, 
+    UT_COMMENT, 
+    UT_WHITESPACE
 }Options;
 
 extern options_s enum_options[];
