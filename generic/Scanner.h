@@ -42,42 +42,51 @@ EXTC_BEGIN
 
 #define COCO_WCHAR_MAX 65535
 #define EoF            -1
+#define ErrorChr       -2
 
 typedef struct Token_s Token_t;
 struct Token_s
 {
+    Token_t * next;
     int kind;
     int pos;
     int col;
     int line;
     char * val;
-    Token_t * next;
 };
 
-Token_t * Token(Token_t * self);
-void Token_Destruct(Token_t * self);
-
-typedef struct Buffer_s Buffer_t;
-struct Buffer_s {
+typedef struct {
+    FILE * fp;
+    long   start;
     char * buf;
+    char * busyFirst;
+    char * lockFirst;
     char * cur;
+    char * loaded;
     char * last;
-};
+} Buffer_t;
 
-Buffer_t * Buffer(Buffer_t * self, FILE * fp);
-void Buffer_Destruct(Buffer_t * self);
-int Buffer_Read(Buffer_t * self);
-int Buffer_Peek(Buffer_t * self);
-const char * Buffer_GetString(Buffer_t * self, int start);
-int Buffer_GetPos(Buffer_t * self);
-void Buffer_SetPos(Buffer_t * self, int pos);
+typedef struct {
+    int        eofSym;
+    int        noSym;
+    int        maxT;
 
-typedef struct Scanner_s Scanner_t;
-struct Scanner_s {
-};
+    Token_t  * busyTokenList;
+    Token_t ** curToken;
+    Token_t ** peekToken;
+
+    int        ch;
+    int        pos;
+    int        line;
+    int        col;
+    int        oldEols;
+
+    Buffer_t   buffer;
+} Scanner_t;
 
 Scanner_t * Scanner(Scanner_t * self, const char * filename);
 void Scanner_Destruct(Scanner_t * self);
+void Scanner_Release(Scanner_t * self, Token_t * token);
 Token_t * Scanner_Scan(Scanner_t * self);
 Token_t * Scanner_Peek(Scanner_t * self);
 void Scanner_ResetPeek(Scanner_t * self);
