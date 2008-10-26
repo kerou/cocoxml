@@ -105,7 +105,7 @@ Coco                            (. Symbol_t  * sym;
 
   "COMPILER"                    (. self->genScanner = TRUE;
                                    self->tab->ignored = CharSet(NULL); .)
-  ident                         (. gramName = CocoStrdup(self->t->val);
+  ident                         (. gramName = strdupa(self->t->val);
                                    beg = self->la->pos;
                                  .)
   { ANY }                       (. self->tab->semDeclPos = Position(NULL, beg, self->la->pos-beg, 0); .)
