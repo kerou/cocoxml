@@ -61,6 +61,10 @@ struct Parser_s {
     const Token_t * la;
 
     int             maxT;
+
+    FILE          * trace;
+    Tab_t         * tab;
+    ParserGen_t   * pgen;
     /*---- declarations ----*/
     /*---- enable ----*/
 };
