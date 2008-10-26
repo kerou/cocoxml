@@ -34,6 +34,7 @@
 EXTC_BEGIN
 
 /*---- headerdef ----*/
+/*---- enable ----*/
 
 typedef struct {
     FILE * fp;
@@ -50,7 +51,7 @@ void Errors_Exception(Errors_t * self, const char * s);
 typedef struct Parser_s Parser_t;
 struct Parser_s {
     /*---- constantsheader ----*/
-    Token_t       * dummyToken;
+    /*---- enable ----*/
     int             errDist;
     int             minErrDist;
 
@@ -61,6 +62,7 @@ struct Parser_s {
 
     int             maxT;
     /*---- declarations ----*/
+    /*---- enable ----*/
 };
 
 Parser_t * Parser(Parser_t * self, Scanner_t * scanner);
@@ -69,6 +71,7 @@ void Parser_SemErr(Parser_t * self, const char * format, ...);
 void Parser_Parse(Parser_t * self);
 
 /*---- productionsheader ----*/
+/*---- enable ----*/
 
 EXTC_END
 
