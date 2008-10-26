@@ -27,7 +27,7 @@
 #include <stdio.h>
 
 #ifndef  COCO_CHARSET_H
-#include  "CharSet.h"
+#include "CharSet.h"
 #endif
 
 #ifndef  COCO_PARSER_H
@@ -47,8 +47,9 @@ struct DFA_s {
     FILE      * fram;
     FILE      * gen;
     Symbol_t  * curSy;
-    Bool_t      dirtyDFA;
+    Node_t    * curGraph;
     Bool_t      ignoreCase;
+    Bool_t      dirtyDFA;
     Bool_t      hasCtxMoves;
     Parser_t  * parser;
     Tab_t     * tab;
@@ -61,13 +62,13 @@ struct DFA_s {
 
 DFA_t * DFA(DFA_t * self, Parser_t * parser);
 
-State_t * DFA_ConvertToStates(DFA_t * self, Node_t * p, Symbol_t * sym);
+void DFA_ConvertToStates(DFA_t * self, Node_t * p, Symbol_t * sym);
 void DFA_MatchLiteral(DFA_t * self, const char * s, Symbol_t * sym);
 void DFA_MakeDeterministic(DFA_t * self);
 void DFA_PrintStates(DFA_t * self);
-Action_t * DFA_FindAction(DFA_t * self, State_t * state, char ch);
-void DFA_GetTargetStates(DFA_t * self, Action_t * a, BitArray_t * targets,
-			 Symbol_t * endOf, Bool_t * ctx);
+Action_t * DFA_FindAction(DFA_t * self, State_t * state, int ch);
+void DFA_GetTargetStates(DFA_t * self, Action_t * a, BitArray_t ** targets,
+			 Symbol_t ** endOf, Bool_t * ctx);
 
 Melted_t * DFA_NewMelted(DFA_t * self, BitArray_t * set, State_t * state);
 BitArray_t * DFA_MeltedSet(DFA_t * self, int nr);
