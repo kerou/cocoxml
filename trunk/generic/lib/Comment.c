@@ -26,11 +26,16 @@
 #include  "Comment.h"
 
 Comment_t *
-Comment(Comment_t * self, const char * start, const char * stop, Bool_t nested)
+Comment(Comment_t * self, const int * start, const int * stop, Bool_t nested)
 {
+    int * cur0; const int * cur1;
     self = AllocObject(self, sizeof(Comment_t));
-    self->start = CocoStrdup(start);
-    self->stop = CocoStrdup(stop);
+    cur0 = self->start; cur1 = start;
+    while (*cur1) *cur0++ = *cur1++;
+    *cur0 = 0;
+    cur0 = self->stop; cur1 = stop;
+    while (*cur1) *cur0++ = *cur1++;
+    *cur0 = 0;
     self->nested = nested;
     self->next = NULL;
     return self;
@@ -39,6 +44,4 @@ Comment(Comment_t * self, const char * start, const char * stop, Bool_t nested)
 void
 Comment_Destruct(Comment_t * self)
 {
-    if (self->start) CocoFree(self->start);
-    if (self->stop) CocoFree(self->stop);
 }
