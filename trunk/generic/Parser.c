@@ -46,9 +46,61 @@ Errors_Destruct(Errors_t * self)
 void
 Errors_SynErr(Errors_t * self, int line, int col, int n)
 {
-    char * s, format[20];
+    const char * s; char format[20];
     switch (n) {
 	/*---- errors ----*/
+    case 0: s = "EOF expected"; break;
+    case 1: s = "ident expected"; break;
+    case 2: s = "number expected"; break;
+    case 3: s = "string expected"; break;
+    case 4: s = "badString expected"; break;
+    case 5: s = "char expected"; break;
+    case 6: s = "\"COMPILER\" expected"; break;
+    case 7: s = "\"IGNORECASE\" expected"; break;
+    case 8: s = "\"CHARACTERS\" expected"; break;
+    case 9: s = "\"TOKENS\" expected"; break;
+    case 10: s = "\"PRAGMAS\" expected"; break;
+    case 11: s = "\"COMMENTS\" expected"; break;
+    case 12: s = "\"FROM\" expected"; break;
+    case 13: s = "\"TO\" expected"; break;
+    case 14: s = "\"NESTED\" expected"; break;
+    case 15: s = "\"IGNORE\" expected"; break;
+    case 16: s = "\"PRODUCTIONS\" expected"; break;
+    case 17: s = "\"=\" expected"; break;
+    case 18: s = "\".\" expected"; break;
+    case 19: s = "\"END\" expected"; break;
+    case 20: s = "\"+\" expected"; break;
+    case 21: s = "\"-\" expected"; break;
+    case 22: s = "\"..\" expected"; break;
+    case 23: s = "\"ANY\" expected"; break;
+    case 24: s = "\"<\" expected"; break;
+    case 25: s = "\">\" expected"; break;
+    case 26: s = "\"<.\" expected"; break;
+    case 27: s = "\".>\" expected"; break;
+    case 28: s = "\"|\" expected"; break;
+    case 29: s = "\"WEAK\" expected"; break;
+    case 30: s = "\"(\" expected"; break;
+    case 31: s = "\")\" expected"; break;
+    case 32: s = "\"[\" expected"; break;
+    case 33: s = "\"]\" expected"; break;
+    case 34: s = "\"{\" expected"; break;
+    case 35: s = "\"}\" expected"; break;
+    case 36: s = "\"SYNC\" expected"; break;
+    case 37: s = "\"IF\" expected"; break;
+    case 38: s = "\"CONTEXT\" expected"; break;
+    case 39: s = "\"(.\" expected"; break;
+    case 40: s = "\".)\" expected"; break;
+    case 41: s = "??? expected"; break;
+    case 42: s = "this symbol not expected in Coco"; break;
+    case 43: s = "this symbol not expected in TokenDecl"; break;
+    case 44: s = "invalid TokenDecl"; break;
+    case 45: s = "invalid AttrDecl"; break;
+    case 46: s = "invalid SimSet"; break;
+    case 47: s = "invalid Sym"; break;
+    case 48: s = "invalid Term"; break;
+    case 49: s = "invalid Factor"; break;
+    case 50: s = "invalid Attribs"; break;
+    case 51: s = "invalid TokenFactor"; break;
 	/*---- enable ----*/
     default:
 	snprintf(format, sizeof(format), "error %d", n);
@@ -130,15 +182,36 @@ Parser_Expect(Parser_t * self, int n)
     else Parser_SynErr(self, n);
 }
 
-/*---- initialization ----*/
-static CBool_t set[1][1] = {
-    { FALSE }
+
+static const char * set[] = {
+    /*---- initialization ----*/
+    "**.*.*....**...***.....................*...",
+    ".*****.***********************************.",
+    ".******.....***..*************************.",
+    "**.*.*....**...****....*....***.*.*.**.*...",
+    "**.*.*....**...***.*...................*...",
+    "**.*.*....**...***.....................*...",
+    ".*.*.*....**...**......................*...",
+    "...........*.****.*............*.*.*.......",
+    ".*.*.*........................*.*.*........",
+    ".************************.****************.",
+    ".***.********************.****************.",
+    ".**************************.**************.",
+    ".***.**********************.**************.",
+    ".***************************************.*.",
+    ".***.**********************************..*.",
+    "..................*............*.*.*.......",
+    ".*.*.*............*....*....**********.*...",
+    ".*.*.*.................*.....**.*.*.**.*...",
+    ".*.*.*.................*.....**.*.*.*..*...",
+    "..................*.........*..*.*.*.......",
+    ".******************************.**********."
+    /*---- enable ----*/
 };
-/*---- enable ----*/
-static CBool_t
+static int
 Parser_StartOf(Parser_t * self, int s)
 {
-    return set[s][self->la->kind];
+    return set[s][self->la->kind] == '*';
 }
 
 static void
@@ -180,7 +253,7 @@ Parser_SemErr(Parser_t * self, const char * format, ...)
 /*---- enable ----*/
 
 void
-Parser_Parser(Parser_t * self)
+Parser_Parse(Parser_t * self)
 {
     self->t = NULL;
     self->la = self->dummyToken = Token(NULL);
@@ -214,3 +287,5 @@ Parser_Destruct(Parser_t * self)
 	Token_Destruct(self->dummyToken); free(self->dummyToken);
     }
 }
+
+

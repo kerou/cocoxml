@@ -50,23 +50,23 @@ void Errors_Exception(Errors_t * self, const char * s);
 typedef struct Parser_s Parser_t;
 struct Parser_s {
     /*---- constantsheader ----*/
-    Token_t * dummyToken;
-    int errDist;
-    int minErrDist;
+    Token_t       * dummyToken;
+    int             errDist;
+    int             minErrDist;
 
-    Scanner_t * scanner;
-    Errors_t errors;
-    Token_t * t;
-    Token_t * la;
+    Scanner_t     * scanner;
+    Errors_t        errors;
+    const Token_t * t;
+    const Token_t * la;
 
-    int maxT;
+    int             maxT;
     /*---- declarations ----*/
 };
 
 Parser_t * Parser(Parser_t * self, Scanner_t * scanner);
 void Parser_Destruct(Parser_t * self);
 void Parser_SemErr(Parser_t * self, const char * format, ...);
-void Parser_Parse();
+void Parser_Parse(Parser_t * self);
 
 /*---- productionsheader ----*/
 
