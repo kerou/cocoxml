@@ -76,17 +76,19 @@ typedef struct {
     Token_t ** peekToken;
 
     int        ch;
+    int        chBytes;
     int        pos;
     int        line;
     int        col;
     int        oldEols;
+    int        oldEolsEOL;
 
     Buffer_t   buffer;
 } Scanner_t;
 
 Scanner_t * Scanner(Scanner_t * self, const char * filename);
 void Scanner_Destruct(Scanner_t * self);
-void Scanner_Release(Scanner_t * self, Token_t * token);
+void Scanner_Release(Scanner_t * self, const Token_t * token);
 const Token_t * Scanner_Scan(Scanner_t * self);
 const Token_t * Scanner_Peek(Scanner_t * self);
 void Scanner_ResetPeek(Scanner_t * self);

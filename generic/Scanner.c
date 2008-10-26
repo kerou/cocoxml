@@ -40,7 +40,8 @@ Token(int kind, int pos, int col, int line, const char * val, size_t vallen)
     self->col = col;
     self->line = line;
     self->val = (char *)(self + 1);
-    memcpy(self->val, val, vallen);  self->val[vallen] = 0;
+    if (vallen > 0) memcpy(self->val, val, vallen);
+    self->val[vallen] = 0;
     return self;
 }
 
@@ -57,7 +58,7 @@ static Buffer_t * Buffer(Buffer_t * self, FILE * fp);
 static void Buffer_Destruct(Buffer_t * self);
 static long Buffer_GetPos(Buffer_t * self);
 static int Buffer_Read(Buffer_t * self, int * retBytes);
-static const char * Buffer_GetString(Buffer_t * self, long start);
+static const char * Buffer_GetString(Buffer_t * self, long start, size_t size);
 static void Buffer_SetBusy(Buffer_t * self, long startBusy);
 static void Buffer_ClearBusy(Buffer_t * self);
 static void Buffer_Lock(Buffer_t * self);
@@ -105,45 +106,47 @@ Buffer_Read(Buffer_t * self, int * retBytes)
     int ch, c1, c2, c3, c4;
     int cur = self->cur - self->buf;
 
-    if (Buffer_ReadByte(self, &ch) < 0) return ch;
+    if (Buffer_ReadByte(self, &ch) < 0) goto quit;
 
-    if (ch < 128) return ch;
+    if (ch < 128) goto quit;
 
     if ((ch & 0xC0) != 0xC0) /* Inside UTF-8 character! */
 	return ErrorChr;
     if ((ch & 0xF0) == 0xF0) {
 	/* 1110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
 	c1 = ch & 0x07;
-	if (Buffer_ReadByte(self, &ch) < 0) return ch;
+	if (Buffer_ReadByte(self, &ch) < 0) goto quit;
 	c2 = ch & 0x3F;
-	if (Buffer_ReadByte(self, &ch) < 0) return ch;
+	if (Buffer_ReadByte(self, &ch) < 0) goto quit;
 	c3 = ch & 0x3F;
-	if (Buffer_ReadByte(self, &ch) < 0) return ch;
+	if (Buffer_ReadByte(self, &ch) < 0) goto quit;
 	c4 = ch & 0x3F;
 	ch = (((((c1 << 6) | c2) << 6) | c3) << 6) | c4;
     } else if ((ch & 0xE0) == 0xE0) {
 	/* 1110xxxx 10xxxxxx 10xxxxxx */
 	c1 = ch & 0x0F;
-	if (Buffer_ReadByte(self, &ch) < 0) return ch;
+	if (Buffer_ReadByte(self, &ch) < 0) goto quit;
 	c2 = ch & 0x3F;
-	if (Buffer_ReadByte(self, &ch) < 0) return ch;
+	if (Buffer_ReadByte(self, &ch) < 0) goto quit;
 	c3 = ch & 0x3F;
 	ch = (((c1 << 6) | c2) << 6) | c3;
     } else {
 	/* (ch & 0xC0) == 0xC0 */
 	/* 110xxxxx 10xxxxxx */
 	c1 = ch & 0x1F;
-	if (Buffer_ReadByte(self, &ch) < 0) return ch;
+	if (Buffer_ReadByte(self, &ch) < 0) goto quit;
 	c2 = ch & 0x3F;
 	ch = (c1 << 6) | c2;
     }
-    if (retBytes) *retBytes = (self->cur - self->buf) - cur;
+ quit:
+    *retBytes = (self->cur - self->buf) - cur;
     return ch;
 }
 
 const char *
-Buffer_GetString(Buffer_t * self, long start)
+Buffer_GetString(Buffer_t * self, long start, size_t size)
 {
+    if (size == 0) return NULL;
     if (start < self->start || start >= self->start + (self->cur - self->buf)){
 	fprintf(stderr, "start is out of range!\n");
 	exit(-1);
@@ -244,6 +247,7 @@ static int Char2State(int chr);
 static int Identifier2KWKind(const char * key, size_t keylen, int defaultVal);
 static void Scanner_Init(Scanner_t * self);
 static Token_t * Scanner_NextToken(Scanner_t * self);
+static void Scanner_GetCh(Scanner_t * self);
 
 Scanner_t *
 Scanner(Scanner_t * self, const char * filename)
@@ -272,8 +276,10 @@ Scanner_Init(Scanner_t * self)
     self->curToken = &self->busyTokenList;
     self->peekToken = &self->busyTokenList;
 
-    self->pos = -1; self->line = 1; self->col = 0;
-    self->oldEols = 0;
+    self->ch = 0; self->chBytes = 0;
+    self->pos = 0; self->line = 1; self->col = 0;
+    self->oldEols = 0; self->oldEolsEOL = 0;
+    Scanner_GetCh(self);
 }
 
 void
@@ -288,18 +294,23 @@ Scanner_Destruct(Scanner_t * self)
 }
 
 void
-Scanner_Release(Scanner_t * self, Token_t * token)
+Scanner_Release(Scanner_t * self, const Token_t * token)
 {
-    /* Only the first token in busyTokenList can be released. */
-    assert(self->busyTokenList == token);
-    /* If the first token in busyTokenList is not consumed yet, failed! */
-    assert(self->curToken != &self->busyTokenList);
-    self->busyTokenList = self->busyTokenList->next;
-    Token_Destruct(token);
-    if (self->busyTokenList) {
-	Buffer_SetBusy(&self->buffer, self->busyTokenList->pos);
-    } else {
-	Buffer_ClearBusy(&self->buffer);
+    Token_t ** curToken, * token0;
+    assert(self->busyTokenList != NULL);
+    for (curToken = &self->busyTokenList;
+	 *curToken != token; curToken = &(*curToken)->next)
+	assert(*curToken && curToken != self->curToken);
+    /* Found, detach and destroy it. */
+    token0 = *curToken; *curToken = (*curToken)->next;
+    Token_Destruct(token0);
+    /* Adjust Buffer busy pointer */
+    if (curToken == &self->busyTokenList) {
+	if (self->busyTokenList) {
+	    Buffer_SetBusy(&self->buffer, self->busyTokenList->pos);
+	} else {
+	    Buffer_ClearBusy(&self->buffer);
+	}
     }
 }
 
@@ -492,44 +503,83 @@ Identifier2KWKind(const char * key, size_t keylen, int defaultVal)
 }
 
 static void
-Scanner_NextCh(Scanner_t * self)
+Scanner_GetCh(Scanner_t * self)
 {
-    int bytes;
-    if (self->oldEols > 0) { self->ch = '\n'; --self->oldEols; }
-    else {
-	self->ch = Buffer_Read(&self->buffer, &bytes); self->col += bytes;
-	if (self->ch == '\n') { ++self->line; self->col = 0; }
+    if (self->oldEols > 0) {
+	self->ch = '\n'; --self->oldEols; self->oldEolsEOL= 1;
+    } else {
+	if (self->ch == '\n') {
+	    if (self->oldEolsEOL) self->oldEolsEOL = 0;
+	    else {
+		++self->line; self->col = 0;
+	    }
+	} else {
+	    self->col += self->chBytes;
+	}
+	self->pos = Buffer_GetPos(&self->buffer);
+	self->ch = Buffer_Read(&self->buffer, &self->chBytes);
     }
+}
+
+typedef struct {
+    int ch, chBytes;
+    int pos, line, col;
+}  SLock_t;
+static void
+Scanner_LockCh(Scanner_t * self, SLock_t * slock)
+{
+    slock->ch = self->ch;
+    slock->chBytes = self->chBytes;
+    slock->pos = self->pos;
+    slock->line = self->line;
+    slock->col = self->col;
+    Buffer_Lock(&self->buffer);
+}
+static void
+Scanner_UnlockCh(Scanner_t * self, SLock_t * slock)
+{
+    Buffer_Unlock(&self->buffer);
+}
+static void
+Scanner_ResetCh(Scanner_t * self, SLock_t * slock)
+{
+    self->ch = slock->ch;
+    self->chBytes = slock->chBytes;
+    self->pos = slock->pos;
+    self->line = slock->line;
+    self->line = slock->line;
+    Buffer_LockReset(&self->buffer);
 }
 
 /*---- comments ----*/
 static int
 Scanner_Comment0(Scanner_t * self)
 {
-    int level = 1, pos0 = self->pos, line0 = self->line, col0 = self->col;
-    Buffer_Lock(&self->buffer);
-    Scanner_NextCh(self);
+    SLock_t slock;
+    int level = 1, line0 = self->line;
+
+    Scanner_LockCh(self, &slock);
+    Scanner_GetCh(self);
     if (self->ch == '/') {
-	Buffer_Unlock(&self->buffer);
-	Scanner_NextCh(self);
+	Scanner_UnlockCh(self, &slock);
+	Scanner_GetCh(self);
 	for (;;) {
 	    if (self->ch == 10) {
 		--level;
 		if (level == 0) {
 		    self->oldEols = self->line - line0;
-		    Scanner_NextCh(self);
+		    Scanner_GetCh(self);
 		    return 1;
 		}
-		Scanner_NextCh(self);
+		Scanner_GetCh(self);
 	    } else if (self->ch == EoF) {
 		return 0;
 	    } else {
-		Scanner_NextCh(self);
+		Scanner_GetCh(self);
 	    }
 	}
     } else {
-	Buffer_LockReset(&self->buffer); Scanner_NextCh(self);
-	self->pos = pos0; self->line = line0; self->col = col0;
+	Scanner_ResetCh(self, &slock);
     }
     return 0;
 }
@@ -537,38 +587,39 @@ Scanner_Comment0(Scanner_t * self)
 static int
 Scanner_Comment1(Scanner_t * self)
 {
-    int level = 1, pos0 = self->pos, line0 = self->line, col0 = self->col;
-    Buffer_Lock(&self->buffer);
-    Scanner_NextCh(self);
+    SLock_t slock;
+    int level = 1, line0 = self->line;
+
+    Scanner_LockCh(self, &slock);
+    Scanner_GetCh(self);
     if (self->ch == '*') {
-	Buffer_Unlock(&self->buffer);
-	Scanner_NextCh(self);
+	Scanner_UnlockCh(self, &slock);
+	Scanner_GetCh(self);
 	for (;;) {
 	    if (self->ch == '*') {
-		Scanner_NextCh(self);
+		Scanner_GetCh(self);
 		if (self->ch == '/') {
 		    --level;
 		    if (level == 0) {
 			self->oldEols = self->line - line0;
-			Scanner_NextCh(self);
+			Scanner_GetCh(self);
 			return 1;
 		    }
-		    Scanner_NextCh(self);
+		    Scanner_GetCh(self);
 		}
 	    } else if (self->ch == '/') {
-		Scanner_NextCh(self);
+		Scanner_GetCh(self);
 		if (self->ch == '*') {
-		    ++level; Scanner_NextCh(self);
+		    ++level; Scanner_GetCh(self);
 		}
 	    } else if (self->ch == EoF) {
 		return 0;
 	    } else {
-		Scanner_NextCh(self);
+		Scanner_GetCh(self);
 	    }
 	}
     } else {
-	Buffer_LockReset(&self->buffer); Scanner_NextCh(self);
-	self->pos = pos0; self->line = line0; self->col = col0;
+	Scanner_ResetCh(self, &slock);
     }
     return 0;
 }
@@ -577,22 +628,23 @@ Scanner_Comment1(Scanner_t * self)
 Token_t *
 Scanner_NextToken(Scanner_t * self)
 {
-    int pos, line, col, state, kind;
-    Token_t * t;
-    while (self->ch == ' ' ||
-	   /*---- scan1 ----*/
-	   (self->ch >= 9 && self->ch <= 10) || self->ch == 13
-	   /*---- enable ----*/
-	   ) Scanner_NextCh(self);
-    /*---- scan2 ----*/
-    if ((self->ch == '/' && Scanner_Comment0(self)) ||
-	(self->ch =='/' && Scanner_Comment1(self)))
-	return Scanner_NextToken(self);
-    /*---- enable ----*/
+    int pos, line, col, state, kind; Token_t * t;
+    for (;;) {
+	while (self->ch == ' ' ||
+	       /*---- scan1 ----*/
+	       (self->ch >= 9 && self->ch <= 10) || self->ch == 13
+	       /*---- enable ----*/
+	       ) Scanner_GetCh(self);
+	/*---- scan2 ----*/
+	if (self->ch == '/' && Scanner_Comment0(self)) continue;
+	if (self->ch == '/' && Scanner_Comment1(self)) continue;
+	/*---- enable ----*/
+	break;
+    }
     pos = self->pos; line = self->line; col = self->col;
     Buffer_Lock(&self->buffer);
     state = Char2State(self->ch);
-    Scanner_NextCh(self);
+    Scanner_GetCh(self);
     switch (state) {
     case -1: kind = self->eofSym; break;
     case 0: kind = self->noSym; break;
@@ -602,15 +654,16 @@ Scanner_NextToken(Scanner_t * self)
 	    (self->ch >= 'A' && self->ch <= 'Z') ||
 	    self->ch == '_' ||
 	    (self->ch >= 'a' && self->ch <= 'z')) {
-	    Scanner_NextCh(self); goto case_1;
+	    Scanner_GetCh(self); goto case_1;
 	} else {
 	    kind = 1;
-	    kind = Identifier2KWKind(Buffer_GetString(&self->buffer, pos), self->pos - pos, kind);
+	    kind = Identifier2KWKind(Buffer_GetString(&self->buffer, pos, self->pos - pos),
+				     self->pos - pos, kind);
 	    break;
 	}
     case 2: case_2:
 	if ((self->ch >= '0' && self->ch <= '9')) {
-	    Scanner_NextCh(self); goto case_2;
+	    Scanner_GetCh(self); goto case_2;
 	} else {
 	    kind = 2;
 	    break;
@@ -623,30 +676,30 @@ Scanner_NextToken(Scanner_t * self)
 	    (self->ch >= 14 && self->ch <= '&') ||
 	    (self->ch >= '(' && self->ch <= '[') ||
 	    (self->ch >= ']' && self->ch <= 65535)) {
-	    Scanner_NextCh(self); goto case_6;
+	    Scanner_GetCh(self); goto case_6;
 	} else if (self->ch == 92) {
-	    Scanner_NextCh(self); goto case_7;
+	    Scanner_GetCh(self); goto case_7;
 	} else {
 	    kind = self->noSym; break;
 	}
     case 6: case_6:
 	if (self->ch == 39) {
-	    Scanner_NextCh(self); goto case_9;
+	    Scanner_GetCh(self); goto case_9;
 	} else {
 	    kind = self->noSym; break;
 	}
     case 7: case_7:
 	if (self->ch >= ' ' && self->ch <= '~') {
-	    Scanner_NextCh(self); goto case_8;
+	    Scanner_GetCh(self); goto case_8;
 	} else {
 	    kind = self->noSym; break;
 	}
     case 8: case_8:
 	if ((self->ch >= '0' && self->ch <= '9') ||
 	    (self->ch >= 'a' && self->ch <= 'f')) {
-	    Scanner_NextCh(self); goto case_8;
+	    Scanner_GetCh(self); goto case_8;
 	} else if (self->ch == 39) {
-	    Scanner_NextCh(self); goto case_9;
+	    Scanner_GetCh(self); goto case_9;
 	} else {
 	    kind = self->noSym; break;
 	}
@@ -656,7 +709,7 @@ Scanner_NextToken(Scanner_t * self)
 	    (self->ch >= 'A' && self->ch <= 'Z') ||
 	    self->ch == '_' ||
 	    (self->ch >= 'a' && self->ch <= 'z')) {
-	    Scanner_NextCh(self); goto case_10;
+	    Scanner_GetCh(self); goto case_10;
 	} else {
 	    kind = 42; break;
 	}
@@ -666,19 +719,19 @@ Scanner_NextToken(Scanner_t * self)
 	    (self->ch >= 14 && self->ch <= '!') ||
 	    (self->ch >= '#' && self->ch <= '[') ||
 	    (self->ch >= ']' && self->ch <= 65535)) {
-	    Scanner_NextCh(self); goto case_11;
+	    Scanner_GetCh(self); goto case_11;
 	} else if (self->ch == 10 || self->ch == 13) {
-	    Scanner_NextCh(self); goto case_4;
+	    Scanner_GetCh(self); goto case_4;
 	} else if (self->ch == '"') {
-	    Scanner_NextCh(self); goto case_3;
+	    Scanner_GetCh(self); goto case_3;
 	} else if (self->ch == 92) {
-	    Scanner_NextCh(self); goto case_12;
+	    Scanner_GetCh(self); goto case_12;
 	} else {
 	    kind = self->noSym; break;
 	}
     case 12: case_12:
 	if (self->ch >= ' ' && self->ch <= '~') {
-	    Scanner_NextCh(self); goto case_11;
+	    Scanner_GetCh(self); goto case_11;
 	} else {
 	    kind = self->noSym; break;
 	}
@@ -698,20 +751,21 @@ Scanner_NextToken(Scanner_t * self)
     case 26: case_26: {kind = 39; break;}
     case 27: case_27: {kind = 40; break;}
     case 28:
-	if (self->ch == '.') {Scanner_NextCh(self); goto case_16;}
-	else if (self->ch == '>') {Scanner_NextCh(self); goto case_19;}
-	else if (self->ch == ')') {Scanner_NextCh(self); goto case_27;}
+	if (self->ch == '.') {Scanner_GetCh(self); goto case_16;}
+	else if (self->ch == '>') {Scanner_GetCh(self); goto case_19;}
+	else if (self->ch == ')') {Scanner_GetCh(self); goto case_27;}
 	else {kind = 18; break;}
     case 29:
-	if (self->ch == '.') {Scanner_NextCh(self); goto case_18;}
+	if (self->ch == '.') {Scanner_GetCh(self); goto case_18;}
 	else {kind = 24; break;}
     case 30:
-	if (self->ch == '.') {Scanner_NextCh(self); goto case_26;}
+	if (self->ch == '.') {Scanner_GetCh(self); goto case_26;}
 	else {kind = 30; break;}
 	/*---- enable ----*/
     }
     t = Token(kind, pos, col, line,
-	      Buffer_GetString(&self->buffer, pos), self->pos - pos);
+	      Buffer_GetString(&self->buffer, pos, self->pos - pos),
+	      self->pos - pos);
     Buffer_Unlock(&self->buffer);
     return t;
 }
