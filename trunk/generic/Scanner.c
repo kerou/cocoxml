@@ -66,7 +66,8 @@ static void Buffer_LockReset(Buffer_t * self);
 static void Buffer_Unlock(Buffer_t * self);
 
 /* Buffer_t private members. */
-#define BUFSTEP  4096
+/*#define BUFSTEP  8*/
+#define BUFSTEP 4096
 static int Buffer_Load(Buffer_t * self);
 static int Buffer_ReadByte(Buffer_t * self, int * value);
 
@@ -76,8 +77,9 @@ Buffer(Buffer_t * self, FILE * fp)
     self->fp = fp;
     self->start = 0;
     if (!(self->buf = malloc(BUFSTEP))) goto errquit0;
-    self->busyFirst = self->lockFirst = NULL;
-    self->cur = self->loaded = self->buf;
+    self->busyFirst = self->lockCur = NULL;
+    self->cur = NULL;
+    self->next = self->loaded = self->buf;
     self->last = self->buf + BUFSTEP;
     if (Buffer_Load(self) < 0) goto errquit1;
     return self;
@@ -97,14 +99,17 @@ Buffer_Destruct(Buffer_t * self)
 static long
 Buffer_GetPos(Buffer_t * self)
 {
-    return self->start + (self->cur - self->buf);
+    return self->cur ? self->start + (self->cur - self->buf) : 0L;
 }
 
 static int
 Buffer_Read(Buffer_t * self, int * retBytes)
 {
     int ch, c1, c2, c3, c4;
-    int cur = self->cur - self->buf;
+    /* self->start might be changed in Buffer_ReadByte */
+    long next = self->start + (self->next - self->buf);
+
+    self->cur = self->next;
 
     if (Buffer_ReadByte(self, &ch) < 0) goto quit;
 
@@ -139,7 +144,7 @@ Buffer_Read(Buffer_t * self, int * retBytes)
 	ch = (c1 << 6) | c2;
     }
  quit:
-    *retBytes = (self->cur - self->buf) - cur;
+    *retBytes = self->start + (self->next - self->buf) - next;
     return ch;
 }
 
@@ -171,23 +176,25 @@ Buffer_ClearBusy(Buffer_t * self)
 static void
 Buffer_Lock(Buffer_t * self)
 {
-    assert(self->lockFirst == NULL);
-    self->lockFirst = self->cur;
+    assert(self->lockCur == NULL);
+    self->lockCur = self->cur;
+    self->lockNext = self->next;
 }
 
 static void
 Buffer_LockReset(Buffer_t * self)
 {
-    assert(self->lockFirst != NULL);
-    self->cur = self->lockFirst;
-    self->lockFirst = NULL;
+    assert(self->lockCur != NULL);
+    self->cur = self->lockCur;
+    self->next = self->lockNext;
+    self->lockCur = NULL;
 }
 
 static void
 Buffer_Unlock(Buffer_t * self)
 {
-    assert(self->lockFirst != NULL);
-    self->lockFirst = NULL;
+    assert(self->lockCur != NULL);
+    self->lockCur = NULL;
 }
 
 static int
@@ -203,20 +210,23 @@ static int
 Buffer_ReadByte(Buffer_t * self, int * value)
 {
     int delta; char * keptFirst, * newbuf;
-    while (self->cur >= self->loaded) {
+    while (self->next >= self->loaded) {
 	/* Calculate keptFirst */
 	keptFirst = self->cur;
 	if (self->busyFirst && self->busyFirst < keptFirst)
 	    keptFirst = self->busyFirst;
-	if (self->lockFirst && self->lockFirst < keptFirst)
-	    keptFirst = self->lockFirst;
+	if (self->lockCur && self->lockCur < keptFirst)
+	    keptFirst = self->lockCur;
 	if (self->buf < keptFirst) { /* Remove the unprotected data. */
 	    delta = keptFirst - self->buf;
 	    memmove(self->buf, keptFirst, self->loaded - keptFirst);
 	    self->start += delta;
 	    if (self->busyFirst) self->busyFirst -= delta;
-	    if (self->lockFirst) self->lockFirst -= delta;
+	    if (self->lockCur) {
+		self->lockCur -= delta; self->lockNext -= delta;
+	    }
 	    self->cur -= delta;
+	    self->next -= delta;
 	    self->loaded -= delta;
 	}
 	if (feof(self->fp)) { *value = EoF; return -1; }
@@ -229,16 +239,19 @@ Buffer_ReadByte(Buffer_t * self, int * value)
 	    }
 	    if (self->busyFirst)
 		self->busyFirst = newbuf + (self->busyFirst - self->buf);
-	    if (self->lockFirst)
-		self->lockFirst = newbuf + (self->lockFirst - self->buf);
+	    if (self->lockCur) {
+		self->lockCur = newbuf + (self->lockCur - self->buf);
+		self->lockNext = newbuf + (self->lockNext - self->buf);
+	    }
 	    self->cur = newbuf + (self->cur - self->buf);
+	    self->next = newbuf + (self->next - self->buf);
 	    self->loaded = newbuf + (self->loaded - self->buf);
 	    self->last = newbuf + (self->last - self->buf + BUFSTEP);
 	    self->buf = newbuf;
 	}
 	if (Buffer_Load(self) < 0) { *value = ErrorChr; return -1; }
     }
-    *value = *self->cur++;
+    *value = *self->next++;
     return 0;
 }
 
@@ -516,8 +529,8 @@ Scanner_GetCh(Scanner_t * self)
 	} else {
 	    self->col += self->chBytes;
 	}
-	self->pos = Buffer_GetPos(&self->buffer);
 	self->ch = Buffer_Read(&self->buffer, &self->chBytes);
+	self->pos = Buffer_GetPos(&self->buffer);
     }
 }
 
@@ -558,8 +571,7 @@ Scanner_Comment0(Scanner_t * self)
     SLock_t slock;
     int level = 1, line0 = self->line;
 
-    Scanner_LockCh(self, &slock);
-    Scanner_GetCh(self);
+    Scanner_LockCh(self, &slock); Scanner_GetCh(self);
     if (self->ch == '/') {
 	Scanner_UnlockCh(self, &slock);
 	Scanner_GetCh(self);
@@ -590,8 +602,7 @@ Scanner_Comment1(Scanner_t * self)
     SLock_t slock;
     int level = 1, line0 = self->line;
 
-    Scanner_LockCh(self, &slock);
-    Scanner_GetCh(self);
+    Scanner_LockCh(self, &slock); Scanner_GetCh(self);
     if (self->ch == '*') {
 	Scanner_UnlockCh(self, &slock);
 	Scanner_GetCh(self);
