@@ -199,10 +199,11 @@ namespace CocoXml{
     void XmlScannerData::WriteDeclarations(){
         Symbol *sym;
         fwprintf(gen, L"    int[] useKindVector = new int[] {\n");
-        map<const wchar_t*, int>::iterator iter;
-        for (iter=optionsMap.begin(); iter!=optionsMap.end(); ++iter){
-            sym = tab->FindSym(iter->first);
-            fwprintf(gen, L"        %d, // %ls\n", sym == NULL ? -1 : sym->n, iter->first);
+        for(int i=0; enum_options[i].value>=0; i++){
+            wchar_t *name = coco_string_create(enum_options[i].name);
+            sym = tab->FindSym(name);
+            fwprintf(gen, L"        %d, // %ls\n", sym == NULL ? -1 : sym->n, name);
+            coco_string_delete(name);
         }
         fwprintf(gen, L"    };\n");
     }
@@ -211,7 +212,7 @@ namespace CocoXml{
         for (iter=XmlLangMap.begin(); iter!=XmlLangMap.end(); ++iter){
             fwprintf(gen, L"    curXLDef = new XmlLangDefinition();\n");
             iter->second->Write(gen);
-            fwprintf(gen, L"    XmlLangMap.Add(\"%ls\", curXLDef);\n", iter->first);
+            fwprintf(gen, L"    XmlLangMap.Add(L\"%ls\", curXLDef);\n", iter->first);
         }
     }
     int XmlScannerData::GenNamespaceOpen(const wchar_t *nsName) {
