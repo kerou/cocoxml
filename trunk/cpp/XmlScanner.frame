@@ -116,27 +116,24 @@ class XmlLangDefinition {
     void AddProcessingInstruction(wchar_t* PIName, int PIToken);
 }
 
-public class tagStackEle {
+class tagStackEle {
     bool unknownNamespace;
     bool unknownTag;
     XmlLangDefinition *xldef;
 }
 
 class XmlScanner {
-    enum XSStatus { XSCommon, XSFirstAttr, XSNextAttr };
-
-    const char EOL = '\n';
     const int eofSym = 0;
+    int eof;
 /*---- Declarations ----*/
     map<const wchar_t*, XmlLangDefinition*> XmlLangMap;
     stack<tagStackEle*>                    tagStack;
-    XSStatus                               status;
     bool                                   inEmptyElement;
     wchar_t*                               emptyNSURI;
     wchar_t*                               emptyLName;
     vector<Token*>                         tokens;
     int                                    peek;
-    FILE*                                  xmlfile;                                   
+    FILE*                                  xmlstream;                                   
     XML_Parser                             xmlparser;
     
     XmlScanner (const char* fileName);
@@ -146,8 +143,17 @@ class XmlScanner {
     int EndElement2Kind(wchar_t* NamespaceURI, wchar_t* TagName);
     int Attribute2Kind(wchar_t* NamespaceURI, wchar_t* AttrName);
     int ProcessingInstruction2Kind(wchar_t* PIName);
-    int Others2Kind(XmlNodeType *ntype);
-    void AppendToken();
+
+    /* expat callback function definition */
+    void XMLCALL startElement(void *userData, const char *name, const char **atts);
+    void XMLCALL endElementHandler(void *userData, const char *name, const char **atts);
+    void XMLCALL charDataHandler(void *userData, const XML_Char *s, int len);
+    void XMLCALL processingInstructionHandler(void *userData, const XML_Char *target, const XML_Char *data);
+    void XMLCALL commentHandler(void *userData, const XML_Char *data);
+    void XMLCALL cdataHandler(void *userData);
+
+    void AppendToken(int kind, int linenumber, int lineposition, wchar_t* value);
+    void AppendTokens();
     Token Scan ();
     Token Peek ();
     void ResetPeek();
@@ -396,22 +402,19 @@ void XmlLangDefinition::AddProcessingInstruction(const wchar_t* PIName, int PITo
     PInstructions.insert(make_pair(PIName, PIToken));
 }
 
-XmlScanner::XmlScanner (const char* fileName) {
-    xmlfile = fopen(fileName, "r");
-    if(xmlfile){
+XmlScanner::XmlScanner (const wchar_t* fileName) {
+    char *chFileName = coco_string_create_char(fileName);
+    xmlstream = fopen(chFileName, "r");
+    if(xmlstream){
        Init();
     }else{
        throw new FatalError("Can not open file " + fileName);
     }
 }
 
-XmlScanner::XmlScanner (Stream s) {
-    Init();
-}
-
 XmlScanner::~XmlScanner() {
     XML_ParserFree(xmlparser);
-    if(xmlfile) fclose(xmlfile);
+    if(xmlstream) fclose(xmlstream);
 }
 
 void XmlScanner::Init() {
@@ -420,14 +423,15 @@ void XmlScanner::Init() {
 
     XML_SetElementHandler(xmlparser, startElementHandler, endElementHandler);
 
-    XML_SetNamespaceDeclHandler(parser, startNamespaceHandler, endNamespaceHandler);
-
     XML_SetCharacterDataHandler(parser, charDataHandler);
 
     XML_SetProcessingInstructionHandler(parser, processingInstructionHandler);
+    
+    XML_SetCommentHandler(parser, commentHandler);
 
-    status = XSStatus.XSCommon;
-    inEmptyElement = false;
+    XML_SetStartCdataSectionHandler(parser, cdataHandler);
+
+    eof = 0;
     peek = 0;
 
 /*---- Initialization ----*/
@@ -476,7 +480,6 @@ int XmlScanner::Attribute2Kind(const wchar_t* NamespaceURI, const wchar_t* AttrN
     XmlLangDefinition *xldef;
     tagStackEle *curEle = tagStack.top();
 
-    // assert(!curEle.unknownNamespace and !curEle.unknownTag);
     if (NamespaceURI == "") xldef = curEle->xldef;
     else if (!XmlLangMap.find(NamespaceURI))
         return useKindVector[(int)Token.Options.UNKNOWN_ATTR_NAMESPACE];
@@ -488,161 +491,186 @@ int XmlScanner::Attribute2Kind(const wchar_t* NamespaceURI, const wchar_t* AttrN
 
 int XmlScanner::ProcessingInstruction2Kind(const wchar_t* PIName) {
     tagStackEle *curEle = tagStack.top();
-    // Should I always use 'XmlLangMap[""]' but not 'curEle.xldef' here?
-    if (!curEle->xldef->PInstructions.ContainsKey(PIName))
+
+    if (!curEle->xldef->PInstructions.find(PIName))
         return useKindVector[(int)Token.Options.UNKNOWN_PROCESSING_INSTRUCTION];
     return curEle->xldef->PInstructions[PIName];
 }
 
-int XmlScanner::Others2Kind(XmlNodeType ntype) {
-    Token.Options opt;
-    tagStackEle* curEle = tagStack->top();
-
-    switch (ntype) {
-    case XmlNodeType.Text:
-        if (curEle.unknownNamespace) opt = Token.Options.UNS_TEXT;
-        else if (curEle.unknownTag) opt = Token.Options.UT_TEXT;
-        else opt = Token.Options.TEXT;
-        break;
-    case XmlNodeType.CDATA:
-        if (curEle.unknownNamespace) opt = Token.Options.UNS_CDATA;
-        else if (curEle.unknownTag) opt = Token.Options.UT_CDATA;
-        else opt = Token.Options.CDATA;
-        break;
-    case XmlNodeType.Whitespace:
-        if (curEle.unknownNamespace) opt = Token.Options.UNS_WHITESPACE;
-        else if (curEle.unknownTag) opt = Token.Options.UT_WHITESPACE;
-        else opt = Token.Options.WHITESPACE;
-        break;
-    case XmlNodeType.Comment:
-        if (curEle.unknownNamespace) opt = Token.Options.UNS_COMMENT;
-        else if (curEle.unknownTag) opt = Token.Options.UT_COMMENT;
-        else opt = Token.Options.COMMENT;
-        break;
-    default:
-        return -1;
-    }
-    return curEle->xldef->useVector[(int)opt] ? useKindVector[(int)opt] : -1;
-}
-
-void XMLCALL  XmlScanner::startElement(void *userData, 
-                                       const char *name, 
-                                       const char **atts)
+void XMLCALL XmlScanner::startElement(void *userData, const char *name, const char **atts)
 {
+    wchar_t *wname = coco_string_create(name);
+    wchar_t *namespace=NULL, *elename=NULL;
+    inx = coco_string_indexof(name, L':');
+    if(inx>0){
+        /* have namespace indication */
+        namespace = coco_string_create(wname, 0, inx+1);
+        elename = coco_string_create(wname, inx+1, strlen(name)-(inx+1));
+    }
+    fwprintf("get namespace:%ls, start elename:%ls\n", namespace, elename);
+    kind = StartElement2Kind(namespace, elename);
+    AppendToken(kind, 0, 0, elename);
+    
+    inx = 0;
+    while(*(attrs+inx)){
+        wchar_t *wkey=0, wchar_t *wvalue=0;
+
+        wkey = coco_string_create(attrs+0);
+        wvalue = coco_string_create(attrs+1);
+            fwprintf("\t key:%ls, value:%ls\n", wkey, wvalue);
+        inx += 2;
         
-}
+        kind = Attribute2Kind(namespace, wkey);
 
-void XMLCALL  XmlScanner::endElementHandler(void *userData, 
-                                            const char *name, 
-                                            const char **atts)
-{
-}
-
-void XMLCALL XmlScanner::startNamespaceHandler(void *userData,
-                                               const XML_Char *prefix,
-                                               const XML_Char *uri)
-{
-}
-
-void XMLCALL XmlScanner::endNamespaceHandler(void *userData,
-                                             const XML_Char *prefix)
-{
-}
-
-void XMLCALL XmlScanner::charDataHandler(void *userData,
-                                         const XML_Char *s,
-                                         int len)
-{
-}
-void XMLCALL XmlScanner::processingInstructionHandler(void *userData,
-                                                      const XML_Char *target,
-                                                      const XML_Char *data)
-{
-
-}
-
-void XMLCALL XmlScanner::commentHandler(void *userData,
-                                        const XML_Char *data)
-{
-}
-
-void XMLCALL XmlScanner::cdataHandler(void *userData);
-
-
-void XmlScanner::AppendToken() {
-    int kind = -1;
-    Token* new_token = null;
-
-    while (kind < 0) {
-        switch (status) {
-        case XSStatus.XSCommon:
-        if (inEmptyElement) {
-            kind = EndElement2Kind(emptyNSURI, emptyLName);
-            inEmptyElement = false;
-            break;
-        } else if (!xmlreader.Read()) { kind = eofSym; break; }
-        switch (xmlreader.NodeType) {
-        case XmlNodeType.Element:
-            kind = StartElement2Kind(xmlreader.NamespaceURI,
-                         xmlreader.LocalName);
-            if (xmlreader.IsEmptyElement) {
-            emptyNSURI = xmlreader.NamespaceURI;
-            emptyLName = xmlreader.LocalName;
-            inEmptyElement = true;
-            }
-            if (kind >= 0) status = XSStatus.XSFirstAttr;
-            break;
-        case XmlNodeType.EndElement:
-            kind = EndElement2Kind(xmlreader.NamespaceURI,
-                       xmlreader.Name);
-            break;
-        case XmlNodeType.ProcessingInstruction:
-            kind = ProcessingInstruction2Kind(xmlreader.Name);
-            break;
-        default:
-            kind = Others2Kind(xmlreader.NodeType);
-            break;
-        }
-        break;
-        case XSStatus.XSFirstAttr:
-        if (!xmlreader.MoveToFirstAttribute()) {
-            status = XSStatus.XSCommon;
-            kind = -1;
-        } else {
-            status = XSStatus.XSNextAttr;
-            kind = Attribute2Kind(xmlreader.NamespaceURI,
-                      xmlreader.LocalName);
-        }
-        break;
-        case XSStatus.XSNextAttr:
-        if (!xmlreader.MoveToNextAttribute()) {
-            status = XSStatus.XSCommon;
-            kind = -1;
-        } else {
-            kind = Attribute2Kind(xmlreader.NamespaceURI,
-                      xmlreader.LocalName);
-        }
-        break;
-        }
+        AppendToken(kind, 0/*line number*/, 0/*line position*/, wvalue);
+        coco_string_delete(wkey);
+        coco_string_delete(wvalue);        
     }
+    
+    coco_string_delete(wname);
+    coco_string_delete(namespace);
+    coco_string_delete(elename);
+}
+
+void XMLCALL XmlScanner::endElementHandler(void *userData, const char *name, const char **atts)
+{
+    wchar_t *wname = coco_string_create(name);
+    wchar_t *namespace=NULL, *elename=NULL;
+    inx = coco_string_indexof(name, L':');
+    if(inx>0){
+        /* have namespace indication */
+        namespace = coco_string_create(wname, 0, inx+1);
+        elename = coco_string_create(wname, inx+1, strlen(name)-(inx+1));
+    }
+    fwprintf("get namespace:%ls, end elename:%ls\n", namespace, elename);
+    kind = EndElement2Kind(namespace, elename);
+    AppendToken(kind, 0, 0, elename);
+
+    coco_string_delete(wname);
+    coco_string_delete(namespace);
+    coco_string_delete(elename);
+}
+
+void XMLCALL XmlScanner::charDataHandler(void *userData, const XML_Char *s, int len)
+{
+    int opt;
+    tagStackEle* curEle = tagStack->top();
+    char *buf;
+    wchar_t *value;
+    
+    buf = malloc(len+1);
+    snprintf(buf, len, "%s", s);
+    value = coco_string_create(data);
+
+    if (curEle->unknownNamespace) opt = Token.Options.UNS_TEXT;
+    else if (curEle->unknownTag) opt = Token.Options.UT_TEXT;
+    else opt = Token.Options.TEXT;
+    
+    kind = curEle->xldef->useVector[(int)opt] ? useKindVector[(int)opt] : -1;
+
+    AppendToken(kind, 0, 0, vlaue);
+    
+    coco_string_delete(value);
+}
+
+void XMLCALL XmlScanner::processingInstructionHandler(void *userData, const XML_Char *target, const XML_Char *data)
+{
+    wchar_t *wtarget, *wdata;
+    
+    wtarget = coco_string_create(target);
+    wdata = coco_string_create(data);
+    
+    kind = ProcessingInstruction2Kind(target)
+    AppendToken(kind, 0, 0, wdata);
+
+    coco_string_delete(wtarget);
+    coco_string_delete(wdata);
+}
+
+void XMLCALL XmlScanner::commentHandler(void *userData, const XML_Char *data)
+{
+    int opt;
+    tagStackEle* curEle = tagStack->top();
+    wchar_t *value = coco_string_create(data);
+
+    if (curEle->unknownNamespace) opt = Token.Options.UNS_CDATA;
+    else if (curEle->unknownTag) opt = Token.Options.UT_CDATA;
+    else opt = Token.Options.CDATA;
+    
+    kind = curEle->xldef->useVector[(int)opt] ? useKindVector[(int)opt] : -1;
+    
+    AppendToken(kind, 0, 0, vlaue);
+    
+    coco_string_delete(value);
+}
+
+void XMLCALL XmlScanner::cdataHandler(void *userData)
+{
+    int opt;
+    tagStackEle* curEle = tagStack->top();
+    wchar_t *value = coco_string_create(data);
+
+    if (curEle->unknownNamespace) opt = Token.Options.UNS_CDATA;
+    else if (curEle->unknownTag) opt = Token.Options.UT_CDATA;
+    else opt = Token.Options.CDATA;
+
+    kind = curEle->xldef->useVector[(int)opt] ? useKindVector[(int)opt] : -1;
+    
+    AppendToken(kind, 0, 0, vlaue);
+    
+    coco_string_delete(value);
+}
+
+void XmlScanner::AppendToken(int line, int linenumber, int lineposition, wchar_t* value)
+{    
+    Token* new_token = NULL;
+
     new_token = new Token();
     new_token->kind = kind;
-    new_token->line = xmlreader.LineNumber;
-    new_token->col = xmlreader.LinePosition;
-    new_token->val = xmlreader.Value;
+    new_token->line = linenumber;
+    new_token->col = lineposition;
+    new_token->val = value?coco_string_create(value):NULL;
     tokens.push_back(new_token);
+}
+
+void XmlScanner::AppendTokens() {
+    if(eof) return;
+
+    for (;;) {
+        int bytes_read;
+        void *buff = XML_GetBuffer(p, BUFF_SIZE);
+        if (buff == NULL) {
+            /* handle error */
+        }
+
+        bytes_read = fread(buff, 1, BUFF_SIZE, xmlstream);
+        if (bytes_read < 0) {
+            /* handle error */
+        }
+
+        if (! XML_ParseBuffer(p, bytes_read, bytes_read == 0)) {
+            /* handle parse error */
+        }
+
+        if (bytes_read == 0)
+            break;
+        }
+    }
+
+    AppendToken(eofSym, 0, 0, NULL);
+    eof = 1;
 }
 
 Token XmlScanner::Scan () {
     Token* token;
-    if (tokens->size() == 0) AppendToken();
+    if (tokens->size() == 0) AppendTokens();
     token = tokens.front();
     Tokens.Pop_front();
     return token;
 }
 
 Token XmlScanner::Peek () {
-    if (peek == tokens.size()) AppendToken();
+    if (peek == tokens.size()) AppendTokens();
     return tokens[peek ++];
 }
 
