@@ -303,7 +303,7 @@ Scanner_Release(Scanner_t * self, Token_t * token)
     }
 }
 
-Token_t *
+const Token_t *
 Scanner_Scan(Scanner_t * self)
 {
     Token_t * cur;
@@ -317,7 +317,7 @@ Scanner_Scan(Scanner_t * self)
     return cur;
 }
 
-Token_t *
+const Token_t *
 Scanner_Peek(Scanner_t * self)
 {
     Token_t * cur;
