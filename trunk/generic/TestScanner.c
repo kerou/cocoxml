@@ -38,6 +38,10 @@ main(int argc, char * argv[])
     for (;;) {
 	if (t) Scanner_Release(&scanner, t);
 	t = la;
+	if (t) {
+	    printf("Token(%d,%d): kind = %d pos = %d: [%s]\n",
+		   t->line, t->col, t->kind, t->pos, t->val);
+	}
 	la = Scanner_Scan(&scanner);
 	if (la->kind == scanner.eofSym) break;
     }
