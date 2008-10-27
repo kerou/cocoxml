@@ -35,6 +35,13 @@ Coco/R itself) does not fall under the GNU General Public License.
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
+#include <vector>
+#include <map>
+#include <stack>
+
+#include <expat.h>
+
+using namespace std;
 
 // io.h and fcntl are used to ensure binary read from streams on windows
 #if _MSC_VER >= 1300
@@ -84,6 +91,12 @@ void  coco_string_delete(char* &data);
 
 /*---- Namespace Begin ----*/
 
+struct wcharCmp {
+	bool operator()(const wchar_t* s1, const wchar_t* s2 ) const{
+        return coco_string_compareto(s1, s2) < 0;
+	}
+};
+
 class Token  
 {
 /*---- Options ----*/
@@ -98,15 +111,16 @@ public:
 };
 
 class TagInfo {
+public:
     int startToken;
     int endToken;
-}
+};
 
 class XmlLangDefinition {
     vector<bool>            useVector;
-    map<wchar_t*, *TagInfo> Tags;
-    map<wchar_t*, int>      Attrs;
-    map<wchar_t*, int>      PInstructions;
+    map<wchar_t*, TagInfo*, wcharCmp> Tags;
+    map<wchar_t*, int, wcharCmp>      Attrs;
+    map<wchar_t*, int, wcharCmp>      PInstructions;
 
     XmlLangDefinition();
     ~XmlLangDefinition();
@@ -114,19 +128,20 @@ class XmlLangDefinition {
     void AddTag(const wchar_t* Name, int StartToken, int EndToken);
     void AddAttr(const wchar_t* Name, int AttrToken);
     void AddProcessingInstruction(wchar_t* PIName, int PIToken);
-}
+};
 
 class tagStackEle {
+public:
     bool unknownNamespace;
     bool unknownTag;
     XmlLangDefinition *xldef;
-}
+};
 
 class XmlScanner {
-    const int eofSym = 0;
+public:
     int eof;
 /*---- Declarations ----*/
-    map<const wchar_t*, XmlLangDefinition*> XmlLangMap;
+    map<const wchar_t*, XmlLangDefinition*, wcharCmp> XmlLangMap;
     stack<tagStackEle*>                    tagStack;
     vector<Token*>                         tokens;
     int                                    peek;
@@ -192,6 +207,9 @@ Coco/R itself) does not fall under the GNU General Public License.
 #include <memory.h>
 #include <string.h>
 #include "Scanner.h"
+
+
+using namespace std;
 
 // string handling, wide character
 
