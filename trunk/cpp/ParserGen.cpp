@@ -446,7 +446,7 @@ void ParserGen::WriteXmlParser () {
 	CopyFramePart(L"/*---- begin ----*/");
 	wchar_t *subSrcName = coco_string_create_lower(tab->srcName);
 	if (!coco_string_endswith(subSrcName, L"cocoxml.atg")) {
-		fclose(gen); OpenGen(L"XmlParser.h", false); /* pdt */
+		fclose(gen); OpenGen(L"XmlParser.hxx", false); /* pdt */
 	}
 	coco_string_delete(subSrcName);
 
@@ -468,7 +468,7 @@ void ParserGen::WriteXmlParser () {
 	fclose(gen);
 
 	// Source
-	OpenGen(L"XmlParser.cpp", true); /* pdt */
+	OpenGen(L"XmlParser.cxx", true); /* pdt */
 	CopyFramePart(L"/*---- begin ----*/");
 	subSrcName = coco_string_create_lower(tab->srcName);
 	if (!coco_string_endswith(subSrcName, L"cocoxml.atg")) {

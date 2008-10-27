@@ -7,10 +7,10 @@ Import('env')
 Import('CocoXml')
 Import('XmlScannerFrame', 'XmlParserFrame')
 
-env.Command(['XmlScanner.cpp', 'XmlParser.cpp'], [CocoXml, 'rss.atg'],
+env.Command(['XmlScanner.cxx', 'XmlParser.cxx'], [CocoXml, 'rss.atg'],
             './${SOURCES[0]} -frames ${SOURCES[0].srcdir} -namespace cocoxml ${SOURCES[1]}')
 
-env.Depends('XmlScanner.cpp', XmlScannerFrame)
-env.Depends('XmlParser.cpp', XmlParserFrame)
+env.Depends('XmlScanner.cxx', XmlScannerFrame)
+env.Depends('XmlParser.cxx', XmlParserFrame)
 
 #env.Program('samples', ['Main.cpp', 'RSSData.cpp', 'XmlScanner.cpp', 'XmlParser.cpp'])
