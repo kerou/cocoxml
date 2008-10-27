@@ -68,7 +68,7 @@ CheckMark(const char * lnbuf,
     for (b = lnbuf; isspace(*b); ++b);
     GetResult(retIndent, szRetIndent, lnbuf, b - lnbuf);
 
-    if (!LocateMark(&b, &e, "/*----", "----*/")) return FALSE;
+    if (!LocateMark(&b, &e, "/*---- ", " ----*/")) return FALSE;
     start = b;
     while (b < e && isalnum(*b)) ++b;
     GetResult(retCommand, szRetCommand, start, b - start);
