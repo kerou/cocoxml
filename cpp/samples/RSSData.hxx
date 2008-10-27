@@ -15,90 +15,99 @@
   with this program; if not, write to the Free Software Foundation, Inc., 
   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
   -------------------------------------------------------------------------*/
-class Cloud {
-public:
-    string domain;
-    string port;
-    string path;
-    string registerProcedure;
-    string protocol;
+#ifndef __RSS_DATA_H
+#define __RSS_DATA_H
 
-    friend ostream &operator<<(ostream &s, Cloud p);
+#include <list>
+
+using namespace std;
+
+class CloudClass {
+public:
+    wchar_t* domain;
+    wchar_t* port;
+    wchar_t* path;
+    wchar_t* registerProcedure;
+    wchar_t* protocol;
+
+    friend ostream &operator<<(ostream &s, CloudClass p);
 };
 
-class Image {
+class ImageClass {
 public:
-    string url;
-    string title;
-    string link;
-    string width;
-    string height;
+    wchar_t* url;
+    wchar_t* title;
+    wchar_t* link;
+    wchar_t* width;
+    wchar_t* height;
 
-    friend ostream &operator<<(ostream &s, Image p);
+    friend ostream &operator<<(ostream &s, ImageClass p);
 };
 
-class TextInput {
+class TextInputClass {
 public:
-    string title;
-    string description;
-    string name;
-    string link;
+    wchar_t* title;
+    wchar_t* description;
+    wchar_t* name;
+    wchar_t* link;
 
-    friend ostream &operator<<(ostream &s, TextInput p);
+    friend ostream &operator<<(ostream &s, TextInputClass p);
 };
 
-class Item {
+class ItemClass {
 public:
-    string title;
-    string link;
-    string description;
-    string author;
-    string category;
-    string comments;
-    string enclosure;
-    string guid;
-    string pubdate;
-    string source;
-    Image  image;
+    wchar_t* title;
+    wchar_t* link;
+    wchar_t* description;
+    wchar_t* author;
+    wchar_t* category;
+    wchar_t* comments;
+    wchar_t* enclosure;
+    wchar_t* guid;
+    wchar_t* pubdate;
+    wchar_t* source;
+    ImageClass*  image;
 
-    friend ostream &operator<<(ostream &s, Item p);
+    friend ostream &operator<<(ostream &s, ItemClass p);
 };
 
-class Channel {
+class ChannelClass {
 public:
-    string    title;
-    string    link;
-    string    description;
-    string    language;
-    string    copyright;
-    string    managingEditor;
-    string    webMaster;
-    string    pubDate;
-    string    lastBuildDate;
-    string    category;
-    string    generator;
-    string    docs;
-    Cloud     cloud;
-    string    ttl;
-    Image     image;
-    string    rating;
-    TextInput textInput;
-    string    skipHours;
-    string    skipDays;
-    List<Item>  itemList;
+    wchar_t*    title;
+    wchar_t*    link;
+    wchar_t*    description;
+    wchar_t*    language;
+    wchar_t*    copyright;
+    wchar_t*    managingEditor;
+    wchar_t*    webMaster;
+    wchar_t*    pubDate;
+    wchar_t*    lastBuildDate;
+    wchar_t*    category;
+    wchar_t*    generator;
+    wchar_t*    docs;
+    CloudClass* cloud;
+    wchar_t*    ttl;
+    ImageClass* image;
+    wchar_t*    rating;
+    TextInputClass*  textInput;
+    wchar_t*    skipHours;
+    wchar_t*    skipDays;
+    list<ItemClass*>  *itemList;
 
-    Channel();
-    void AddItem(Item item);
+    ChannelClass();
+    void AddItem(ItemClass *item);
 
-    friend ostream &operator<<(ostream &s, Channel p);
+    friend ostream &operator<<(ostream &s, ChannelClass p);
 };
     
-class Rss {
+class RssClass {
 public:
-    List<Channel>  channelList;
+    list<ChannelClass*>  *channelList;
     
-    Rss();
-    void AddChannel(Channel channel);
+    RssClass();
+    void AddChannel(ChannelClass *channel);
 
-    friend ostream &operator<<(ostream &s, Rss p);
+    friend ostream &operator<<(ostream &s, RssClass p);
 };
+
+#endif
