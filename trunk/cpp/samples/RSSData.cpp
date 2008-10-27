@@ -15,15 +15,6 @@
   with this program; if not, write to the Free Software Foundation, Inc., 
   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
   -------------------------------------------------------------------------*/
-class Cloud {
-    string domain;
-    string port;
-    string path;
-    string registerProcedure;
-    string protocol;
-
-    friend ostream &operator<<(ostream &s, Cloud p);
-};
 
 ostream &operator<<(ostream &s, Cloud p){
     s << "Cloud('" << 
@@ -35,29 +26,11 @@ ostream &operator<<(ostream &s, Cloud p){
     return s;
 };
 
-class Image {
-    string url;
-    string title;
-    string link;
-    string width;
-    string height;
-
-    ostream &operator<<(ostream &s, Image p);
-};
-
 ostream &operator<<(ostream &s, Image p){
     s << "Image('" << url << "', '" << title << "', '" << link << "', '" << width << "', '" << height << "')";
     return s;
 };
 
-class TextInput {
-    string title;
-    string description;
-    string name;
-    string link;
-
-    ostream &operator<<(ostream &s, TextInput p);
-};
 ostream &operator<<(ostream &s, TextInput p){
     s <<  "TextInput('" << 
         title << "', '" << 
@@ -65,22 +38,6 @@ ostream &operator<<(ostream &s, TextInput p){
         name << "', '" << 
         link << "')";
     return s;
-};
-
-class Item {
-    string title;
-    string link;
-    string description;
-    string author;
-    string category;
-    string comments;
-    string enclosure;
-    string guid;
-    string pubdate;
-    string source;
-    Image  image;
-
-    ostream &operator<<(ostream &s, Item p);
 };
 
 ostream &operator<<(ostream &s, Item p)
@@ -100,40 +57,14 @@ ostream &operator<<(ostream &s, Item p)
     return s;
 };
 
-class Channel {
-    string    title;
-    string    link;
-    string    description;
-    string    language;
-    string    copyright;
-    string    managingEditor;
-    string    webMaster;
-    string    pubDate;
-    string    lastBuildDate;
-    string    category;
-    string    generator;
-    string    docs;
-    Cloud     cloud;
-    string    ttl;
-    Image     image;
-    string    rating;
-    TextInput textInput;
-    string    skipHours;
-    string    skipDays;
-
-    List<Item>  itemList;
-
-    Channel() {
-        itemList = new List<Item>();
-    };
-     
-    void AddItem(Item item) {
-        itemList.Add(item);
-    };
-    
-    ostream &operator<<(ostream &s, Channel p);
+Channel::Channel() {
+    itemList = new List<Item>();
 };
-    
+
+void Channel::AddItem(Item item) {
+        itemList.Add(item);
+};
+
 ostream &operator<<(ostream &s, Channel p)
 {
     s << "Channel: '" << title << "'\n" <<
@@ -161,19 +92,13 @@ ostream &operator<<(ostream &s, Channel p)
     return s;
 };
 
-class Rss {
-    List<Channel>  channelList;
-    
-    Rss() {
-        channelList = new List<Channel>();
-    }
+Rss::Rss() {
+    channelList = new List<Channel>();
+}
 
-    void AddChannel(Channel channel) {
+void Rss::AddChannel(Channel channel) {
         channelList.Add(channel);
-    }
-
-    ostream &operator<<(ostream &s, Rss p);
-};
+}
 
 ostream &operator<<(ostream &s, Rss p)
 {
