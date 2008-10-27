@@ -34,6 +34,7 @@ Token(int kind, int pos, int col, int line, const char * val, size_t vallen)
 {
     Token_t * self;
     if (!(self = malloc(sizeof(Token_t) + vallen + 1))) return NULL;
+    self->refcnt = 0;
     self->next = NULL;
     self->kind = kind;
     self->pos = pos;
@@ -312,35 +313,13 @@ Scanner_Destruct(Scanner_t * self)
     Buffer_Destruct(&self->buffer);
 }
 
-const Token_t *
+Token_t *
 Scanner_GetDummy(Scanner_t * self)
 {
     return self->dummyToken;
 }
 
-void
-Scanner_Release(Scanner_t * self, const Token_t * token)
-{
-    Token_t ** curToken, * token0;
-    if (token == self->dummyToken) return;
-    assert(self->busyTokenList != NULL);
-    for (curToken = &self->busyTokenList;
-	 *curToken != token; curToken = &(*curToken)->next)
-	assert(*curToken && curToken != self->curToken);
-    /* Found, detach and destroy it. */
-    token0 = *curToken; *curToken = (*curToken)->next;
-    Token_Destruct(token0);
-    /* Adjust Buffer busy pointer */
-    if (curToken == &self->busyTokenList) {
-	if (self->busyTokenList) {
-	    Buffer_SetBusy(&self->buffer, self->busyTokenList->pos);
-	} else {
-	    Buffer_ClearBusy(&self->buffer);
-	}
-    }
-}
-
-const Token_t *
+Token_t *
 Scanner_Scan(Scanner_t * self)
 {
     Token_t * cur;
@@ -351,10 +330,11 @@ Scanner_Scan(Scanner_t * self)
     }
     cur = *self->curToken;
     self->peekToken = self->curToken = &cur->next;
+    ++cur->refcnt;
     return cur;
 }
 
-const Token_t *
+Token_t *
 Scanner_Peek(Scanner_t * self)
 {
     Token_t * cur;
@@ -367,6 +347,7 @@ Scanner_Peek(Scanner_t * self)
 	cur = *self->peekToken;
 	self->peekToken = &cur->next;
     } while (cur->kind > self->maxT); /* Skip pragmas */
+    ++cur->refcnt;
     return cur;
 }
 
@@ -375,6 +356,52 @@ Scanner_ResetPeek(Scanner_t * self)
 {
     *self->peekToken = *self->curToken;
 }
+
+void
+Scanner_IncRef(Scanner_t * self, Token_t * token)
+{
+    ++token->refcnt;
+}
+
+void
+Scanner_DecRef(Scanner_t * self, Token_t * token)
+{
+    Token_t ** curToken;
+    if (token == self->dummyToken) return;
+    if (--token->refcnt > 0) return;
+    assert(self->busyTokenList != NULL);
+    for (curToken = &self->busyTokenList;
+	 *curToken != token; curToken = &(*curToken)->next)
+	assert(*curToken && curToken != self->curToken);
+    /* Found, *curToken == token, detach and destroy it. */
+    *curToken = (*curToken)->next;
+    Token_Destruct(token);
+    /* Adjust Buffer busy pointer */
+    if (curToken == &self->busyTokenList) {
+	if (self->busyTokenList) {
+	    Buffer_SetBusy(&self->buffer, self->busyTokenList->pos);
+	} else {
+	    Buffer_ClearBusy(&self->buffer);
+	}
+    }
+}
+
+Position_t *
+Scanner_GetPosition(Scanner_t * self, Token_t * begin, Token_t * end)
+{
+    int len = end->pos - begin->pos;
+    return Position(begin->pos, len, begin->col,
+		    Buffer_GetString(&self->buffer, begin->pos, len));
+}
+
+Position_t *
+Scanner_GetPositionWithTail(Scanner_t * self, Token_t * begin, Token_t * end)
+{
+    int len = (end->pos + strlen(end->val)) - begin->pos;
+    return Position(begin->pos, len, begin->col,
+		    Buffer_GetString(&self->buffer, begin->pos, len));
+}
+
 
 /* All the following things are used by Scanner_NextToken. */
 typedef struct {

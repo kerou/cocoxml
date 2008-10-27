@@ -27,16 +27,16 @@ int
 main(int argc, char * argv[])
 {
     Scanner_t scanner;
-    const Token_t * t, * la;
+    Token_t * t, * la;
 
     if (argc != 2) {
 	fprintf(stderr, "argc != 2\n");
 	return -1;
     }
     Scanner(&scanner, argv[1]);
-    la = t = NULL;
+    t = NULL; la = Scanner_GetDummy(&scanner);
     for (;;) {
-	if (t) Scanner_Release(&scanner, t);
+	if (t) Scanner_DecRef(&scanner, t);
 	t = la;
 	if (t) {
 	    printf("Token(%d,%d): kind = %d pos = %d: [%s]\n",
@@ -45,6 +45,8 @@ main(int argc, char * argv[])
 	la = Scanner_Scan(&scanner);
 	if (la->kind == scanner.eofSym) break;
     }
+    if (t) Scanner_DecRef(&scanner, t);
+    if (la) Scanner_DecRef(&scanner, t);
     Scanner_Destruct(&scanner);
     return 0;
 }
