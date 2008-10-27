@@ -194,10 +194,12 @@ namespace CocoXml{
         for (iter=optionsMap.begin(); iter!=optionsMap.end(); iter++)
             fwprintf(gen, L"        %ls,\n", iter->first);
         fwprintf(gen, L"    };\n");
-        fwprintf(gen, L"    const int numOptions = %d;\n", optionsMap.size());
+        //fwprintf(gen, L"    const int numOptions = %d;\n", optionsMap.size());
     }
     void XmlScannerData::WriteDeclarations(){
+#if 0
         Symbol *sym;
+
         fwprintf(gen, L"    int[] useKindVector = new int[] {\n");
         for(int i=0; enum_options[i].value>=0; i++){
             wchar_t *name = coco_string_create(enum_options[i].name);
@@ -206,6 +208,7 @@ namespace CocoXml{
             coco_string_delete(name);
         }
         fwprintf(gen, L"    };\n");
+#endif
     }
     void XmlScannerData::WriteInitialization(){
         map<const wchar_t *, XmlLangDefinition*>::iterator iter;
