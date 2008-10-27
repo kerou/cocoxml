@@ -30,12 +30,8 @@
 
 #include  <stdio.h>
 
-#ifdef __cplusplus
-#define  EXTC_BEGIN extern "C" {
-#define  EXTC_END   }
-#else
-#define  EXTC_BEGIN
-#define  EXTC_END
+#ifndef  COCO_POSITION_H
+#include "Position.h"
 #endif
 
 EXTC_BEGIN
@@ -48,6 +44,7 @@ typedef struct Token_s Token_t;
 struct Token_s
 {
     Token_t * next;
+    int refcnt;
     int kind;
     int pos;
     int col;
@@ -92,11 +89,17 @@ typedef struct {
 
 Scanner_t * Scanner(Scanner_t * self, const char * filename);
 void Scanner_Destruct(Scanner_t * self);
-const Token_t * Scanner_GetDummy(Scanner_t * self);
-void Scanner_Release(Scanner_t * self, const Token_t * token);
-const Token_t * Scanner_Scan(Scanner_t * self);
-const Token_t * Scanner_Peek(Scanner_t * self);
+Token_t * Scanner_GetDummy(Scanner_t * self);
+Token_t * Scanner_Scan(Scanner_t * self);
+Token_t * Scanner_Peek(Scanner_t * self);
 void Scanner_ResetPeek(Scanner_t * self);
+void Scanner_IncRef(Scanner_t * self, Token_t * token);
+void Scanner_DecRef(Scanner_t * self, Token_t * token);
+
+Position_t *
+Scanner_GetPosition(Scanner_t * self, Token_t * begin, Token_t * end);
+Position_t *
+Scanner_GetPositionWithTail(Scanner_t * self, Token_t * begin, Token_t * end);
 
 EXTC_END
 
