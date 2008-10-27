@@ -15,96 +15,104 @@
   with this program; if not, write to the Free Software Foundation, Inc., 
   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
   -------------------------------------------------------------------------*/
+#include <ostream>
+#include <iostream>
+#include "RSSData.hxx"
 
-ostream &operator<<(ostream &s, Cloud p){
+ostream &operator<<(ostream &s, CloudClass p){
     s << "Cloud('" << 
-        domain << "', '" << 
-        port << "', '" << 
-        path << "', '" << 
-        registerProcedure << "', '" << 
-        protocol << "')";
+        p.domain << "', '" << 
+        p.port << "', '" << 
+        p.path << "', '" << 
+        p.registerProcedure << "', '" << 
+        p.protocol << "')";
     return s;
 };
 
-ostream &operator<<(ostream &s, Image p){
-    s << "Image('" << url << "', '" << title << "', '" << link << "', '" << width << "', '" << height << "')";
+ostream &operator<<(ostream &s, ImageClass p){
+    s << "Image('" << p.url << "', '" << p.title << "', '" << p.link << "', '" << p.width << "', '" << p.height << "')";
     return s;
 };
 
-ostream &operator<<(ostream &s, TextInput p){
+ostream &operator<<(ostream &s, TextInputClass p){
     s <<  "TextInput('" << 
-        title << "', '" << 
-        description << "', '" << 
-        name << "', '" << 
-        link << "')";
+        p.title << "', '" << 
+        p.description << "', '" << 
+        p.name << "', '" << 
+        p.link << "')";
     return s;
 };
 
-ostream &operator<<(ostream &s, Item p)
+ostream &operator<<(ostream &s, ItemClass p)
 {
     s << "Item('" << 
-        title << "', '" << 
-        link << "', '" << 
-        description << "', '" << 
-        author << "', '" << 
-        category << "', '" << 
-        comments << "', '" << 
-        enclosure << "', '" << 
-        guid << "', '" << 
-        pubdate << "', '" << 
-        source << "', '" << 
-        image << "')";
+        p.title << "', '" << 
+        p.link << "', '" << 
+        p.description << "', '" << 
+        p.author << "', '" << 
+        p.category << "', '" << 
+        p.comments << "', '" << 
+        p.enclosure << "', '" << 
+        p.guid << "', '" << 
+        p.pubdate << "', '" << 
+        p.source << "', '" << 
+        p.image << "')";
     return s;
 };
 
-Channel::Channel() {
-    itemList = new List<Item>();
+ChannelClass::ChannelClass() {
+    itemList = new list<ItemClass*>();
 };
 
-void Channel::AddItem(Item item) {
-        itemList.Add(item);
+void ChannelClass::AddItem(ItemClass *item) {
+        itemList->push_back(item);
 };
 
-ostream &operator<<(ostream &s, Channel p)
+ostream &operator<<(ostream &s, ChannelClass p)
 {
-    s << "Channel: '" << title << "'\n" <<
-        "\tlink: '" << link << "'\n" <<
-        "\tdescription: '" << description << "'\n" <<
-        "\tlanguage: '" << language << "'\n" <<
-        "\tcopyright: '" << copyright << "'\n" <<
-        "\tmanagingEditor: '" << managingEditor << "'\n" <<
-        "\twebMaster: '" << webMaster << "'\n" <<
-        "\tpubDate: '" << pubDate << "'\n" <<
-        "\tlastBuildDate: '" << lastBuildDate << "'\n" <<
-        "\tcategory: '" << category << "'\n" <<
-        "\tgenerator: '" << generator << "'\n" <<
-        "\tdocs: '" << docs << "'\n" <<
-        "\tcloud: '" << cloud << "'\n" <<
-        "\tttl: '" << ttl << "'\n" <<
-        "\timage: '" << image << "'\n" <<
-        "\trating: '" << rating << "'\n" <<
-        "\ttextInput: '" << textInput << "'\n" <<
-        "\tskipHours: '" << skipHours << "'\n" <<
-        "\tskipDays: '" << skipDays << "'\n";
+    s << "Channel: '" << p.title << "'\n" <<
+        "\tlink: '" << p.link << "'\n" <<
+        "\tdescription: '" << p.description << "'\n" <<
+        "\tlanguage: '" << p.language << "'\n" <<
+        "\tcopyright: '" << p.copyright << "'\n" <<
+        "\tmanagingEditor: '" << p.managingEditor << "'\n" <<
+        "\twebMaster: '" << p.webMaster << "'\n" <<
+        "\tpubDate: '" << p.pubDate << "'\n" <<
+        "\tlastBuildDate: '" << p.lastBuildDate << "'\n" <<
+        "\tcategory: '" << p.category << "'\n" <<
+        "\tgenerator: '" << p.generator << "'\n" <<
+        "\tdocs: '" << p.docs << "'\n" <<
+        "\tcloud: '" << p.cloud << "'\n" <<
+        "\tttl: '" << p.ttl << "'\n" <<
+        "\timage: '" << p.image << "'\n" <<
+        "\trating: '" << p.rating << "'\n" <<
+        "\ttextInput: '" << p.textInput << "'\n" <<
+        "\tskipHours: '" << p.skipHours << "'\n" <<
+        "\tskipDays: '" << p.skipDays << "'\n";
+#if 0
     foreach (Item i in itemList) {
         s << s << "\t" << i << "\n";
     }
+#endif
     return s;
 };
 
-Rss::Rss() {
-    channelList = new List<Channel>();
-}
+RssClass::RssClass() {
+    channelList = new list<ChannelClass*>();
+};
 
-void Rss::AddChannel(Channel channel) {
-        channelList.Add(channel);
-}
+void RssClass::AddChannel(ChannelClass* channel) {
+        channelList->push_back(channel);
+};
 
-ostream &operator<<(ostream &s, Rss p)
+ostream &operator<<(ostream &s, RssClass p)
 {
+#if 0
     string s = "";
     foreach (Channel c in channelList) {
         s = s << c << "\n";
     }
+#endif
+    s<<"???";
     return s;
 }
