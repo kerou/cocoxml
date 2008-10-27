@@ -1,7 +1,7 @@
 # -*- python -*-
 import os.path
 
-env = Environment(CCFLAGS = '-Wall')
+env = Environment(CCFLAGS = ['-g', '-Wall'])
 Export('env')
 
 SConscript(os.path.join('coco', 'SConscript'))
