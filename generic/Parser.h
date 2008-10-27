@@ -29,17 +29,23 @@
 #define  COCO_PARSER_H
 
 #include  <stdio.h>
+typedef struct Errors_s Errors_t;
+typedef struct Parser_s Parser_t;
+#ifndef   COCO_SCANNER_H
 #include  "Scanner.h"
+#endif
+#ifndef   COCO_DFA_H
+#include  "DFA.h"
+#endif
 
 EXTC_BEGIN
 
 /*---- headerdef ----*/
 /*---- enable ----*/
-
-typedef struct {
+struct Errors_s {
     FILE * fp;
     int count;
-}  Errors_t;
+};
 
 Errors_t * Errors(Errors_t * self, FILE * fp);
 void Errors_Destruct(Errors_t * self);
@@ -48,23 +54,24 @@ void Errors_Warning(Errors_t * self, int line, int col, const char * s);
 void Errors_WarningS(Errors_t * self, const char * s);
 void Errors_Exception(Errors_t * self, const char * s);
 
-typedef struct Parser_s Parser_t;
 struct Parser_s {
-    /*---- constantsheader ----*/
-    /*---- enable ----*/
     int             errDist;
     int             minErrDist;
 
     Scanner_t     * scanner;
     Errors_t        errors;
-    const Token_t * t;
-    const Token_t * la;
+    Token_t       * t;
+    Token_t       * la;
 
     int             maxT;
 
     FILE          * trace;
     Tab_t         * tab;
     ParserGen_t   * pgen;
+    char          * tokenString;
+    char          * noString;
+    Bool_t          genScanner;
+    DFA_t         * dfa;
     /*---- declarations ----*/
     /*---- enable ----*/
 };
@@ -73,9 +80,6 @@ Parser_t * Parser(Parser_t * self, Scanner_t * scanner);
 void Parser_Destruct(Parser_t * self);
 void Parser_SemErr(Parser_t * self, const char * format, ...);
 void Parser_Parse(Parser_t * self);
-
-/*---- productionsheader ----*/
-/*---- enable ----*/
 
 EXTC_END
 

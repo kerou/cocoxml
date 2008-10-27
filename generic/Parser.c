@@ -23,11 +23,21 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
+#include  <assert.h>
+#include  <ctype.h>
 #include  <stdarg.h>
 #include  <stdio.h>
 #include  <stdlib.h>
 #include  <string.h>
 #include  "Parser.h"
+#include  "Tab.h"
+#include  "Symbol.h"
+#include  "Node.h"
+#include  "CharSet.h"
+#include  "CharClass.h"
+#include  "DFA.h"
+#include  "Graph.h"
+#include  "ParserGen.h"
 
 Errors_t *
 Errors(Errors_t * self, FILE * fp)
@@ -140,6 +150,11 @@ Errors_Exception(Errors_t * self, const char * s)
     exit(1);
 }
 
+/*---- constantsheader ----*/
+static const int Parser_id = 0;
+static const int Parser_str = 1;
+/*---- enable ----*/
+
 static void
 Parser_SynErr(Parser_t * self, int n)
 {
@@ -237,7 +252,25 @@ Parser_WeakSeparator(Parser_t * self, int n, int syFol, int repFol)
     return Parser_StartOf(self, syFol);
 }
 
-/*---- productions ----*/
+/*---- productionsheader ----*/
+static void Parser_Coco(Parser_t * self);
+static void Parser_SetDecl(Parser_t * self);
+static void Parser_TokenDecl(Parser_t * self, int typ);
+static void Parser_TokenExpr(Parser_t * self, Graph_t ** g);
+static void Parser_Set(Parser_t * self, CharSet_t ** s);
+static void Parser_AttrDecl(Parser_t * self, Symbol_t * sym);
+static void Parser_SemText(Parser_t * self, Position_t ** pos);
+static void Parser_Expression(Parser_t * self, Graph_t ** g);
+static void Parser_SimSet(Parser_t * self, CharSet_t ** s);
+static void Parser_Char(Parser_t * self, int * n);
+static void Parser_Sym(Parser_t * self, char ** name, int * kind);
+static void Parser_Term(Parser_t * self, Graph_t ** g);
+static void Parser_Resolver(Parser_t * self, Position_t ** pos);
+static void Parser_Factor(Parser_t * self, Graph_t ** g);
+static void Parser_Attribs(Parser_t * self, Node_t * p);
+static void Parser_Condition(Parser_t * self);
+static void Parser_TokenTerm(Parser_t * self, Graph_t ** g);
+static void Parser_TokenFactor(Parser_t * self, Graph_t ** g);
 /*---- enable ----*/
 
 void
@@ -272,36 +305,41 @@ Parser_Destruct(Parser_t * self)
     Errors_Destruct(&self->errors);
 }
 
-void
+/*---- productionsheader ----*/
+static void /* OK */
 Parser_Coco(Parser_t * self) {
-    Symbol_t *sym;
-    Graph_t *g, *g1, *g2;
+    Symbol_t * sym;
+    Graph_t * g, * g1, * g2;
     const char * gramName = NULL;
-    CharSet_t *s; 
+    CharSet_t * s;
 
-    InitDeclarations(); 
-    int beg = self->la->pos; 
+    InitDeclarations();
+    Token_t * beg;
+    Scanner_IncRef(self->scanner, beg = self->la);
     while (Parser_StartOf(self, 1)) {
 	Parser_Get(self);
     }
-    if (self->la->pos != beg) {
-	pgen->usingPos = new Position(beg, t->pos - beg + coco_string_length(t->val), 0);
+    if (self->la->pos != beg->pos) {
+	self->pgen->usingPos =
+	    Scanner_GetPositionWithTail(self->scanner, beg, self->t);
+	/*pgen->usingPos = new Position(beg, t->pos - beg + coco_string_length(t->val), 0);*/
     }
 
     Parser_Expect(self, 6);
-    genScanner = TRUE; 
-    tab->ignored = CharSet(NULL); 
+    self->genScanner = TRUE;
+    self->tab->ignored = CharSet(NULL); 
     Parser_Expect(self, 1);
-    gramName = strdupa(t->val);
-    beg = self->la->pos;
+    gramName = strdupa(self->t->val);
+    Scanner_DecRef(self->scanner, beg);
+    Scanner_IncRef(self->scanner, beg = self->la);
 
     while (Parser_StartOf(self, 2)) {
 	Parser_Get(self);
     }
-    Tab_semDeclPos = new Position(beg, self->la->pos-beg, 0); 
+    self->tab->semDeclPos = Scanner_GetPosition(self->scanner, beg, self->la);
     if (self->la->kind == 7) {
 	Parser_Get(self);
-	dfa->ignoreCase = TRUE; 
+	self->dfa->ignoreCase = TRUE; 
     }
     if (self->la->kind == 8) {
 	Parser_Get(self);
@@ -312,117 +350,117 @@ Parser_Coco(Parser_t * self) {
     if (self->la->kind == 9) {
 	Parser_Get(self);
 	while (self->la->kind == 1 || self->la->kind == 3 || self->la->kind == 5) {
-	    Parser_TokenDecl(node_t);
+	    Parser_TokenDecl(self, node_t);
 	}
     }
     if (self->la->kind == 10) {
 	Parser_Get(self);
 	while (self->la->kind == 1 || self->la->kind == 3 || self->la->kind == 5) {
-	    Parser_TokenDecl(node_pr);
+	    Parser_TokenDecl(self, node_pr);
 	}
     }
     while (self->la->kind == 11) {
 	Parser_Get(self);
-	PBool_t nested = FALSE; 
+	Bool_t nested = FALSE; 
 	Parser_Expect(self, 12);
-	Parser_TokenExpr(g1);
+	Parser_TokenExpr(self, &g1);
 	Parser_Expect(self, 13);
-	Parser_TokenExpr(g2);
+	Parser_TokenExpr(self, &g2);
 	if (self->la->kind == 14) {
 	    Parser_Get(self);
 	    nested = TRUE; 
 	}
-	dfa->NewComment(g1->l, g2->l, nested); 
+	DFA_NewComment(self->dfa, g1->l, g2->l, nested);
     }
     while (self->la->kind == 15) {
 	Parser_Get(self);
-	Set(s);
-	tab->ignored->Or(s); 
+	Parser_Set(self, &s);
+	CharSet_Or(self->tab->ignored, s);
     }
     while (!(self->la->kind == 0 || self->la->kind == 16)) {Parser_SynErr(self, 42); Parser_Get(self);}
     Parser_Expect(self, 16);
-    if (genScanner) dfa->MakeDeterministic();
-    Tab_DeleteNodes();
+    if (self->genScanner) DFA_MakeDeterministic(self->dfa);
+    Tab_DeleteNodes(self->tab);
 
     while (self->la->kind == 1) {
 	Parser_Get(self);
-	sym = Tab_FindSym(t->val);
-	PBool_t undef = (sym == NULL);
-	if (undef) sym = Tab_NewSym(node_nt, t->val, t->line);
+	sym = Tab_FindSym(self->tab, self->t->val);
+	Bool_t undef = (sym == NULL);
+	if (undef) sym = Tab_NewSym(self->tab, node_nt, self->t->val, self->t->line);
 	else {
 	    if (sym->typ == node_nt) {
 		if (sym->graph != NULL) Parser_SemErr(self, "name declared twice");
 	    } else Parser_SemErr(self, "this symbol kind not allowed on left side of production");
-	    sym->line = t->line;
+	    sym->line = self->t->line;
 	}
-	PBool_t noAttrs = (sym->attrPos == NULL);
+	Bool_t noAttrs = (sym->attrPos == NULL);
 	sym->attrPos = NULL;
 
 	if (self->la->kind == 24 || self->la->kind == 26) {
-	    AttrDecl(sym);
+	    Parser_AttrDecl(self, sym);
 	}
 	if (!undef)
 	    if (noAttrs != (sym->attrPos == NULL))
 		Parser_SemErr(self, "attribute mismatch between declaration and use of this symbol");
 
 	if (self->la->kind == 39) {
-	    SemText(sym->semPos);
+	    Parser_SemText(self, &sym->semPos);
 	}
 	Parser_ExpectWeak(self, 17, 3);
-	Parser_Expression(self, g);
+	Parser_Expression(self, &g);
 	sym->graph = g->l;
-	Tab_Finish(g);
+	Tab_Finish(self->tab, g);
 	
 	Parser_ExpectWeak(self, 18, 4);
     }
     Parser_Expect(self, 19);
     Parser_Expect(self, 1);
-    if (!coco_string_equal(gramName, t->val))
+    if (strcmp(gramName, self->t->val))
 	Parser_SemErr(self, "name does not match grammar name");
-    Tab_gramSy = Tab_FindSym(gramName);
-    if (Tab_gramSy == NULL)
+    self->tab->gramSy = Tab_FindSym(self->tab, gramName);
+    if (self->tab->gramSy == NULL)
 	Parser_SemErr(self, "missing production for grammar name");
     else {
-	sym = Tab_gramSy;
+	sym = self->tab->gramSy;
 	if (sym->attrPos != NULL)
 	    Parser_SemErr(self, "grammar symbol must not have attributes");
     }
-    Tab_noSym = Tab_NewSym(node_t, "???", 0); // noSym gets highest number
-    Tab_SetupAnys();
-    Tab_RenumberPragmas();
-    if (Tab_ddt[2]) Tab_PrintNodes();
-    if (errors->count == 0) {
-	wprintf("checking\n");
-	Tab_CompSymbol_tSets();
-	if (Tab_ddt[7]) Tab_XRef();
-	if (Tab_GrammarOk()) {
-	    wprintf("parser");
-	    pgen->WriteParser();
-	    if (genScanner) {
-		wprintf(" + scanner");
-		dfa->WriteScanner();
-		if (Tab_ddt[0]) dfa->PrintStates();
+    self->tab->noSym = Tab_NewSym(self->tab, node_t, "???", 0); /* noSym gets highest number */
+    Tab_SetupAnys(self->tab);
+    Tab_RenumberPragmas(self->tab);
+    if (self->tab->ddt[2]) Tab_PrintNodes(self->tab);
+    if (self->errors.count == 0) {
+	fprintf(stderr, "checking\n");
+	Tab_CompSymbolSets(self->tab);
+	if (self->tab->ddt[7]) Tab_XRef(self->tab);
+	if (Tab_GrammarOk(self->tab)) {
+	    fprintf(stderr, "parser");
+	    ParserGen_WriteParser(self->pgen);
+	    if (self->genScanner) {
+		fprintf(stderr, " + scanner");
+		DFA_WriteScanner(self->dfa);
+		if (self->tab->ddt[0]) DFA_PrintStates(self->dfa);
 	    }
-	    wprintf(" generated\n");
-	    if (Tab_ddt[8]) pgen->WriteStatistics();
+	    fprintf(stderr, " generated\n");
+	    if (self->tab->ddt[8]) ParserGen_WriteStatistics(self->pgen);
 	}
     }
-    if (Tab_ddt[6]) Tab_PrintSymbol_tTable();
-    
+    if (self->tab->ddt[6]) Tab_PrintSymbolTable(self->tab);
+
     Parser_Expect(self, 18);
 }
 
-void /* OK */
+static void /* OK */
 Parser_SetDecl(Parser_t * self) {
     CharSet_t * s; 
     Parser_Expect(self, 1);
     const char * name = self->t->val;
-    CharClass_t * c = Tab_FindCharClass(self->tab, name);
+    CharClass_t * c = Tab_FindCharClassS(self->tab, name);
 
     if (c != NULL) Parser_SemErr(self, "name declared twice");
 
     Parser_Expect(self, 17);
-    Parser_Set(self, s);
+    Parser_Set(self, &s);
     if (CharSet_Elements(s) == 0)
 	Parser_SemErr(self, "character set must not be empty");
     Tab_NewCharClass(self->tab, name, s);
@@ -430,49 +468,53 @@ Parser_SetDecl(Parser_t * self) {
     Parser_Expect(self, 18);
 }
 
-void
+static void /* OK */
 Parser_TokenDecl(Parser_t * self, int typ) {
-    wchar_t* name = NULL; int kind; Symbol_t *sym; Graph_t *g; 
-    Sym(name, kind);
-    sym = Tab_FindSym(name);
+    char * name = NULL; int kind; Symbol_t * sym; Graph_t * g; 
+    Parser_Sym(self, &name, &kind);
+    sym = Tab_FindSym(self->tab, name);
     if (sym != NULL) Parser_SemErr(self, "name declared twice");
     else {
-	sym = Tab_NewSym(typ, name, t->line);
-	sym->tokenKind = Symbol_t::fixedToken;
+	sym = Tab_NewSym(self->tab, typ, name, self->t->line);
+	sym->tokenKind = symbol_fixedToken;
     }
-    tokenString = NULL;
+    self->tokenString = NULL;
 
-    while (!(Parser_StartOf(self, 5))) {Parser_SynErr(self, 43); Parser_Get(self);}
+    while (!(Parser_StartOf(self, 5))) {
+	Parser_SynErr(self, 43); Parser_Get(self);
+    }
     if (self->la->kind == 17) {
 	Parser_Get(self);
-	Parser_TokenExpr(g);
+	Parser_TokenExpr(self, &g);
 	Parser_Expect(self, 18);
-	if (kind == str) Parser_SemErr(self, "a literal must not be declared with a structure");
-	Tab_Finish(g);
-	if (tokenString == NULL || coco_string_equal(tokenString, noString))
-	    dfa->ConvertToStates(g->l, sym);
-	else { // Parser_TokenExpr is a single string
-	    if ((*(Tab_literals))[tokenString] != NULL)
+	if (kind == Parser_str)
+	    Parser_SemErr(self, "a literal must not be declared with a structure");
+	Tab_Finish(self->tab, g);
+	if (self->tokenString == NULL ||
+	    !strcmp(self->tokenString, self->noString))
+	    DFA_ConvertToStates(self->dfa, g->l, sym);
+	else { /* Parser_TokenExpr is a single string */
+	    if (HashTable_Get(&self->tab->literals, self->tokenString) != NULL)
 		Parser_SemErr(self, "token string declared twice");
-	    Tab_literals->Set(tokenString, sym);
-	    dfa->MatchLiteral(tokenString, sym);
+	    HashTable_Set(&self->tab->literals, self->tokenString, sym);
+	    DFA_MatchLiteral(self->dfa, self->tokenString, sym);
 	}
-
     } else if (Parser_StartOf(self, 6)) {
-	if (kind == id) genScanner = FALSE;
-	else dfa->MatchLiteral(sym->name, sym);
+	if (kind == Parser_id) self->genScanner = FALSE;
+	else DFA_MatchLiteral(self->dfa, sym->name, sym);
     } else Parser_SynErr(self, 44);
     if (self->la->kind == 39) {
-	SemText(sym->semPos);
-	if (typ != node_pr) Parser_SemErr(self, "semantic action not allowed here"); 
+	Parser_SemText(self, &sym->semPos);
+	if (typ != node_pr)
+	    Parser_SemErr(self, "semantic action not allowed here"); 
     }
 }
 
-void /* OK */
+static void /* OK */
 Parser_TokenExpr(Parser_t * self, Graph_t ** g) {
     Graph_t * g2;
     Parser_TokenTerm(self, g);
-    PBool_t first = TRUE; 
+    Bool_t first = TRUE; 
     while (Parser_WeakSeparator(self, 28,8,7) ) {
 	Parser_TokenTerm(self, &g2);
 	if (first) { Tab_MakeFirstAlt(self->tab, *g); first = FALSE; }
@@ -480,28 +522,29 @@ Parser_TokenExpr(Parser_t * self, Graph_t ** g) {
     }
 }
 
-void /* OK */
+static void /* OK */
 Parser_Set(Parser_t * self, CharSet_t ** s) {
     CharSet_t * s2; 
-    Parser_SimSet(self, *s);
+    Parser_SimSet(self, s);
     while (self->la->kind == 20 || self->la->kind == 21) {
 	if (self->la->kind == 20) {
 	    Parser_Get(self);
-	    Parser_SimSet(self, s2);
+	    Parser_SimSet(self, &s2);
 	    CharSet_Or(*s, s2);
 	} else {
 	    Parser_Get(self);
-	    Parser_SimSet(self, s2);
+	    Parser_SimSet(self, &s2);
 	    CharSet_Subtract(*s, s2);
 	}
     }
 }
 
-void
-Parser_AttrDecl(Parser_t * self, Symbol_t *sym) {
+static void /* OK */
+Parser_AttrDecl(Parser_t * self, Symbol_t * sym) {
     if (self->la->kind == 24) {
 	Parser_Get(self);
-	int beg = self->la->pos; int col = self->la->col; 
+	Token_t * beg;
+	Scanner_IncRef(self->scanner, beg = self->la);
 	while (Parser_StartOf(self, 9)) {
 	    if (Parser_StartOf(self, 10)) {
 		Parser_Get(self);
@@ -511,11 +554,12 @@ Parser_AttrDecl(Parser_t * self, Symbol_t *sym) {
 	    }
 	}
 	Parser_Expect(self, 25);
-	if (t->pos > beg)
-	    sym->attrPos = new Position(beg, t->pos - beg, col); 
+	sym->attrPos = Scanner_GetPosition(self->scanner, beg, self->t);
+	Scanner_DecRef(self->scanner, beg);
     } else if (self->la->kind == 26) {
 	Parser_Get(self);
-	int beg = self->la->pos; int col = self->la->col; 
+	Token_t * beg;
+	Scanner_IncRef(self->scanner, beg = self->la);
 	while (Parser_StartOf(self, 11)) {
 	    if (Parser_StartOf(self, 12)) {
 		Parser_Get(self);
@@ -525,15 +569,18 @@ Parser_AttrDecl(Parser_t * self, Symbol_t *sym) {
 	    }
 	}
 	Parser_Expect(self, 27);
-	if (t->pos > beg)
-	    sym->attrPos = new Position(beg, t->pos - beg, col); 
-    } else Parser_SynErr(self, 45);
+	sym->attrPos = Scanner_GetPosition(self->scanner, beg, self->t);
+	Scanner_DecRef(self->scanner, beg);
+    } else {
+	Parser_SynErr(self, 45);
+    }
 }
 
-void
-Parser_SemText(Parser_t * self, Position* &pos) {
+static void /* OK */
+Parser_SemText(Parser_t * self, Position_t ** pos) {
     Parser_Expect(self, 39);
-    int beg = self->la->pos; int col = self->la->col; 
+    Token_t * beg;
+    Scanner_IncRef(self->scanner, beg = self->la);
     while (Parser_StartOf(self, 13)) {
 	if (Parser_StartOf(self, 14)) {
 	    Parser_Get(self);
@@ -546,140 +593,140 @@ Parser_SemText(Parser_t * self, Position* &pos) {
 	}
     }
     Parser_Expect(self, 40);
-    pos = new Position(beg, t->pos - beg, col); 
+    *pos = Scanner_GetPosition(self->scanner, beg, self->t);
+    Scanner_DecRef(self->scanner, beg);
 }
 
-void
+static void /* OK */
 Parser_Expression(Parser_t * self, Graph_t ** g) {
     Graph_t * g2;
     Parser_Term(self, g);
-    PBool_t first = TRUE; 
+    Bool_t first = TRUE; 
     while (Parser_WeakSeparator(self, 28,16,15) ) {
-	Term(g2);
-	if (first) { Tab_MakeFirstAlt(g); first = FALSE; }
-	Tab_MakeAlternative(self->tab, g, g2);
+	Parser_Term(self, &g2);
+	if (first) { Tab_MakeFirstAlt(self->tab, *g); first = FALSE; }
+	Tab_MakeAlternative(self->tab, *g, g2);
     }
 }
 
-void
+static void /* OK */
 Parser_SimSet(Parser_t * self, CharSet_t ** s) {
     int n1, n2; 
     *s = CharSet(NULL); 
     if (self->la->kind == 1) {
 	Parser_Get(self);
-	CharClass_t * c = Tab_FindCharClass(self->tab, t->val);
-	if (c == NULL)
-	    Parser_SemErr(self, "undefined name");
-	else
-	    CharSet_Or(*s, c->set);
+	CharClass_t * c = Tab_FindCharClassS(self->tab, self->t->val);
+	if (c == NULL) Parser_SemErr(self, "undefined name");
+	else CharSet_Or(*s, c->set);
     } else if (self->la->kind == 3) {
 	Parser_Get(self);
-	wchar_t *subName2 = coco_string_create(t->val, 1, coco_string_length(t->val)-2);
-	wchar_t *name = Tab_Unescape(subName2);
-	coco_string_delete(subName2);
-	wchar_t ch;
-	int len = coco_string_length(name);
-	for(int i=0; i < len; i++) {
-	    ch = name[i];
-	    if (dfa->ignoreCase) {
-		if ((L'A' <= ch) && (ch <= L'Z')) ch = ch - (L'A' - L'a'); // ch.ToLower()
-	    }
-	    s->Set(ch);
+	const char * cur0; int ch;
+	char * cur, * name = Unescape(self->t->val);
+	if (self->dfa->ignoreCase) {
+	    for (cur = name; *cur; ++cur) *cur = tolower(*cur);
 	}
-	coco_string_delete(name);
+	cur0 = name;
+	while (*cur0) {
+	    ch = UTF8Get(&cur0, EoF);
+	    assert(ch >= 0);
+	    CharSet_Set(*s, ch);
+	}
+	CocoFree(name);
     } else if (self->la->kind == 5) {
-	Char(n1);
-	s->Set(n1); 
+	Parser_Char(self, &n1);
+	CharSet_Set(*s, n1);
 	if (self->la->kind == 22) {
 	    Parser_Get(self);
-	    Char(n2);
-	    for (int i = n1; i <= n2; i++) s->Set(i); 
+	    Parser_Char(self, &n2);
+	    int idx;
+	    for (idx = n1; idx <= n2; ++idx) CharSet_Set(*s, idx); 
 	}
     } else if (self->la->kind == 23) {
 	Parser_Get(self);
-	s = CharSet(NULL); s->Fill(); 
-    } else Parser_SynErr(self, 46);
+	*s = CharSet(NULL); CharSet_Fill(*s, COCO_WCHAR_MAX);
+    } else {
+	Parser_SynErr(self, 46);
+    }
 }
 
-void
+static void /* OK */
 Parser_Char(Parser_t * self, int * n) {
     Parser_Expect(self, 5);
     *n = 0;
-    char * name = Unescape(self->t->val);
-
-    /* FIX ME: Deal with UTF-8 mutli-char carefully here. */
-    // "<= 1" instead of "== 1" to allow the escape sequence '\0' in c++
-    if (strlen(name) <= 1) *n = name[0];
-    else Parser_SemErr(self, "unacceptable character value");
-    free(name);
-    if (dfa->ignoreCase && (((wchar_t) n) >= 'A') && (((wchar_t) n) <= 'Z')) n += 32;
+    char * name; const char * cur;
+    cur = name = Unescape(self->t->val);
+    *n = UTF8Get(&cur, EoF);
+    if (*cur != 0) Parser_SemErr(self, "unacceptable character value");
+    CocoFree(name);
+    if (self->dfa->ignoreCase) *n = tolower(*n);
 }
 
-void
-Parser_Sym(Parser_t * self, wchar_t* &name, int &kind) {
-    name = coco_string_create("???"); kind = id; 
+static void /* OK */
+Parser_Sym(Parser_t * self, char ** name, int * kind) {
+    *name = CocoStrdup("???"); *kind = Parser_id;
     if (self->la->kind == 1) {
 	Parser_Get(self);
-	kind = id; coco_string_delete(name); name = coco_string_create(t->val); 
+	*kind = Parser_id; CocoFree(*name); *name = CocoStrdup(self->t->val);
     } else if (self->la->kind == 3 || self->la->kind == 5) {
 	if (self->la->kind == 3) {
 	    Parser_Get(self);
-	    coco_string_delete(name); name = coco_string_create(t->val); 
+	    CocoFree(*name); *name = CocoStrdup(self->t->val);
 	} else {
 	    Parser_Get(self);
-	    wchar_t *subName = coco_string_create(t->val, 1, coco_string_length(t->val)-2);
-	    coco_string_delete(name); 
-	    name = coco_string_create_append("\"", subName);
-	    coco_string_delete(subName);
-	    coco_string_merge(name, "\""); 
+	    /* FIX ME: csharp code is:
+	     * name = "\"" + t.val.Substring(1, t.val.Length-2) + "\""; */
+	    CocoFree(*name); *name = CocoStrdup(self->t->val);
 	}
-	kind = str;
-	if (dfa->ignoreCase) {
-	    wchar_t *oldName = name;
-	    name = coco_string_create_lower(name);
-	    coco_string_delete(oldName);
+	*kind = Parser_str;
+	if (self->dfa->ignoreCase) {
+	    char * cur;
+	    for (cur = *name; *cur; ++cur) *cur = tolower(*cur);
 	}
-	if (coco_string_indexof(name, ' ') >= 0)
-	    Parser_SemErr(self, "literal tokens must not contain blanks"); 
-    } else Parser_SynErr(self, 47);
+	if (strchr(*name, ' '))
+	    Parser_SemErr(self, "literal tokens \"%s\" can not contain blanks", *name);
+    } else {
+	Parser_SynErr(self, 47);
+    }
 }
 
-void
+static void /* OK */
 Parser_Term(Parser_t * self, Graph_t ** g) {
-    Graph_t *g2; Node *rslv = NULL; g = NULL; 
+    Graph_t *g2; Node_t * rslv = NULL; *g = NULL; 
     if (Parser_StartOf(self, 17)) {
 	if (self->la->kind == 37) {
-	    rslv = Tab_NewNode(node_rslv, (Symbol_t*)NULL, self->la->line); 
-	    Resolver(rslv->pos);
-	    g = new Graph_t(rslv); 
+	    rslv = Tab_NewNodeTSL(self->tab, node_rslv, NULL, self->la->line); 
+	    Parser_Resolver(self, &rslv->pos);
+	    *g = GraphP(NULL, rslv);
 	}
-	Factor(g2);
-	if (rslv != NULL) Tab_MakeSequence(g, g2);
-	else g = g2; 
+	Parser_Factor(self, &g2);
+	if (rslv != NULL) Tab_MakeSequence(self->tab, *g, g2);
+	else *g = g2;
 	while (Parser_StartOf(self, 18)) {
-	    Factor(g2);
-	    Tab_MakeSequence(g, g2); 
+	    Parser_Factor(self, &g2);
+	    Tab_MakeSequence(self->tab, *g, g2);
 	}
     } else if (Parser_StartOf(self, 19)) {
-	g = new Graph_t(Tab_NewNode(node_eps, (Symbol_t*)NULL, 0)); 
+	*g = GraphP(NULL, Tab_NewNodeTSL(self->tab, node_eps, NULL, 0)); 
     } else Parser_SynErr(self, 48);
-    if (g == NULL) // invalid start of Term
-	g = new Graph_t(Tab_NewNode(node_eps, (Symbol_t*)NULL, 0)); 
+    if (*g == NULL) /* invalid start of Term */
+	*g = GraphP(NULL, Tab_NewNodeTSL(self->tab, node_eps, NULL, 0)); 
 }
 
-void /* Half OK */
-Parser_Resolver(Parser_t * self, Position ** pos) {
+static void /* OK */
+Parser_Resolver(Parser_t * self, Position_t ** pos) {
     Parser_Expect(self, 37);
     Parser_Expect(self, 30);
-    int beg = self->la->pos; int col = self->la->col; 
+    Token_t * beg;
+    Scanner_IncRef(self->scanner, beg = self->la);
     Parser_Condition(self);
-    pos = new Position(beg, t->pos - beg, col); 
+    *pos = Scanner_GetPosition(self->scanner, beg, self->t);
+    Scanner_DecRef(self->scanner, beg);
 }
 
-void
-Parser_Factor(Parser_t * self, Graph_t* &g) {
-    wchar_t* name = NULL; int kind; Position *pos; PBool_t weak = FALSE; 
-    g = NULL;
+static void /* OK */
+Parser_Factor(Parser_t * self, Graph_t ** g) {
+    char * name = NULL; int kind; Position_t * pos; Bool_t weak = FALSE; 
+    *g = NULL;
 
     switch (self->la->kind) {
     case 1: case 3: case 5: case 29: {
@@ -687,37 +734,39 @@ Parser_Factor(Parser_t * self, Graph_t* &g) {
 	    Parser_Get(self);
 	    weak = TRUE; 
 	}
-	Sym(name, kind);
-	Symbol_t *sym = Tab_FindSym(name);
-	if (sym == NULL && kind == str)
-	    sym = (Symbol_t*)((*(Tab_literals))[name]);
-	PBool_t undef = (sym == NULL);
+	Parser_Sym(self, &name, &kind);
+	Symbol_t * sym = Tab_FindSym(self->tab, name);
+	if (sym == NULL && kind == Parser_str)
+	    sym = (Symbol_t *)HashTable_Get(&self->tab->literals, name);
+	Bool_t undef = (sym == NULL);
 	if (undef) {
-	    if (kind == id)
-		sym = Tab_NewSym(node_nt, name, 0);  // forward nt
-	    else if (genScanner) { 
-		sym = Tab_NewSym(node_t, name, t->line);
-		dfa->MatchLiteral(sym->name, sym);
-	    } else {  // undefined string in production
+	    if (kind == Parser_id)
+		sym = Tab_NewSym(self->tab, node_nt, name, 0);  /* forward nt */
+	    else if (self->genScanner) { 
+		sym = Tab_NewSym(self->tab, node_t, name, self->t->line);
+		DFA_MatchLiteral(self->dfa, sym->name, sym);
+	    } else {  /* undefined string in production */
 		Parser_SemErr(self, "undefined string in production");
-		sym = Tab_eofSy;  // dummy
+		sym = self->tab->eofSy;  /* dummy */
 	    }
 	}
 	int typ = sym->typ;
 	if (typ != node_t && typ != node_nt)
 	    Parser_SemErr(self, "this symbol kind is not allowed in a production");
-	if (weak)
+	if (weak) {
 	    if (typ == node_t) typ = node_wt;
 	    else Parser_SemErr(self, "only terminals may be weak");
-	Node *p = Tab_NewNode(typ, sym, t->line);
-	g = new Graph_t(p);
+	}
+	Node_t * p = Tab_NewNodeTSL(self->tab, typ, sym, self->t->line);
+	*g = GraphP(NULL, p);
 
 	if (self->la->kind == 24 || self->la->kind == 26) {
-	    Attribs(p);
-	    if (kind != id) Parser_SemErr(self, "a literal must not have attributes"); 
+	    Parser_Attribs(self, p);
+	    if (kind != Parser_id)
+		Parser_SemErr(self, "a literal must not have attributes");
 	}
 	if (undef)
-	    sym->attrPos = p->pos;  // dummy
+	    sym->attrPos = p->pos;  /* dummy */
 	else if ((p->pos == NULL) != (sym->attrPos == NULL))
 	    Parser_SemErr(self, "attribute mismatch between declaration and use of this symbol");
 	break;
@@ -732,46 +781,48 @@ Parser_Factor(Parser_t * self, Graph_t* &g) {
 	Parser_Get(self);
 	Parser_Expression(self, g);
 	Parser_Expect(self, 33);
-	Tab_MakeOption(g); 
+	Tab_MakeOption(self->tab, *g); 
 	break;
     }
     case 34: {
 	Parser_Get(self);
 	Parser_Expression(self, g);
 	Parser_Expect(self, 35);
-	Tab_MakeIteration(g); 
+	Tab_MakeIteration(self->tab, *g);
 	break;
     }
     case 39: {
-	SemText(pos);
-	Node *p = Tab_NewNode(node_sem, (Symbol_t*)NULL, 0);
+	Parser_SemText(self, &pos);
+	Node_t * p = Tab_NewNodeTSL(self->tab, node_sem, NULL, 0);
 	p->pos = pos;
-	g = new Graph_t(p);
+	*g = GraphP(NULL, p);
 	break;
     }
     case 23: {
 	Parser_Get(self);
-	Node *p = Tab_NewNode(node_any, (Symbol_t*)NULL, 0);  // p.set is set in Tab_SetupAnys
-	g = new Graph_t(p);
+	/* p.set is set in Tab_SetupAnys */
+	Node_t * p = Tab_NewNodeTSL(self->tab, node_any, NULL, 0);
+	*g = GraphP(NULL, p);
 	break;
     }
     case 36: {
 	Parser_Get(self);
-	Node *p = Tab_NewNode(node_sync, (Symbol_t*)NULL, 0);
-	g = new Graph_t(p);
+	Node_t * p = Tab_NewNodeTSL(self->tab, node_sync, NULL, 0);
+	*g = GraphP(NULL, p);
 	break;
     }
     default: Parser_SynErr(self, 49); break;
     }
-    if (g == NULL) // invalid start of Factor
-	g = new Graph_t(Tab_NewNode(node_eps, (Symbol_t*)NULL, 0));
+    if (*g == NULL) // invalid start of Factor
+	*g = GraphP(NULL, Tab_NewNodeTSL(self->tab, node_eps, NULL, 0));
 }
 
-void
-Parser_Attribs(Parser_t * self, Node *p) {
+static void /* OK */
+Parser_Attribs(Parser_t * self, Node_t * p) {
     if (self->la->kind == 24) {
 	Parser_Get(self);
-	int beg = self->la->pos; int col = self->la->col; 
+	Token_t * beg;
+	Scanner_IncRef(self->scanner, beg = self->la);
 	while (Parser_StartOf(self, 9)) {
 	    if (Parser_StartOf(self, 10)) {
 		Parser_Get(self);
@@ -781,10 +832,12 @@ Parser_Attribs(Parser_t * self, Node *p) {
 	    }
 	}
 	Parser_Expect(self, 25);
-	if (t->pos > beg) p->pos = new Position(beg, t->pos - beg, col); 
+	p->pos = Scanner_GetPosition(self->scanner, beg, self->t);
+	Scanner_DecRef(self->scanner, beg);
     } else if (self->la->kind == 26) {
 	Parser_Get(self);
-	int beg = self->la->pos; int col = self->la->col; 
+	Token_t * beg;
+	Scanner_IncRef(self->scanner, beg = self->la);
 	while (Parser_StartOf(self, 11)) {
 	    if (Parser_StartOf(self, 12)) {
 		Parser_Get(self);
@@ -794,11 +847,12 @@ Parser_Attribs(Parser_t * self, Node *p) {
 	    }
 	}
 	Parser_Expect(self, 27);
-	if (t->pos > beg) p->pos = new Position(beg, t->pos - beg, col); 
+	p->pos = Scanner_GetPosition(self->scanner, beg, self->t);
+	Scanner_DecRef(self->scanner, beg);
     } else Parser_SynErr(self, 50);
 }
 
-void /* OK */
+static void /* OK */
 Parser_Condition(Parser_t * self) {
     while (Parser_StartOf(self, 20)) {
 	if (self->la->kind == 30) {
@@ -811,59 +865,65 @@ Parser_Condition(Parser_t * self) {
     Parser_Expect(self, 31);
 }
 
-void
-Parser_TokenTerm(Parser_t * self, Graph_t* &g) {
-    Graph_t *g2; 
-    TokenFactor(g);
+static void /* OK */
+Parser_TokenTerm(Parser_t * self, Graph_t ** g) {
+    Graph_t * g2; 
+    Parser_TokenFactor(self, g);
     while (Parser_StartOf(self, 8)) {
-	TokenFactor(g2);
-	Tab_MakeSequence(g, g2); 
+	Parser_TokenFactor(self, &g2);
+	Tab_MakeSequence(self->tab, *g, g2); 
     }
     if (self->la->kind == 38) {
 	Parser_Get(self);
 	Parser_Expect(self, 30);
-	Parser_TokenExpr(g2);
-	Tab_SetContextTrans(g2->l); dfa->hasCtxMoves = TRUE;
-	Tab_MakeSequence(g, g2); 
+	Parser_TokenExpr(self, &g2);
+	Tab_SetContextTrans(self->tab, g2->l);
+	self->dfa->hasCtxMoves = TRUE;
+	Tab_MakeSequence(self->tab, *g, g2);
 	Parser_Expect(self, 31);
     }
 }
 
-void
+static void /* OK */
 Parser_TokenFactor(Parser_t * self, Graph_t ** g) {
-    wchar_t* name = NULL; int kind; 
-    g = NULL; 
+    char * name = NULL; int kind;
+    *g = NULL;
     if (self->la->kind == 1 || self->la->kind == 3 || self->la->kind == 5) {
-	Sym(name, kind);
-	if (kind == id) {
-	    CharClass_t *c = Tab_FindCharClass(self->tab, name);
+	Parser_Sym(self, &name, &kind);
+	if (kind == Parser_id) {
+	    CharClass_t * c = Tab_FindCharClassS(self->tab, name);
 	    if (c == NULL) {
 		Parser_SemErr(self, "undefined name");
-		c = Tab_NewCharClass_t(name, CharSet(NULL));
+		c = Tab_NewCharClass(self->tab, name, CharSet(NULL));
 	    }
-	    Node *p = Tab_NewNode(node_clas, (Symbol_t*)NULL, 0); p->val = c->n;
-	    g = new Graph_t(p);
-	    tokenString = coco_string_create(noString);
-	} else { // str
-	    g = Tab_StrToGraph_t(name);
-	    if (tokenString == NULL) tokenString = coco_string_create(name);
-	    else tokenString = coco_string_create(noString);
+	    Node_t * p = Tab_NewNodeTSL(self->tab, node_clas, NULL, 0);
+	    p->val = c->n;
+	    *g = GraphP(NULL, p);
+	    self->tokenString = strdup(self->noString);
+	} else { /* Parser_str */
+	    *g = Tab_StrToGraph(self->tab, name);
+	    if (self->tokenString == NULL) self->tokenString = strdup(name);
+	    else {
+		free(self->tokenString);
+		self->tokenString = strdup(self->noString);
+	    }
 	}
     } else if (self->la->kind == 30) {
 	Parser_Get(self);
-	Parser_TokenExpr(g);
+	Parser_TokenExpr(self, g);
 	Parser_Expect(self, 31);
     } else if (self->la->kind == 32) {
 	Parser_Get(self);
-	Parser_TokenExpr(g);
+	Parser_TokenExpr(self, g);
 	Parser_Expect(self, 33);
-	Tab_MakeOption(g); 
+	Tab_MakeOption(self->tab, *g); 
     } else if (self->la->kind == 34) {
 	Parser_Get(self);
-	Parser_TokenExpr(g);
+	Parser_TokenExpr(self, g);
 	Parser_Expect(self, 35);
-	Tab_MakeIteration(self->tab, g); 
+	Tab_MakeIteration(self->tab, *g); 
     } else Parser_SynErr(self, 51);
-    if (g == NULL) // invalid start of TokenFactor
-	g = new Graph_t(Tab_NewNode(node_eps, (Symbol_t*)NULL, 0)); 
+    if (g == NULL) /* invalid start of TokenFactor */
+	*g = GraphP(NULL, Tab_NewNodeTSL(self->tab, node_eps, NULL, 0));
 }
+/*---- enable ----*/

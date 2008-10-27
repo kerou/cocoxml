@@ -24,11 +24,12 @@
 #ifndef  COCO_PARSERGEN_H
 #define  COCO_PARSERGEN_H
 
-#ifndef  COCO_DEFS_H
-#include "Defs.h"
+#ifndef  COCO_POSITION_H
+#include "Position.h"
 #endif
 
 struct ParserGen_s {
+    Position_t * usingPos;
 };
 
 void ParserGen_CopySourcePart(ParserGen_t * self,
