@@ -1,4 +1,7 @@
 #include <iostream>
+#include "XmlParser.h"
+#include "XmlScanner.h"
+#include "RSSData.hxx"
 
 int main(int argc, char **argv)
 {
