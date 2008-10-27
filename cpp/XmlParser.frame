@@ -33,7 +33,7 @@ Coco/R itself) does not fall under the GNU General Public License.
 
 /*---- headerdef ----*/
 
-#include "XmlScanner.h"
+#include "XmlScanner.hxx"
 
 /*---- namespace_open ----*/
 
@@ -117,8 +117,8 @@ Coco/R itself) does not fall under the GNU General Public License.
 /*---- begin ----*/
 
 #include <wchar.h>
-#include "XmlParser.h"
-#include "XmlScanner.h"
+#include "XmlParser.hxx"
+#include "XmlScanner.hxx"
 
 
 /*---- namespace_open ----*/
