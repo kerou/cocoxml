@@ -141,10 +141,53 @@ DumpBuffer_Full(DumpBuffer_t * self)
     return self->cur == self->last;
 }
 
+const char *
+UnescapeCh(DumpBuffer_t * buf, const char * s)
+{
+    int ch; const char * sbk;
+    if (*s != '\\') {
+	DumpBuffer_Print(buf, "%c", *s); return s + 1;
+    }
+    switch (*s) {
+    case '\\': DumpBuffer_Print(buf, "%c",  '\\'); return s + 2;
+    case 'a': DumpBuffer_Print(buf, "%c", '\a'); return s + 2;
+    case 'b': DumpBuffer_Print(buf, "%c", '\b'); return s + 2;
+    case 'f': DumpBuffer_Print(buf, "%c", '\f'); return s + 2;
+    case 'n': DumpBuffer_Print(buf, "%c", '\n'); return s + 2;
+    case 'r': DumpBuffer_Print(buf, "%c", '\r'); return s + 2;
+    case 't': DumpBuffer_Print(buf, "%c", '\t'); return s + 2;
+    case 'v': DumpBuffer_Print(buf, "%c", '\v'); return s + 2;
+    case '\'': DumpBuffer_Print(buf, "%c", '\''); return s + 2;
+    case '\"': DumpBuffer_Print(buf, "%c", '\"'); return s + 2;
+    case '0': s += 2; sbk = s; ch = 0;
+	while (s - sbk < 3)
+	    if (*s >= '0' && *s <= '7') { ch = (ch << 3) | (*s++ - '0'); }
+	    else break;
+	break;
+    case 'x': s += 2; sbk = s; ch = 0;
+	while (s - sbk < 3)
+	    if (*s >= '0' && *s <= '9') ch = (ch << 4) | (*s++ - '0');
+	    else if (*s >= 'A' && *s <= 'F') ch = (ch << 4) | (*s++ - 'A' + 10);
+	    else if (*s >= 'a' && *s <= 'f') ch = (ch << 4) | (*s++ - 'a' + 10);
+	    else break;
+    default:
+	return NULL;
+    }
+    DumpBuffer_Print(buf, "%c", ch);
+    return s;
+}
+
 char *
 Unescape(const char * s)
 {
-    /* The first " and the last " have to be cut out. */
+    char dbufspace[1024]; DumpBuffer_t dbuf;
+    DumpBuffer(&dbuf, dbufspace, sizeof(dbufspace));
+    if (*s == '"') ++s;
+    while (*s) {
+	if (s[0] == '"' && s[1] == 0) break;
+	if (!(s = UnescapeCh(&dbuf, s))) return NULL; /* Error encountered. */
+    }
+    return CocoStrdup(dbufspace);
 }
 
 void
@@ -152,13 +195,17 @@ EscapeCh(DumpBuffer_t * buf, int ch)
 {
     switch (ch) {
     case '\\': DumpBuffer_Print(buf, "\\\\"); break;
+    case '\a': DumpBuffer_Print(buf, "\\a"); break;
+    case '\b': DumpBuffer_Print(buf, "\\b"); break;
+    case '\f': DumpBuffer_Print(buf, "\\f"); break;
+    case '\n': DumpBuffer_Print(buf, "\\n"); break;
+    case '\r': DumpBuffer_Print(buf, "\\r"); break;
+    case '\t': DumpBuffer_Print(buf, "\\t"); break;
+    case '\v': DumpBuffer_Print(buf, "\\v"); break;
     case '\'': DumpBuffer_Print(buf, "\\'"); break;
     case '\"': DumpBuffer_Print(buf, "\\\""); break;
-    case '\t': DumpBuffer_Print(buf, "\\t"); break;
-    case '\r': DumpBuffer_Print(buf, "\\r"); break;
-    case '\n': DumpBuffer_Print(buf, "\\n"); break;
     default:
-	if (ch < ' ' || ch > 127) DumpBuffer_Print(buf, "%%%02X", ch);
+	if (ch < ' ' || ch > 127) DumpBuffer_Print(buf, "\\x%03x", ch);
 	else DumpBuffer_Print(buf, "%c", ch);
 	break;
     }
