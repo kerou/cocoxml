@@ -23,16 +23,28 @@
 -------------------------------------------------------------------------*/
 #include  <stdio.h>
 #include  <stdlib.h>
+#include  <string.h>
 #include  "Position.h"
 
+/*------------------------------ Position_t ------------------------------*/
 Position_t *
-Position(Position_t * self, int beg, int len, int col)
+Position(int beg, int len, int col, const char * text)
 {
-    self = CocoMalloc(sizeof(Position_t));
+    Position_t * self;
+    if (!(self = malloc(sizeof(Position_t) + len + 1))) return NULL;
     self->beg = beg;
     self->len = len;
     self->col = col;
+    self->text = (char *)(self + 1);
+    memcpy(self->text, text, len);
+    self->text[0] = 0;
     return self;
+}
+
+void
+Position_Destruct(Position_t * self)
+{
+    free(self);
 }
 
 const char *

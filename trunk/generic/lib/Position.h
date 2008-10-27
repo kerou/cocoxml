@@ -34,9 +34,11 @@ struct Position_s {
     int beg;
     int len;
     int col;
+    char * text;
 };
 
-Position_t * Position(Position_t * self, int beg, int len, int col);
+Position_t * Position(int beg, int len, int col, const char * text);
+void Position_Destruct(Position_t * self);
 
 const char *
 Position_Dump(Position_t * self, char * buf, size_t szbuf);
