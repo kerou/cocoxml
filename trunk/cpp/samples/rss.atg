@@ -21,9 +21,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
    CocoXml rss.atg
 -------------------------------------------------------------------------*/
 
-COMPILER Rss
+#include "RSSData.hxx"
 
-    Rss rss;
+COMPILER Rss
+    RssClass *rss;
 
 /*-------------------------------------------------------------------------*/
 OPTIONS TEXT
@@ -71,138 +72,138 @@ ATTRS
 /*-------------------------------------------------------------------------*/
 PRODUCTIONS
 
-Rss = (. Channel channel; rss = new Rss(); .)
+Rss = (. ChannelClass *channel; rss = new RssClass(); .)
     RSS {
-    Channel<.channel.> (. rss.AddChannel(channel); .)
+    Channel<.channel.> (. rss->AddChannel(channel); .)
     } END_RSS.
 
-Channel<.Channel channel.> = (. channel = new Channel(); .)
+Channel<.ChannelClass* &channel.> = (. channel = new ChannelClass(); .)
     CHANNEL { ChannelProperty<channel> } END_CHANNEL.
 
-ChannelProperty<Channel channel>  (. string value;
-                         Cloud cloud;
-                     Image image;
-                     TextInput textInput;
-                     Item item; .) =
-    Title<.value.>            (. channel.title = value; .)
-    | Link<.value.>           (. channel.link = value; .)
-    | Description<.value.>    (. channel.description = value; .)
-    | Language<.value.>       (. channel.language = value; .)
-    | Copyright<.value.>      (. channel.copyright = value; .)
-    | ManagingEditor<.value.> (. channel.managingEditor = value; .)
-    | WebMaster<.value.>      (. channel.webMaster = value; .)
-    | PubDate<.value.>        (. channel.pubDate = value; .)
-    | LastBuildDate<.value.>  (. channel.lastBuildDate = value; .)
-    | Category<.value.>       (. channel.category = value; .)
-    | Generator<.value.>      (. channel.generator = value; .)
-    | Docs<.value.>           (. channel.docs = value; .)
-    | Cloud<.cloud.>          (. channel.cloud = cloud; .)
-    | Ttl<.value.>            (. channel.ttl = value; .)
-    | Image<.image.>          (. channel.image = image; .)
-    | Rating<.value.>         (. channel.rating = value; .)
-    | TextInput<.textInput.>  (. channel.textInput = textInput; .)
-    | SkipHours<.value.>      (. channel.skipHours = value; .)
-    | SkipDays<.value.>       (. channel.skipDays = value; .)
-    | Item<.item.>            (. channel.AddItem(item); .)
+ChannelProperty<ChannelClass *channel>  (. wchar_t* value;
+                         CloudClass *cloud;
+                     ImageClass *image;
+                     TextInputClass *textInput;
+                     ItemClass *item; .) =
+    Title<.value.>            (. channel->title = value; .)
+    | Link<.value.>           (. channel->link = value; .)
+    | Description<.value.>    (. channel->description = value; .)
+    | Language<.value.>       (. channel->language = value; .)
+    | Copyright<.value.>      (. channel->copyright = value; .)
+    | ManagingEditor<.value.> (. channel->managingEditor = value; .)
+    | WebMaster<.value.>      (. channel->webMaster = value; .)
+    | PubDate<.value.>        (. channel->pubDate = value; .)
+    | LastBuildDate<.value.>  (. channel->lastBuildDate = value; .)
+    | Category<.value.>       (. channel->category = value; .)
+    | Generator<.value.>      (. channel->generator = value; .)
+    | Docs<.value.>           (. channel->docs = value; .)
+    | Cloud<.cloud.>          (. channel->cloud = cloud; .)
+    | Ttl<.value.>            (. channel->ttl = value; .)
+    | Image<.image.>          (. channel->image = image; .)
+    | Rating<.value.>         (. channel->rating = value; .)
+    | TextInput<.textInput.>  (. channel->textInput = textInput; .)
+    | SkipHours<.value.>      (. channel->skipHours = value; .)
+    | SkipDays<.value.>       (. channel->skipDays = value; .)
+    | Item<.item.>            (. channel->AddItem(item); .)
 .
 
-Cloud<.Cloud cloud.> = (. cloud = new Cloud(); .)
+Cloud<.CloudClass* &cloud.> = (. cloud = new CloudClass(); .)
     CLOUD
-    { ATTR_DOMAIN              (. cloud.domain = t.val; .)
-    | ATTR_PORT                (. cloud.port = t.val; .)
-    | ATTR_PATH                (. cloud.path = t.val; .)
-    | ATTR_REGISTER_PROCEDURE  (. cloud.registerProcedure = t.val; .)
-    | ATTR_PROTOCOL            (. cloud.protocol = t.val; .)
+    { ATTR_DOMAIN              (. cloud->domain = t.val; .)
+    | ATTR_PORT                (. cloud->port = t.val; .)
+    | ATTR_PATH                (. cloud->path = t.val; .)
+    | ATTR_REGISTER_PROCEDURE  (. cloud->registerProcedure = t.val; .)
+    | ATTR_PROTOCOL            (. cloud->protocol = t.val; .)
     } END_CLOUD
 .
 
-Image<.Image image.> = (. image = new Image(); .)
+Image<.ImageClass* &image.> = (. image = new ImageClass(); .)
     IMAGE { ImageProperty<image> } END_IMAGE.
 
-ImageProperty<Image image>  (. string value; .) =
-    Url<.value.>      (. image.url = value; .)
-    | Title<.value.>  (. image.title = value; .)
-    | Link<.value.>   (. image.link = value; .)
-    | Width<.value.>  (. image.width = value; .)
-    | Height<.value.> (. image.height = value; .)
+ImageProperty<ImageClass *image>  (. wchar_t* value; .) =
+    Url<.value.>      (. image->url = value; .)
+    | Title<.value.>  (. image->title = value; .)
+    | Link<.value.>   (. image->link = value; .)
+    | Width<.value.>  (. image->width = value; .)
+    | Height<.value.> (. image->height = value; .)
 .
 
-TextInput<.TextInput textInput.> = (. textInput = new TextInput(); .)
+TextInput<.TextInputClass* &textInput.> = (. textInput = new TextInputClass(); .)
     TEXT_INPUT { TextInputProperty<textInput> } END_TEXT_INPUT.
 
-TextInputProperty<TextInput textInput> (. string value; .) =
-    Title<.value.>         (. textInput.title = value; .)
-    | Description<.value.> (. textInput.description = value; .)
-    | Name<.value.>        (. textInput.name = value; .)
-    | Link<.value.>        (. textInput.link = value; .)
+TextInputProperty<TextInputClass* &textInput> (. wchar_t* value; .) =
+    Title<.value.>         (. textInput->title = value; .)
+    | Description<.value.> (. textInput->description = value; .)
+    | Name<.value.>        (. textInput->name = value; .)
+    | Link<.value.>        (. textInput->link = value; .)
 .
 
-Item<.Item item.> = (. item = new Item(); .)
+Item<.ItemClass* &item.> = (. item = new ItemClass(); .)
     ITEM { ItemProperty<item> } END_ITEM.
 
-ItemProperty<Item item> (. string value; Image image; .) =
-    Title<.value.>          (. item.title = value; .)
-    | Link<.value.>         (. item.link = value; .)
-    | Description<.value.>  (. item.description = value; .)
-    | Author<.value.>       (. item.author = value; .)
-    | Category<.value.>     (. item.category = value; .)
-    | Comments<.value.>     (. item.comments = value; .)
-    | Enclosure<.value.>    (. item.enclosure = value; .)
-    | Guid<.value.>         (. item.guid = value; .)
-    | PubDate<.value.>      (. item.pubdate = value; .)
-    | Source<.value.>       (. item.source = value; .)
-    | Image<.image.>        (. item.image = image; .)
+ItemProperty<ItemClass *item> (. wchar_t* value; ImageClass *image; .) =
+    Title<.value.>          (. item->title = value; .)
+    | Link<.value.>         (. item->link = value; .)
+    | Description<.value.>  (. item->description = value; .)
+    | Author<.value.>       (. item->author = value; .)
+    | Category<.value.>     (. item->category = value; .)
+    | Comments<.value.>     (. item->comments = value; .)
+    | Enclosure<.value.>    (. item->enclosure = value; .)
+    | Guid<.value.>         (. item->guid = value; .)
+    | PubDate<.value.>      (. item->pubdate = value; .)
+    | Source<.value.>       (. item->source = value; .)
+    | Image<.image.>        (. item->image = image; .)
 .
 
 
-Title<.string value.> = TITLE TEXT (. value = t.val; .) END_TITLE.
+Title<.wchar_t* value.> = TITLE TEXT (. value = t.val; .) END_TITLE.
 
-Link<.string value.> = LINK TEXT (. value = t.val; .) END_LINK .
+Link<.wchar_t* value.> = LINK TEXT (. value = t.val; .) END_LINK .
 
-Description<.string value.> = DESCRIPTION TEXT (. value = t.val; .) END_DESCRIPTION .
+Description<.wchar_t* value.> = DESCRIPTION TEXT (. value = t.val; .) END_DESCRIPTION .
 
-Language<.string value.> = LANGUAGE TEXT (. value = t.val; .) END_LANGUAGE.
+Language<.wchar_t* value.> = LANGUAGE TEXT (. value = t.val; .) END_LANGUAGE.
 
-Copyright<.string value.> = COPYRIGHT TEXT (. value = t.val; .) END_COPYRIGHT.
+Copyright<.wchar_t* value.> = COPYRIGHT TEXT (. value = t.val; .) END_COPYRIGHT.
 
-ManagingEditor<.string value.> = MANAGING_EDITOR TEXT (. value = t.val; .) END_MANAGING_EDITOR.
+ManagingEditor<.wchar_t* value.> = MANAGING_EDITOR TEXT (. value = t.val; .) END_MANAGING_EDITOR.
 
-WebMaster<.string value.> = WEB_MASTER TEXT (. value = t.val; .) END_WEB_MASTER.
+WebMaster<.wchar_t* value.> = WEB_MASTER TEXT (. value = t.val; .) END_WEB_MASTER.
 
-PubDate<.string value.> = PUB_DATE TEXT (. value = t.val; .) END_PUB_DATE.
+PubDate<.wchar_t* value.> = PUB_DATE TEXT (. value = t.val; .) END_PUB_DATE.
 
-LastBuildDate<.string value.> = LAST_BUILD_DATE TEXT (. value = t.val; .) END_LAST_BUILD_DATE.
+LastBuildDate<.wchar_t* value.> = LAST_BUILD_DATE TEXT (. value = t.val; .) END_LAST_BUILD_DATE.
 
-Category<.string value.> = CATEGORY TEXT (. value = t.val; .) END_CATEGORY.
+Category<.wchar_t* value.> = CATEGORY TEXT (. value = t.val; .) END_CATEGORY.
 
-Generator<.string value.> = GENERATOR TEXT (. value = t.val; .) END_GENERATOR.
+Generator<.wchar_t* value.> = GENERATOR TEXT (. value = t.val; .) END_GENERATOR.
 
-Docs<.string value.> = DOCS TEXT (. value = t.val; .) END_DOCS.
+Docs<.wchar_t* value.> = DOCS TEXT (. value = t.val; .) END_DOCS.
 
-Ttl<.string value.> = TTL TEXT (. value = t.val; .) END_TTL.
+Ttl<.wchar_t* value.> = TTL TEXT (. value = t.val; .) END_TTL.
 
-Url<.string value.> = URL TEXT (. value = t.val; .) END_URL.
+Url<.wchar_t* value.> = URL TEXT (. value = t.val; .) END_URL.
 
-Width<.string value.> = WIDTH TEXT (. value = t.val; .) END_WIDTH.
+Width<.wchar_t* value.> = WIDTH TEXT (. value = t.val; .) END_WIDTH.
 
-Height<.string value.> = HEIGHT TEXT (. value = t.val; .) END_HEIGHT.
+Height<.wchar_t* value.> = HEIGHT TEXT (. value = t.val; .) END_HEIGHT.
 
-Rating<.string value.> = RATING TEXT (. value = t.val; .) END_RATING.
+Rating<.wchar_t* value.> = RATING TEXT (. value = t.val; .) END_RATING.
 
-Name<.string value.> = NAME TEXT (. value = t.val; .) END_NAME.
+Name<.wchar_t* value.> = NAME TEXT (. value = t.val; .) END_NAME.
 
-SkipHours<.string value.> = SKIP_HOURS TEXT (. value = t.val; .) END_SKIP_HOURS.
+SkipHours<.wchar_t* value.> = SKIP_HOURS TEXT (. value = t.val; .) END_SKIP_HOURS.
 
-SkipDays<.string value.> = SKIP_DAYS TEXT (. value = t.val; .) END_SKIP_DAYS.
+SkipDays<.wchar_t* value.> = SKIP_DAYS TEXT (. value = t.val; .) END_SKIP_DAYS.
 
-Author<.string value.> = AUTHOR TEXT (. value = t.val; .) END_AUTHOR.
+Author<.wchar_t* value.> = AUTHOR TEXT (. value = t.val; .) END_AUTHOR.
 
-Comments<.string value.> = COMMENTS TEXT (. value = t.val; .) END_COMMENTS.
+Comments<.wchar_t* value.> = COMMENTS TEXT (. value = t.val; .) END_COMMENTS.
 
-Enclosure<.string value.> = ENCLOSURE TEXT (. value = t.val; .) END_ENCLOSURE.
+Enclosure<.wchar_t* value.> = ENCLOSURE TEXT (. value = t.val; .) END_ENCLOSURE.
 
-Guid<.string value.> = GUID TEXT (. value = t.val; .) END_GUID.
+Guid<.wchar_t* value.> = GUID TEXT (. value = t.val; .) END_GUID.
 
-Source<.string value.> = SOURCE TEXT (. value = t.val; .) END_SOURCE.
+Source<.wchar_t* value.> = SOURCE TEXT (. value = t.val; .) END_SOURCE.
 
 END Rss.
