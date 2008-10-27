@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 
+typedef struct DFA_s DFA_t;
 #ifndef  COCO_CHARSET_H
 #include "CharSet.h"
 #endif
@@ -36,7 +37,6 @@
 
 EXTC_BEGIN
 
-typedef struct DFA_s DFA_t;
 struct DFA_s {
     /* Private members. */
     int         maxStates;

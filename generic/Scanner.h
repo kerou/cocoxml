@@ -29,7 +29,7 @@
 #define  COCO_SCANNER_H
 
 #include  <stdio.h>
-
+typedef struct Token_s Token_t;
 #ifndef  COCO_POSITION_H
 #include "Position.h"
 #endif
@@ -40,7 +40,6 @@ EXTC_BEGIN
 #define EoF            -1
 #define ErrorChr       -2
 
-typedef struct Token_s Token_t;
 struct Token_s
 {
     Token_t * next;
