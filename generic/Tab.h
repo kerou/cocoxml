@@ -117,7 +117,7 @@ void Tab_CompDeletableSymbols(Tab_t * self);
 void Tab_RenumberPragmas(Tab_t * self);
 void Tab_CompSymbolSets(Tab_t * self);
 
-Bool_t Tab_GrammerOk(Tab_t * self);
+Bool_t Tab_GrammarOk(Tab_t * self);
 Bool_t Tab_NoCircularProductions(Tab_t * self);
 void Tab_CheckLL1(Tab_t * self);
 void Tab_CheckResolvers(Tab_t * self);
