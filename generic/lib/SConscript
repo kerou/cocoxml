@@ -6,7 +6,7 @@ Import('env')
 
 lib = env.Library('coco', ['Defs.c', 'Action.c', 'ArrayList.c', 'BitArray.c',
                            'CharSet.c', 'CharClass.c', 'Comment.c', 'Frame.c',
-                           'Graph.c', 'HashTable.c', 'Melted.c',
-                           'Node.c', 'ParserGen.c', 'Position.c',
-                           'SortedList.c', 'State.c', 'Symbol.c', 'Target.c'])
+                           'Graph.c', 'HashTable.c', 'Melted.c', 'Node.c',
+                           'ParserGen.c', 'Position.c', 'SortedList.c',
+                           'State.c', 'Symbol.c', 'Target.c'])
 Export('lib')
