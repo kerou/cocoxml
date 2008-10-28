@@ -141,10 +141,10 @@ void XmlParser::Get() {
 /*---- pragmas ----*/
 		if (dummyToken != t) {
 			dummyToken->kind = t->kind;
-			dummyToken->pos = t->pos;
+            //dummyToken->pos = t->pos;
 			dummyToken->col = t->col;
 			dummyToken->line = t->line;
-			dummyToken->next = NULL;
+			//dummyToken->next = NULL;
 			coco_string_delete(dummyToken->val);
 			dummyToken->val = coco_string_create(t->val);
 			t = dummyToken;
@@ -188,7 +188,7 @@ void XmlParser::Parse() {
 	Expect(0);
 }
 
-XmlParser::XmlParser(Scanner *scanner) {
+XmlParser::XmlParser(XmlScanner *scanner) {
 /*---- constants ----*/
 	dummyToken = NULL;
 	t = la = NULL;
