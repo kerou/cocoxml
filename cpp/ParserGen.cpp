@@ -357,7 +357,7 @@ void ParserGen::GenProductions() {
 	for (int i=0; i<tab->nonterminals->Count; i++) {
 		sym = (Symbol*)((*(tab->nonterminals))[i]);
 		curSy = sym;
-		fwprintf(gen, L"void Parser::%ls(", sym->name);
+		fwprintf(gen, L"void XmlParser::%ls(", sym->name);
 		CopySourcePart(sym->attrPos, 0);
 		fwprintf(gen, L") {\n");
 		CopySourcePart(sym->semPos, 2);
