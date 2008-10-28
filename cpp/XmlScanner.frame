@@ -165,8 +165,8 @@ public:
 
     void AppendToken(int kind, int linenumber, int lineposition, wchar_t* value);
     void AppendTokens();
-    Token Scan ();
-    Token Peek ();
+    Token* Scan ();
+    Token* Peek ();
     void ResetPeek();
 }; // end Scanner
 
@@ -206,7 +206,7 @@ Coco/R itself) does not fall under the GNU General Public License.
 
 #include <memory.h>
 #include <string.h>
-#include "Scanner.h"
+#include "XmlScanner.hxx"
 
 
 using namespace std;
