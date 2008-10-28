@@ -109,11 +109,11 @@ ChannelProperty<ChannelClass *channel>  (. wchar_t* value;
 
 Cloud<.CloudClass* &cloud.> = (. cloud = new CloudClass(); .)
     CLOUD
-    { ATTR_DOMAIN              (. cloud->domain = t.val; .)
-    | ATTR_PORT                (. cloud->port = t.val; .)
-    | ATTR_PATH                (. cloud->path = t.val; .)
-    | ATTR_REGISTER_PROCEDURE  (. cloud->registerProcedure = t.val; .)
-    | ATTR_PROTOCOL            (. cloud->protocol = t.val; .)
+    { ATTR_DOMAIN              (. cloud->domain = t->val; .)
+    | ATTR_PORT                (. cloud->port = t->val; .)
+    | ATTR_PATH                (. cloud->path = t->val; .)
+    | ATTR_REGISTER_PROCEDURE  (. cloud->registerProcedure = t->val; .)
+    | ATTR_PROTOCOL            (. cloud->protocol = t->val; .)
     } END_CLOUD
 .
 
@@ -156,54 +156,54 @@ ItemProperty<ItemClass *item> (. wchar_t* value; ImageClass *image; .) =
 .
 
 
-Title<.wchar_t* value.> = TITLE TEXT (. value = t.val; .) END_TITLE.
+Title<.wchar_t* value.> = TITLE TEXT (. value = t->val; .) END_TITLE.
 
-Link<.wchar_t* value.> = LINK TEXT (. value = t.val; .) END_LINK .
+Link<.wchar_t* value.> = LINK TEXT (. value = t->val; .) END_LINK .
 
-Description<.wchar_t* value.> = DESCRIPTION TEXT (. value = t.val; .) END_DESCRIPTION .
+Description<.wchar_t* value.> = DESCRIPTION TEXT (. value = t->val; .) END_DESCRIPTION .
 
-Language<.wchar_t* value.> = LANGUAGE TEXT (. value = t.val; .) END_LANGUAGE.
+Language<.wchar_t* value.> = LANGUAGE TEXT (. value = t->val; .) END_LANGUAGE.
 
-Copyright<.wchar_t* value.> = COPYRIGHT TEXT (. value = t.val; .) END_COPYRIGHT.
+Copyright<.wchar_t* value.> = COPYRIGHT TEXT (. value = t->val; .) END_COPYRIGHT.
 
-ManagingEditor<.wchar_t* value.> = MANAGING_EDITOR TEXT (. value = t.val; .) END_MANAGING_EDITOR.
+ManagingEditor<.wchar_t* value.> = MANAGING_EDITOR TEXT (. value = t->val; .) END_MANAGING_EDITOR.
 
-WebMaster<.wchar_t* value.> = WEB_MASTER TEXT (. value = t.val; .) END_WEB_MASTER.
+WebMaster<.wchar_t* value.> = WEB_MASTER TEXT (. value = t->val; .) END_WEB_MASTER.
 
-PubDate<.wchar_t* value.> = PUB_DATE TEXT (. value = t.val; .) END_PUB_DATE.
+PubDate<.wchar_t* value.> = PUB_DATE TEXT (. value = t->val; .) END_PUB_DATE.
 
-LastBuildDate<.wchar_t* value.> = LAST_BUILD_DATE TEXT (. value = t.val; .) END_LAST_BUILD_DATE.
+LastBuildDate<.wchar_t* value.> = LAST_BUILD_DATE TEXT (. value = t->val; .) END_LAST_BUILD_DATE.
 
-Category<.wchar_t* value.> = CATEGORY TEXT (. value = t.val; .) END_CATEGORY.
+Category<.wchar_t* value.> = CATEGORY TEXT (. value = t->val; .) END_CATEGORY.
 
-Generator<.wchar_t* value.> = GENERATOR TEXT (. value = t.val; .) END_GENERATOR.
+Generator<.wchar_t* value.> = GENERATOR TEXT (. value = t->val; .) END_GENERATOR.
 
-Docs<.wchar_t* value.> = DOCS TEXT (. value = t.val; .) END_DOCS.
+Docs<.wchar_t* value.> = DOCS TEXT (. value = t->val; .) END_DOCS.
 
-Ttl<.wchar_t* value.> = TTL TEXT (. value = t.val; .) END_TTL.
+Ttl<.wchar_t* value.> = TTL TEXT (. value = t->val; .) END_TTL.
 
-Url<.wchar_t* value.> = URL TEXT (. value = t.val; .) END_URL.
+Url<.wchar_t* value.> = URL TEXT (. value = t->val; .) END_URL.
 
-Width<.wchar_t* value.> = WIDTH TEXT (. value = t.val; .) END_WIDTH.
+Width<.wchar_t* value.> = WIDTH TEXT (. value = t->val; .) END_WIDTH.
 
-Height<.wchar_t* value.> = HEIGHT TEXT (. value = t.val; .) END_HEIGHT.
+Height<.wchar_t* value.> = HEIGHT TEXT (. value = t->val; .) END_HEIGHT.
 
-Rating<.wchar_t* value.> = RATING TEXT (. value = t.val; .) END_RATING.
+Rating<.wchar_t* value.> = RATING TEXT (. value = t->val; .) END_RATING.
 
-Name<.wchar_t* value.> = NAME TEXT (. value = t.val; .) END_NAME.
+Name<.wchar_t* value.> = NAME TEXT (. value = t->val; .) END_NAME.
 
-SkipHours<.wchar_t* value.> = SKIP_HOURS TEXT (. value = t.val; .) END_SKIP_HOURS.
+SkipHours<.wchar_t* value.> = SKIP_HOURS TEXT (. value = t->val; .) END_SKIP_HOURS.
 
-SkipDays<.wchar_t* value.> = SKIP_DAYS TEXT (. value = t.val; .) END_SKIP_DAYS.
+SkipDays<.wchar_t* value.> = SKIP_DAYS TEXT (. value = t->val; .) END_SKIP_DAYS.
 
-Author<.wchar_t* value.> = AUTHOR TEXT (. value = t.val; .) END_AUTHOR.
+Author<.wchar_t* value.> = AUTHOR TEXT (. value = t->val; .) END_AUTHOR.
 
-Comments<.wchar_t* value.> = COMMENTS TEXT (. value = t.val; .) END_COMMENTS.
+Comments<.wchar_t* value.> = COMMENTS TEXT (. value = t->val; .) END_COMMENTS.
 
-Enclosure<.wchar_t* value.> = ENCLOSURE TEXT (. value = t.val; .) END_ENCLOSURE.
+Enclosure<.wchar_t* value.> = ENCLOSURE TEXT (. value = t->val; .) END_ENCLOSURE.
 
-Guid<.wchar_t* value.> = GUID TEXT (. value = t.val; .) END_GUID.
+Guid<.wchar_t* value.> = GUID TEXT (. value = t->val; .) END_GUID.
 
-Source<.wchar_t* value.> = SOURCE TEXT (. value = t.val; .) END_SOURCE.
+Source<.wchar_t* value.> = SOURCE TEXT (. value = t->val; .) END_SOURCE.
 
 END Rss.
