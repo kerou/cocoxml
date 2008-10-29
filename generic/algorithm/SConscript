@@ -5,4 +5,5 @@
 Import('env')
 Import('libobjs')
 
-libobjs.extend(env.Object('EBNF.c'))
+libobjs.extend(map(lambda src: env.Object(src),
+                   ['EBNF.c', 'SymbolTable.c']))
