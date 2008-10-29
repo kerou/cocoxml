@@ -59,6 +59,7 @@ extern const CcNodeType_t * node_alt;
 extern const CcNodeType_t * node_iter;
 extern const CcNodeType_t * node_opt;
 
+/* OutputScheme types. */
 typedef struct CcOutputSchemeType_s CcOutputSchemeType_t;
 typedef struct CcOutputScheme_s CcOutputScheme_t;
 typedef struct CcSourceOutputSchemeType_s CcSourceOutputSchemeType_t;
@@ -68,9 +69,17 @@ typedef struct CcSourceOutputScheme_s CcSourceOutputScheme_t;
 typedef struct CcLexical_s CcLexical_t;
 typedef struct CcSyntax_s CcSyntax_t;
 typedef struct CcSymbolTable_s CcSymbolTable_t;
+
+/* Symbol */
+typedef struct CcSymbol_s CcSymbol_t;
+
 /* Lexical types */
 typedef struct CcCharSet_s CcCharSet_t;
 typedef struct CcCharClass_s CcCharClass_t;
+typedef struct CcComment_s CcComment_t;
+typedef struct CcAction_s CcAction_t;
+typedef struct CcState_s CcState_t;
+typedef struct CcTarget_s CcTarget_t;
 
 /* C Scheme types */
 typedef struct CcsErrorPool_s CcsErrorPool_t;

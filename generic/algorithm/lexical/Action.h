@@ -30,21 +30,19 @@
 
 EXTC_BEGIN
 
-struct Action_s {
-    int        typ;
-    int        sym;
-    int        tc;
-    Target_t * target;
-    Action_t * next;
+struct CcAction_s {
+    int          typ;
+    int          sym;
+    int          tc;
+    CcTarget_t * target;
+    CcAction_t * next;
 };
 
-Action_t * Action(Action_t * self, int typ, int sym, int tc);
-void Action_Destruct(Action_t * self);
-void Action_AddTarget(Action_t * self, Target_t * t);
-int Action_AddTargets(Action_t * self, Action_t * a);
-CharSet_t * Action_Symbols(Action_t * self, Tab_t * tab);
-void Action_ShiftWith(Action_t * self, CharSet_t * s, Tab_t * tab);
+CcAction_t * CcAction(CcAction_t * self, int typ, int sym, int tc);
+void CcAction_Destruct(CcAction_t * self);
+void CcAction_AddTarget(CcAction_t * self, CcTarget_t * t);
+int CcAction_AddTargets(CcAction_t * self, CcAction_t * a);
 
 EXTC_END
 
-#endif
+#endif /* COCO_ACTION_H */
