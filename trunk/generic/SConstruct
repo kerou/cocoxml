@@ -6,19 +6,27 @@ import os
 import os.path
 
 topsrc = os.getcwd()
+cpppath = [topsrc] + map(lambda subdir: os.path.join(topsrc, subdir),
+                         ['core', 'algorithm'])
 env = Environment(ENV = os.environ,
                   tools = ['gcc', 'g++', 'gnulink', 'gas', 'ar'],
                   CCFLAGS = ['-g', '-Wall'],
                   CPPDEFINES = ['_GNU_SOURCE'],
-                  CPPPATH = [topsrc,
-                             os.path.join(topsrc, 'lib')])
+                  CPPPATH = cpppath)
+Export('env')
+
+libobjs = []
+Export('libobjs')
 
 Export('env')
-SConscript(os.path.join('lib', 'SConscript'))
-Import('lib')
-SConscript(os.path.join('tests', 'SConscript'))
+SConscript(os.path.join('core', 'SConscript'))
+SConscript(os.path.join('algorithm', 'SConscript'))
 
-env.Program('Src2Frame', ['Src2Frame.c', lib])
-env.Program('TestScanner', ['TestScanner.c', 'Scanner.c'])
-env.Program('Coco', ['Coco.c', 'Scanner.c', 'Parser.c', 'DFA.c', 'Tab.c', lib])
-env.Program('CocoXml', ['CocoXml.c', lib])
+lib = env.Library('coco', libobjs)
+
+#SConscript(os.path.join('tests', 'SConscript'))
+
+#env.Program('Src2Frame', ['Src2Frame.c', lib])
+#env.Program('TestScanner', ['TestScanner.c', 'Scanner.c'])
+#env.Program('Coco', ['Coco.c', 'Scanner.c', 'Parser.c', 'DFA.c', 'Tab.c', lib])
+#env.Program('CocoXml', ['CocoXml.c', lib])
