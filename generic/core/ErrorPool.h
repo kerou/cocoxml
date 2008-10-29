@@ -24,36 +24,28 @@
 #ifndef  COCO_ERRORPOOL_H
 #define  COCO_ERRORPOOL_H
 
-#include  <stdarg.h>
-
-#ifndef   COCO_OBJECT_H
-#include  "Object.h"
+#ifndef   COCO_DEFS_H
+#include  "Defs.h"
 #endif
 
 EXTC_BEGIN
 
-struct CsErrorPoolType_s {
-    CsObjectType_t base;
-
-    void (* info)(CsErrorPool_t * self, const char * format, va_list ap);
-    void (* warning)(CsErrorPool_t * self, const char * format, va_list ap);
-    void (* error)(CsErrorPool_t * self, const char * format, va_list ap);
-    void (* fatal)(CsErrorPool_t * self, const char * format, va_list ap);
+struct CcsErrorPool_s {
+    FILE * fp;
+    int    warningCount;
+    int    errorCount;
 };
 
-struct CsErrorPool_s {
-    CsObject_t base;
-    int warningCount;
-    int errorCount;
-};
+CcsErrorPool_t * CcsErrorPool(CcsErrorPool_t * self, FILE * fp);
+void CcsErrorPool_Destruct(CcsErrorPool_t * self);
 
-CsErrorPool_t * CsErrorPool(CsErrorPool_t * self, const CsErrorPoolType_t * type);
-void CsErrorPool_Destruct(CsErrorPool_t * self);
-
-void CsErrorPool_Info(CsErrorPool_t *, const char * format, ...);
-void CsErrorPool_Warning(CsErrorPool_t * self, const char * format, ...);
-void CsErrorPool_Error(CsErrorPool_t * self, const char * format, ...);
-void CsErrorPool_Fatal(CsErrorPool_t * self, const char * format, ...);
+void CcsErrorPool_Info(CcsErrorPool_t *, const char * format, ...);
+void CcsErrorPool_Warning(CcsErrorPool_t * self, int line, int col,
+			  const char * format, ...);
+void CcsErrorPool_Error(CcsErrorPool_t * self, int line, int col,
+			const char * format, ...);
+void CcsErrorPool_Fatal(CcsErrorPool_t * self, int line, int col,
+			const char * format, ...);
 
 EXTC_END
 

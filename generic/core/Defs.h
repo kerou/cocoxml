@@ -48,8 +48,7 @@ typedef struct CsObject_s CsObject_t;
 typedef struct CsArrayList_s CsArrayList_t;
 typedef struct CsBitArray_s CsBitArray_t;
 typedef struct CsHashTable_s CsHashTable_t;
-typedef struct CsErrorPoolType_s CsErrorPoolType_t;
-typedef struct CsErrorPool_s CsErrorPool_t;
+
 
 /* EBNF types */
 typedef struct CsNodeType_s CsNodeType_t;
@@ -64,6 +63,9 @@ typedef struct CsOutputSchemeType_s CsOutputSchemeType_t;
 typedef struct CsOutputScheme_s CsOutputScheme_t;
 typedef struct CsSourceOutputSchemeType_s CsSourceOutputSchemeType_t;
 typedef struct CsSourceOutputScheme_s CsSourceOutputScheme_t;
+
+/* C Scheme types */
+typedef struct CcsErrorPool_s CcsErrorPool_t;
 
 #define CocoMalloc(size) _CocoMalloc_(size, __FILE__, __LINE__)
 void * _CocoMalloc_(size_t size, const char * fname, int line);
