@@ -2,12 +2,8 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: GPLv2
 
-import os.path
-
 Import('env')
 Import('libobjs')
 
 libobjs.extend(map(lambda src: env.Object(src),
-                   ['OutputScheme.c', 'SourceOutputScheme.c']))
-
-SConscript(os.path.join('c', 'SConscript'))
+                   ['ErrorPool.c']))
