@@ -2,10 +2,13 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: GPLv2
 
+import os
 import os.path
 
 topsrc = os.getcwd()
-env = Environment(CCFLAGS = ['-g', '-Wall'],
+env = Environment(ENV = os.environ,
+                  tools = ['gcc', 'g++', 'gnulink', 'gas', 'ar'],
+                  CCFLAGS = ['-g', '-Wall'],
                   CPPDEFINES = ['_GNU_SOURCE'],
                   CPPPATH = [topsrc,
                              os.path.join(topsrc, 'lib')])
