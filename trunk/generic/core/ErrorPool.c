@@ -24,62 +24,62 @@
 #include  <stdarg.h>
 #include  "ErrorPool.h"
 
-CsErrorPool_t *
-CsErrorPool(CsErrorPool_t * self, const CsErrorPoolType_t * type)
+CcsErrorPool_t *
+CcsErrorPool(CcsErrorPool_t * self, FILE * fp)
 {
-    self = (CsErrorPool_t *)CsObject(self ? &self->base : NULL, &type->base);
+    self = AllocObject(self, sizeof(CcsErrorPool_t));
+    self->fp = fp;
     self->warningCount = 0;
     self->errorCount = 0;
     return self;
 }
 
 void
-CsErrorPool_Destruct(CsErrorPool_t * self)
+CcsErrorPool_Destruct(CcsErrorPool_t * self)
 {
-    CsObject_Destruct(&self->base);
 }
 
 void
-CsErrorPool_Info(CsErrorPool_t * self, const char * format, ...)
+CcsErrorPool_Info(CcsErrorPool_t * self, const char * format, ...)
 {
     va_list ap;
-    const CsErrorPoolType_t * cstype =
-	(const CsErrorPoolType_t *)(self->base.type);
     va_start(ap, format);
-    cstype->info(self, format, ap);
+    vfprintf(self->fp, format, ap);
     va_end(ap);
 }
 
 void
-CsErrorPool_Warning(CsErrorPool_t * self, const char * format, ...)
+CcsErrorPool_Warning(CcsErrorPool_t * self, int line, int col,
+		    const char * format, ...)
 {
     va_list ap;
-    const CsErrorPoolType_t * cstype =
-	(const CsErrorPoolType_t *)(self->base.type);
+    fprintf(self->fp, "Warning(%d,%d): ", line, col);
     va_start(ap, format);
-    cstype->warning(self, format, ap);
+    vfprintf(self->fp, format, ap);
     va_end(ap);
+    ++self->warningCount;
 }
 
 void
-CsErrorPool_Error(CsErrorPool_t * self, const char * format, ...)
+CcsErrorPool_Error(CcsErrorPool_t * self, int line, int col,
+		  const char * format, ...)
 {
     va_list ap;
-    const CsErrorPoolType_t * cstype =
-	(const CsErrorPoolType_t *)(self->base.type);
+    fprintf(self->fp, "Error(%d,%d): ", line, col);
     va_start(ap, format);
-    cstype->error(self, format, ap);
+    vfprintf(self->fp, format, ap);
     va_end(ap);
+    ++self->errorCount;
 }
 
 void
-CsErrorPool_Fatal(CsErrorPool_t * self, const char * format, ...)
+CcsErrorPool_Fatal(CcsErrorPool_t * self, int line, int col,
+		  const char * format, ...)
 {
     va_list ap;
-    const CsErrorPoolType_t * cstype =
-	(const CsErrorPoolType_t *)(self->base.type);
+    fprintf(self->fp, "Fatal Error(%d,%d): ", line, col);
     va_start(ap, format);
-    cstype->fatal(self, format, ap);
+    vfprintf(self->fp, format, ap);
     va_end(ap);
     exit(-1);
 }
