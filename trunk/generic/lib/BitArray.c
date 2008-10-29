@@ -35,7 +35,7 @@ BitArray(BitArray_t * self, int numbits)
     self->numbits = numbits;
     if (numbits) {
 	self->data = CocoMalloc(NB2SZ(numbits));
-	bzero(self->data, NB2SZ(numbits));
+	memset(self->data, 0, NB2SZ(numbits));
     } else {
 	self->data = NULL;
     }
@@ -121,10 +121,7 @@ BitArray_Set(BitArray_t * self, int index, Bool_t value)
 void
 BitArray_SetAll(BitArray_t * self, Bool_t value)
 {
-    if (self->data) {
-	if (value) memset(self->data, 1, NB2SZ(self->numbits));
-	else bzero(self->data, NB2SZ(self->numbits));
-    }
+    if (self->data) memset(self->data, value ? 0xFF : 0, NB2SZ(self->numbits));
 }
 
 Bool_t
