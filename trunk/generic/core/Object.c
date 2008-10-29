@@ -23,8 +23,8 @@
 -------------------------------------------------------------------------*/
 #include  "Object.h"
 
-CsObject_t *
-CsObject(CsObject_t * self, const CsObjectType_t * type)
+CcObject_t *
+CcObject(CcObject_t * self, const CcObjectType_t * type)
 {
     self = AllocObject(self, type->size);
     self->type = type;
@@ -32,7 +32,7 @@ CsObject(CsObject_t * self, const CsObjectType_t * type)
 }
 
 void
-CsObject_Destruct(CsObject_t * self)
+CcObject_Destruct(CcObject_t * self)
 {
     CocoFree(self);
 }

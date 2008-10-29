@@ -23,71 +23,71 @@
 -------------------------------------------------------------------------*/
 #include  "EBNF.h"
 
-static const CsNodeType_t NodeAlt = {
-    { sizeof(CsNode_t), "alt" }
+static const CcNodeType_t NodeAlt = {
+    { sizeof(CcNode_t), "alt" }
 };
-const CsNodeType_t * node_alt = &NodeAlt;
+const CcNodeType_t * node_alt = &NodeAlt;
 
-static const CsNodeType_t NodeIter = {
-    { sizeof(CsNode_t), "iter" }
+static const CcNodeType_t NodeIter = {
+    { sizeof(CcNode_t), "iter" }
 };
-const CsNodeType_t * node_iter = &NodeIter;
+const CcNodeType_t * node_iter = &NodeIter;
 
-static const CsNodeType_t NodeOpt = {
-    { sizeof(CsNode_t), "opt" }
+static const CcNodeType_t NodeOpt = {
+    { sizeof(CcNode_t), "opt" }
 };
-const CsNodeType_t * node_opt = &NodeOpt;
+const CcNodeType_t * node_opt = &NodeOpt;
 
-CsNode_t *
-CsNode_NewWithSub(CsNode_t * self, const CsNodeType_t * type, CsNode_t * sub)
+CcNode_t *
+CcNode_NewWithSub(CcNode_t * self, const CcNodeType_t * type, CcNode_t * sub)
 {
-    self = (CsNode_t *)CsObject(self ? &self->base : NULL, &type->base);
+    self = (CcNode_t *)CcObject(self ? &self->base : NULL, &type->base);
     self->sub = sub;
     return self;
 }
 
 void
-CsNode_Destruct(CsNode_t * self)
+CcNode_Destruct(CcNode_t * self)
 {
-    CsObject_Destruct(&self->base);
+    CcObject_Destruct(&self->base);
 }
 
-CsGraph_t *
-CsGraph(CsGraph_t * self)
+CcGraph_t *
+CcGraph(CcGraph_t * self)
 {
-    self = AllocObject(self, sizeof(CsGraph_t));
+    self = AllocObject(self, sizeof(CcGraph_t));
     self->l = self->r = NULL;
     return self;
 }
 
-CsGraph_t *
-CsGraphP(CsGraph_t * self, CsNode_t * p)
+CcGraph_t *
+CcGraphP(CcGraph_t * self, CcNode_t * p)
 {
-    self = AllocObject(self, sizeof(CsGraph_t));
+    self = AllocObject(self, sizeof(CcGraph_t));
     self->l = self->r = p;
     return self;
 }
 
 void
-CsGraph_Destruct(CsGraph_t * self)
+CcGraph_Destruct(CcGraph_t * self)
 {
     CocoFree(self);
 }
 
 void
-CsGraph_MakeFirstAlt(CsGraph_t * self)
+CcGraph_MakeFirstAlt(CcGraph_t * self)
 {
-    self->l = CsNode_NewWithSub(NULL, node_alt, self->l);
+    self->l = CcNode_NewWithSub(NULL, node_alt, self->l);
     self->l->line = self->l->sub->line;
     self->l->next = self->r;
     self->r = self->l;
 }
 
 void
-CsGraph_MakeAlternative(CsGraph_t * self, CsGraph_t * g2)
+CcGraph_MakeAlternative(CcGraph_t * self, CcGraph_t * g2)
 {
-    CsNode_t * p;
-    g2->l = CsNode_NewWithSub(NULL, node_alt, g2->l); g2->l->line = g2->l->sub->line;
+    CcNode_t * p;
+    g2->l = CcNode_NewWithSub(NULL, node_alt, g2->l); g2->l->line = g2->l->sub->line;
     p = self->l; while (p->down != NULL) p = p->down;
     p->down = g2->l;
     p = self->r; while (p->next != NULL) p = p->next;
@@ -98,9 +98,9 @@ CsGraph_MakeAlternative(CsGraph_t * self, CsGraph_t * g2)
 }
 
 void
-CsGraph_MakeSequence(CsGraph_t * self, CsGraph_t * g2)
+CcGraph_MakeSequence(CcGraph_t * self, CcGraph_t * g2)
 {
-    CsNode_t * q, * p;
+    CcNode_t * q, * p;
     p = self->r->next; self->r->next = g2->l; /* link head node */
     while (p != NULL) { /* link substructure */
 	q = p->next; p->next = g2->l; p->up = TRUE;
@@ -110,10 +110,10 @@ CsGraph_MakeSequence(CsGraph_t * self, CsGraph_t * g2)
 }
 
 void
-CsGraph_MakeIteration(CsGraph_t * self)
+CcGraph_MakeIteration(CcGraph_t * self)
 {
-    CsNode_t * p , * q;
-    self->l = CsNode_NewWithSub(NULL, node_iter, self->l);
+    CcNode_t * p , * q;
+    self->l = CcNode_NewWithSub(NULL, node_iter, self->l);
     p = self->r;
     self->r = self->l;
     while (p != NULL) {
@@ -123,17 +123,17 @@ CsGraph_MakeIteration(CsGraph_t * self)
 }
 
 void
-CsGraph_MakeOption(CsGraph_t * self)
+CcGraph_MakeOption(CcGraph_t * self)
 {
-    self->l = CsNode_NewWithSub(NULL, node_opt, self->l);
+    self->l = CcNode_NewWithSub(NULL, node_opt, self->l);
     self->l->next = self->r;
     self->r = self->l;
 }
 
 void
-CsGraph_Finish(CsGraph_t * self)
+CcGraph_Finish(CcGraph_t * self)
 {
-    CsNode_t * p, * q;
+    CcNode_t * p, * q;
     p = self->r;
     while (p != NULL) {
 	q = p->next; p->next = NULL; p = q;

@@ -23,17 +23,17 @@
 -------------------------------------------------------------------------*/
 #include  "SourceOutputScheme.h"
 
-CsSourceOutputScheme_t *
-CsSourceOutputScheme(CsSourceOutputScheme_t * self,
-		     const CsSourceOutputSchemeType_t * type)
+CcSourceOutputScheme_t *
+CcSourceOutputScheme(CcSourceOutputScheme_t * self,
+		     const CcSourceOutputSchemeType_t * type)
 {
-    self = (CsSourceOutputScheme_t *)
-	CsOutputScheme(self ? &self->base : NULL, &type->base);
+    self = (CcSourceOutputScheme_t *)
+	CcOutputScheme(self ? &self->base : NULL, &type->base);
     return self;
 }
 
 void
-CsSourceOutputScheme_Destruct(CsSourceOutputScheme_t * self)
+CcSourceOutputScheme_Destruct(CcSourceOutputScheme_t * self)
 {
-    CsOutputScheme_Destruct(&self->base);
+    CcOutputScheme_Destruct(&self->base);
 }
