@@ -44,6 +44,7 @@ typedef int    Bool_t;
 
 /* Basic DataStructures */
 typedef struct ArrayList_s ArrayList_t;
+typedef struct BitArray_s BitArray_t;
 typedef struct HashTable_s HashTable_t;
 
 /* EBNF types */

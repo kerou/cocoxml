@@ -54,8 +54,6 @@ int BitArray_Xor(BitArray_t * self, const BitArray_t * value);
 Bool_t BitArray_Intersect(const BitArray_t * self1, const BitArray_t * self2);
 void BitArray_Subtract(BitArray_t * self, const BitArray_t * b);
 
-void BitArray_Dump(const BitArray_t * self, DumpBuffer_t * buf);
-
 EXTC_END
 
 #endif  /* COCO_BITARRAY_H */
