@@ -22,6 +22,7 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "lexical/CharClass.h"
+#include  "lexical/CharSet.h"
 
 CcCharClass_t *
 CcCharClass(CcCharClass_t * self, const char * name, CcCharSet_t * s)
@@ -36,5 +37,6 @@ CcCharClass(CcCharClass_t * self, const char * name, CcCharSet_t * s)
 void
 CcCharClass_Destruct(CcCharClass_t * self)
 {
+    if (self->set) { CcCharSet_Destruct(self->set); CocoFree(self->set); }
     if (self->name) CocoFree(self->name);
 }
