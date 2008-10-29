@@ -48,6 +48,8 @@ typedef struct CsObject_s CsObject_t;
 typedef struct CsArrayList_s CsArrayList_t;
 typedef struct CsBitArray_s CsBitArray_t;
 typedef struct CsHashTable_s CsHashTable_t;
+typedef struct CsErrorPoolType_s CsErrorPoolType_t;
+typedef struct CsErrorPool_s CsErrorPool_t;
 
 /* EBNF types */
 typedef struct CsNodeType_s CsNodeType_t;
