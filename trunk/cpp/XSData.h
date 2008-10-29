@@ -88,6 +88,8 @@ public:
     void CopyFramePart(const wchar_t * stop);
     void WriteOptions();
     void WriteDeclarations();
+    void WriteInitTokens();
+    void WriteInitUseVector();
     void WriteInitialization();
     int GenNamespaceOpen(const wchar_t* nsName);
     void GenNamespaceClose(int nrOfNs);
