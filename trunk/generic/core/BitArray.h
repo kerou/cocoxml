@@ -30,29 +30,29 @@
 
 EXTC_BEGIN
 
-struct BitArray_s {
+struct CsBitArray_s {
     int numbits;
     unsigned char * data;
 };
 
-BitArray_t * BitArray(BitArray_t * self, int numbits);
-BitArray_t * BitArray1(BitArray_t * self, int numbits);
-BitArray_t * BitArray_Clone(BitArray_t * self, const BitArray_t * value);
-void BitArray_Destruct(BitArray_t * self);
+CsBitArray_t * CsBitArray(CsBitArray_t * self, int numbits);
+CsBitArray_t * CsBitArray1(CsBitArray_t * self, int numbits);
+CsBitArray_t * CsBitArray_Clone(CsBitArray_t * self, const CsBitArray_t * value);
+void CsBitArray_Destruct(CsBitArray_t * self);
 
 /* Return -1 for error. */
-int BitArray_getCount(const BitArray_t * self);
-int BitArray_Elements(const BitArray_t * self);
-Bool_t BitArray_Get(const BitArray_t * self, int index);
-void BitArray_Set(BitArray_t * self, int index, Bool_t value);
-void BitArray_SetAll(BitArray_t * self, Bool_t value);
-Bool_t BitArray_Equal(const BitArray_t * self1, const BitArray_t * self2);
-void BitArray_Not(BitArray_t * self);
-int BitArray_And(BitArray_t * self, const BitArray_t * value);
-int BitArray_Or(BitArray_t * self, const BitArray_t * value);
-int BitArray_Xor(BitArray_t * self, const BitArray_t * value);
-Bool_t BitArray_Intersect(const BitArray_t * self1, const BitArray_t * self2);
-void BitArray_Subtract(BitArray_t * self, const BitArray_t * b);
+int CsBitArray_getCount(const CsBitArray_t * self);
+int CsBitArray_Elements(const CsBitArray_t * self);
+CsBool_t CsBitArray_Get(const CsBitArray_t * self, int index);
+void CsBitArray_Set(CsBitArray_t * self, int index, CsBool_t value);
+void CsBitArray_SetAll(CsBitArray_t * self, CsBool_t value);
+CsBool_t CsBitArray_Equal(const CsBitArray_t * self1, const CsBitArray_t * self2);
+void CsBitArray_Not(CsBitArray_t * self);
+int CsBitArray_And(CsBitArray_t * self, const CsBitArray_t * value);
+int CsBitArray_Or(CsBitArray_t * self, const CsBitArray_t * value);
+int CsBitArray_Xor(CsBitArray_t * self, const CsBitArray_t * value);
+CsBool_t CsBitArray_Intersect(const CsBitArray_t * self1, const CsBitArray_t * self2);
+void CsBitArray_Subtract(CsBitArray_t * self, const CsBitArray_t * b);
 
 EXTC_END
 

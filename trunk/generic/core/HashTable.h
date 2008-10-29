@@ -28,27 +28,27 @@
 #include "Defs.h"
 #endif
 
-typedef struct HTEntry_s HTEntry_t;
+typedef struct CsHTEntry_s CsHTEntry_t;
 
 typedef struct {
-    HTEntry_t ** cur, ** last;
-} HTIterator_t;
+    CsHTEntry_t ** cur, ** last;
+} CsHTIterator_t;
 
-struct HashTable_s {
-    HTEntry_t ** first, ** last;
+struct CsHashTable_s {
+    CsHTEntry_t ** first, ** last;
 };
 
-HashTable_t * HashTable(HashTable_t * self, size_t size);
-void HashTable_Destruct(HashTable_t * self);
+CsHashTable_t * CsHashTable(CsHashTable_t * self, size_t size);
+void CsHashTable_Destruct(CsHashTable_t * self);
 
-int HashTable_Set(HashTable_t * self, const char * key, void * value);
-void * HashTable_Get(const HashTable_t * self, const char * key);
+int CsHashTable_Set(CsHashTable_t * self, const char * key, void * value);
+void * CsHashTable_Get(const CsHashTable_t * self, const char * key);
 
-HTIterator_t *
-HashTable_GetIterator(const HashTable_t * self, HTIterator_t * iter);
+CsHTIterator_t *
+CsHashTable_GetIterator(const CsHashTable_t * self, CsHTIterator_t * iter);
 
-Bool_t HTIterator_Forward(HTIterator_t * self);
-const char * HTIterator_Key(HTIterator_t * iter);
-void * HTIterator_Value(HTIterator_t * iter);
+CsBool_t CsHTIterator_Forward(CsHTIterator_t * self);
+const char * CsHTIterator_Key(CsHTIterator_t * iter);
+void * CsHTIterator_Value(CsHTIterator_t * iter);
 
 #endif  /* COCO_HASHTABLE_H */
