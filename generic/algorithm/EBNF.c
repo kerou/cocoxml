@@ -24,26 +24,32 @@
 #include  "EBNF.h"
 
 static const CsNodeType_t NodeAlt = {
-    sizeof(CsNode_t), "alt"
+    { sizeof(CsNode_t), "alt" }
 };
 const CsNodeType_t * node_alt = &NodeAlt;
 
 static const CsNodeType_t NodeIter = {
-    sizeof(CsNode_t), "iter"
+    { sizeof(CsNode_t), "iter" }
 };
 const CsNodeType_t * node_iter = &NodeIter;
 
 static const CsNodeType_t NodeOpt = {
-    sizeof(CsNode_t), "opt"
+    { sizeof(CsNode_t), "opt" }
 };
 const CsNodeType_t * node_opt = &NodeOpt;
 
 CsNode_t *
 CsNode_NewWithSub(CsNode_t * self, const CsNodeType_t * type, CsNode_t * sub)
 {
-    self = AllocObject(self, type->size);
+    self = (CsNode_t *)CsObject(self ? &self->base : NULL, &type->base);
     self->sub = sub;
     return self;
+}
+
+void
+CsNode_Destruct(CsNode_t * self)
+{
+    CsObject_Destruct(&self->base);
 }
 
 CsGraph_t *
