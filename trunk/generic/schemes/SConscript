@@ -1,0 +1,9 @@
+# -*- python -*-
+# Author: Charles Wang <charlesw123456@gmail.com>
+# License: GPLv2
+
+Import('env')
+Import('libobjs')
+
+libobjs.extend(map(lambda src: env.Object(src),
+                   ['OutputScheme.c', 'SourceOutputScheme.c']))

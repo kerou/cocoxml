@@ -58,6 +58,11 @@ extern const CsNodeType_t * node_alt;
 extern const CsNodeType_t * node_iter;
 extern const CsNodeType_t * node_opt;
 
+typedef struct CsOutputSchemeType_s CsOutputSchemeType_t;
+typedef struct CsOutputScheme_s CsOutputScheme_t;
+typedef struct CsSourceOutputSchemeType_s CsSourceOutputSchemeType_t;
+typedef struct CsSourceOutputScheme_s CsSourceOutputScheme_t;
+
 #define CocoMalloc(size) _CocoMalloc_(size, __FILE__, __LINE__)
 void * _CocoMalloc_(size_t size, const char * fname, int line);
 
