@@ -68,6 +68,9 @@ typedef struct CcSourceOutputScheme_s CcSourceOutputScheme_t;
 typedef struct CcLexical_s CcLexical_t;
 typedef struct CcSyntax_s CcSyntax_t;
 typedef struct CcSymbolTable_s CcSymbolTable_t;
+/* Lexical types */
+typedef struct CcCharSet_s CcCharSet_t;
+typedef struct CcCharClass_s CcCharClass_t;
 
 /* C Scheme types */
 typedef struct CcsErrorPool_s CcsErrorPool_t;
