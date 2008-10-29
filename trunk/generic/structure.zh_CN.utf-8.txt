@@ -43,7 +43,7 @@ Coco 的算法核心是 EBNF 产生式，EBNF 在 Coco 内的数据结构表示�
 * Buffer_t(Scanner.frame)：用于缓冲输入文件的内容，主要是保存 Token_t 的 val 字段。确保当前仍然存在的 Token_t，其对应的字符串值仍然被保留在Buffer_t之中。以便于实现从输入文件中复制出一段文本的功能。这是产品类，应名为 CcsBuffer_t。由于 CcsToken_t 的值总是在 CcsBuffer_t 之中，因此CcsToken_t只需要记录位置指针，而不必复制字符串。在目前的代码中，为了使用的方便，对CcsToken_t对应的文本进行了复制。
 * Scanner_t(Scanner.frame)：词法分析状态机。把输入的字符分解为 Token_t。这是产品类，应名为 CcsScanner_t。
 * Parser_t(Parser.frame)：语法分析状态机。以 Token_t 为输入，根据语法状态机决定执行那些语义动作。应名为CcsParser_t。
-* Errors_t(Parser.frame)：错误报告对象，所有产品类的实例均向它报告错误、警告。因此它是产品类之中的支持类，应名为CcsParser_t。
+* Errors_t(Parser.frame)：错误报告对象，所有产品类的实例均向它报告错误、警告。因此它是产品类之中的支持类，应名为CcsErrors_t。
 
 * Action_t：词法分析有限自动机的动作。属于Coco本体，是词法分析的内部子结构。应名为 CsAction_t。
 * ArrayList_t：数据结构支持类，实现可变长度的数组。属于 Coco 本体。由于是本体类，应名为 CsArrayList_t。主要由 Tab_t，即语法分析器使用。
