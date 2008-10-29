@@ -1,0 +1,8 @@
+# -*- python -*-
+# Author: Charles Wang <charlesw123456@gmail.com>
+# License: GPLv2
+
+Import('env')
+Import('libobjs')
+
+libobjs.extend(env.Object('Defs.c'))
