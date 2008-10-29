@@ -42,6 +42,10 @@ typedef int    Bool_t;
 #define FALSE  0
 #define TRUE   1
 
+/* Basic DataStructures */
+typedef struct ArrayList_s ArrayList_t;
+typedef struct HashTable_s HashTable_t;
+
 /* EBNF types */
 typedef struct CsNodeType_s CsNodeType_t;
 typedef struct CsNode_s  CsNode_t;

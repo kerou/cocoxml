@@ -5,4 +5,5 @@
 Import('env')
 Import('libobjs')
 
-libobjs.extend(env.Object('Defs.c'))
+libobjs.extend(map(lambda src: env.Object(src),
+                   ['Defs.c', 'ArrayList.c', 'HashTable.c']))
