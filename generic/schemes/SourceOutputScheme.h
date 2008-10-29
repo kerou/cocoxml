@@ -30,18 +30,18 @@
 
 EXTC_BEGIN
 
-struct CsSourceOutputSchemeType_s {
-    CsOutputSchemeType_t base;
+struct CcSourceOutputSchemeType_s {
+    CcOutputSchemeType_t base;
 };
 
-struct CsSourceOutputScheme_s {
-    CsOutputScheme_t base;
+struct CcSourceOutputScheme_s {
+    CcOutputScheme_t base;
 };
 
-CsSourceOutputScheme_t *
-CsSourceOutputScheme(CsSourceOutputScheme_t * self,
-		     const CsSourceOutputSchemeType_t * type);
-void CsSourceOutputScheme_Destruct(CsSourceOutputScheme_t * self);
+CcSourceOutputScheme_t *
+CcSourceOutputScheme(CcSourceOutputScheme_t * self,
+		     const CcSourceOutputSchemeType_t * type);
+void CcSourceOutputScheme_Destruct(CcSourceOutputScheme_t * self);
 
 EXTC_END
 

@@ -30,17 +30,17 @@
 
 EXTC_BEGIN
 
-struct CsOutputSchemeType_s {
-    CsObjectType_t base;
+struct CcOutputSchemeType_s {
+    CcObjectType_t base;
 };
 
-struct CsOutputScheme_s {
-    CsObject_t base;
+struct CcOutputScheme_s {
+    CcObject_t base;
 };
 
-CsOutputScheme_t *
-CsOutputScheme(CsOutputScheme_t * self, const CsOutputSchemeType_t * type);
-void CsOutputScheme_Destruct(CsOutputScheme_t * self);
+CcOutputScheme_t *
+CcOutputScheme(CcOutputScheme_t * self, const CcOutputSchemeType_t * type);
+void CcOutputScheme_Destruct(CcOutputScheme_t * self);
 
 EXTC_END
 

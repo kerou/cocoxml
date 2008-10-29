@@ -23,15 +23,15 @@
 -------------------------------------------------------------------------*/
 #include  "OutputScheme.h"
 
-CsOutputScheme_t *
-CsOutputScheme(CsOutputScheme_t * self, const CsOutputSchemeType_t * type)
+CcOutputScheme_t *
+CcOutputScheme(CcOutputScheme_t * self, const CcOutputSchemeType_t * type)
 {
-    self = (CsOutputScheme_t *)CsObject(self ? &self->base : NULL, &type->base);
+    self = (CcOutputScheme_t *)CcObject(self ? &self->base : NULL, &type->base);
     return self;
 }
 
 void
-CsOutputScheme_Destruct(CsOutputScheme_t * self)
+CcOutputScheme_Destruct(CcOutputScheme_t * self)
 {
-    CsObject_Destruct(&self->base);
+    CcObject_Destruct(&self->base);
 }

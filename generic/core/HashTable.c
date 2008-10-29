@@ -23,7 +23,7 @@
 -------------------------------------------------------------------------*/
 #include  "HashTable.h"
 
-struct CsHTEntry_s {
+struct CcHTEntry_s {
     char * key;
     void * value;
 };
@@ -36,29 +36,29 @@ strhash(const char * str, int szhash)
     return value % szhash;
 }
 
-CsHashTable_t *
-CsHashTable(CsHashTable_t * self, size_t size)
+CcHashTable_t *
+CcHashTable(CcHashTable_t * self, size_t size)
 {
-    self = AllocObject(self, sizeof(CsHashTable_t));
-    self->first = CocoMalloc(sizeof(CsHTEntry_t *) * size);
+    self = AllocObject(self, sizeof(CcHashTable_t));
+    self->first = CocoMalloc(sizeof(CcHTEntry_t *) * size);
     self->last = self->first + size;
-    memset(self->first, 0, sizeof(CsHTEntry_t *) * size);
+    memset(self->first, 0, sizeof(CcHTEntry_t *) * size);
     return self;
 }
 
-void CsHashTable_Destruct(CsHashTable_t * self)
+void CcHashTable_Destruct(CcHashTable_t * self)
 {
     if (self->first)  CocoFree(self->first);
 }
 
 int
-CsHashTable_Set(CsHashTable_t * self, const char * key, void * value)
+CcHashTable_Set(CcHashTable_t * self, const char * key, void * value)
 {
-    CsHTEntry_t ** start, ** cur;
+    CcHTEntry_t ** start, ** cur;
     start = cur = self->first + strhash(key, self->last - self->first);
     for (;;) {
 	if (*cur == NULL) {
-	    *cur = CocoMalloc(sizeof(CsHTEntry_t) + strlen(key) + 1);
+	    *cur = CocoMalloc(sizeof(CcHTEntry_t) + strlen(key) + 1);
 	    (*cur)->key = (char *)(*cur + 1); strcpy((*cur)->key, key);
 	    (*cur)->value = value;
 	    return 0;
@@ -70,9 +70,9 @@ CsHashTable_Set(CsHashTable_t * self, const char * key, void * value)
 }
 
 void *
-CsHashTable_Get(const CsHashTable_t * self, const char * key)
+CcHashTable_Get(const CcHashTable_t * self, const char * key)
 {
-    CsHTEntry_t ** start, ** cur;
+    CcHTEntry_t ** start, ** cur;
     start = cur = self->first + strhash(key, self->last - self->first);
     for (;;) {
 	if (*cur == NULL) return NULL;
@@ -83,16 +83,16 @@ CsHashTable_Get(const CsHashTable_t * self, const char * key)
     return NULL;
 }
 
-CsHTIterator_t *
-CsHashTable_GetIterator(const CsHashTable_t * self, CsHTIterator_t * iter)
+CcHTIterator_t *
+CcHashTable_GetIterator(const CcHashTable_t * self, CcHTIterator_t * iter)
 {
     iter->cur = self->first;
     iter->last = self->last;
     return iter;
 }
 
-CsBool_t
-CsHTIterator_Forward(CsHTIterator_t * self)
+CcBool_t
+CcHTIterator_Forward(CcHTIterator_t * self)
 {
     while (self->cur < self->last)
 	if (*self->cur) return TRUE;
@@ -101,13 +101,13 @@ CsHTIterator_Forward(CsHTIterator_t * self)
 }
 
 const char *
-CsHTIterator_Key(CsHTIterator_t * iter)
+CcHTIterator_Key(CcHTIterator_t * iter)
 {
     return (*(iter->cur))->key;
 }
 
 void *
-CsHTIterator_Value(CsHTIterator_t * iter)
+CcHTIterator_Value(CcHTIterator_t * iter)
 {
     return (*(iter->cur))->value;
 }

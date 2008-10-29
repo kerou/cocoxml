@@ -38,31 +38,31 @@
 
 EXTC_BEGIN
 
-typedef int    CsBool_t;
+typedef int    CcBool_t;
 #define FALSE  0
 #define TRUE   1
 
 /* Basic DataStructures */
-typedef struct CsObjectType_s CsObjectType_t;
-typedef struct CsObject_s CsObject_t;
-typedef struct CsArrayList_s CsArrayList_t;
-typedef struct CsBitArray_s CsBitArray_t;
-typedef struct CsHashTable_s CsHashTable_t;
+typedef struct CcObjectType_s CcObjectType_t;
+typedef struct CcObject_s CcObject_t;
+typedef struct CcArrayList_s CcArrayList_t;
+typedef struct CcBitArray_s CcBitArray_t;
+typedef struct CcHashTable_s CcHashTable_t;
 
 
 /* EBNF types */
-typedef struct CsNodeType_s CsNodeType_t;
-typedef struct CsNode_s  CsNode_t;
-typedef struct CsGraph_s CsGraph_t;
+typedef struct CcNodeType_s CcNodeType_t;
+typedef struct CcNode_s  CcNode_t;
+typedef struct CcGraph_s CcGraph_t;
 
-extern const CsNodeType_t * node_alt;
-extern const CsNodeType_t * node_iter;
-extern const CsNodeType_t * node_opt;
+extern const CcNodeType_t * node_alt;
+extern const CcNodeType_t * node_iter;
+extern const CcNodeType_t * node_opt;
 
-typedef struct CsOutputSchemeType_s CsOutputSchemeType_t;
-typedef struct CsOutputScheme_s CsOutputScheme_t;
-typedef struct CsSourceOutputSchemeType_s CsSourceOutputSchemeType_t;
-typedef struct CsSourceOutputScheme_s CsSourceOutputScheme_t;
+typedef struct CcOutputSchemeType_s CcOutputSchemeType_t;
+typedef struct CcOutputScheme_s CcOutputScheme_t;
+typedef struct CcSourceOutputSchemeType_s CcSourceOutputSchemeType_t;
+typedef struct CcSourceOutputScheme_s CcSourceOutputScheme_t;
 
 /* C Scheme types */
 typedef struct CcsErrorPool_s CcsErrorPool_t;

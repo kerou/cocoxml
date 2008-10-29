@@ -23,10 +23,10 @@
 -------------------------------------------------------------------------*/
 #include  "ArrayList.h"
 
-CsArrayList_t *
-CsArrayList(CsArrayList_t * self)
+CcArrayList_t *
+CcArrayList(CcArrayList_t * self)
 {
-    self = AllocObject(self, sizeof(CsArrayList_t));
+    self = AllocObject(self, sizeof(CcArrayList_t));
     self->Count = 0;
     self->Capacity = 16;
     self->Data = CocoMalloc(sizeof(void *) * self->Capacity);
@@ -34,14 +34,14 @@ CsArrayList(CsArrayList_t * self)
 }
 
 void
-CsArrayList_Destruct(CsArrayList_t * self)
+CcArrayList_Destruct(CcArrayList_t * self)
 {
-    CsArrayList_Clear(self);
+    CcArrayList_Clear(self);
     if (self->Data)  CocoFree(self->Data);
 }
 
 void
-CsArrayList_Add(CsArrayList_t * self, void * value)
+CcArrayList_Add(CcArrayList_t * self, void * value)
 {
     int newCapacity;
     if (self->Count >= self->Capacity) {
@@ -53,7 +53,7 @@ CsArrayList_Add(CsArrayList_t * self, void * value)
 }
 
 void
-CsArrayList_Remove(CsArrayList_t * self, void * value)
+CcArrayList_Remove(CcArrayList_t * self, void * value)
 {
     void ** cur;
     for (cur = self->Data; cur - self->Data < self->Count; ++cur)
@@ -66,12 +66,12 @@ CsArrayList_Remove(CsArrayList_t * self, void * value)
 }
 
 void *
-CsArrayList_Get(CsArrayList_t * self, int index)
+CcArrayList_Get(CcArrayList_t * self, int index)
 {
     return (index >= 0 && index < self->Count) ? self->Data[index] : NULL;
 }
 
 void
-CsArrayList_Clear(CsArrayList_t * self)
+CcArrayList_Clear(CcArrayList_t * self)
 {
 }

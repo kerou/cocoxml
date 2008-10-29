@@ -30,18 +30,18 @@
 
 EXTC_BEGIN
 
-struct CsArrayList_s {
+struct CcArrayList_s {
     int Count;
     int Capacity;
     void ** Data;
 };
 
-CsArrayList_t * CsArrayList(CsArrayList_t * self);
-void CsArrayList_Destruct(CsArrayList_t * self);
-void CsArrayList_Add(CsArrayList_t * self, void * value);
-void CsArrayList_Remove(CsArrayList_t * self, void * value);
-void * CsArrayList_Get(CsArrayList_t * self, int index);
-void CsArrayList_Clear(CsArrayList_t * self);
+CcArrayList_t * CcArrayList(CcArrayList_t * self);
+void CcArrayList_Destruct(CcArrayList_t * self);
+void CcArrayList_Add(CcArrayList_t * self, void * value);
+void CcArrayList_Remove(CcArrayList_t * self, void * value);
+void * CcArrayList_Get(CcArrayList_t * self, int index);
+void CcArrayList_Clear(CcArrayList_t * self);
 
 EXTC_END
 

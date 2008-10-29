@@ -28,41 +28,41 @@
 #include "Object.h"
 #endif
 
-struct CsNodeType_s {
-    CsObjectType_t base;
+struct CcNodeType_s {
+    CcObjectType_t base;
 };
 
-struct CsNode_s {
-    CsObject_t   base;
-    CsNode_t   * next;
-    CsNode_t   * down;
-    CsNode_t   * sub;
-    CsBool_t     up;
+struct CcNode_s {
+    CcObject_t   base;
+    CcNode_t   * next;
+    CcNode_t   * down;
+    CcNode_t   * sub;
+    CcBool_t     up;
     int          line;
 };
 
-struct CsGraph_s {
-    CsNode_t * l;
-    CsNode_t * r;
+struct CcGraph_s {
+    CcNode_t * l;
+    CcNode_t * r;
 };
 
-extern const CsNodeType_t * node_alt;
-extern const CsNodeType_t * node_iter;
-extern const CsNodeType_t * node_opt;
+extern const CcNodeType_t * node_alt;
+extern const CcNodeType_t * node_iter;
+extern const CcNodeType_t * node_opt;
 
-CsNode_t *
-CsNode_NewWithSub(CsNode_t * self, const CsNodeType_t * type, CsNode_t * sub);
-void CsNode_Destruct(CsNode_t * self);
+CcNode_t *
+CcNode_NewWithSub(CcNode_t * self, const CcNodeType_t * type, CcNode_t * sub);
+void CcNode_Destruct(CcNode_t * self);
 
-CsGraph_t * CsGraph(CsGraph_t * self);
-CsGraph_t * CsGraphP(CsGraph_t * self, CsNode_t * p);
-void CsGraph_Destruct(CsGraph_t * self);
+CcGraph_t * CcGraph(CcGraph_t * self);
+CcGraph_t * CcGraphP(CcGraph_t * self, CcNode_t * p);
+void CcGraph_Destruct(CcGraph_t * self);
 
-void CsGraph_MakeFirstAlt(CsGraph_t * g);
-void CsGraph_MakeAlternative(CsGraph_t * g1, CsGraph_t * g2);
-void CsGraph_MakeSequence(CsGraph_t * g1, CsGraph_t * g2);
-void CsGraph_MakeIteration(CsGraph_t * g);
-void CsGraph_MakeOption(CsGraph_t * g);
-void CsGraph_Finish(CsGraph_t * g);
+void CcGraph_MakeFirstAlt(CcGraph_t * g);
+void CcGraph_MakeAlternative(CcGraph_t * g1, CcGraph_t * g2);
+void CcGraph_MakeSequence(CcGraph_t * g1, CcGraph_t * g2);
+void CcGraph_MakeIteration(CcGraph_t * g);
+void CcGraph_MakeOption(CcGraph_t * g);
+void CcGraph_Finish(CcGraph_t * g);
 
 #endif /* COCO_EBNF_H */

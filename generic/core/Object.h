@@ -30,17 +30,17 @@
 
 EXTC_BEGIN
 
-struct CsObjectType_s {
+struct CcObjectType_s {
     size_t size;
     const char * name;
 };
 
-struct CsObject_s {
-    const CsObjectType_t * type;
+struct CcObject_s {
+    const CcObjectType_t * type;
 };
 
-CsObject_t * CsObject(CsObject_t * self, const CsObjectType_t * type);
-void CsObject_Destruct(CsObject_t * self);
+CcObject_t * CcObject(CcObject_t * self, const CcObjectType_t * type);
+void CcObject_Destruct(CcObject_t * self);
 
 EXTC_END
 
