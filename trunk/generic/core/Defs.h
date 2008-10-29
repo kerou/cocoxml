@@ -64,8 +64,15 @@ typedef struct CcOutputScheme_s CcOutputScheme_t;
 typedef struct CcSourceOutputSchemeType_s CcSourceOutputSchemeType_t;
 typedef struct CcSourceOutputScheme_s CcSourceOutputScheme_t;
 
+/* Algorithm types */
+typedef struct CcLexical_s CcLexical_t;
+typedef struct CcSyntax_s CcSyntax_t;
+typedef struct CcSymbolTable_s CcSymbolTable_t;
+
 /* C Scheme types */
 typedef struct CcsErrorPool_s CcsErrorPool_t;
+typedef struct CcsScanner_s CcsScanner_t;
+typedef struct CcsParser_s CcsParser_t;
 
 #define CocoMalloc(size) _CocoMalloc_(size, __FILE__, __LINE__)
 void * _CocoMalloc_(size_t size, const char * fname, int line);
@@ -81,6 +88,17 @@ char * _CocoStrdup_(const char * str, const char * fname, int line);
 
 #define AllocObject(self, szobj) _AllocObject_(self, szobj, __FILE__, __LINE__)
 void * _AllocObject_(void * self, size_t szobj, const char * fname, int line);
+
+typedef struct {
+    CcsScanner_t     * scanner;
+    CcsParser_t      * parser;
+    CcsErrorPool_t   * error;
+
+    CcOutputScheme_t * outputScheme;
+    CcSymbolTable_t  * symbolTab;
+    CcLexical_t      * lexical;
+    CcSyntax_t       * syntax;
+} CcGlobals_t;
 
 EXTC_END
 
