@@ -99,8 +99,9 @@ struct wcharCmp {
 
 class Token  
 {
-/*---- Options ----*/
 public:
+/*---- Options ----*/
+    int numOptions;
     int kind;     // token kind
     int col;      // token column (starting at 1)
     int line;     // token line (starting at 1)
@@ -117,17 +118,18 @@ public:
 };
 
 class XmlLangDefinition {
-    vector<bool>            useVector;
-    map<wchar_t*, TagInfo*, wcharCmp> Tags;
-    map<wchar_t*, int, wcharCmp>      Attrs;
-    map<wchar_t*, int, wcharCmp>      PInstructions;
+public:
+    vector<bool> useVector;
+    map<const wchar_t*, TagInfo*, wcharCmp> Tags;
+    map<const wchar_t*, int, wcharCmp>      Attrs;
+    map<const wchar_t*, int, wcharCmp>      PInstructions;
 
     XmlLangDefinition();
     ~XmlLangDefinition();
 
     void AddTag(const wchar_t* Name, int StartToken, int EndToken);
     void AddAttr(const wchar_t* Name, int AttrToken);
-    void AddProcessingInstruction(wchar_t* PIName, int PIToken);
+    void AddProcessingInstruction(const wchar_t* PIName, int PIToken);
 };
 
 class tagStackEle {
@@ -136,6 +138,14 @@ public:
     bool unknownTag;
     XmlLangDefinition *xldef;
 };
+
+/* expat callback function definition */
+void XMLCALL startElementHandler(void *userData, const XML_Char *name, const XML_Char **atts);
+void XMLCALL endElementHandler(void *userData, const XML_Char *name);
+void XMLCALL charDataHandler(void *userData, const XML_Char *s, int len);
+void XMLCALL processingInstructionHandler(void *userData, const XML_Char *target, const XML_Char *data);
+void XMLCALL commentHandler(void *userData, const XML_Char *data);
+void XMLCALL cdataHandler(void *userData);
 
 class XmlScanner {
 public:
@@ -149,19 +159,12 @@ public:
     XML_Parser                             xmlparser;
     
     XmlScanner (const wchar_t* fileName);
+    ~XmlScanner ();
     void Init();
-    int StartElement2Kind(wchar_t* NamespaceURI, wchar_t* TagName);
-    int EndElement2Kind(wchar_t* NamespaceURI, wchar_t* TagName);
-    int Attribute2Kind(wchar_t* NamespaceURI, wchar_t* AttrName);
-    int ProcessingInstruction2Kind(wchar_t* PIName);
-
-    /* expat callback function definition */
-    void XMLCALL startElement(void *userData, const char *name, const char **atts);
-    void XMLCALL endElementHandler(void *userData, const char *name, const char **atts);
-    void XMLCALL charDataHandler(void *userData, const XML_Char *s, int len);
-    void XMLCALL processingInstructionHandler(void *userData, const XML_Char *target, const XML_Char *data);
-    void XMLCALL commentHandler(void *userData, const XML_Char *data);
-    void XMLCALL cdataHandler(void *userData);
+    int StartElement2Kind(const wchar_t* NamespaceURI, const wchar_t* TagName);
+    int EndElement2Kind(const wchar_t* NamespaceURI, const wchar_t* TagName);
+    int Attribute2Kind(const wchar_t* NamespaceURI, const wchar_t* AttrName);
+    int ProcessingInstruction2Kind(const wchar_t* PIName);
 
     void AppendToken(int kind, int linenumber, int lineposition, wchar_t* value);
     void AppendTokens();
@@ -386,11 +389,14 @@ void coco_string_delete(char* &data) {
 
 /*---- Namespace Begin ----*/
 
-Token::Token() {
+Token::Token() 
+{
     kind = 0;
     col  = 0;
     line = 0;
     val  = NULL;
+
+/*---- Init Tokens ----*/
 }
 
 Token::~Token() {
@@ -398,7 +404,7 @@ Token::~Token() {
 }
 
 XmlLangDefinition::XmlLangDefinition() {
-    useVector.resize(Token.numOptions);
+/*---- Init UseVector ----*/
 }
 
 void XmlLangDefinition::AddTag(const wchar_t* Name, int StartToken, int EndToken) {
@@ -422,7 +428,7 @@ XmlScanner::XmlScanner (const wchar_t* fileName) {
     if(xmlstream){
        Init();
     }else{
-       throw new FatalError("Can not open file " + fileName);
+       //throw new FatalError("Can not open file " + fileName);
     }
 }
 
@@ -432,18 +438,20 @@ XmlScanner::~XmlScanner() {
 }
 
 void XmlScanner::Init() {
+    XmlLangDefinition *curXLDef;
+
     xmlparser = XML_ParserCreate(NULL);
-    XML_SetUserData(parser, this);
+    XML_SetUserData(xmlparser, this);
 
     XML_SetElementHandler(xmlparser, startElementHandler, endElementHandler);
 
-    XML_SetCharacterDataHandler(parser, charDataHandler);
+    XML_SetCharacterDataHandler(xmlparser, charDataHandler);
 
-    XML_SetProcessingInstructionHandler(parser, processingInstructionHandler);
+    XML_SetProcessingInstructionHandler(xmlparser, processingInstructionHandler);
     
-    XML_SetCommentHandler(parser, commentHandler);
+    XML_SetCommentHandler(xmlparser, commentHandler);
 
-    XML_SetStartCdataSectionHandler(parser, cdataHandler);
+    XML_SetStartCdataSectionHandler(xmlparser, cdataHandler);
 
     eof = 0;
     peek = 0;
@@ -460,182 +468,206 @@ int XmlScanner::StartElement2Kind(const wchar_t* NamespaceURI, const wchar_t* Ta
     tagStackEle *curEle = tagStack.top();
     tagStackEle *newEle = new tagStackEle();
 
-    if (!XmlLangMap.find(NamespaceURI)) {
+    map<const wchar_t*, XmlLangDefinition*>::iterator it1=XmlLangMap.find(NamespaceURI);
+    if (it1 == XmlLangMap.end()) {
         newEle->unknownNamespace = true;
         newEle->unknownTag = false;
         newEle->xldef = curEle->xldef;
         tagStack.push(newEle);
-        return useKindVector[(int)Token.Options.UNKNOWN_NAMESPACE];
+        return useKindVector[Token::UNKNOWN_NAMESPACE];
     }
     newEle->unknownNamespace = false;
     newEle->xldef = XmlLangMap[NamespaceURI];
-    if (!newEle.xldef->Tags.find(TagName)) {
+    map<const wchar_t*, TagInfo*>::iterator it2=newEle->xldef->Tags.find(TagName);
+    if (it2 == newEle->xldef->Tags.end()) {
         newEle->unknownTag = true;
         tagStack.push(newEle);
-        return useKindVector[(int)Token.Options.UNKNOWN_TAG];
+        return useKindVector[Token::UNKNOWN_TAG];
     }
     newEle->unknownTag = false;
     tagStack.push(newEle);
-    return newEle->xldef->Tags[TagName].startToken;
+    return newEle->xldef->Tags[TagName]->startToken;
 }
 
 int XmlScanner::EndElement2Kind(const wchar_t* NamespaceURI, const wchar_t* TagName) {
-    tagStackEle* curEle = tagStack.pop();
+    tagStackEle* curEle = tagStack.top();
+    tagStack.pop();
 
     if (curEle->unknownNamespace) {
-        return useKindVector[(int)Token.Options.END_UNKNOWN_NAMESPACE];
+        return useKindVector[(int)Token::END_UNKNOWN_NAMESPACE];
     }
     if (curEle->unknownTag)
-        return useKindVector[(int)Token.Options.END_UNKNOWN_TAG];
-    return curEle->xldef->Tags[TagName].endToken;
+        return useKindVector[(int)Token::END_UNKNOWN_TAG];
+    return curEle->xldef->Tags[TagName]->endToken;
 }
 
 int XmlScanner::Attribute2Kind(const wchar_t* NamespaceURI, const wchar_t* AttrName) {
     XmlLangDefinition *xldef;
     tagStackEle *curEle = tagStack.top();
 
-    if (NamespaceURI == "") xldef = curEle->xldef;
-    else if (!XmlLangMap.find(NamespaceURI))
-        return useKindVector[(int)Token.Options.UNKNOWN_ATTR_NAMESPACE];
-    else xldef = XmlLangMap[NamespaceURI];
-    if (!xldef->Attrs.find(AttrName))
-        return useKindVector[(int)Token.Options.UNKNOWN_ATTR];
+    if (!coco_string_compareto(NamespaceURI, L""))
+        xldef = curEle->xldef;
+    else {
+        map<const wchar_t*, XmlLangDefinition*>::iterator it1=XmlLangMap.find(NamespaceURI);
+        if (it1 == XmlLangMap.end())
+            return useKindVector[(int)Token::UNKNOWN_ATTR_NAMESPACE];
+        else 
+            xldef = XmlLangMap[NamespaceURI];
+    }
+    map<const wchar_t*, int>::iterator it2=xldef->Attrs.find(AttrName);
+    if (it2 == xldef->Attrs.end())
+        return useKindVector[(int)Token::UNKNOWN_ATTR];
     return xldef->Attrs[AttrName];
 }
 
 int XmlScanner::ProcessingInstruction2Kind(const wchar_t* PIName) {
     tagStackEle *curEle = tagStack.top();
 
-    if (!curEle->xldef->PInstructions.find(PIName))
-        return useKindVector[(int)Token.Options.UNKNOWN_PROCESSING_INSTRUCTION];
+    map<const wchar_t*, int>::iterator it=curEle->xldef->PInstructions.find(PIName);
+    if (it == curEle->xldef->PInstructions.end())
+        return useKindVector[(int)Token::UNKNOWN_PROCESSING_INSTRUCTION];
     return curEle->xldef->PInstructions[PIName];
 }
 
-void XMLCALL XmlScanner::startElement(void *userData, const char *name, const char **atts)
+void XMLCALL startElementHandler(void *userData, const char *name, const char **atts)
 {
+    XmlScanner *scanner=(XmlScanner *)userData;
     wchar_t *wname = coco_string_create(name);
-    wchar_t *namespace=NULL, *elename=NULL;
-    inx = coco_string_indexof(name, L':');
+    wchar_t *nm=NULL, *elename=NULL;
+    int kind;
+    int inx = coco_string_indexof(wname, L':');
     if(inx>0){
         /* have namespace indication */
-        namespace = coco_string_create(wname, 0, inx+1);
+        nm = coco_string_create(wname, 0, inx+1);
         elename = coco_string_create(wname, inx+1, strlen(name)-(inx+1));
     }
-    fwprintf("get namespace:%ls, start elename:%ls\n", namespace, elename);
-    kind = StartElement2Kind(namespace, elename);
-    AppendToken(kind, 0, 0, elename);
+    wprintf(L"get namespace:%ls, start elename:%ls\n", nm, elename);
+    kind = scanner->StartElement2Kind(nm, elename);
+    scanner->AppendToken(kind, 0, 0, elename);
     
     inx = 0;
-    while(*(attrs+inx)){
-        wchar_t *wkey=0, wchar_t *wvalue=0;
+    while(*(atts+inx)){
+        wchar_t *wkey=NULL, *wvalue=NULL;
 
-        wkey = coco_string_create(attrs+0);
-        wvalue = coco_string_create(attrs+1);
-            fwprintf("\t key:%ls, value:%ls\n", wkey, wvalue);
+        wkey = coco_string_create(atts[inx+0]);
+        wvalue = coco_string_create(atts[inx+1]);
+            wprintf(L"\t key:%ls, value:%ls\n", wkey, wvalue);
         inx += 2;
         
-        kind = Attribute2Kind(namespace, wkey);
+        kind = scanner->Attribute2Kind(nm, wkey);
 
-        AppendToken(kind, 0/*line number*/, 0/*line position*/, wvalue);
+        scanner->AppendToken(kind, 0/*line number*/, 0/*line position*/, wvalue);
         coco_string_delete(wkey);
         coco_string_delete(wvalue);        
     }
     
     coco_string_delete(wname);
-    coco_string_delete(namespace);
+    coco_string_delete(nm);
     coco_string_delete(elename);
 }
 
-void XMLCALL XmlScanner::endElementHandler(void *userData, const char *name, const char **atts)
+void XMLCALL endElementHandler(void *userData, const char *name)
 {
+    XmlScanner *scanner=(XmlScanner *)userData;
     wchar_t *wname = coco_string_create(name);
-    wchar_t *namespace=NULL, *elename=NULL;
-    inx = coco_string_indexof(name, L':');
+    wchar_t *nm=NULL, *elename=NULL;
+    int kind;
+    int inx = coco_string_indexof(wname, L':');
     if(inx>0){
         /* have namespace indication */
-        namespace = coco_string_create(wname, 0, inx+1);
+        nm = coco_string_create(wname, 0, inx+1);
         elename = coco_string_create(wname, inx+1, strlen(name)-(inx+1));
     }
-    fwprintf("get namespace:%ls, end elename:%ls\n", namespace, elename);
-    kind = EndElement2Kind(namespace, elename);
-    AppendToken(kind, 0, 0, elename);
+    wprintf(L"get namespace:%ls, end elename:%ls\n", nm, elename);
+    kind = scanner->EndElement2Kind(nm, elename);
+    scanner->AppendToken(kind, 0, 0, elename);
 
     coco_string_delete(wname);
-    coco_string_delete(namespace);
+    coco_string_delete(nm);
     coco_string_delete(elename);
 }
 
-void XMLCALL XmlScanner::charDataHandler(void *userData, const XML_Char *s, int len)
+void XMLCALL charDataHandler(void *userData, const XML_Char *s, int len)
 {
+    XmlScanner *scanner=(XmlScanner *)userData;
     int opt;
-    tagStackEle* curEle = tagStack->top();
+    tagStackEle* curEle = scanner->tagStack.top();
     char *buf;
     wchar_t *value;
+    int kind;
     
-    buf = malloc(len+1);
+    buf = (char *)malloc(len+1);
     snprintf(buf, len, "%s", s);
-    value = coco_string_create(data);
+    value = coco_string_create(buf);
 
-    if (curEle->unknownNamespace) opt = Token.Options.UNS_TEXT;
-    else if (curEle->unknownTag) opt = Token.Options.UT_TEXT;
-    else opt = Token.Options.TEXT;
+    if (curEle->unknownNamespace) opt = Token::UNS_TEXT;
+    else if (curEle->unknownTag) opt = Token::UT_TEXT;
+    else opt = Token::TEXT;
     
-    kind = curEle->xldef->useVector[(int)opt] ? useKindVector[(int)opt] : -1;
+    kind = curEle->xldef->useVector[(int)opt] ? scanner->useKindVector[(int)opt] : -1;
 
-    AppendToken(kind, 0, 0, vlaue);
+    scanner->AppendToken(kind, 0, 0, value);
     
     coco_string_delete(value);
 }
 
-void XMLCALL XmlScanner::processingInstructionHandler(void *userData, const XML_Char *target, const XML_Char *data)
+void XMLCALL processingInstructionHandler(void *userData, const XML_Char *target, const XML_Char *data)
 {
+    XmlScanner *scanner=(XmlScanner *)userData;
     wchar_t *wtarget, *wdata;
+    int kind;
     
     wtarget = coco_string_create(target);
     wdata = coco_string_create(data);
     
-    kind = ProcessingInstruction2Kind(target)
-    AppendToken(kind, 0, 0, wdata);
+    kind = scanner->ProcessingInstruction2Kind(wtarget);
+    scanner->AppendToken(kind, 0, 0, wdata);
 
     coco_string_delete(wtarget);
     coco_string_delete(wdata);
 }
 
-void XMLCALL XmlScanner::commentHandler(void *userData, const XML_Char *data)
+void XMLCALL commentHandler(void *userData, const XML_Char *data)
 {
+    XmlScanner *scanner=(XmlScanner *)userData;
     int opt;
-    tagStackEle* curEle = tagStack->top();
+    tagStackEle* curEle = scanner->tagStack.top();
     wchar_t *value = coco_string_create(data);
+    int kind;
 
-    if (curEle->unknownNamespace) opt = Token.Options.UNS_CDATA;
-    else if (curEle->unknownTag) opt = Token.Options.UT_CDATA;
-    else opt = Token.Options.CDATA;
+    if (curEle->unknownNamespace) opt = Token::UNS_CDATA;
+    else if (curEle->unknownTag) opt = Token::UT_CDATA;
+    else opt = Token::CDATA;
     
-    kind = curEle->xldef->useVector[(int)opt] ? useKindVector[(int)opt] : -1;
+    kind = curEle->xldef->useVector[(int)opt] ? scanner->useKindVector[(int)opt] : -1;
     
-    AppendToken(kind, 0, 0, vlaue);
+    scanner->AppendToken(kind, 0, 0, value);
     
     coco_string_delete(value);
 }
 
-void XMLCALL XmlScanner::cdataHandler(void *userData)
+void XMLCALL cdataHandler(void *userData)
 {
+#if 0
+    XmlScanner *scanner=(XmlScanner *)userData;
     int opt;
-    tagStackEle* curEle = tagStack->top();
+    tagStackEle* curEle = scanner->tagStack.top();
     wchar_t *value = coco_string_create(data);
+    int kind;
 
-    if (curEle->unknownNamespace) opt = Token.Options.UNS_CDATA;
-    else if (curEle->unknownTag) opt = Token.Options.UT_CDATA;
-    else opt = Token.Options.CDATA;
+    if (curEle->unknownNamespace) opt = Token::UNS_CDATA;
+    else if (curEle->unknownTag) opt = Token::UT_CDATA;
+    else opt = Token::CDATA;
 
-    kind = curEle->xldef->useVector[(int)opt] ? useKindVector[(int)opt] : -1;
+    kind = curEle->xldef->useVector[(int)opt] ? scanner->useKindVector[(int)opt] : -1;
     
-    AppendToken(kind, 0, 0, vlaue);
+    scanner->AppendToken(kind, 0, 0, value);
     
     coco_string_delete(value);
+#endif
 }
 
-void XmlScanner::AppendToken(int line, int linenumber, int lineposition, wchar_t* value)
+void XmlScanner::AppendToken(int kind, int linenumber, int lineposition, wchar_t* value)
 {    
     Token* new_token = NULL;
 
@@ -647,12 +679,13 @@ void XmlScanner::AppendToken(int line, int linenumber, int lineposition, wchar_t
     tokens.push_back(new_token);
 }
 
+#define BUFF_SIZE 1024
 void XmlScanner::AppendTokens() {
     if(eof) return;
 
     for (;;) {
         int bytes_read;
-        void *buff = XML_GetBuffer(p, BUFF_SIZE);
+        void *buff = XML_GetBuffer(xmlparser, BUFF_SIZE);
         if (buff == NULL) {
             /* handle error */
         }
@@ -662,28 +695,28 @@ void XmlScanner::AppendTokens() {
             /* handle error */
         }
 
-        if (! XML_ParseBuffer(p, bytes_read, bytes_read == 0)) {
+        if (!XML_ParseBuffer(xmlparser, bytes_read, bytes_read==0)) {
             /* handle parse error */
         }
 
-        if (bytes_read == 0)
+        if (bytes_read == 0){
             break;
         }
     }
 
-    AppendToken(eofSym, 0, 0, NULL);
+    //AppendToken(eofSym, 0, 0, NULL);
+    AppendToken(0, 0, 0, NULL);
     eof = 1;
 }
 
-Token XmlScanner::Scan () {
+Token* XmlScanner::Scan () {
     Token* token;
-    if (tokens->size() == 0) AppendTokens();
+    if (tokens.size() == 0) AppendTokens();
     token = tokens.front();
-    Tokens.Pop_front();
     return token;
 }
 
-Token XmlScanner::Peek () {
+Token* XmlScanner::Peek () {
     if (peek == tokens.size()) AppendTokens();
     return tokens[peek ++];
 }
