@@ -15,4 +15,4 @@ env.Depends('XmlScanner.hxx', XmlScannerFrame)
 env.Depends('XmlParser.cxx', XmlParserFrame)
 env.Depends('XmlParser.hxx', XmlParserFrame)
 
-env.Program('samples', Glob("*.cxx"))
+env.Program('samples', Glob("*.cxx"), LIBS=['expat'])
