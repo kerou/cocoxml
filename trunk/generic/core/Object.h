@@ -38,6 +38,9 @@ struct CsObjectType_s {
 struct CsObject_s {
 };
 
+CsObject_t * CsObject(CsObject_t * self, const CsObjectType_t * type);
+void CsObject_Destruct(CsObject_t * self);
+
 EXTC_END
 
 #endif  /* COCO_OBJECT_H */

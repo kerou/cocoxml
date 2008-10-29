@@ -22,3 +22,15 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "Object.h"
+
+CsObject_t *
+CsObject(CsObject_t * self, const CsObjectType_t * type)
+{
+    return AllocObject(self, type->size);
+}
+
+void
+CsObject_Destruct(CsObject_t * self)
+{
+    CocoFree(self);
+}

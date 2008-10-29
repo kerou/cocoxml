@@ -24,21 +24,21 @@
 #ifndef  COCO_EBNF_H
 #define  COCO_EBNF_H
 
-#ifndef  COCO_DEFS_H
-#include "Defs.h"
+#ifndef  COCO_OBJECT_H
+#include "Object.h"
 #endif
 
 struct CsNodeType_s {
-    size_t size;
-    const char * name;
+    CsObjectType_t base;
 };
 
 struct CsNode_s {
-    CsNode_t * next;
-    CsNode_t * down;
-    CsNode_t * sub;
-    Bool_t     up;
-    int        line;
+    CsObject_t   base;
+    CsNode_t   * next;
+    CsNode_t   * down;
+    CsNode_t   * sub;
+    CsBool_t     up;
+    int          line;
 };
 
 struct CsGraph_s {
@@ -52,6 +52,7 @@ extern const CsNodeType_t * node_opt;
 
 CsNode_t *
 CsNode_NewWithSub(CsNode_t * self, const CsNodeType_t * type, CsNode_t * sub);
+void CsNode_Destruct(CsNode_t * self);
 
 CsGraph_t * CsGraph(CsGraph_t * self);
 CsGraph_t * CsGraphP(CsGraph_t * self, CsNode_t * p);
