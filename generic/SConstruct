@@ -21,6 +21,7 @@ Export('libobjs')
 Export('env')
 SConscript(os.path.join('core', 'SConscript'))
 SConscript(os.path.join('algorithm', 'SConscript'))
+SConscript(os.path.join('schemes', 'SConscript'))
 
 lib = env.Library('coco', libobjs)
 
