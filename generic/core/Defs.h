@@ -38,14 +38,16 @@
 
 EXTC_BEGIN
 
-typedef int    Bool_t;
+typedef int    CsBool_t;
 #define FALSE  0
 #define TRUE   1
 
 /* Basic DataStructures */
-typedef struct ArrayList_s ArrayList_t;
-typedef struct BitArray_s BitArray_t;
-typedef struct HashTable_s HashTable_t;
+typedef struct CsObjectType_s CsObjectType_t;
+typedef struct CsObject_s CsObject_t;
+typedef struct CsArrayList_s CsArrayList_t;
+typedef struct CsBitArray_s CsBitArray_t;
+typedef struct CsHashTable_s CsHashTable_t;
 
 /* EBNF types */
 typedef struct CsNodeType_s CsNodeType_t;

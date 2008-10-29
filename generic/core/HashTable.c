@@ -23,7 +23,7 @@
 -------------------------------------------------------------------------*/
 #include  "HashTable.h"
 
-struct HTEntry_s {
+struct CsHTEntry_s {
     char * key;
     void * value;
 };
@@ -36,29 +36,29 @@ strhash(const char * str, int szhash)
     return value % szhash;
 }
 
-HashTable_t *
-HashTable(HashTable_t * self, size_t size)
+CsHashTable_t *
+CsHashTable(CsHashTable_t * self, size_t size)
 {
-    self = AllocObject(self, sizeof(HashTable_t));
-    self->first = CocoMalloc(sizeof(HTEntry_t *) * size);
+    self = AllocObject(self, sizeof(CsHashTable_t));
+    self->first = CocoMalloc(sizeof(CsHTEntry_t *) * size);
     self->last = self->first + size;
-    memset(self->first, 0, sizeof(HTEntry_t *) * size);
+    memset(self->first, 0, sizeof(CsHTEntry_t *) * size);
     return self;
 }
 
-void HashTable_Destruct(HashTable_t * self)
+void CsHashTable_Destruct(CsHashTable_t * self)
 {
     if (self->first)  CocoFree(self->first);
 }
 
 int
-HashTable_Set(HashTable_t * self, const char * key, void * value)
+CsHashTable_Set(CsHashTable_t * self, const char * key, void * value)
 {
-    HTEntry_t ** start, ** cur;
+    CsHTEntry_t ** start, ** cur;
     start = cur = self->first + strhash(key, self->last - self->first);
     for (;;) {
 	if (*cur == NULL) {
-	    *cur = CocoMalloc(sizeof(HTEntry_t) + strlen(key) + 1);
+	    *cur = CocoMalloc(sizeof(CsHTEntry_t) + strlen(key) + 1);
 	    (*cur)->key = (char *)(*cur + 1); strcpy((*cur)->key, key);
 	    (*cur)->value = value;
 	    return 0;
@@ -70,9 +70,9 @@ HashTable_Set(HashTable_t * self, const char * key, void * value)
 }
 
 void *
-HashTable_Get(const HashTable_t * self, const char * key)
+CsHashTable_Get(const CsHashTable_t * self, const char * key)
 {
-    HTEntry_t ** start, ** cur;
+    CsHTEntry_t ** start, ** cur;
     start = cur = self->first + strhash(key, self->last - self->first);
     for (;;) {
 	if (*cur == NULL) return NULL;
@@ -83,16 +83,16 @@ HashTable_Get(const HashTable_t * self, const char * key)
     return NULL;
 }
 
-HTIterator_t *
-HashTable_GetIterator(const HashTable_t * self, HTIterator_t * iter)
+CsHTIterator_t *
+CsHashTable_GetIterator(const CsHashTable_t * self, CsHTIterator_t * iter)
 {
     iter->cur = self->first;
     iter->last = self->last;
     return iter;
 }
 
-Bool_t
-HTIterator_Forward(HTIterator_t * self)
+CsBool_t
+CsHTIterator_Forward(CsHTIterator_t * self)
 {
     while (self->cur < self->last)
 	if (*self->cur) return TRUE;
@@ -101,13 +101,13 @@ HTIterator_Forward(HTIterator_t * self)
 }
 
 const char *
-HTIterator_Key(HTIterator_t * iter)
+CsHTIterator_Key(CsHTIterator_t * iter)
 {
     return (*(iter->cur))->key;
 }
 
 void *
-HTIterator_Value(HTIterator_t * iter)
+CsHTIterator_Value(CsHTIterator_t * iter)
 {
     return (*(iter->cur))->value;
 }
