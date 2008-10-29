@@ -42,7 +42,7 @@ CharSet_RandomSet(CharSet_t * self)
     long int rnd;
     int idx, bit;
     for (idx = 0; idx < NUMBITS; idx += 16) {
-	rnd = random();
+	rnd = rand();
 	for (bit = 0; bit < 16; ++bit)
 	    if ((rnd & (1 << bit))) CharSet_Set(self, idx + bit);
     }

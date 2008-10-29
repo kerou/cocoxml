@@ -32,7 +32,7 @@ BitArray_RandomSet(BitArray_t * self)
     long int rnd;
     int idx, bit, numbits = BitArray_getCount(self);
     for (idx = 0; idx < numbits; idx += 16) {
-	rnd = random();
+	rnd = rand();
 	for (bit = 0; bit < 16 && idx + bit < self->numbits; ++bit)
 	    if ((rnd & (1 << bit))) BitArray_Set(self, idx + bit, 1);
 	    else BitArray_Set(self, idx + bit, 0);
