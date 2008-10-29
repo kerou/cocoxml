@@ -1,3 +1,5 @@
+-*- coding: utf-8 -*-
+
 根据Coco/R、CocoXml的任务，我们大概可以把他们要做的事情分为三类。
 一、生成、优化、检验词法(或 XmlLangDefinition)、语法状态机。这一部分纯粹是维护数据结构，根据数据本身的特征完成需要的计算操作。与输入、输出的形式无关。它们的输入是产生式规则、输出是状态机数据结构；
 二、根据状态机数据结构，生成不同形式的输出。可以想象的是，相同的状态机可以为不同的编程语言生成源代码，也可以生成测试信息输出。这些输出的格式跟数据的运算是完全无关的；
@@ -27,11 +29,13 @@ Coco/R的代码，包含了上述三个部分，但是没有加以明确的区�
 
 在源代码组织上，根目录下保存主程序入口 Coco.c 和 CocoXml.c。
 
-core 子目录含有所有数据结构算法类及子数据结构。其中一个.c含有词法状态机、一个.c含有语法状态机、一个.c含有Xml 语言定义、一个.c含有各种支持类及工具函数、一个.c含有交互子数据结构。
+core 子目录含有所有数据结构算法类及子数据结构。一个 EBNF.c 实现状态机通用算法、一个.c含有词法状态机、一个.c含有语法状态机、一个.c含有Xml 语言定义、一个.c含有各种支持类及工具函数、一个.c含有交互子数据结构。
 
 schemes 子目录含有各种输出方案，不同的输出方案在 schemes 的子目录中。schemes 中一个 .c 定义 OutputScheme 类，一个 .c 定义 SourceOutputScheme 类。
 
 在输出方案子目录中，输出生产者和产品模板被保存在一起。这里要特别注意对这两者加以区分。
+
+Coco 的算法核心是 EBNF 产生式，EBNF 在 Coco 内的数据结构表示由 Graph_t 和 Node_t 组成。由于词法分析和语法分析都使用了 EBNF 产生式，因此词法分析和语法分析都利用了 Graph_t 和 Node_t。不同类型的 Node_t 分别在词法分析和语法分析中使用。
 
 要整理 Coco 的源代码，首先必须对现有的 Coco 类及其成员进行分类。首先必须区分是属于本体还是属于被生成的源代码。而后对于本体部分，再按照本体需完成的事务类别进行区分。
 
@@ -50,22 +54,39 @@ schemes 子目录含有各种输出方案，不同的输出方案在 schemes 的
 * Graph_t：语法状态机用于表示两个结点之间的连接关系。是本体类，是语法自动机的内部子结构。应名为 CsGraph_t。
 * HashTable_t：数据结构支持类，实现杂凑表。是本体类中的支持类，应名为 CsHashTable_t。在 Coco 中，HashTable_t 只有一个用途，就是为词法分析器记录字面量和符号之间的对应关系。它的 key 是字符串，值是 Symbol_t。由于它只有这一个用途，所以也可以看作是词法自动机的内部子结构。但从它的含义上讲是没有这层关系的。
 * Melted_t：被分解的状态。是本体类，属于词法分析的子结构。应名为 CsMelted_t。
-* Node_t：语法状态机的结点，是本体类中的语法状态机的子结构，应名为 CsNode_t。
+* Node_t：EBNF 结点，是本体类中的语法状态机的子结构，应名为 CsNode_t。在 Coco 现有代码中，有些类型的结点是属于词法分析的，有些是属于语法分析的，还有些是用于生成源代码输出的。有必要逐个区分，以便正确分解。
+  * node_t 语法
+  * node_pr 语法
+  * node_nt 语法
+  * node_clas 词法
+  * node_chr 词法
+  * node_wt 语法
+  * node_any 语法
+  * node_eps 空，基本 EBNF 结点
+  * node_sync 语法
+  * node_sem 语义动作，源码生成
+  * node_alt 替换，基本 EBNF 结点
+  * node_opt 可选，基本 EBNF 结点
+  * node_rslv 语法
 * ParserGen_t：用于输出当前编程语言的Parser_t源代码。是本体类中源码输出方案的一部分。
 * Position_t：是 CcsScanner_t 输出的一种，用于输出输入文件的指定片段。由于 Position_t 的值(字符串)的时候，CcsBuffer_t 可能已经丢弃相关数据，因此必须复制 Position_t 的相关内容。它是产品类，应名为 CcsPosition_t。
 * Set：定义了 BitArray_t 的一些操作函数，应该合并到BitArray_t之中去。
 * SortedList_t：数据结构支持类，实现自动排序列表。只在输出交叉引用表的时候使用。如果能够比较容易地计算出成员数量，在C语言中应该能够以简单的 qsort 调用代替,，因此不必单独命名了。它属于 Coco 本体，是调试信息输出方案的一部分。
 * State_t：状态，是本体中词法分析自动机的结点。是本体类，属于词法分析的子结构。应名为 CsState_t。
-* Symbol_t：符号。是本体中词法分析的输出，语法分析的输入。对应于产品源代码之中的 Token_t。由于是本体交互子结构，因此应名为 CsSymbol_t。
+* Symbol_t：符号。是本体中词法分析的输出，语法分析的输入。对应于产品源代码之中的 Token_t。由于是本体交互子结构，因此应名为 CsSymbol_t。Symbol_t 有四种类型：
+  * fixedToken：
+  * classToken：字符类符号
+  * litToken： 字面量符号
+  * classLitToken：
 * Target_t：一个动作能够到达的状态集合。是本体类，属于词法分析的子结构。应名为 CsTarget_t。
 
 要在 DFA_t 和 Tab_t 之间区分那些是属于词法分析的部分，那些是属与语法分析的部分，分析 Coco.atg 中的终结符和非终结符的用途是前提：
 * Coco
-* SetDecl
-* Set
-* SimSet
-* Char
-* TokenDecl
+* SetDecl：定义字符集。属于词法分析，操作 CharSet_t、CharClass_t。
+* Set：定义字符集。属于词法分析，操作 CharSet_t。
+* SimSet：定义字符集。属于词法分析，操作 CharSet_t、CharClass_t。
+* Char：定义单个字符。属于词法分析，操作字符(int)。
+* TokenDecl：定义符号，即词法分析的结果，语法分析的输入。操作 Symbol_t、Graph_t、DFA_t。从这个角度看 Graph_t 应该是属于词法分析的(那么 Node_t 也应该属于词法分析)。Symbol_t 应该是属于词法、语法中介对象的(符号表？)。
 * AttrDecl
 * Expression
 * Term
@@ -78,7 +99,10 @@ schemes 子目录含有各种输出方案，不同的输出方案在 schemes 的
 * Sym
 * Attribs
 * SemText
-* UsingDecl
+* UsingDecl：填充 ParserGen_t 中的 usingPos，用于把 Coco.atg 中的 using 命令，复制到产品源码中。它只于具体的输出方案有关，应该放到输出方案里去。
+
+符号表应该是一个终结符、非终结符、pragmas 的列表。词法分析、语法分析都不应该内置。
+Graph_t 和 Node_t 难道在语法分析和词法分析中用作不同的用途。Graph_t 和 Node_t 应该是对 EBNF 的实现，这一实现在词法分析中用到，在语法分析中也用到。
 
 * DFA_t：本体类中的词法分析状态机的生成类。但是它还糅合了输出词法分析源代码和输出部分调试信息的工作，这部分代码要全部清理出去，让它只完成词法分析状态机的生成和分析这一件事。应名为 CsDFA_t。
   * int maxStates：自动机状态
@@ -102,7 +126,7 @@ schemes 子目录含有各种输出方案，不同的输出方案在 schemes 的
   * ConvertToStates、FindTrans、NumberNodes、Step，最终的外界接口是 ConvertToStates。该功能只在 TokenDecl_t 之中使用，也就是说只于词法分析的标记表达式有关。但奇怪的是很多计算都出现在 Tab_t 之中。
 
 * Tab_t：本体类中的语法分析状态机的生成类。但是它还包含了输出部分调试信息的工作，这部分代码要全部清理出去，让它只完成语法分析状态机的生成和分析这一件事。应名为 CsTab_t。
-  * Position_t semDeclPos：
+  * Position_t semDeclPos：仅仅是用于记录 COMPILER 标记之前的文本，用于帮助引入头文件。这是本体中输出方案的一部份，应放到具体输出方案中去。
   * CharSet_t ignored：被忽略的字符集，与词法分析有关，与语法分析无关，应从 Tab_t 中删除并转移到 DFA_t 中去。
   * Bool_t ddt[10]：决定输出那些调试信息，与语法分析无关，应从 Tab_t 中删除。
   * Symbol_t gramSy：起始符号，即最后要归约的目标。
@@ -127,3 +151,5 @@ schemes 子目录含有各种输出方案，不同的输出方案在 schemes 的
   * Node_t dummyNode
   * ArrayList_t classes：有名字符集列表，应该放到 DFA_t 之中。
   * int dummyName
+
+编码工作，从 EBNF 的实现开始吧。
