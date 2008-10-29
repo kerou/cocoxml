@@ -26,7 +26,9 @@
 CsObject_t *
 CsObject(CsObject_t * self, const CsObjectType_t * type)
 {
-    return AllocObject(self, type->size);
+    self = AllocObject(self, type->size);
+    self->type = type;
+    return self;
 }
 
 void
