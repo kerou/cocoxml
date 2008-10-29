@@ -44,7 +44,7 @@ HashTable(HashTable_t * self, size_t size)
     self = AllocObject(self, sizeof(HashTable_t));
     self->first = CocoMalloc(sizeof(HTEntry_t *) * size);
     self->last = self->first + size;
-    bzero(self->first, sizeof(HTEntry_t *) * size);
+    memset(self->first, 0, sizeof(HTEntry_t *) * size);
     return self;
 }
 
