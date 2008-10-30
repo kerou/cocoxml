@@ -8,11 +8,20 @@ import os.path
 topsrc = os.getcwd()
 cpppath = [topsrc] + map(lambda subdir: os.path.join(topsrc, subdir),
                          ['core', 'algorithm', 'schemes'])
+# The following Environment setup is used with gcc in Win32.
 env = Environment(ENV = os.environ,
                   tools = ['gcc', 'g++', 'gnulink', 'gas', 'ar'],
                   CCFLAGS = ['-g', '-Wall'],
-                  CPPDEFINES = ['_GNU_SOURCE'],
                   CPPPATH = cpppath)
+
+# The following Environment setup is used with MSVC in Win32.
+#env = Environment(ENV = os.environ,
+#                  CPPPATH = cpppath)
+
+# The following Environemtn setup is used in Linux.
+#env = Environment(CCFLAGS = ['-g', '-Wall'],
+#                  CPPPATH = cpppath)
+
 Export('env')
 
 libobjs = []
