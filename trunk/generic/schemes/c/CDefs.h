@@ -66,6 +66,8 @@ char * _CcsStrdup_(const char * str, const char * fname, int line);
 #define EoF            -1
 #define ErrorChr       -2
 
+int CcsUTF8GetCh(const char ** str);
+
 EXTC_END
 
 #endif  /* COCO_CDEFS_H */
