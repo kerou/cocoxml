@@ -82,6 +82,7 @@ typedef struct CcState_s CcState_t;
 typedef struct CcTarget_s CcTarget_t;
 typedef struct CcChrNode_s CcChrNode_t;
 typedef struct CcClasNode_s CcClasNode_t;
+typedef struct CcMelted_s CcMelted_t;
 
 /* C Scheme types */
 typedef struct CcsErrorPool_s CcsErrorPool_t;
