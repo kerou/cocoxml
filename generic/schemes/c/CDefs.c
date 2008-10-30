@@ -48,10 +48,12 @@ _CcsStrdup_(const char * str, const char * fname, int line)
 }
 
 int
-CcsUTF8GetCh(const char ** str)
+CcsUTF8GetCh(const char ** str, const char * stop)
 {
     int ch, c1, c2, c3, c4;
     const char * cur = *str;
+
+    if (*str == stop) return EoF;
     ch = *cur++;
     if (ch >= 128 && ((ch & 0xC0) != 0xC0) && (ch != EoF)) {
 	fprintf(stderr, "Inside UTF-8 character!\n");
@@ -61,10 +63,13 @@ CcsUTF8GetCh(const char ** str)
     if ((ch & 0xF0) == 0xF0) {
 	/* 1110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
 	c1 = ch & 0x07;
+	if (cur >= stop) goto broken;
 	ch = *cur++; if (ch == 0) goto broken;
 	c2 = ch & 0x3F;
+	if (cur >= stop) goto broken;
 	ch = *cur++; if (ch == 0) goto broken;
 	c3 = ch & 0x3F;
+	if (cur >= stop) goto broken;
 	ch = *cur++; if (ch == 0) goto broken;
 	c4 = ch & 0x3F;
 	*str = cur;
@@ -73,8 +78,10 @@ CcsUTF8GetCh(const char ** str)
     if ((ch & 0xE0) == 0xE0) {
 	/* 1110xxxx 10xxxxxx 10xxxxxx */
 	c1 = ch & 0x0F;
+	if (cur >= stop) goto broken;
 	ch = *cur++; if (ch == 0) goto broken;
 	c2 = ch & 0x3F;
+	if (cur >= stop) goto broken;
 	ch = *cur++; if (ch == 0) goto broken;
 	c3 = ch & 0x3F;
 	*str = cur;
@@ -83,6 +90,7 @@ CcsUTF8GetCh(const char ** str)
     /* (ch & 0xC0) == 0xC0 */
     /* 110xxxxx 10xxxxxx */
     c1 = ch & 0x1F;
+    if (cur >= stop) goto broken;
     ch = *cur++; if (ch == 0) goto broken;
     c2 = ch & 0x3F;
     *str = cur;
@@ -90,4 +98,86 @@ CcsUTF8GetCh(const char ** str)
  broken:
     fprintf(stderr, "Broken in UTF8 character.\n");
     exit(-1);
+}
+
+int
+CcsUTF8GetWidth(const char * str, size_t len)
+{
+    int ch, width;
+    const char * stop = str + len;
+
+    width = 0;
+    while (str < stop) {
+	ch = CcsUTF8GetCh(&str, stop);
+	if (ch == 0 || ch == EoF) break;
+	if (ch == '\t') width = (width + 8) - (width & 0x07);
+	else if (ch < 32) /* Do Nothing */;
+	else if (ch < 128) ++width;
+ 	/* All multi-byte characters are treated as 2 char width */
+	else width += 2;
+    }
+    return width;
+}
+
+int
+CcsUnescapeCh(const char ** str, const char * stop)
+{
+    int val;
+    const char * cur = *str;
+
+    if (cur >= stop) return EoF;
+    if (*cur++ != '\\') { *str = cur; return *cur; }
+    if (cur >= stop) return ErrorChr;
+    switch (*cur) {
+    case 'a': *str = ++cur; return '\a';
+    case 'b': *str = ++cur; return '\b';
+    case 'e': *str = ++cur; return '\e';
+    case 'f': *str = ++cur; return '\f';
+    case 'n': *str = ++cur; return '\n';
+    case 'r': *str = ++cur; return '\r';
+    case 't': *str = ++cur; return '\t';
+    case 'v': *str = ++cur; return '\v';
+    case '\\': *str = ++cur; return '\\';
+    case '\'': *str = ++cur; return '\'';
+    case '\"': *str = ++cur; return '\"';
+    case '0': case '1': case '2': case '3': /* \nnn */
+	if (cur + 3 >= stop) return ErrorChr;
+	if (cur[1] < '0' || cur[1] > '7') return ErrorChr;
+	if (cur[2] < '0' || cur[2] > '7') return ErrorChr;
+	*str = cur + 3;
+	return ((cur[0] - '0') << 6) | ((cur[1] - '0') << 3) | (cur[0] - '0');
+    case 'x': /* \HH */
+	if (cur + 3 >= stop) return ErrorChr;
+	val = 0;
+	if (cur[1] >= '0' && cur[1] <= '9') val = ((cur[1] - '0') << 4);
+	else if (cur[1] >= 'A' && cur[1] <= 'F') val = ((cur[1] - 'A' + 10) << 4);
+	else if (cur[1] >= 'a' && cur[1] <= 'f') val = ((cur[1] - 'a' + 10) << 4);
+	else return ErrorChr;
+	if (cur[2] >= '0' && cur[2] <= '9') val |= cur[2] - '0';
+	else if (cur[2] >= 'A' && cur[2] <= 'F') val |= cur[2] - 'A' + 10;
+	else if (cur[2] >= 'a' && cur[2] <= 'f') val |= cur[2] - 'a' + 10;
+	else return ErrorChr;
+	*str = cur + 3;
+	return val;
+    default:
+	break;
+    }
+    return ErrorChr;
+}
+
+char *
+CcsUnescape(const char * str)
+{
+    const char * cursrc, * stop;
+    char * curtgt, * retval = CcsMalloc(strlen(str) + 1);
+
+    if (!retval) return NULL;
+    cursrc = str; curtgt = retval; stop = str + strlen(str);
+    if (*cursrc == '"') ++cursrc;
+    while (*cursrc) {
+	if (cursrc[0] == '"' && cursrc[1] == 0) break;
+	*curtgt++ = (char)CcsUnescapeCh(&cursrc, stop);
+    }
+    *curtgt = 0;
+    return retval;
 }
