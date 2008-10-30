@@ -7,7 +7,7 @@ import os.path
 
 topsrc = os.getcwd()
 cpppath = [topsrc] + map(lambda subdir: os.path.join(topsrc, subdir),
-                         ['core', 'algorithm'])
+                         ['core', 'algorithm', 'schemes'])
 env = Environment(ENV = os.environ,
                   tools = ['gcc', 'g++', 'gnulink', 'gas', 'ar'],
                   CCFLAGS = ['-g', '-Wall'],
