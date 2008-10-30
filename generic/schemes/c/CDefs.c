@@ -131,7 +131,8 @@ CcsUnescapeCh(const char ** str, const char * stop)
     switch (*cur) {
     case 'a': *str = cur + 1; return '\a';
     case 'b': *str = cur + 1; return '\b';
-    case 'e': *str = cur + 1; return '\e';
+	/* Not all platform support \e */
+	/*case 'e': *str = cur + 1; return '\e';*/
     case 'f': *str = cur + 1; return '\f';
     case 'n': *str = cur + 1; return '\n';
     case 'r': *str = cur + 1; return '\r';

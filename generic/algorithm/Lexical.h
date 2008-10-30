@@ -32,6 +32,7 @@
 #define  CcContextTrans  1
 
 struct CcLexical_s {
+    int dummy;
 };
 
 #endif  /* COCO_LEXICAL_H */
