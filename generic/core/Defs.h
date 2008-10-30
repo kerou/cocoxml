@@ -80,6 +80,8 @@ typedef struct CcComment_s CcComment_t;
 typedef struct CcAction_s CcAction_t;
 typedef struct CcState_s CcState_t;
 typedef struct CcTarget_s CcTarget_t;
+typedef struct CcChrNode_s CcChrNode_t;
+typedef struct CcClasNode_s CcClasNode_t;
 
 /* C Scheme types */
 typedef struct CcsErrorPool_s CcsErrorPool_t;
