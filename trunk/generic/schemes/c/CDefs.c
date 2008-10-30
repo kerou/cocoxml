@@ -63,14 +63,14 @@ CcsUTF8GetCh(const char ** str, const char * stop)
     if ((ch & 0xF0) == 0xF0) {
 	/* 1110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
 	c1 = ch & 0x07;
-	if (cur >= stop) goto broken;
-	ch = *cur++; if (ch == 0) goto broken;
+	if (cur >= stop || *cur == 0) goto broken;
+	ch = *cur++;
 	c2 = ch & 0x3F;
-	if (cur >= stop) goto broken;
-	ch = *cur++; if (ch == 0) goto broken;
+	if (cur >= stop || *cur == 0) goto broken;
+	ch = *cur++;
 	c3 = ch & 0x3F;
-	if (cur >= stop) goto broken;
-	ch = *cur++; if (ch == 0) goto broken;
+	if (cur >= stop || *cur == 0) goto broken;
+	ch = *cur++;
 	c4 = ch & 0x3F;
 	*str = cur;
 	return (((((c1 << 6) | c2) << 6) | c3) << 6) | c4;
@@ -78,11 +78,11 @@ CcsUTF8GetCh(const char ** str, const char * stop)
     if ((ch & 0xE0) == 0xE0) {
 	/* 1110xxxx 10xxxxxx 10xxxxxx */
 	c1 = ch & 0x0F;
-	if (cur >= stop) goto broken;
-	ch = *cur++; if (ch == 0) goto broken;
+	if (cur >= stop || *cur == 0) goto broken;
+	ch = *cur++;
 	c2 = ch & 0x3F;
-	if (cur >= stop) goto broken;
-	ch = *cur++; if (ch == 0) goto broken;
+	if (cur >= stop || *cur == 0) goto broken;
+	ch = *cur++;
 	c3 = ch & 0x3F;
 	*str = cur;
 	return (((c1 << 6) | c2) << 6) | c3;
@@ -90,8 +90,8 @@ CcsUTF8GetCh(const char ** str, const char * stop)
     /* (ch & 0xC0) == 0xC0 */
     /* 110xxxxx 10xxxxxx */
     c1 = ch & 0x1F;
-    if (cur >= stop) goto broken;
-    ch = *cur++; if (ch == 0) goto broken;
+    if (cur >= stop || *cur == 0) goto broken;
+    ch = *cur++;
     c2 = ch & 0x3F;
     *str = cur;
     return (c1 << 6) | c2;
@@ -129,17 +129,17 @@ CcsUnescapeCh(const char ** str, const char * stop)
     if (*cur++ != '\\') { *str = cur; return *cur; }
     if (cur >= stop) return ErrorChr;
     switch (*cur) {
-    case 'a': *str = ++cur; return '\a';
-    case 'b': *str = ++cur; return '\b';
-    case 'e': *str = ++cur; return '\e';
-    case 'f': *str = ++cur; return '\f';
-    case 'n': *str = ++cur; return '\n';
-    case 'r': *str = ++cur; return '\r';
-    case 't': *str = ++cur; return '\t';
-    case 'v': *str = ++cur; return '\v';
-    case '\\': *str = ++cur; return '\\';
-    case '\'': *str = ++cur; return '\'';
-    case '\"': *str = ++cur; return '\"';
+    case 'a': *str = cur + 1; return '\a';
+    case 'b': *str = cur + 1; return '\b';
+    case 'e': *str = cur + 1; return '\e';
+    case 'f': *str = cur + 1; return '\f';
+    case 'n': *str = cur + 1; return '\n';
+    case 'r': *str = cur + 1; return '\r';
+    case 't': *str = cur + 1; return '\t';
+    case 'v': *str = cur + 1; return '\v';
+    case '\\': *str = cur + 1; return '\\';
+    case '\'': *str = cur + 1; return '\'';
+    case '\"': *str = cur + 1; return '\"';
     case '0': case '1': case '2': case '3': /* \nnn */
 	if (cur + 3 >= stop) return ErrorChr;
 	if (cur[1] < '0' || cur[1] > '7') return ErrorChr;
