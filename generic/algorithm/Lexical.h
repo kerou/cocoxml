@@ -28,6 +28,9 @@
 #include "Defs.h"
 #endif
 
+#define  CcNormalTrans   0
+#define  CcContextTrans  1
+
 struct CcLexical_s {
 };
 
