@@ -83,6 +83,7 @@ typedef struct CcTarget_s CcTarget_t;
 
 /* C Scheme types */
 typedef struct CcsErrorPool_s CcsErrorPool_t;
+typedef struct CcsPosition_s CcsPosition_t;
 typedef struct CcsScanner_s CcsScanner_t;
 typedef struct CcsParser_s CcsParser_t;
 
