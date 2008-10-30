@@ -71,7 +71,7 @@ CcGraphP(CcGraph_t * self, CcNode_t * p)
 void
 CcGraph_Destruct(CcGraph_t * self)
 {
-    CocoFree(self);
+    CcFree(self);
 }
 
 void

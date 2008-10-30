@@ -47,7 +47,7 @@ void * CcHashTable_Get(const CcHashTable_t * self, const char * key);
 CcHTIterator_t *
 CcHashTable_GetIterator(const CcHashTable_t * self, CcHTIterator_t * iter);
 
-CcBool_t CcHTIterator_Forward(CcHTIterator_t * self);
+CcsBool_t CcHTIterator_Forward(CcHTIterator_t * self);
 const char * CcHTIterator_Key(CcHTIterator_t * iter);
 void * CcHTIterator_Value(CcHTIterator_t * iter);
 

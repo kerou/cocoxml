@@ -27,7 +27,7 @@
 CcState_t *
 CcState(CcState_t * self)
 {
-    self = CocoMalloc(sizeof(CcState_t));
+    self = AllocObject(self, sizeof(CcState_t));
     self->nr = 0;
     self->firstAction = NULL;
     self->endOf = NULL;

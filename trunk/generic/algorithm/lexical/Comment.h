@@ -33,13 +33,13 @@ EXTC_BEGIN
 struct CcComment_s {
     int           start[3];
     int           stop[3];
-    CcBool_t      nested;
+    CcsBool_t     nested;
     CcComment_t * next;
 };
 
 CcComment_t *
 CcComment(CcComment_t * self, const int * start, const int * stop,
-	  CcBool_t nested);
+	  CcsBool_t nested);
 
 void
 CcComment_Destruct(CcComment_t * self);

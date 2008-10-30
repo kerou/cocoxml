@@ -27,7 +27,7 @@ CcsPosition_t *
 CcsPosition(int beg, int len, int col, const char * text)
 {
     CcsPosition_t * self;
-    self = CocoMalloc(sizeof(CcsPosition_t) + len + 1);
+    if (!(self = CcsMalloc(sizeof(CcsPosition_t) + len + 1))) return NULL;
     self->beg = beg;
     self->len = len;
     self->col = col;
@@ -40,7 +40,7 @@ CcsPosition(int beg, int len, int col, const char * text)
 void
 CcsPosition_Destruct(CcsPosition_t * self)
 {
-    CocoFree(self);
+    CcsFree(self);
 }
 /*
 const char *

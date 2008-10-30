@@ -27,7 +27,7 @@
 CcMelted_t *
 CcMelted(CcMelted_t * self, CcBitArray_t * set, CcState_t * state)
 {
-    self = CocoMalloc(sizeof(CcMelted_t));
+    self = AllocObject(self, sizeof(CcMelted_t));
     self->set = set;
     self->state = state;
     self->next = NULL;

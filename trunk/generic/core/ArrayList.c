@@ -29,7 +29,7 @@ CcArrayList(CcArrayList_t * self)
     self = AllocObject(self, sizeof(CcArrayList_t));
     self->Count = 0;
     self->Capacity = 16;
-    self->Data = CocoMalloc(sizeof(void *) * self->Capacity);
+    self->Data = CcMalloc(sizeof(void *) * self->Capacity);
     return self;
 }
 
@@ -37,7 +37,7 @@ void
 CcArrayList_Destruct(CcArrayList_t * self)
 {
     CcArrayList_Clear(self);
-    if (self->Data)  CocoFree(self->Data);
+    if (self->Data)  CcFree(self->Data);
 }
 
 void
@@ -46,7 +46,7 @@ CcArrayList_Add(CcArrayList_t * self, void * value)
     int newCapacity;
     if (self->Count >= self->Capacity) {
 	newCapacity = self->Capacity + self->Capacity;
-	self->Data = CocoRealloc(self->Data, sizeof(void *) * newCapacity);
+	self->Data = CcRealloc(self->Data, sizeof(void *) * newCapacity);
 	self->Capacity = newCapacity;
     }
     self->Data[self->Count++] = value;

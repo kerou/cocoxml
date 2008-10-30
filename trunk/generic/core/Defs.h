@@ -24,23 +24,11 @@
 #ifndef  COCO_DEFS_H
 #define  COCO_DEFS_H
 
-#include  <stdio.h>
-#include  <stdlib.h>
-#include  <string.h>
-
-#ifdef  __cplusplus
-#define EXTC_BEGIN extern "C" {
-#define EXTC_END   }
-#else
-#define EXTC_BEGIN
-#define EXTC_END
+#ifndef  COCO_CDEFS_H
+#include  "c/CDefs.h"
 #endif
 
 EXTC_BEGIN
-
-typedef int    CcBool_t;
-#define FALSE  0
-#define TRUE   1
 
 /* Basic DataStructures */
 typedef struct CcObjectType_s CcObjectType_t;
@@ -48,7 +36,6 @@ typedef struct CcObject_s CcObject_t;
 typedef struct CcArrayList_s CcArrayList_t;
 typedef struct CcBitArray_s CcBitArray_t;
 typedef struct CcHashTable_s CcHashTable_t;
-
 
 /* EBNF types */
 typedef struct CcNodeType_s CcNodeType_t;
@@ -84,23 +71,17 @@ typedef struct CcChrNode_s CcChrNode_t;
 typedef struct CcClasNode_s CcClasNode_t;
 typedef struct CcMelted_s CcMelted_t;
 
-/* C Scheme types */
-typedef struct CcsErrorPool_s CcsErrorPool_t;
-typedef struct CcsPosition_s CcsPosition_t;
-typedef struct CcsScanner_s CcsScanner_t;
-typedef struct CcsParser_s CcsParser_t;
+#define CcMalloc(size) _CcMalloc_(size, __FILE__, __LINE__)
+void * _CcMalloc_(size_t size, const char * fname, int line);
 
-#define CocoMalloc(size) _CocoMalloc_(size, __FILE__, __LINE__)
-void * _CocoMalloc_(size_t size, const char * fname, int line);
+#define CcRealloc(ptr, size) _CcRealloc_(ptr, size, __FILE__, __LINE__)
+void * _CcRealloc_(void * ptr, size_t size, const char * fname, int line);
 
-#define CocoRealloc(ptr, size) _CocoRealloc_(ptr, size, __FILE__, __LINE__)
-void * _CocoRealloc_(void * ptr, size_t size, const char * fname, int line);
+#define CcFree(ptr) _CcFree_(ptr, __FILE__, __LINE__)
+void _CcFree_(void * ptr, const char * fname, int line);
 
-#define CocoFree(ptr) _CocoFree_(ptr, __FILE__, __LINE__)
-void _CocoFree_(void * ptr, const char * fname, int line);
-
-#define CocoStrdup(str) _CocoStrdup_(str, __FILE__, __LINE__)
-char * _CocoStrdup_(const char * str, const char * fname, int line);
+#define CcStrdup(str) _CcStrdup_(str, __FILE__, __LINE__)
+char * _CcStrdup_(const char * str, const char * fname, int line);
 
 #define AllocObject(self, szobj) _AllocObject_(self, szobj, __FILE__, __LINE__)
 void * _AllocObject_(void * self, size_t szobj, const char * fname, int line);
