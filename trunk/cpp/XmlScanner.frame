@@ -440,7 +440,7 @@ XmlScanner::~XmlScanner() {
 void XmlScanner::Init() {
     XmlLangDefinition *curXLDef;
 
-    xmlparser = XML_ParserCreate(NULL);
+    xmlparser = XML_ParserCreate("UTF-8");
     XML_SetUserData(xmlparser, this);
 
     XML_SetElementHandler(xmlparser, startElementHandler, endElementHandler);
@@ -538,11 +538,15 @@ void XMLCALL startElementHandler(void *userData, const char *name, const char **
     int inx = coco_string_indexof(wname, L':');
     if(inx>0){
         /* have namespace indication */
-        nm = coco_string_create(wname, 0, inx+1);
+        nm = coco_string_create(wname, 0, inx);
         elename = coco_string_create(wname, inx+1, strlen(name)-(inx+1));
+    }else{
+        /* No namespace */
+        nm = coco_string_create("");
+        elename = coco_string_create(wname);
     }
-    wprintf(L"get namespace:%ls, start elename:%ls\n", nm, elename);
     kind = scanner->StartElement2Kind(nm, elename);
+    wprintf(L"Start(%s:%d)get namespace:[%ls], start elename:[%ls]\n", name, kind, nm, elename);
     scanner->AppendToken(kind, 0, 0, elename);
     
     inx = 0;
@@ -551,7 +555,7 @@ void XMLCALL startElementHandler(void *userData, const char *name, const char **
 
         wkey = coco_string_create(atts[inx+0]);
         wvalue = coco_string_create(atts[inx+1]);
-            wprintf(L"\t key:%ls, value:%ls\n", wkey, wvalue);
+        //wprintf(L"\t key:%ls, value:%ls\n", wkey, wvalue);
         inx += 2;
         
         kind = scanner->Attribute2Kind(nm, wkey);
@@ -577,9 +581,13 @@ void XMLCALL endElementHandler(void *userData, const char *name)
         /* have namespace indication */
         nm = coco_string_create(wname, 0, inx+1);
         elename = coco_string_create(wname, inx+1, strlen(name)-(inx+1));
+    }else{
+        /* No namespace */
+        nm = coco_string_create("");
+        elename = coco_string_create(wname);
     }
-    wprintf(L"get namespace:%ls, end elename:%ls\n", nm, elename);
     kind = scanner->EndElement2Kind(nm, elename);
+    wprintf(L"End(%s:%d)get namespace:[%ls], start elename:[%ls]\n", name, kind, nm, elename);
     scanner->AppendToken(kind, 0, 0, elename);
 
     coco_string_delete(wname);
@@ -711,12 +719,16 @@ void XmlScanner::AppendTokens() {
 
 Token* XmlScanner::Scan () {
     Token* token;
+    wprintf(L"F:%s,%d\n", __FUNCTION__, __LINE__);
     if (tokens.size() == 0) AppendTokens();
     token = tokens.front();
+    wprintf(L"F:%s,%d, token->value:%ls\n", __FUNCTION__, __LINE__, token->val);
+    tokens.erase(tokens.begin());
     return token;
 }
 
 Token* XmlScanner::Peek () {
+    wprintf(L"F:%s,%d\n", __FUNCTION__, __LINE__);
     if (peek == tokens.size()) AppendTokens();
     return tokens[peek ++];
 }
