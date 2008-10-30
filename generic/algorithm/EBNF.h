@@ -37,7 +37,7 @@ struct CcNode_s {
     CcNode_t   * next;
     CcNode_t   * down;
     CcNode_t   * sub;
-    CcBool_t     up;
+    CcsBool_t    up;
     int          line;
 };
 

@@ -25,7 +25,7 @@
 
 CcComment_t *
 CcComment(CcComment_t * self, const int * start, const int * stop,
-	  CcBool_t nested)
+	  CcsBool_t nested)
 {
     int * cur0; const int * cur1;
     self = AllocObject(self, sizeof(CcComment_t));

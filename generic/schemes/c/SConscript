@@ -6,4 +6,5 @@ Import('env')
 Import('libobjs')
 
 libobjs.extend(map(lambda src: env.Object(src),
-                   ['ErrorPool.c', 'Position.c']))
+                   ['CDefs.c', 'ErrorPool.c', 'Buffer.c',
+                    'Token.c', 'Position.c']))

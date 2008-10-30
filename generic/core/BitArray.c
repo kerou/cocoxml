@@ -32,7 +32,7 @@ CcBitArray(CcBitArray_t * self, int numbits)
     self = AllocObject(self, sizeof(CcBitArray_t));
     self->numbits = numbits;
     if (numbits) {
-	self->data = CocoMalloc(NB2SZ(numbits));
+	self->data = CcMalloc(NB2SZ(numbits));
 	memset(self->data, 0, NB2SZ(numbits));
     } else {
 	self->data = NULL;
@@ -46,7 +46,7 @@ CcBitArray1(CcBitArray_t * self, int numbits)
     self = AllocObject(self, sizeof(CcBitArray_t));
     self->numbits = numbits;
     if (numbits) {
-	self->data = CocoMalloc(NB2SZ(numbits));
+	self->data = CcMalloc(NB2SZ(numbits));
 	memset(self->data, 0xFF, NB2SZ(numbits));
     } else {
 	self->data = NULL;
@@ -59,7 +59,7 @@ CcBitArray_Clone(CcBitArray_t * self, const CcBitArray_t * value)
 {
     self = AllocObject(self, sizeof(CcBitArray_t));
     if (value->data) {
-	self->data = CocoMalloc(NB2SZ(value->numbits));
+	self->data = CcMalloc(NB2SZ(value->numbits));
 	memcpy(self->data, value->data, NB2SZ(value->numbits));
     } else {
 	self->data = NULL;
@@ -72,7 +72,7 @@ void
 CcBitArray_Destruct(CcBitArray_t * self)
 {
     if (self->data) {
-	CocoFree(self->data);
+	CcFree(self->data);
 	self->data = NULL;
     }
     self->numbits = 0;
@@ -102,7 +102,7 @@ CcBitArray_Elements(const CcBitArray_t * self)
     return elements;
 }
 
-CcBool_t
+CcsBool_t
 CcBitArray_Get(const CcBitArray_t * self, int index)
 {
     if (index < 0 || index >= self->numbits) return -1;
@@ -110,19 +110,19 @@ CcBitArray_Get(const CcBitArray_t * self, int index)
 }
 
 void
-CcBitArray_Set(CcBitArray_t * self, int index, CcBool_t value)
+CcBitArray_Set(CcBitArray_t * self, int index, CcsBool_t value)
 {
     if (value) self->data[index >> 3] |= 1 << (index & 0x07);
     else self->data[index >> 3] &= ~(1 << (index & 0x07));
 }
 
 void
-CcBitArray_SetAll(CcBitArray_t * self, CcBool_t value)
+CcBitArray_SetAll(CcBitArray_t * self, CcsBool_t value)
 {
     if (self->data) memset(self->data, value ? 0xFF : 0, NB2SZ(self->numbits));
 }
 
-CcBool_t
+CcsBool_t
 CcBitArray_Equal(const CcBitArray_t * self1, const CcBitArray_t * self2)
 {
     int boffset, bmask;
@@ -180,7 +180,7 @@ CcBitArray_Xor(CcBitArray_t * self, const CcBitArray_t * value)
     return 0;
 }
 
-CcBool_t
+CcsBool_t
 CcBitArray_Intersect(const CcBitArray_t * self1, const CcBitArray_t * self2)
 {
     /* assert(self1->numbits == self2->numbits2); */

@@ -37,17 +37,17 @@ struct CcCharSet_s {
 
 CcCharSet_t * CcCharSet(CcCharSet_t * self);
 void CcCharSet_Destruct(CcCharSet_t * self);
-CcBool_t CcCharSet_Get(const CcCharSet_t * self, int i);
+CcsBool_t CcCharSet_Get(const CcCharSet_t * self, int i);
 void CcCharSet_Set(CcCharSet_t * self, int i);
 CcCharSet_t * CcCharSet_Clone(CcCharSet_t * self, const CcCharSet_t * s);
-CcBool_t CcCharSet_Equals(const CcCharSet_t * self, const CcCharSet_t * s);
+CcsBool_t CcCharSet_Equals(const CcCharSet_t * self, const CcCharSet_t * s);
 int CcCharSet_Elements(const CcCharSet_t * self);
 int CcCharSet_First(const CcCharSet_t * self);
 void CcCharSet_Or(CcCharSet_t * self, const CcCharSet_t * s);
 void CcCharSet_And(CcCharSet_t * self, const CcCharSet_t * s);
 void CcCharSet_Subtract(CcCharSet_t * self, const CcCharSet_t * s);
-CcBool_t CcCharSet_Includes(const CcCharSet_t * self, const CcCharSet_t * s);
-CcBool_t CcCharSet_Intersects(const CcCharSet_t * self, const CcCharSet_t * s);
+CcsBool_t CcCharSet_Includes(const CcCharSet_t * self, const CcCharSet_t * s);
+CcsBool_t CcCharSet_Intersects(const CcCharSet_t * self, const CcCharSet_t * s);
 void CcCharSet_Clear(CcCharSet_t * self);
 void CcCharSet_Fill(CcCharSet_t * self, int maxchar);
 /*

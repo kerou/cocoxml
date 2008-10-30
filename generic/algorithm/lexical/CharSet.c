@@ -30,11 +30,11 @@ struct CcRange_s {
 CcRange_t *
 new_Range(int from, int to)
 {
-    CcRange_t * self = CocoMalloc(sizeof(CcRange_t));
+    CcRange_t * self = CcMalloc(sizeof(CcRange_t));
     self->from = from; self->to = to; self->next = NULL;
     return self;
 }
-#define Del_Range(range)  CocoFree(range)
+#define Del_Range(range)  CcFree(range)
 
 CcCharSet_t *
 CcCharSet(CcCharSet_t * self)
@@ -50,7 +50,7 @@ CcCharSet_Destruct(CcCharSet_t * self)
     CcCharSet_Clear(self);
 }
 
-CcBool_t
+CcsBool_t
 CcCharSet_Get(const CcCharSet_t * self, int i)
 {
     CcRange_t * cur = self->head;
@@ -111,7 +111,7 @@ CcCharSet_Clone(CcCharSet_t * self, const CcCharSet_t * s)
     return self;
 }
 
-CcBool_t
+CcsBool_t
 CcCharSet_Equals(const CcCharSet_t * self, const CcCharSet_t * s)
 {
     const CcRange_t * cur0, * cur1;
@@ -255,7 +255,7 @@ CcCharSet_Subtract(CcCharSet_t * self, const CcCharSet_t * s)
     }
 }
 
-CcBool_t
+CcsBool_t
 CcCharSet_Includes(const CcCharSet_t * self, const CcCharSet_t * s)
 {
     const CcRange_t * cur0 = self->head, * cur1 = s->head;
@@ -269,7 +269,7 @@ CcCharSet_Includes(const CcCharSet_t * self, const CcCharSet_t * s)
     return cur1 == NULL;
 }
 
-CcBool_t
+CcsBool_t
 CcCharSet_Intersects(const CcCharSet_t * self, const CcCharSet_t * s)
 {
     const CcRange_t * cur0 = self->head, * cur1 = s->head;

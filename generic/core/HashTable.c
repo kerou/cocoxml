@@ -40,7 +40,7 @@ CcHashTable_t *
 CcHashTable(CcHashTable_t * self, size_t size)
 {
     self = AllocObject(self, sizeof(CcHashTable_t));
-    self->first = CocoMalloc(sizeof(CcHTEntry_t *) * size);
+    self->first = CcMalloc(sizeof(CcHTEntry_t *) * size);
     self->last = self->first + size;
     memset(self->first, 0, sizeof(CcHTEntry_t *) * size);
     return self;
@@ -48,7 +48,7 @@ CcHashTable(CcHashTable_t * self, size_t size)
 
 void CcHashTable_Destruct(CcHashTable_t * self)
 {
-    if (self->first)  CocoFree(self->first);
+    if (self->first)  CcFree(self->first);
 }
 
 int
@@ -58,7 +58,7 @@ CcHashTable_Set(CcHashTable_t * self, const char * key, void * value)
     start = cur = self->first + strhash(key, self->last - self->first);
     for (;;) {
 	if (*cur == NULL) {
-	    *cur = CocoMalloc(sizeof(CcHTEntry_t) + strlen(key) + 1);
+	    *cur = CcMalloc(sizeof(CcHTEntry_t) + strlen(key) + 1);
 	    (*cur)->key = (char *)(*cur + 1); strcpy((*cur)->key, key);
 	    (*cur)->value = value;
 	    return 0;
@@ -91,7 +91,7 @@ CcHashTable_GetIterator(const CcHashTable_t * self, CcHTIterator_t * iter)
     return iter;
 }
 
-CcBool_t
+CcsBool_t
 CcHTIterator_Forward(CcHTIterator_t * self)
 {
     while (self->cur < self->last)

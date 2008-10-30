@@ -29,7 +29,7 @@ CcCharClass(CcCharClass_t * self, const char * name, CcCharSet_t * s)
 {
     self = AllocObject(self, sizeof(CcCharClass_t));
     self->n = 0;
-    self->name = CocoStrdup(name);
+    self->name = CcStrdup(name);
     self->set = s;
     return self;
 }
@@ -37,6 +37,6 @@ CcCharClass(CcCharClass_t * self, const char * name, CcCharSet_t * s)
 void
 CcCharClass_Destruct(CcCharClass_t * self)
 {
-    if (self->set) { CcCharSet_Destruct(self->set); CocoFree(self->set); }
-    if (self->name) CocoFree(self->name);
+    if (self->set) { CcCharSet_Destruct(self->set); CcFree(self->set); }
+    if (self->name) CcFree(self->name);
 }
