@@ -24,7 +24,7 @@
 #ifndef  COCO_ERRORPOOL_H
 #define  COCO_ERRORPOOL_H
 
-#ifndef   COCO_DEFS_H
+#ifndef   COCO_CDEFS_H
 #include  "Defs.h"
 #endif
 

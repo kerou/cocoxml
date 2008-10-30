@@ -30,18 +30,18 @@
 
 EXTC_BEGIN
 
-struct Position_s {
+struct CcsPosition_s {
     int beg;
     int len;
     int col;
     char * text;
 };
 
-Position_t * Position(int beg, int len, int col, const char * text);
-void Position_Destruct(Position_t * self);
+CcsPosition_t * CcsPosition(int beg, int len, int col, const char * text);
+void CcsPosition_Destruct(CcsPosition_t * self);
 
 const char *
-Position_Dump(Position_t * self, char * buf, size_t szbuf);
+CcsPosition_Dump(CcsPosition_t * self, char * buf, size_t szbuf);
 
 EXTC_END
 
