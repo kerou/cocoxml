@@ -46,8 +46,8 @@ typedef int CcsBool_t;
 #ifdef  NDEBUG
 #define CcsAssert(e)  ((void)0)
 #else /* NDEBUG */
-#define CcsAssert(e)  ((e) ? (void)0 : _CcsAssert_(#e, __FILE__, __LINE__))
-void _CcsAssert_(const char * vstr, const char * fname, int line);
+#define CcsAssert(e)  ((e) ? (void)0 : _CcsAssertFailed_(#e, __FILE__, __LINE__))
+void _CcsAssertFailed_(const char * vstr, const char * fname, int line);
 #endif /* NDEBUG */
 
 /* C Scheme types */
