@@ -43,6 +43,13 @@ typedef int CcsBool_t;
 #define FALSE 0
 #define TRUE  1
 
+#ifdef  NDEBUG
+#define CcsAssert(e)  ((void)0)
+#else /* NDEBUG */
+#define CcsAssert(e)  ((e) ? (void)0 : _CcsAssert_(#e, __FILE__, __LINE__))
+void _CcsAssert_(const char * vstr, const char * fname, int line);
+#endif /* NDEBUG */
+
 /* C Scheme types */
 typedef struct CcsErrorPool_s CcsErrorPool_t;
 typedef struct CcsToken_s CcsToken_t;

@@ -23,6 +23,13 @@
 -------------------------------------------------------------------------*/
 #include  "CDefs.h"
 
+void
+_CcsAssert_(const char * vstr, const char * fname, int line)
+{
+    fprintf(stderr, "Assert %s failed in %s#%d.\n", vstr, fname, line);
+    exit(-1);
+}
+
 void *
 _CcsMalloc_(size_t size, const char * fname, int line)
 {
