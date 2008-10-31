@@ -35,3 +35,17 @@ CcOutputScheme_Destruct(CcOutputScheme_t * self)
 {
     CcObject_Destruct(&self->base);
 }
+
+const char **
+CcOutputScheme_List(CcOutputScheme_t * self)
+{
+    return (((CcOutputSchemeType_t *)self->base.type))->list(self);
+}
+
+CcsBool_t
+CcOutputScheme_Gen(CcOutputScheme_t * self,
+		   const char * dirname, const char * filename)
+{
+    return (((CcOutputSchemeType_t *)self->base.type))->gen(self,
+							    dirname, filename);
+}
