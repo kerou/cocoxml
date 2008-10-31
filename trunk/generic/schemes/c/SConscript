@@ -7,4 +7,4 @@ Import('libobjs')
 
 libobjs.extend(map(lambda src: env.Object(src),
                    ['CDefs.c', 'ErrorPool.c', 'Buffer.c',
-                    'Token.c', 'Position.c']))
+                    'Token.c', 'Position.c', 'Scanner.c']))
