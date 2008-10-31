@@ -27,7 +27,6 @@
 CcsErrorPool_t *
 CcsErrorPool(CcsErrorPool_t * self, FILE * fp)
 {
-    self = AllocObject(self, sizeof(CcsErrorPool_t));
     self->fp = fp;
     self->warningCount = 0;
     self->errorCount = 0;
@@ -65,10 +64,17 @@ CcsErrorPool_Error(CcsErrorPool_t * self, int line, int col,
 		  const char * format, ...)
 {
     va_list ap;
-    fprintf(self->fp, "Error(%d,%d): ", line, col);
     va_start(ap, format);
-    vfprintf(self->fp, format, ap);
+    CcsErrorPool_VError(self, line, col, format, ap);
     va_end(ap);
+}
+
+void
+CcsErrorPool_VError(CcsErrorPool_t * self, int line, int col,
+		    const char * format, va_list ap)
+{
+    fprintf(self->fp, "Error(%d,%d): ", line, col);
+    vfprintf(self->fp, format, ap);
     ++self->errorCount;
 }
 
