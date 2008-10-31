@@ -28,10 +28,18 @@
 #include "Object.h"
 #endif
 
+#ifndef  COCO_GLOBALS_H
+#include "Globals.h"
+#endif
+
 EXTC_BEGIN
 
 struct CcOutputSchemeType_s {
     CcObjectType_t base;
+
+    const char ** (* list)(CcOutputScheme_t * self);
+    CcsBool_t (* gen)(CcOutputScheme_t * self,
+		      const char * dirname, const char * filename);
 };
 
 struct CcOutputScheme_s {
@@ -41,6 +49,10 @@ struct CcOutputScheme_s {
 CcOutputScheme_t *
 CcOutputScheme(CcOutputScheme_t * self, const CcOutputSchemeType_t * type);
 void CcOutputScheme_Destruct(CcOutputScheme_t * self);
+
+const char ** CcOutputScheme_List(CcOutputScheme_t * self);
+CcsBool_t CcOutputScheme_Gen(CcOutputScheme_t * self,
+			     const char * dirname, const char * filename);
 
 EXTC_END
 
