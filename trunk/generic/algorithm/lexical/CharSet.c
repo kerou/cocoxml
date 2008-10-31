@@ -23,10 +23,6 @@
 -------------------------------------------------------------------------*/
 #include  "lexical/CharSet.h"
 
-struct CcRange_s {
-    int from, to;
-    CcRange_t * next;
-};
 CcRange_t *
 new_Range(int from, int to)
 {
