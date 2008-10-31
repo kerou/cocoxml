@@ -8,6 +8,6 @@ Import('env')
 Import('libobjs')
 
 libobjs.extend(map(lambda src: env.Object(src),
-                   ['EBNF.c', 'SymbolTable.c']))
+                   ['EBNF.c', 'SymbolTable.c', 'Lexical.c', 'Syntax.c']))
 
 SConscript(os.path.join('lexical', 'SConscript'))

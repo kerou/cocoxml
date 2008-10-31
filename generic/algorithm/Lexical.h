@@ -35,4 +35,7 @@ struct CcLexical_s {
     int dummy;
 };
 
+CcLexical_t * CcLexical(CcLexical_t * self);
+void CcLexical_Destruct(CcLexical_t * self);
+
 #endif  /* COCO_LEXICAL_H */
