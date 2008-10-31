@@ -31,6 +31,10 @@
 EXTC_BEGIN
 
 typedef struct CcRange_s CcRange_t;
+struct CcRange_s {
+    int from, to;
+    CcRange_t * next;
+};
 struct CcCharSet_s {
     CcRange_t * head;
 };
