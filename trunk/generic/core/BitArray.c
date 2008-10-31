@@ -29,7 +29,6 @@ static int bitmask[] = { 0xFF, 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x7F };
 CcBitArray_t *
 CcBitArray(CcBitArray_t * self, int numbits)
 {
-    self = AllocObject(self, sizeof(CcBitArray_t));
     self->numbits = numbits;
     if (numbits) {
 	self->data = CcMalloc(NB2SZ(numbits));
@@ -43,7 +42,6 @@ CcBitArray(CcBitArray_t * self, int numbits)
 CcBitArray_t *
 CcBitArray1(CcBitArray_t * self, int numbits)
 {
-    self = AllocObject(self, sizeof(CcBitArray_t));
     self->numbits = numbits;
     if (numbits) {
 	self->data = CcMalloc(NB2SZ(numbits));
@@ -57,7 +55,6 @@ CcBitArray1(CcBitArray_t * self, int numbits)
 CcBitArray_t *
 CcBitArray_Clone(CcBitArray_t * self, const CcBitArray_t * value)
 {
-    self = AllocObject(self, sizeof(CcBitArray_t));
     if (value->data) {
 	self->data = CcMalloc(NB2SZ(value->numbits));
 	memcpy(self->data, value->data, NB2SZ(value->numbits));

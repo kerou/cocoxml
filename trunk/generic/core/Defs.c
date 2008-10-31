@@ -55,10 +55,3 @@ _CcStrdup_(const char * str, const char * fname, int line)
     fprintf(stderr, "Strdup failed in %s#%d\n", fname, line);
     exit(-1);
 }
-
-void *
-_AllocObject_(void * self, size_t szobj, const char * fname, int line)
-{
-    if (self) return self;
-    return _CcsMalloc_(szobj, fname, line);
-}

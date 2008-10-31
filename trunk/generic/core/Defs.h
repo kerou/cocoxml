@@ -58,7 +58,20 @@ typedef struct CcSyntax_s CcSyntax_t;
 typedef struct CcSymbolTable_s CcSymbolTable_t;
 
 /* Symbol */
+typedef struct CcSymbolType_s CcSymbolType_t;
 typedef struct CcSymbol_s CcSymbol_t;
+
+typedef enum {
+    symbol_fixedToken = 0,
+    symbol_classToken = 1,
+    symbol_litToken = 2,
+    symbol_classlitToken = 3,
+} CcSymbolT_TokenKind_t;
+extern const CcSymbolType_t * symbol_t;
+extern const CcSymbolType_t * symbol_nt;
+extern const CcSymbolType_t * symbol_pr;
+extern const CcSymbolType_t * symbol_unknown;
+extern const CcSymbolType_t * symbol_rslv;
 
 /* Lexical types */
 typedef struct CcAction_s CcAction_t;
@@ -83,9 +96,6 @@ void _CcFree_(void * ptr, const char * fname, int line);
 
 #define CcStrdup(str) _CcStrdup_(str, __FILE__, __LINE__)
 char * _CcStrdup_(const char * str, const char * fname, int line);
-
-#define AllocObject(self, szobj) _AllocObject_(self, szobj, __FILE__, __LINE__)
-void * _AllocObject_(void * self, size_t szobj, const char * fname, int line);
 
 typedef struct CcGlobals_s CcGlobals_t;
 

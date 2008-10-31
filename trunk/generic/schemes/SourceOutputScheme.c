@@ -24,12 +24,9 @@
 #include  "SourceOutputScheme.h"
 
 CcSourceOutputScheme_t *
-CcSourceOutputScheme(CcSourceOutputScheme_t * self,
-		     const CcSourceOutputSchemeType_t * type)
+CcSourceOutputScheme(const CcSourceOutputSchemeType_t * type)
 {
-    self = (CcSourceOutputScheme_t *)
-	CcOutputScheme(self ? &self->base : NULL, &type->base);
-    return self;
+    return (CcSourceOutputScheme_t *)CcOutputScheme(&type->base);
 }
 
 void

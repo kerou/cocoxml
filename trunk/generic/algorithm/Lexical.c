@@ -43,9 +43,11 @@ CcLexical_ActionSymbols(CcLexical_t * self, CcAction_t * action)
     CcCharSet_t * s;
 
     if (action->typ == node_clas) {
-	s = CcCharSet_Clone(NULL, CcLexical_CharClassSet(self, action->sym));
+	s = CcCharSet_Clone(CcMalloc(sizeof(CcCharSet_t)),
+			    CcLexical_CharClassSet(self, action->sym));
     } else {
-	s = CcCharSet(NULL); CcCharSet_Set(s, action->sym);
+	s = CcCharSet(CcMalloc(sizeof(CcCharSet_t)));
+	CcCharSet_Set(s, action->sym);
     }
     return s;
 }

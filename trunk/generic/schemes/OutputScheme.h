@@ -46,8 +46,7 @@ struct CcOutputScheme_s {
     CcObject_t base;
 };
 
-CcOutputScheme_t *
-CcOutputScheme(CcOutputScheme_t * self, const CcOutputSchemeType_t * type);
+CcOutputScheme_t * CcOutputScheme(const CcOutputSchemeType_t * type);
 void CcOutputScheme_Destruct(CcOutputScheme_t * self);
 
 const char ** CcOutputScheme_List(CcOutputScheme_t * self);

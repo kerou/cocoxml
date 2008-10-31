@@ -27,7 +27,6 @@
 CcCharClass_t *
 CcCharClass(CcCharClass_t * self, const char * name, CcCharSet_t * s)
 {
-    self = AllocObject(self, sizeof(CcCharClass_t));
     self->n = 0;
     self->name = CcStrdup(name);
     self->set = s;
