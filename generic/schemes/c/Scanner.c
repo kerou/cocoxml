@@ -31,9 +31,10 @@ static void CcsScanner_GetCh(CcsScanner_t * self);
 
 static const char * dummyval = "dummy";
 CcsScanner_t *
-CcsScanner(CcsScanner_t * self, const char * filename)
+CcsScanner(CcsScanner_t * self, CcsGlobals_t * globals, const char * filename)
 {
     FILE * fp;
+    self->globals = globals;
     if (!(fp = fopen(filename, "r"))) goto errquit0;
     if (!(self->dummyToken = CcsToken(0, 0, 0, 0, dummyval, strlen(dummyval))))
 	goto errquit1;

@@ -24,7 +24,7 @@
 #ifndef  COCO_CDEFS_H
 #define  COCO_CDEFS_H
 
-
+#include  <stdarg.h>
 #include  <stdio.h>
 #include  <stdlib.h>
 #include  <string.h>
@@ -56,6 +56,7 @@ typedef struct CcsToken_s CcsToken_t;
 typedef struct CcsPosition_s CcsPosition_t;
 typedef struct CcsScanner_s CcsScanner_t;
 typedef struct CcsParser_s CcsParser_t;
+typedef struct CcsGlobals_s CcsGlobals_t;
 
 #define CcsMalloc(size)  _CcsMalloc_(size, __FILE__, __LINE__)
 void * _CcsMalloc_(size_t size, const char * fname, int line);
