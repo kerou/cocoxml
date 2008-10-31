@@ -22,11 +22,12 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "Globals.h"
+#include  "c/CGlobals.h"
 
 CcGlobals_t *
 CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
 {
-    if (!CcsGlobal(&self->base, fname, errfp)) goto errquit0;
+    if (!CcsGlobals(&self->base, fname, errfp)) goto errquit0;
     if (!CcSymbolTable(&self->symbolTab)) goto errquit1;
     if (!CcLexical(&self->lexical)) goto errquit2;
     if (!CcSyntax(&self->syntax)) goto errquit3;
@@ -36,7 +37,7 @@ CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
  errquit2:
     CcSymbolTable_Destruct(&self->symbolTab);
  errquit1:
-    CcsGlobal_Destruct(&self->base);
+    CcsGlobals_Destruct(&self->base);
  errquit0:
     return NULL;
 }
@@ -47,5 +48,5 @@ CcGlobals_Destruct(CcGlobals_t * self)
     CcSyntax_Destruct(&self->syntax);
     CcLexical_Destruct(&self->lexical);
     CcSymbolTable_Destruct(&self->symbolTab);
-    CcsGlobal_Destruct(&self->base);
+    CcsGlobals_Destruct(&self->base);
 }
