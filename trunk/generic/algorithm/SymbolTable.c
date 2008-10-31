@@ -23,10 +23,34 @@
 -------------------------------------------------------------------------*/
 #include  "SymbolTable.h"
 
+static const CcSymbolType_t SymbolT = {
+    { sizeof(CcSymbolT_t), "symbol_t" }
+};
+const CcSymbolType_t * symbol_t = &SymbolT;
+
+static const CcSymbolType_t SymbolNT = {
+    { sizeof(CcSymbolNT_t), "symbol_nt" }
+};
+const CcSymbolType_t * symbol_nt = &SymbolNT;
+
+static const CcSymbolType_t SymbolPR = {
+    { sizeof(CcSymbolPR_t), "symbol_pr" }
+};
+const CcSymbolType_t * symbol_pr = &SymbolPR;
+
+static const CcSymbolType_t SymbolUNKNOWN = {
+    { sizeof(CcSymbolPR_t), "symbol_unknown" }
+};
+const CcSymbolType_t * symbol_unknown = &SymbolUNKNOWN;
+
+static const CcSymbolType_t SymbolRSLV = {
+    { sizeof(CcSymbolPR_t), "symbol_rslv" }
+};
+const CcSymbolType_t * symbol_rslv = &SymbolRSLV;
+
 CcSymbolTable_t *
 CcSymbolTable(CcSymbolTable_t * self)
 {
-    self = AllocObject(self, sizeof(CcSymbolTable_t));
     CcArrayList(&self->terminals);
     CcArrayList(&self->pragmas);
     CcArrayList(&self->nonterminals);
@@ -39,4 +63,21 @@ CcSymbolTable_Destruct(CcSymbolTable_t * self)
     CcArrayList_Destruct(&self->nonterminals);
     CcArrayList_Destruct(&self->pragmas);
     CcArrayList_Destruct(&self->terminals);
+}
+
+CcSymbol_t *
+CcSymbolTable_NewTerminal(CcSymbolTable_t * self, const char * name, int line)
+{
+
+}
+
+CcSymbol_t *
+CcSymbolTable_NewNonTerminal(CcSymbolTable_t * self,
+			     const char * name, int line)
+{
+}
+
+CcSymbol_t *
+CcSymbolTable_Pragma(CcSymbolTable_t * self, const char * name, int line)
+{
 }
