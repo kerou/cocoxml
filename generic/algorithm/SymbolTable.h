@@ -24,9 +24,52 @@
 #ifndef  COCO_SYMBOLTABLE_H
 #define  COCO_SYMBOLTABLE_H
 
+#ifndef  COCO_OBJECT_H
+#include "Object.h"
+#endif
+
 #ifndef  COCO_ARRAYLIST_H
 #include "ArrayList.h"
 #endif
+
+#ifndef  COCO_BITARRAY_H
+#include "BitArray.h"
+#endif
+
+#ifndef  COCO_POSITION_H
+#include "c/Position.h"
+#endif
+
+struct CcSymbolType_s {
+    CcObjectType_t base;
+};
+
+struct CcSymbol_s {
+    CcObject_t base;
+    char * name;
+    int line;
+};
+
+typedef struct {
+    CcSymbol_t base;
+    CcSymbolT_TokenKind_t tokenKind;
+} CcSymbolT_t;
+
+typedef struct {
+    CcSymbol_t      base;
+    CcNode_t      * graph;
+    CcsBool_t       deletable;
+    CcsBool_t       firstReady;
+    CcBitArray_t    first;
+    CcBitArray_t    follow;
+    CcBitArray_t    nts;
+    CcsPosition_t * attrPos;
+} CcSymbolNT_t;
+
+typedef struct {
+    CcSymbol_t      base;
+    CcsPosition_t * semPos;
+} CcSymbolPR_t;
 
 struct CcSymbolTable_s {
     CcArrayList_t terminals;
@@ -36,5 +79,15 @@ struct CcSymbolTable_s {
 
 CcSymbolTable_t * CcSymbolTable(CcSymbolTable_t * self);
 void CcSymbolTable_Destruct(CcSymbolTable_t * self);
+
+CcSymbol_t *
+CcSymbolTable_NewTerminal(CcSymbolTable_t * self, const char * name, int line);
+
+CcSymbol_t *
+CcSymbolTable_NewNonTerminal(CcSymbolTable_t * self,
+			     const char * name, int line);
+
+CcSymbol_t *
+CcSymbolTable_Pragma(CcSymbolTable_t * self, const char * name, int line);
 
 #endif  /* COCO_SYMBOLTABLE_H */
