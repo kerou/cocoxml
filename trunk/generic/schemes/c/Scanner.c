@@ -583,8 +583,8 @@ CcsScanner_NextCcsToken(CcsScanner_t * self)
 	/*---- enable ----*/
     }
     t = CcsToken(kind, pos, col, line,
-	      CcsBuffer_GetString(&self->buffer, pos, self->pos - pos),
-	      self->pos - pos);
+		 CcsBuffer_GetString(&self->buffer, pos, self->pos - pos),
+		 self->pos - pos);
     CcsBuffer_Unlock(&self->buffer);
     return t;
 }
