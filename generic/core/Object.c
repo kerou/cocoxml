@@ -24,9 +24,9 @@
 #include  "Object.h"
 
 CcObject_t *
-CcObject(CcObject_t * self, const CcObjectType_t * type)
+CcObject(const CcObjectType_t * type)
 {
-    self = AllocObject(self, type->size);
+    CcObject_t * self = CcMalloc(type->size);
     self->type = type;
     return self;
 }

@@ -39,8 +39,7 @@ struct CcSourceOutputScheme_s {
 };
 
 CcSourceOutputScheme_t *
-CcSourceOutputScheme(CcSourceOutputScheme_t * self,
-		     const CcSourceOutputSchemeType_t * type);
+CcSourceOutputScheme(const CcSourceOutputSchemeType_t * type);
 void CcSourceOutputScheme_Destruct(CcSourceOutputScheme_t * self);
 
 EXTC_END

@@ -39,9 +39,9 @@ static const CcNodeType_t NodeOpt = {
 const CcNodeType_t * node_opt = &NodeOpt;
 
 CcNode_t *
-CcNode_NewWithSub(CcNode_t * self, const CcNodeType_t * type, CcNode_t * sub)
+CcNode_NewWithSub(const CcNodeType_t * type, CcNode_t * sub)
 {
-    self = (CcNode_t *)CcObject(self ? &self->base : NULL, &type->base);
+    CcNode_t * self = (CcNode_t *)CcObject(&type->base);
     self->sub = sub;
     return self;
 }
@@ -53,17 +53,17 @@ CcNode_Destruct(CcNode_t * self)
 }
 
 CcGraph_t *
-CcGraph(CcGraph_t * self)
+CcGraph(void)
 {
-    self = AllocObject(self, sizeof(CcGraph_t));
+    CcGraph_t * self = CcMalloc(sizeof(CcGraph_t));
     self->l = self->r = NULL;
     return self;
 }
 
 CcGraph_t *
-CcGraphP(CcGraph_t * self, CcNode_t * p)
+CcGraphP(CcNode_t * p)
 {
-    self = AllocObject(self, sizeof(CcGraph_t));
+    CcGraph_t * self = CcMalloc(sizeof(CcGraph_t));
     self->l = self->r = p;
     return self;
 }
@@ -77,7 +77,7 @@ CcGraph_Destruct(CcGraph_t * self)
 void
 CcGraph_MakeFirstAlt(CcGraph_t * self)
 {
-    self->l = CcNode_NewWithSub(NULL, node_alt, self->l);
+    self->l = CcNode_NewWithSub(node_alt, self->l);
     self->l->line = self->l->sub->line;
     self->l->next = self->r;
     self->r = self->l;
@@ -87,7 +87,7 @@ void
 CcGraph_MakeAlternative(CcGraph_t * self, CcGraph_t * g2)
 {
     CcNode_t * p;
-    g2->l = CcNode_NewWithSub(NULL, node_alt, g2->l); g2->l->line = g2->l->sub->line;
+    g2->l = CcNode_NewWithSub(node_alt, g2->l); g2->l->line = g2->l->sub->line;
     p = self->l; while (p->down != NULL) p = p->down;
     p->down = g2->l;
     p = self->r; while (p->next != NULL) p = p->next;
@@ -113,7 +113,7 @@ void
 CcGraph_MakeIteration(CcGraph_t * self)
 {
     CcNode_t * p , * q;
-    self->l = CcNode_NewWithSub(NULL, node_iter, self->l);
+    self->l = CcNode_NewWithSub(node_iter, self->l);
     p = self->r;
     self->r = self->l;
     while (p != NULL) {
@@ -125,7 +125,7 @@ CcGraph_MakeIteration(CcGraph_t * self)
 void
 CcGraph_MakeOption(CcGraph_t * self)
 {
-    self->l = CcNode_NewWithSub(NULL, node_opt, self->l);
+    self->l = CcNode_NewWithSub(node_opt, self->l);
     self->l->next = self->r;
     self->r = self->l;
 }

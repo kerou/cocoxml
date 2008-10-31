@@ -38,11 +38,8 @@ struct CcComment_s {
 };
 
 CcComment_t *
-CcComment(CcComment_t * self, const int * start, const int * stop,
-	  CcsBool_t nested);
-
-void
-CcComment_Destruct(CcComment_t * self);
+CcComment(const int * start, const int * stop, CcsBool_t nested);
+void CcComment_Destruct(CcComment_t * self);
 
 EXTC_END
 

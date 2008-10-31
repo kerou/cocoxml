@@ -24,10 +24,9 @@
 #include  "OutputScheme.h"
 
 CcOutputScheme_t *
-CcOutputScheme(CcOutputScheme_t * self, const CcOutputSchemeType_t * type)
+CcOutputScheme(const CcOutputSchemeType_t * type)
 {
-    self = (CcOutputScheme_t *)CcObject(self ? &self->base : NULL, &type->base);
-    return self;
+    return (CcOutputScheme_t *)CcObject(&type->base);
 }
 
 void

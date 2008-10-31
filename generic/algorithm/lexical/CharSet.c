@@ -35,7 +35,6 @@ new_Range(int from, int to)
 CcCharSet_t *
 CcCharSet(CcCharSet_t * self)
 {
-    self = AllocObject(self, sizeof(CcCharSet_t));
     self->head = NULL;
     return self;
 }
@@ -96,7 +95,6 @@ CcCharSet_Clone(CcCharSet_t * self, const CcCharSet_t * s)
     CcRange_t * prev, * curnew;
     const CcRange_t * cur1;
 
-    self = AllocObject(self, sizeof(CcCharSet_t));
     self->head = NULL; prev = NULL;
     for (cur1 = s->head; cur1; cur1 = cur1->next) {
 	curnew = new_Range(cur1->from, cur1->to);

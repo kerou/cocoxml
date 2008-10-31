@@ -26,7 +26,6 @@
 CcArrayList_t *
 CcArrayList(CcArrayList_t * self)
 {
-    self = AllocObject(self, sizeof(CcArrayList_t));
     self->Count = 0;
     self->Capacity = 16;
     self->Data = CcMalloc(sizeof(void *) * self->Capacity);

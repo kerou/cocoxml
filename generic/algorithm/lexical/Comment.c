@@ -24,11 +24,10 @@
 #include  "Comment.h"
 
 CcComment_t *
-CcComment(CcComment_t * self, const int * start, const int * stop,
-	  CcsBool_t nested)
+CcComment(const int * start, const int * stop, CcsBool_t nested)
 {
     int * cur0; const int * cur1;
-    self = AllocObject(self, sizeof(CcComment_t));
+    CcComment_t * self = CcMalloc(sizeof(CcComment_t));
     cur0 = self->start; cur1 = start;
     while (*cur1) *cur0++ = *cur1++;
     *cur0 = 0;

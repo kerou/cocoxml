@@ -27,7 +27,6 @@
 CcTarget_t *
 CcTarget(CcTarget_t * self, CcState_t * s)
 {
-    self = AllocObject(self, sizeof(CcTarget_t));
     self->state = s;
     self->next = NULL;
     return self;

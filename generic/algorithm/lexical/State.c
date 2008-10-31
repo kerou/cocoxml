@@ -27,7 +27,6 @@
 CcState_t *
 CcState(CcState_t * self)
 {
-    self = AllocObject(self, sizeof(CcState_t));
     self->nr = 0;
     self->firstAction = NULL;
     self->endOf = NULL;

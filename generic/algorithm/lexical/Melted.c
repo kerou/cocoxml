@@ -27,9 +27,13 @@
 CcMelted_t *
 CcMelted(CcMelted_t * self, CcBitArray_t * set, CcState_t * state)
 {
-    self = AllocObject(self, sizeof(CcMelted_t));
     self->set = set;
     self->state = state;
     self->next = NULL;
     return self;
+}
+
+void
+CcMelted_Destruct(CcMelted_t * self)
+{
 }

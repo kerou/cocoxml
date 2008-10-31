@@ -39,7 +39,6 @@ strhash(const char * str, int szhash)
 CcHashTable_t *
 CcHashTable(CcHashTable_t * self, size_t size)
 {
-    self = AllocObject(self, sizeof(CcHashTable_t));
     self->first = CcMalloc(sizeof(CcHTEntry_t *) * size);
     self->last = self->first + size;
     memset(self->first, 0, sizeof(CcHTEntry_t *) * size);

@@ -39,7 +39,7 @@ struct CcObject_s {
     const CcObjectType_t * type;
 };
 
-CcObject_t * CcObject(CcObject_t * self, const CcObjectType_t * type);
+CcObject_t * CcObject(const CcObjectType_t * type);
 void CcObject_Destruct(CcObject_t * self);
 
 EXTC_END
