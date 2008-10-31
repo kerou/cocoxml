@@ -25,7 +25,7 @@
 #define  COCO_ERRORPOOL_H
 
 #ifndef   COCO_CDEFS_H
-#include  "Defs.h"
+#include  "CDefs.h"
 #endif
 
 EXTC_BEGIN
@@ -44,6 +44,8 @@ void CcsErrorPool_Warning(CcsErrorPool_t * self, int line, int col,
 			  const char * format, ...);
 void CcsErrorPool_Error(CcsErrorPool_t * self, int line, int col,
 			const char * format, ...);
+void CcsErrorPool_VError(CcsErrorPool_t * self, int line, int col,
+			 const char * format, va_list ap);
 void CcsErrorPool_Fatal(CcsErrorPool_t * self, int line, int col,
 			const char * format, ...);
 
