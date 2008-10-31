@@ -46,7 +46,7 @@ main(int argc, char * argv[])
 	if (la->kind == scanner.eofSym) break;
     }
     if (t) CcsScanner_DecRef(&scanner, t);
-    if (la) CcsScanner_DecRef(&scanner, t);
+    if (la) CcsScanner_DecRef(&scanner, la);
     CcsScanner_Destruct(&scanner);
     return 0;
 }
