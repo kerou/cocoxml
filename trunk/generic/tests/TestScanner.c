@@ -33,7 +33,7 @@ main(int argc, char * argv[])
 	fprintf(stderr, "argc != 2\n");
 	return -1;
     }
-    CcsScanner(&scanner, argv[1]);
+    CcsScanner(&scanner, NULL, argv[1]);
     t = NULL; la = CcsScanner_GetDummy(&scanner);
     for (;;) {
 	if (t) CcsScanner_DecRef(&scanner, t);
