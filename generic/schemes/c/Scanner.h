@@ -32,6 +32,10 @@
 #include "Buffer.h"
 #endif
 
+#ifndef  COCO_POSITION_H
+#include "Position.h"
+#endif
+
 EXTC_BEGIN
 
 struct CcsScanner_s {

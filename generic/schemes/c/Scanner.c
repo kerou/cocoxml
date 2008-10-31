@@ -22,8 +22,6 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "Scanner.h"
-#include  "Position.h"
-#include  <assert.h>
 
 static int Char2State(int chr);
 static int Identifier2KWKind(const char * key, size_t keylen, int defaultVal);
@@ -137,10 +135,10 @@ CcsScanner_DecRef(CcsScanner_t * self, CcsToken_t * token)
     CcsToken_t ** curToken;
     if (token == self->dummyToken) return;
     if (--token->refcnt > 0) return;
-    assert(self->busyTokenList != NULL);
+    CcsAssert(self->busyTokenList != NULL);
     for (curToken = &self->busyTokenList;
 	 *curToken != token; curToken = &(*curToken)->next)
-	assert(*curToken && curToken != self->curToken);
+	CcsAssert(*curToken && curToken != self->curToken);
     /* Found, *curToken == token, detach and destroy it. */
     *curToken = (*curToken)->next;
     CcsToken_Destruct(token);
