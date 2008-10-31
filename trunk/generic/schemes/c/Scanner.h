@@ -39,28 +39,30 @@
 EXTC_BEGIN
 
 struct CcsScanner_s {
-    int           eofSym;
-    int           noSym;
-    int           maxT;
+    CcsGlobals_t * globals;
 
-    CcsToken_t  * dummyToken;
+    int            eofSym;
+    int            noSym;
+    int            maxT;
 
-    CcsToken_t  * busyTokenList;
-    CcsToken_t ** curToken;
-    CcsToken_t ** peekToken;
+    CcsToken_t   * dummyToken;
 
-    int           ch;
-    int           chBytes;
-    int           pos;
-    int           line;
-    int           col;
-    int           oldEols;
-    int           oldEolsEOL;
+    CcsToken_t   * busyTokenList;
+    CcsToken_t  ** curToken;
+    CcsToken_t  ** peekToken;
 
-    CcsBuffer_t   buffer;
+    int            ch;
+    int            chBytes;
+    int            pos;
+    int            line;
+    int            col;
+    int            oldEols;
+    int            oldEolsEOL;
+
+    CcsBuffer_t    buffer;
 };
 
-CcsScanner_t * CcsScanner(CcsScanner_t * self, const char * filename);
+CcsScanner_t * CcsScanner(CcsScanner_t * self, CcsGlobals_t * globals, const char * filename);
 void CcsScanner_Destruct(CcsScanner_t * self);
 CcsToken_t * CcsScanner_GetDummy(CcsScanner_t * self);
 CcsToken_t * CcsScanner_Scan(CcsScanner_t * self);
