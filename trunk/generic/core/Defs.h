@@ -61,15 +61,16 @@ typedef struct CcSymbolTable_s CcSymbolTable_t;
 typedef struct CcSymbol_s CcSymbol_t;
 
 /* Lexical types */
+typedef struct CcAction_s CcAction_t;
 typedef struct CcCharSet_s CcCharSet_t;
 typedef struct CcCharClass_s CcCharClass_t;
 typedef struct CcComment_s CcComment_t;
-typedef struct CcAction_s CcAction_t;
+typedef struct CcMelted_s CcMelted_t;
 typedef struct CcState_s CcState_t;
 typedef struct CcTarget_s CcTarget_t;
 typedef struct CcChrNode_s CcChrNode_t;
 typedef struct CcClasNode_s CcClasNode_t;
-typedef struct CcMelted_s CcMelted_t;
+
 
 #define CcMalloc(size) _CcMalloc_(size, __FILE__, __LINE__)
 void * _CcMalloc_(size_t size, const char * fname, int line);
@@ -86,16 +87,7 @@ char * _CcStrdup_(const char * str, const char * fname, int line);
 #define AllocObject(self, szobj) _AllocObject_(self, szobj, __FILE__, __LINE__)
 void * _AllocObject_(void * self, size_t szobj, const char * fname, int line);
 
-typedef struct {
-    CcsScanner_t     * scanner;
-    CcsParser_t      * parser;
-    CcsErrorPool_t   * error;
-
-    CcOutputScheme_t * outputScheme;
-    CcSymbolTable_t  * symbolTab;
-    CcLexical_t      * lexical;
-    CcSyntax_t       * syntax;
-} CcGlobals_t;
+typedef struct CcGlobals_s CcGlobals_t;
 
 EXTC_END
 

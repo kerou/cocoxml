@@ -31,14 +31,14 @@
 EXTC_BEGIN
 
 struct CcAction_s {
-    int          typ;
-    int          sym;
-    int          tc;
-    CcTarget_t * target;
-    CcAction_t * next;
+    const CcNodeType_t * typ;
+    int                  sym;
+    int                  tc;
+    CcTarget_t         * target;
+    CcAction_t         * next;
 };
 
-CcAction_t * CcAction(CcAction_t * self, int typ, int sym, int tc);
+CcAction_t * CcAction(CcAction_t * self, const CcNodeType_t * typ, int sym, int tc);
 void CcAction_Destruct(CcAction_t * self);
 void CcAction_AddTarget(CcAction_t * self, CcTarget_t * t);
 int CcAction_AddTargets(CcAction_t * self, CcAction_t * a);

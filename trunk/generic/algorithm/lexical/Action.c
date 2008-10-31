@@ -29,9 +29,8 @@
 #include  "lexical/State.h"
 
 CcAction_t *
-CcAction(CcAction_t * self, int typ, int sym, int tc)
+CcAction(CcAction_t * self, const CcNodeType_t * typ, int sym, int tc)
 {
-    self = AllocObject(self, sizeof(CcAction_t));
     self->typ = typ;
     self->sym = sym;
     self->tc = tc;
