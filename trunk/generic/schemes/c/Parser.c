@@ -25,22 +25,20 @@
 /*---- enable ----*/
 #include  <ctype.h>
 #include  "Parser.h"
+#include  "Token.h"
 #include  "CGlobals.h"
-/*
-#include  "Tab.h"
-#include  "Symbol.h"
-#include  "Node.h"
-#include  "CharSet.h"
-#include  "CharClass.h"
-#include  "DFA.h"
-#include  "Graph.h"
-*/
+
 /*---- constantsheader ----*/
+#include  "Globals.h"
+#include  "lexical/CharSet.h"
+#include  "lexical/CharClass.h"
+#include  "lexical/Nodes.h"
+#include  "syntax/Nodes.h"
 static const int CcsParser_id = 0;
 static const int CcsParser_str = 1;
 /*---- enable ----*/
 
-void
+static void
 CcsParser_SynErr(CcsParser_t * self, int n)
 {
     const char * s; char format[20];
@@ -104,20 +102,19 @@ CcsParser_SynErr(CcsParser_t * self, int n)
 	s = format;
 	break;
     }
-    CcsErrorPool_Error(&self->globals->error, self->la->line, self->la->col, "%s", s);
+    CcsGlobals_Error(self->globals, self->la->line, self->la->col, "%s", s);
 }
 
-#if 0
 static void
 CcsParser_Get(CcsParser_t * self)
 {
     for (;;) {
 	self->t = self->la;
-	self->la = Scanner_Scan(self->scanner);
-	if (self->la->kind <= self->maxT) { ++self->errDist; break; }
+	self->la = CcsScanner_Scan(self->scanner);
+	if (self->la->kind <= self->maxT) { /*++self->errDist;*/ break; }
 	/*---- pragmas ----*/
 	if (self->la->kind == 42) {
-	    Tab_SetDDT(self->tab, self->la->val);
+	    /*Tab_SetDDT(self->tab, self->la->val);*/
 	}
 	/*---- enable ----*/
 	self->la = self->t;
@@ -149,7 +146,7 @@ static const char * set[] = {
     ".******************************.**********."
     /*---- enable ----*/
 };
-static int
+static CcsBool_t
 CcsParser_StartOf(CcsParser_t * self, int s)
 {
     return set[s][self->la->kind] == '*';
@@ -172,11 +169,11 @@ CcsParser_ExpectWeak(CcsParser_t * self, int n, int follow)
     }
 }
 
-static int
+static CcsBool_t
 CcsParser_WeakSeparator(CcsParser_t * self, int n, int syFol, int repFol)
 {
-    if (self->la->kind == n) { CcsParser_Get(self); return 1; }
-    else if (CcsParser_StartOf(self, repFol)) { return 1; }
+    if (self->la->kind == n) { CcsParser_Get(self); return TRUE; }
+    else if (CcsParser_StartOf(self, repFol)) { return FALSE; }
     CcsParser_SynErr(self, n);
     while (!(CcsParser_StartOf(self, syFol) ||
 	     CcsParser_StartOf(self, repFol) ||
@@ -188,29 +185,29 @@ CcsParser_WeakSeparator(CcsParser_t * self, int n, int syFol, int repFol)
 /*---- productionsheader ----*/
 static void CcsParser_Coco(CcsParser_t * self);
 static void CcsParser_SetDecl(CcsParser_t * self);
-static void CcsParser_TokenDecl(CcsParser_t * self, int typ);
-static void CcsParser_TokenExpr(CcsParser_t * self, Graph_t ** g);
-static void CcsParser_Set(CcsParser_t * self, CharSet_t ** s);
-static void CcsParser_AttrDecl(CcsParser_t * self, Symbol_t * sym);
-static void CcsParser_SemText(CcsParser_t * self, Position_t ** pos);
-static void CcsParser_Expression(CcsParser_t * self, Graph_t ** g);
-static void CcsParser_SimSet(CcsParser_t * self, CharSet_t ** s);
+static void CcsParser_TokenDecl(CcsParser_t * self, const CcSymbolType_t * typ);
+static void CcsParser_TokenExpr(CcsParser_t * self, CcGraph_t ** g);
+static void CcsParser_Set(CcsParser_t * self, CcCharSet_t ** s);
+static void CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym);
+static void CcsParser_SemText(CcsParser_t * self, CcsPosition_t ** pos);
+static void CcsParser_Expression(CcsParser_t * self, CcGraph_t ** g);
+static void CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s);
 static void CcsParser_Char(CcsParser_t * self, int * n);
 static void CcsParser_Sym(CcsParser_t * self, char ** name, int * kind);
-static void CcsParser_Term(CcsParser_t * self, Graph_t ** g);
-static void CcsParser_Resolver(CcsParser_t * self, Position_t ** pos);
-static void CcsParser_Factor(CcsParser_t * self, Graph_t ** g);
-static void CcsParser_Attribs(CcsParser_t * self, Node_t * p);
+static void CcsParser_Term(CcsParser_t * self, CcGraph_t ** g);
+static void CcsParser_Resolver(CcsParser_t * self, CcsPosition_t ** pos);
+static void CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g);
+static void CcsParser_Attribs(CcsParser_t * self, CcNode_t * p);
 static void CcsParser_Condition(CcsParser_t * self);
-static void CcsParser_TokenTerm(CcsParser_t * self, Graph_t ** g);
-static void CcsParser_TokenFactor(CcsParser_t * self, Graph_t ** g);
+static void CcsParser_TokenTerm(CcsParser_t * self, CcGraph_t ** g);
+static void CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g);
 /*---- enable ----*/
 
 void
 CcsParser_Parse(CcsParser_t * self)
 {
     self->t = NULL;
-    self->la = Scanner_GetDummy(self->scanner);
+    self->la = CcsScanner_GetDummy(self->scanner);
     CcsParser_Get(self);
     /*---- parseRoot ----*/
     CcsParser_Coco(self);
@@ -219,60 +216,63 @@ CcsParser_Parse(CcsParser_t * self)
 }
 
 CcsParser_t *
-CcsParser(CcsParser_t * self, Scanner_t * scanner)
+CcsParser(CcsParser_t * self, CcsGlobals_t * globals)
 {
+    self->globals = globals;
+    self->scanner = &globals->scanner;
     /*---- constants ----*/
     self->maxT = 41;
     /*---- enable ----*/
+    /*---- init ----*/
+    self->symtab = &((CcGlobals_t *)globals)->symbolTab;
+    self->lexical = &((CcGlobals_t *)globals)->lexical;
+    self->syntax = &((CcGlobals_t *)globals)->syntax;
+    /*---- enable ----*/
     self->t = self->la = NULL;
-    self->minErrDist = 2;
-    self->errDist = self->minErrDist;
-    self->scanner = scanner;
-    Errors(&self->errors, stderr);
     return self;
 }
 
 void
 CcsParser_Destruct(CcsParser_t * self)
 {
-    Errors_Destruct(&self->errors);
+    /*---- destruct ----*/
+    /*---- enable ----*/
 }
 
 /*---- productionsheader ----*/
 static void /* OK */
 CcsParser_Coco(CcsParser_t * self) {
-    Symbol_t * sym;
-    Graph_t * g, * g1, * g2;
-    const char * gramName = NULL;
-    CharSet_t * s;
+    CcSymbol_t * sym;
+    CcGraph_t * g, * g1, * g2;
+    char * gramName = NULL;
+    CcCharSet_t * s;
 
     InitDeclarations();
-    Token_t * beg;
-    Scanner_IncRef(self->scanner, beg = self->la);
+    CcsToken_t * beg;
+    CcsScanner_IncRef(self->scanner, beg = self->la);
     while (CcsParser_StartOf(self, 1)) {
 	CcsParser_Get(self);
     }
     if (self->la->pos != beg->pos) {
-	self->pgen->usingPos =
-	    Scanner_GetPositionWithTail(self->scanner, beg, self->t);
+	self->usingPos =
+	    CcsScanner_GetPositionWithTail(self->scanner, beg, self->t);
 	/*pgen->usingPos = new Position(beg, t->pos - beg + coco_string_length(t->val), 0);*/
     }
 
     CcsParser_Expect(self, 6);
     self->genScanner = TRUE;
-    self->tab->ignored = CharSet(NULL); 
     CcsParser_Expect(self, 1);
-    gramName = strdupa(self->t->val);
-    Scanner_DecRef(self->scanner, beg);
-    Scanner_IncRef(self->scanner, beg = self->la);
+    gramName = CcStrdup(self->t->val);
+    CcsScanner_DecRef(self->scanner, beg);
+    CcsScanner_IncRef(self->scanner, beg = self->la);
 
     while (CcsParser_StartOf(self, 2)) {
 	CcsParser_Get(self);
     }
-    self->tab->semDeclPos = Scanner_GetPosition(self->scanner, beg, self->la);
+    /*self->tab->semDeclPos = CcsScanner_GetPosition(self->scanner, beg, self->la);*/
     if (self->la->kind == 7) {
 	CcsParser_Get(self);
-	self->dfa->ignoreCase = TRUE; 
+	self->lexical->ignoreCase = TRUE; 
     }
     if (self->la->kind == 8) {
 	CcsParser_Get(self);
@@ -283,18 +283,18 @@ CcsParser_Coco(CcsParser_t * self) {
     if (self->la->kind == 9) {
 	CcsParser_Get(self);
 	while (self->la->kind == 1 || self->la->kind == 3 || self->la->kind == 5) {
-	    CcsParser_TokenDecl(self, node_t);
+	    CcsParser_TokenDecl(self, symbol_t);
 	}
     }
     if (self->la->kind == 10) {
 	CcsParser_Get(self);
 	while (self->la->kind == 1 || self->la->kind == 3 || self->la->kind == 5) {
-	    CcsParser_TokenDecl(self, node_pr);
+	    CcsParser_TokenDecl(self, symbol_pr);
 	}
     }
     while (self->la->kind == 11) {
 	CcsParser_Get(self);
-	Bool_t nested = FALSE; 
+	CcsBool_t nested = FALSE; 
 	CcsParser_Expect(self, 12);
 	CcsParser_TokenExpr(self, &g1);
 	CcsParser_Expect(self, 13);
@@ -303,26 +303,29 @@ CcsParser_Coco(CcsParser_t * self) {
 	    CcsParser_Get(self);
 	    nested = TRUE; 
 	}
-	DFA_NewComment(self->dfa, g1->l, g2->l, nested);
+	CcLexical_NewComment(self->lexical, self->t, g1->l, g2->l, nested);
     }
     while (self->la->kind == 15) {
 	CcsParser_Get(self);
 	CcsParser_Set(self, &s);
-	CharSet_Or(self->tab->ignored, s);
+	CcCharSet_Or(self->lexical->ignored, s);
     }
     while (!(self->la->kind == 0 || self->la->kind == 16)) {CcsParser_SynErr(self, 42); CcsParser_Get(self);}
     CcsParser_Expect(self, 16);
-    if (self->genScanner) DFA_MakeDeterministic(self->dfa);
-    Tab_DeleteNodes(self->tab);
+    if (self->genScanner) CcLexical_MakeDeterministic(self->lexical);
+    CcLexical_DeleteNodes(self->lexical);
+    CcSyntax_DeleteNodes(self->syntax);
 
     while (self->la->kind == 1) {
 	CcsParser_Get(self);
-	sym = Tab_FindSym(self->tab, self->t->val);
-	Bool_t undef = (sym == NULL);
-	if (undef) sym = Tab_NewSym(self->tab, node_nt, self->t->val, self->t->line);
-	else {
-	    if (sym->typ == node_nt) {
-		if (sym->graph != NULL)
+	sym = CcSymbolTable_FindSym(self->symtab, self->t->val);
+	CcsBool_t undef = (sym == NULL);
+	if (undef) {
+	    sym = CcSymbolTable_NewNonTerminal(self->symtab,
+					       self->t->val, self->t->line);
+	} else {
+	    if ((const CcSymbolType_t *)sym->base.type == symbol_nt) {
+		if (((CcSymbolNT_t *)sym)->graph != NULL)
 		    CcsGlobals_SemErr(self->globals, self->t,
 				      "name declared twice");
 	    } else
@@ -330,24 +333,24 @@ CcsParser_Coco(CcsParser_t * self) {
 				  "this symbol kind not allowed on left side of production");
 	    sym->line = self->t->line;
 	}
-	Bool_t noAttrs = (sym->attrPos == NULL);
-	sym->attrPos = NULL;
+	CcsBool_t noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
+	((CcSymbolNT_t *)sym)->attrPos = NULL;
 
 	if (self->la->kind == 24 || self->la->kind == 26) {
-	    CcsParser_AttrDecl(self, sym);
+	    CcsParser_AttrDecl(self, (CcSymbolNT_t *)sym);
 	}
 	if (!undef)
-	    if (noAttrs != (sym->attrPos == NULL))
+	    if (noAttrs != (((CcSymbolNT_t *)sym)->attrPos == NULL))
 		CcsGlobals_SemErr(self->globals, self->t,
 				  "attribute mismatch between declaration and use of this symbol");
 
 	if (self->la->kind == 39) {
-	    CcsParser_SemText(self, &sym->semPos);
+	    CcsParser_SemText(self, &((CcSymbolPR_t *)sym)->semPos);
 	}
 	CcsParser_ExpectWeak(self, 17, 3);
 	CcsParser_Expression(self, &g);
-	sym->graph = g->l;
-	Tab_Finish(self->tab, g);
+	((CcSymbolNT_t *)sym)->graph = g->l;
+	CcGraph_Finish(g);
 	
 	CcsParser_ExpectWeak(self, 18, 4);
     }
@@ -356,19 +359,22 @@ CcsParser_Coco(CcsParser_t * self) {
     if (strcmp(gramName, self->t->val))
 	CcsGlobals_SemErr(self->globals, self->t,
 			  "name does not match grammar name");
-    self->tab->gramSy = Tab_FindSym(self->tab, gramName);
-    if (self->tab->gramSy == NULL)
+    self->syntax->gramSy = CcSymbolTable_FindSym(self->symtab, gramName);
+    CcFree(gramName);
+    if (self->syntax->gramSy == NULL)
 	CcsGlobals_SemErr(self->globals, self->t,
 			  "missing production for grammar name");
     else {
-	sym = self->tab->gramSy;
-	if (sym->attrPos != NULL)
+	sym = self->syntax->gramSy;
+	if (((CcSymbolNT_t *)sym)->attrPos != NULL)
 	    CcsGlobals_SemErr(self->globals, self->t,
 			      "grammar symbol must not have attributes");
     }
-    self->tab->noSym = Tab_NewSym(self->tab, node_t, "???", 0); /* noSym gets highest number */
-    Tab_SetupAnys(self->tab);
-    Tab_RenumberPragmas(self->tab);
+    /* noSym gets highest number */
+    self->syntax->noSym = CcSymbolTable_NewTerminal(self->symtab, "???", 0);
+    CcSyntax_SetupAnys(self->syntax);
+    CcSyntax_RenumberPragmas(self->syntax);
+    /*
     if (self->tab->ddt[2]) Tab_PrintNodes(self->tab);
     if (self->errors.count == 0) {
 	fprintf(stderr, "checking\n");
@@ -387,40 +393,46 @@ CcsParser_Coco(CcsParser_t * self) {
 	}
     }
     if (self->tab->ddt[6]) Tab_PrintSymbolTable(self->tab);
-
+    */
     CcsParser_Expect(self, 18);
 }
 
 static void /* OK */
 CcsParser_SetDecl(CcsParser_t * self) {
-    CharSet_t * s; 
+    CcCharSet_t * s; 
     CcsParser_Expect(self, 1);
     const char * name = self->t->val;
-    CharClass_t * c = Tab_FindCharClassS(self->tab, name);
+    CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, name);
 
-    if (c != NULL) CcsGlobals_SemErr(self->globals, self->t,
-				     "name declared twice");
+    if (c != NULL)
+	CcsGlobals_SemErr(self->globals, self->t, "name declared twice");
 
     CcsParser_Expect(self, 17);
     CcsParser_Set(self, &s);
-    if (CharSet_Elements(s) == 0)
+    if (CcCharSet_Elements(s) == 0)
 	CcsGlobals_SemErr(self->globals, self->t,
 			  "character set must not be empty");
-    Tab_NewCharClass(self->tab, name, s);
+    CcLexical_NewCharClass(self->lexical, name, s);
 
     CcsParser_Expect(self, 18);
 }
 
 static void /* OK */
-CcsParser_TokenDecl(CcsParser_t * self, int typ) {
-    char * name = NULL; int kind; Symbol_t * sym; Graph_t * g; 
+CcsParser_TokenDecl(CcsParser_t * self, const CcSymbolType_t * typ) {
+    char * name = NULL; int kind; CcSymbol_t * sym; CcGraph_t * g; 
+
     CcsParser_Sym(self, &name, &kind);
-    sym = Tab_FindSym(self->tab, name);
-    if (sym != NULL) CcsGlobals_SemErr(self->globals, self->t,
-				       "name declared twice");
-    else {
-	sym = Tab_NewSym(self->tab, typ, name, self->t->line);
-	sym->tokenKind = symbol_fixedToken;
+    sym = CcSymbolTable_FindSym(self->symtab, name);
+    if (sym != NULL) {
+	CcsGlobals_SemErr(self->globals, self->t, "name declared twice");
+    } else if (typ == symbol_t) {
+	sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
+	((CcSymbolT_t *)sym)->tokenKind = symbol_fixedToken;
+	/*
+    } else if (typ == symbol_pr) {
+	sym = CcSymbolTable_NewPragma(self->symtab, name, self->t->line);
+	((CcSymbolPR_t *)sym)->tokenKind = symbol_fixedToken;
+	*/
     }
     self->tokenString = NULL;
 
@@ -434,64 +446,67 @@ CcsParser_TokenDecl(CcsParser_t * self, int typ) {
 	if (kind == CcsParser_str)
 	    CcsGlobals_SemErr(self->globals, self->t,
 			      "a literal must not be declared with a structure");
-	Tab_Finish(self->tab, g);
+	CcGraph_Finish(g);
 	if (self->tokenString == NULL ||
 	    !strcmp(self->tokenString, self->noString))
-	    DFA_ConvertToStates(self->dfa, g->l, sym);
+	    CcLexical_ConvertToStates(self->lexical, g->l, (CcSymbolT_t *)sym);
 	else { /* CcsParser_TokenExpr is a single string */
-	    if (HashTable_Get(&self->tab->literals, self->tokenString) != NULL)
+	    if (CcHashTable_Get(&self->lexical->literals, self->tokenString) != NULL)
 		CcsGlobals_SemErr(self->globals, self->t,
 				  "token string declared twice");
-	    HashTable_Set(&self->tab->literals, self->tokenString, sym);
-	    DFA_MatchLiteral(self->dfa, self->tokenString, sym);
+	    CcHashTable_Set(&self->lexical->literals,
+			    self->tokenString, (CcObject_t *)sym);
+	    CcLexical_MatchLiteral(self->lexical,
+				   self->tokenString, (CcSymbolT_t *)sym);
 	}
     } else if (CcsParser_StartOf(self, 6)) {
 	if (kind == CcsParser_id) self->genScanner = FALSE;
-	else DFA_MatchLiteral(self->dfa, sym->name, sym);
+	else CcLexical_MatchLiteral(self->lexical,
+				    sym->name, (CcSymbolT_t *)sym);
     } else CcsParser_SynErr(self, 44);
     if (self->la->kind == 39) {
-	CcsParser_SemText(self, &sym->semPos);
-	if (typ != node_pr)
+	CcsParser_SemText(self, &((CcSymbolPR_t *)sym)->semPos);
+	if (typ != symbol_pr)
 	    CcsGlobals_SemErr(self->globals, self->t,
 			      "semantic action not allowed here"); 
     }
 }
 
 static void /* OK */
-CcsParser_TokenExpr(CcsParser_t * self, Graph_t ** g) {
-    Graph_t * g2;
+CcsParser_TokenExpr(CcsParser_t * self, CcGraph_t ** g) {
+    CcGraph_t * g2;
     CcsParser_TokenTerm(self, g);
-    Bool_t first = TRUE; 
+    CcsBool_t first = TRUE; 
     while (CcsParser_WeakSeparator(self, 28,8,7) ) {
 	CcsParser_TokenTerm(self, &g2);
-	if (first) { Tab_MakeFirstAlt(self->tab, *g); first = FALSE; }
-	Tab_MakeAlternative(self->tab, *g, g2);
+	if (first) { CcLexical_MakeFirstAlt(self->lexical, *g); first = FALSE; }
+	CcLexical_MakeAlternative(self->lexical, *g, g2);
     }
 }
 
 static void /* OK */
-CcsParser_Set(CcsParser_t * self, CharSet_t ** s) {
-    CharSet_t * s2; 
+CcsParser_Set(CcsParser_t * self, CcCharSet_t ** s) {
+    CcCharSet_t * s2; 
     CcsParser_SimSet(self, s);
     while (self->la->kind == 20 || self->la->kind == 21) {
 	if (self->la->kind == 20) {
 	    CcsParser_Get(self);
 	    CcsParser_SimSet(self, &s2);
-	    CharSet_Or(*s, s2);
+	    CcCharSet_Or(*s, s2);
 	} else {
 	    CcsParser_Get(self);
 	    CcsParser_SimSet(self, &s2);
-	    CharSet_Subtract(*s, s2);
+	    CcCharSet_Subtract(*s, s2);
 	}
     }
 }
 
 static void /* OK */
-CcsParser_AttrDecl(CcsParser_t * self, Symbol_t * sym) {
+CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym) {
     if (self->la->kind == 24) {
 	CcsParser_Get(self);
-	Token_t * beg;
-	Scanner_IncRef(self->scanner, beg = self->la);
+	CcsToken_t * beg;
+	CcsScanner_IncRef(self->scanner, beg = self->la);
 	while (CcsParser_StartOf(self, 9)) {
 	    if (CcsParser_StartOf(self, 10)) {
 		CcsParser_Get(self);
@@ -502,12 +517,12 @@ CcsParser_AttrDecl(CcsParser_t * self, Symbol_t * sym) {
 	    }
 	}
 	CcsParser_Expect(self, 25);
-	sym->attrPos = Scanner_GetPosition(self->scanner, beg, self->t);
-	Scanner_DecRef(self->scanner, beg);
+	sym->attrPos = CcsScanner_GetPosition(self->scanner, beg, self->t);
+	CcsScanner_DecRef(self->scanner, beg);
     } else if (self->la->kind == 26) {
 	CcsParser_Get(self);
-	Token_t * beg;
-	Scanner_IncRef(self->scanner, beg = self->la);
+	CcsToken_t * beg;
+	CcsScanner_IncRef(self->scanner, beg = self->la);
 	while (CcsParser_StartOf(self, 11)) {
 	    if (CcsParser_StartOf(self, 12)) {
 		CcsParser_Get(self);
@@ -518,18 +533,18 @@ CcsParser_AttrDecl(CcsParser_t * self, Symbol_t * sym) {
 	    }
 	}
 	CcsParser_Expect(self, 27);
-	sym->attrPos = Scanner_GetPosition(self->scanner, beg, self->t);
-	Scanner_DecRef(self->scanner, beg);
+	sym->attrPos = CcsScanner_GetPosition(self->scanner, beg, self->t);
+	CcsScanner_DecRef(self->scanner, beg);
     } else {
 	CcsParser_SynErr(self, 45);
     }
 }
 
 static void /* OK */
-CcsParser_SemText(CcsParser_t * self, Position_t ** pos) {
+CcsParser_SemText(CcsParser_t * self, CcsPosition_t ** pos) {
     CcsParser_Expect(self, 39);
-    Token_t * beg;
-    Scanner_IncRef(self->scanner, beg = self->la);
+    CcsToken_t * beg;
+    CcsScanner_IncRef(self->scanner, beg = self->la);
     while (CcsParser_StartOf(self, 13)) {
 	if (CcsParser_StartOf(self, 14)) {
 	    CcsParser_Get(self);
@@ -544,58 +559,58 @@ CcsParser_SemText(CcsParser_t * self, Position_t ** pos) {
 	}
     }
     CcsParser_Expect(self, 40);
-    *pos = Scanner_GetPosition(self->scanner, beg, self->t);
-    Scanner_DecRef(self->scanner, beg);
+    *pos = CcsScanner_GetPosition(self->scanner, beg, self->t);
+    CcsScanner_DecRef(self->scanner, beg);
 }
 
 static void /* OK */
-CcsParser_Expression(CcsParser_t * self, Graph_t ** g) {
-    Graph_t * g2;
+CcsParser_Expression(CcsParser_t * self, CcGraph_t ** g) {
+    CcGraph_t * g2;
     CcsParser_Term(self, g);
-    Bool_t first = TRUE; 
+    CcsBool_t first = TRUE; 
     while (CcsParser_WeakSeparator(self, 28,16,15) ) {
 	CcsParser_Term(self, &g2);
-	if (first) { Tab_MakeFirstAlt(self->tab, *g); first = FALSE; }
-	Tab_MakeAlternative(self->tab, *g, g2);
+	if (first) { CcSyntax_MakeFirstAlt(self->syntax, *g); first = FALSE; }
+	CcSyntax_MakeAlternative(self->syntax, *g, g2);
     }
 }
 
 static void /* OK */
-CcsParser_SimSet(CcsParser_t * self, CharSet_t ** s) {
+CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s) {
     int n1, n2; 
-    *s = CharSet(NULL); 
+    *s = CcCharSet();
     if (self->la->kind == 1) {
 	CcsParser_Get(self);
-	CharClass_t * c = Tab_FindCharClassS(self->tab, self->t->val);
+	CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, self->t->val);
 	if (c == NULL) CcsGlobals_SemErr(self->globals, self->t,
 					 "undefined name");
-	else CharSet_Or(*s, c->set);
+	else CcCharSet_Or(*s, c->set);
     } else if (self->la->kind == 3) {
 	CcsParser_Get(self);
 	const char * cur0; int ch;
-	char * cur, * name = Unescape(self->t->val);
-	if (self->dfa->ignoreCase) {
+	char * cur, * name = CcsUnescape(self->t->val);
+	if (self->lexical->ignoreCase) {
 	    for (cur = name; *cur; ++cur) *cur = tolower(*cur);
 	}
 	cur0 = name;
 	while (*cur0) {
-	    ch = UTF8Get(&cur0, EoF);
-	    assert(ch >= 0);
-	    CharSet_Set(*s, ch);
+	    ch = CcsUTF8Get(&cur0, name + strlen(name));
+	    CcAssert(ch >= 0);
+	    CcCharSet_Set(*s, ch);
 	}
 	CocoFree(name);
     } else if (self->la->kind == 5) {
 	CcsParser_Char(self, &n1);
-	CharSet_Set(*s, n1);
+	CcCharSet_Set(*s, n1);
 	if (self->la->kind == 22) {
 	    CcsParser_Get(self);
 	    CcsParser_Char(self, &n2);
 	    int idx;
-	    for (idx = n1; idx <= n2; ++idx) CharSet_Set(*s, idx); 
+	    for (idx = n1; idx <= n2; ++idx) CcCharSet_Set(*s, idx); 
 	}
     } else if (self->la->kind == 23) {
 	CcsParser_Get(self);
-	*s = CharSet(NULL); CharSet_Fill(*s, COCO_WCHAR_MAX);
+	*s = CcCharSet(); CcCharSet_Fill(*s, COCO_WCHAR_MAX);
     } else {
 	CcsParser_SynErr(self, 46);
     }
@@ -606,32 +621,32 @@ CcsParser_Char(CcsParser_t * self, int * n) {
     CcsParser_Expect(self, 5);
     *n = 0;
     char * name; const char * cur;
-    cur = name = Unescape(self->t->val);
-    *n = UTF8Get(&cur, EoF);
-    if (*cur != 0) CcsGlobals_SemErr(self->globals, self->t,
-				     "unacceptable character value");
+    cur = name = CcsUnescape(self->t->val);
+    *n = UTF8Get(&cur, name + strlen(name));
+    if (*cur != 0)
+	CcsGlobals_SemErr(self->globals, self->t, "unacceptable character value");
     CocoFree(name);
-    if (self->dfa->ignoreCase) *n = tolower(*n);
+    if (self->lexical->ignoreCase) *n = tolower(*n);
 }
 
 static void /* OK */
 CcsParser_Sym(CcsParser_t * self, char ** name, int * kind) {
-    *name = CocoStrdup("???"); *kind = CcsParser_id;
+    *name = CcStrdup("???"); *kind = CcsParser_id;
     if (self->la->kind == 1) {
 	CcsParser_Get(self);
-	*kind = CcsParser_id; CocoFree(*name); *name = CocoStrdup(self->t->val);
+	*kind = CcsParser_id; CcFree(*name); *name = CcStrdup(self->t->val);
     } else if (self->la->kind == 3 || self->la->kind == 5) {
 	if (self->la->kind == 3) {
 	    CcsParser_Get(self);
-	    CocoFree(*name); *name = CocoStrdup(self->t->val);
+	    CcFree(*name); *name = CcStrdup(self->t->val);
 	} else {
 	    CcsParser_Get(self);
 	    /* FIX ME: csharp code is:
 	     * name = "\"" + t.val.Substring(1, t.val.Length-2) + "\""; */
-	    CocoFree(*name); *name = CocoStrdup(self->t->val);
+	    CcFree(*name); *name = CcStrdup(self->t->val);
 	}
 	*kind = CcsParser_str;
-	if (self->dfa->ignoreCase) {
+	if (self->lexical->ignoreCase) {
 	    char * cur;
 	    for (cur = *name; *cur; ++cur) *cur = tolower(*cur);
 	}
@@ -644,78 +659,91 @@ CcsParser_Sym(CcsParser_t * self, char ** name, int * kind) {
 }
 
 static void /* OK */
-CcsParser_Term(CcsParser_t * self, Graph_t ** g) {
-    Graph_t *g2; Node_t * rslv = NULL; *g = NULL; 
+CcsParser_Term(CcsParser_t * self, CcGraph_t ** g) {
+    CcGraph_t *g2; CcNode_t * rslv = NULL; *g = NULL; 
     if (CcsParser_StartOf(self, 17)) {
 	if (self->la->kind == 37) {
-	    rslv = Tab_NewNodeTSL(self->tab, node_rslv, NULL, self->la->line); 
-	    CcsParser_Resolver(self, &rslv->pos);
-	    *g = GraphP(NULL, rslv);
+	    rslv = CcSyntax_NewNodeRSLV(self->syntax, NULL, self->la->line);
+	    CcsParser_Resolver(self, &((CcNodeRSLV_t *)rslv)->pos);
+	    *g = CcGraphP(rslv);
 	}
 	CcsParser_Factor(self, &g2);
-	if (rslv != NULL) Tab_MakeSequence(self->tab, *g, g2);
+	if (rslv != NULL) CcSyntax_MakeSequence(self->syntax, *g, g2);
 	else *g = g2;
 	while (CcsParser_StartOf(self, 18)) {
 	    CcsParser_Factor(self, &g2);
-	    Tab_MakeSequence(self->tab, *g, g2);
+	    CcSyntax_MakeSequence(self->syntax, *g, g2);
 	}
     } else if (CcsParser_StartOf(self, 19)) {
-	*g = GraphP(NULL, Tab_NewNodeTSL(self->tab, node_eps, NULL, 0)); 
+	*g = CcGraphP(CcSyntax_NewNodeEPS(self->syntax)); 
     } else CcsParser_SynErr(self, 48);
     if (*g == NULL) /* invalid start of Term */
-	*g = GraphP(NULL, Tab_NewNodeTSL(self->tab, node_eps, NULL, 0)); 
+	*g = CcGraphP(CcSyntax_NewNodeEPS(self->syntax)); 
 }
 
 static void /* OK */
-CcsParser_Resolver(CcsParser_t * self, Position_t ** pos) {
+CcsParser_Resolver(CcsParser_t * self, CcsPosition_t ** pos) {
     CcsParser_Expect(self, 37);
     CcsParser_Expect(self, 30);
-    Token_t * beg;
-    Scanner_IncRef(self->scanner, beg = self->la);
+    CcsToken_t * beg;
+    CcsScanner_IncRef(self->scanner, beg = self->la);
     CcsParser_Condition(self);
-    *pos = Scanner_GetPosition(self->scanner, beg, self->t);
-    Scanner_DecRef(self->scanner, beg);
+    *pos = CcsScanner_GetPosition(self->scanner, beg, self->t);
+    CcsScanner_DecRef(self->scanner, beg);
 }
 
 static void /* OK */
-CcsParser_Factor(CcsParser_t * self, Graph_t ** g) {
-    char * name = NULL; int kind; Position_t * pos; Bool_t weak = FALSE; 
+CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g) {
+    char * name = NULL; int kind; CcsPosition_t * pos; CcsBool_t weak = FALSE; 
     *g = NULL;
 
     switch (self->la->kind) {
     case 1: case 3: case 5: case 29: {
 	if (self->la->kind == 29) {
 	    CcsParser_Get(self);
-	    weak = TRUE; 
+	    weak = TRUE;
 	}
 	CcsParser_Sym(self, &name, &kind);
-	Symbol_t * sym = Tab_FindSym(self->tab, name);
+	CcSymbol_t * sym = CcSymbolTable_FindSym(self->symtab, name);
 	if (sym == NULL && kind == CcsParser_str)
-	    sym = (Symbol_t *)HashTable_Get(&self->tab->literals, name);
-	Bool_t undef = (sym == NULL);
+	    sym = (CcSymbol_t *)HashTable_Get(&self->lexical->literals, name);
+	CcsBool_t undef = (sym == NULL);
 	if (undef) {
-	    if (kind == CcsParser_id)
-		sym = Tab_NewSym(self->tab, node_nt, name, 0);  /* forward nt */
-	    else if (self->genScanner) { 
-		sym = Tab_NewSym(self->tab, node_t, name, self->t->line);
-		DFA_MatchLiteral(self->dfa, sym->name, sym);
+	    if (kind == CcsParser_id) {
+		/* forward nt */
+		sym = CcSymbolTable_NewNonTerminal(self->symtab, name, 0);
+	    } else if (self->genScanner) { 
+		sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
+		CcLexical_MatchLiteral(self->lexical, sym->name, (CcSymbolT_t *)sym);
 	    } else {  /* undefined string in production */
 		CcsGlobals_SemErr(self->globals, self->t,
 				  "undefined string in production");
-		sym = self->tab->eofSy;  /* dummy */
+		sym = self->syntax->eofSy;  /* dummy */
 	    }
 	}
-	int typ = sym->typ;
-	if (typ != node_t && typ != node_nt)
+	const CcSymbolType_t * typ = (const CcSymbolType_t *)sym->base.type;
+	if (typ != symbol_t && typ != symbol_nt)
 	    CcsGlobals_SemErr(self->globals, self->t,
 			      "this symbol kind is not allowed in a production");
 	if (weak) {
-	    if (typ == node_t) typ = node_wt;
-	    else CcsGlobals_SemErr(self->globals, self->t,
-				   "only terminals may be weak");
+	    if (typ != symbol_t)
+		CcsGlobals_SemErr(self->globals, self->t,
+				  "only terminals may be weak");
 	}
-	Node_t * p = Tab_NewNodeTSL(self->tab, typ, sym, self->t->line);
-	*g = GraphP(NULL, p);
+	CcNode_t * p;
+
+	if (typ == symbol_t && weak) {
+	    p = CcSyntax_NewNodeWT(self->syntax, sym, self->t->line);
+	} else if (typ == symbol_t) {
+	    p = CcSyntax_NewNodeT(self->syntax, sym, self->t->line);
+	} else if (typ == symbol_pr) {
+	    p = CcSyntax_NewNodePR(self->syntax, sym, self->t->line);
+	} else if (typ == symbol_nt) {
+	    p = CcSyntax_NewNodeNT(self->syntax, sym, self->t->line);
+	} else if (typ == symbol_rslv) {
+	    p = CcSyntax_NewNodeRSLV(self->syntax, sym, self->t->line);
+	}
+	*g = CcGraphP(p);
 
 	if (self->la->kind == 24 || self->la->kind == 26) {
 	    CcsParser_Attribs(self, p);
@@ -724,8 +752,8 @@ CcsParser_Factor(CcsParser_t * self, Graph_t ** g) {
 				  "a literal must not have attributes");
 	}
 	if (undef)
-	    sym->attrPos = p->pos;  /* dummy */
-	else if ((p->pos == NULL) != (sym->attrPos == NULL))
+	    ((CcSymbolNT_t *)sym)->attrPos = ((CcNodeNT_t *)p)->pos;  /* dummy */
+	else if ((((CcNodeNT_t *)p)->pos == NULL) != (((CcSymbolNT_t *)sym)->attrPos == NULL))
 	    CcsGlobals_SemErr(self->globals, self->t,
 			      "attribute mismatch between declaration and use of this symbol");
 	break;
@@ -740,48 +768,48 @@ CcsParser_Factor(CcsParser_t * self, Graph_t ** g) {
 	CcsParser_Get(self);
 	CcsParser_Expression(self, g);
 	CcsParser_Expect(self, 33);
-	Tab_MakeOption(self->tab, *g); 
+	CcSyntax_MakeOption(self->syntax, *g);
 	break;
     }
     case 34: {
 	CcsParser_Get(self);
 	CcsParser_Expression(self, g);
 	CcsParser_Expect(self, 35);
-	Tab_MakeIteration(self->tab, *g);
+	CcSyntax_MakeIteration(self->syntax, *g);
 	break;
     }
     case 39: {
 	CcsParser_SemText(self, &pos);
-	Node_t * p = Tab_NewNodeTSL(self->tab, node_sem, NULL, 0);
-	p->pos = pos;
-	*g = GraphP(NULL, p);
+	CcNode_t * p = CcSyntax_NewNodeSEM(self->syntax);
+	((CcNodeSEM_t *)p)->pos = pos;
+	*g = CcGraphP(p);
 	break;
     }
     case 23: {
 	CcsParser_Get(self);
 	/* p.set is set in Tab_SetupAnys */
-	Node_t * p = Tab_NewNodeTSL(self->tab, node_any, NULL, 0);
-	*g = GraphP(NULL, p);
+	CcNode_t * p = CcSyntax_NewNodeANY(self->syntax);
+	*g = CcGraphP(p);
 	break;
     }
     case 36: {
 	CcsParser_Get(self);
-	Node_t * p = Tab_NewNodeTSL(self->tab, node_sync, NULL, 0);
-	*g = GraphP(NULL, p);
+	CcNode_t * p = CcSyntax_NewNodeSYNC(self->syntax);
+	*g = CcGraphP(p);
 	break;
     }
     default: CcsParser_SynErr(self, 49); break;
     }
-    if (*g == NULL) // invalid start of Factor
-	*g = GraphP(NULL, Tab_NewNodeTSL(self->tab, node_eps, NULL, 0));
+    if (*g == NULL) /* invalid start of Factor */
+	*g = CcGraphP(CcSyntax_NewNodeEPS(self->syntax));
 }
 
 static void /* OK */
-CcsParser_Attribs(CcsParser_t * self, Node_t * p) {
+CcsParser_Attribs(CcsParser_t * self, CcNode_t * p) {
     if (self->la->kind == 24) {
 	CcsParser_Get(self);
-	Token_t * beg;
-	Scanner_IncRef(self->scanner, beg = self->la);
+	CcsToken_t * beg;
+	CcsScanner_IncRef(self->scanner, beg = self->la);
 	while (CcsParser_StartOf(self, 9)) {
 	    if (CcsParser_StartOf(self, 10)) {
 		CcsParser_Get(self);
@@ -792,12 +820,27 @@ CcsParser_Attribs(CcsParser_t * self, Node_t * p) {
 	    }
 	}
 	CcsParser_Expect(self, 25);
-	p->pos = Scanner_GetPosition(self->scanner, beg, self->t);
-	Scanner_DecRef(self->scanner, beg);
+	if ((const CcNodeType_t *)p->base.type == node_nt) {
+	    ((CcNodeNT_t *)p)->pos =
+		CcsScanner_GetPosition(self->scanner, beg, self->t);
+	} else if ((const CcNodeType_t *)p->base.type == node_t) {
+	    ((CcNodeT_t *)p)->pos =
+		CcsScanner_GetPosition(self->scanner, beg, self->t);
+	} else if ((const CcNodeType_t *)p->base.type == node_wt) {
+	    ((CcNodeWT_t *)p)->pos =
+		CcsScanner_GetPosition(self->scanner, beg, self->t);
+	} else if ((const CcNodeType_t *)p->base.type == node_sem) {
+	    ((CcNodeSEM_t *)p)->pos =
+		CcsScanner_GetPosition(self->scanner, beg, self->t);
+	} else if ((const CcNodeType_t *)p->base.type == node_rslv) {
+	    ((CcNodeRSLV_t *)p)->pos =
+		CcsScanner_GetPosition(self->scanner, beg, self->t);
+	}
+	CcsScanner_DecRef(self->scanner, beg);
     } else if (self->la->kind == 26) {
 	CcsParser_Get(self);
-	Token_t * beg;
-	Scanner_IncRef(self->scanner, beg = self->la);
+	CcsToken_t * beg;
+	CcsScanner_IncRef(self->scanner, beg = self->la);
 	while (CcsParser_StartOf(self, 11)) {
 	    if (CcsParser_StartOf(self, 12)) {
 		CcsParser_Get(self);
@@ -808,8 +851,23 @@ CcsParser_Attribs(CcsParser_t * self, Node_t * p) {
 	    }
 	}
 	CcsParser_Expect(self, 27);
-	p->pos = Scanner_GetPosition(self->scanner, beg, self->t);
-	Scanner_DecRef(self->scanner, beg);
+	if ((const CcNodeType_t *)p->base.type == node_nt) {
+	    ((CcNodeNT_t *)p)->pos =
+		CcsScanner_GetPosition(self->scanner, beg, self->t);
+	} else if ((const CcNodeType_t *)p->base.type == node_t) {
+	    ((CcNodeT_t *)p)->pos =
+		CcsScanner_GetPosition(self->scanner, beg, self->t);
+	} else if ((const CcNodeType_t *)p->base.type == node_wt) {
+	    ((CcNodeWT_t *)p)->pos =
+		CcsScanner_GetPosition(self->scanner, beg, self->t);
+	} else if ((const CcNodeType_t *)p->base.type == node_sem) {
+	    ((CcNodeSEM_t *)p)->pos =
+		CcsScanner_GetPosition(self->scanner, beg, self->t);
+	} else if ((const CcNodeType_t *)p->base.type == node_rslv) {
+	    ((CcNodeRSLV_t *)p)->pos =
+		CcsScanner_GetPosition(self->scanner, beg, self->t);
+	}
+	CcsScanner_DecRef(self->scanner, beg);
     } else CcsParser_SynErr(self, 50);
 }
 
@@ -827,47 +885,47 @@ CcsParser_Condition(CcsParser_t * self) {
 }
 
 static void /* OK */
-CcsParser_TokenTerm(CcsParser_t * self, Graph_t ** g) {
-    Graph_t * g2; 
+CcsParser_TokenTerm(CcsParser_t * self, CcGraph_t ** g) {
+    CcGraph_t * g2;
     CcsParser_TokenFactor(self, g);
     while (CcsParser_StartOf(self, 8)) {
 	CcsParser_TokenFactor(self, &g2);
-	Tab_MakeSequence(self->tab, *g, g2); 
+	CcLexical_MakeSequence(self->lexical, *g, g2);
     }
     if (self->la->kind == 38) {
 	CcsParser_Get(self);
 	CcsParser_Expect(self, 30);
 	CcsParser_TokenExpr(self, &g2);
-	Tab_SetContextTrans(self->tab, g2->l);
-	self->dfa->hasCtxMoves = TRUE;
-	Tab_MakeSequence(self->tab, *g, g2);
+	CcLexical_SetContextTrans(self->lexical, g2->l);
+	self->lexical->hasCtxMoves = TRUE;
+	CcLexical_MakeSequence(self->lexical, *g, g2);
 	CcsParser_Expect(self, 31);
     }
 }
 
 static void /* OK */
-CcsParser_TokenFactor(CcsParser_t * self, Graph_t ** g) {
+CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g) {
     char * name = NULL; int kind;
     *g = NULL;
     if (self->la->kind == 1 || self->la->kind == 3 || self->la->kind == 5) {
 	CcsParser_Sym(self, &name, &kind);
 	if (kind == CcsParser_id) {
-	    CharClass_t * c = Tab_FindCharClassS(self->tab, name);
+	    CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, name);
 	    if (c == NULL) {
 		CcsGlobals_SemErr(self->globals, self->t,
 				  "undefined name");
-		c = Tab_NewCharClass(self->tab, name, CharSet(NULL));
+		c = CcLexical_NewCharClass(self->lexical, name, CcCharSet());
 	    }
-	    Node_t * p = Tab_NewNodeTSL(self->tab, node_clas, NULL, 0);
-	    p->val = c->n;
-	    *g = GraphP(NULL, p);
-	    self->tokenString = strdup(self->noString);
+	    CcNode_t * p = CcLexical_NewNodeCLAS(self->lexical);
+	    ((CcNodeClas_t *)p)->clas = c->n;
+	    *g = CcGraphP(p);
+	    self->tokenString = CcStrdup(self->noString);
 	} else { /* CcsParser_str */
-	    *g = Tab_StrToGraph(self->tab, name);
+	    *g = CcLexical_StrToGraph(self->lexical, name, self->t);
 	    if (self->tokenString == NULL) self->tokenString = strdup(name);
 	    else {
-		free(self->tokenString);
-		self->tokenString = strdup(self->noString);
+		CcFree(self->tokenString);
+		self->tokenString = CcStrdup(self->noString);
 	    }
 	}
     } else if (self->la->kind == 30) {
@@ -878,15 +936,14 @@ CcsParser_TokenFactor(CcsParser_t * self, Graph_t ** g) {
 	CcsParser_Get(self);
 	CcsParser_TokenExpr(self, g);
 	CcsParser_Expect(self, 33);
-	Tab_MakeOption(self->tab, *g); 
+	CcLexical_MakeOption(self->lexical, *g);
     } else if (self->la->kind == 34) {
 	CcsParser_Get(self);
 	CcsParser_TokenExpr(self, g);
 	CcsParser_Expect(self, 35);
-	Tab_MakeIteration(self->tab, *g); 
+	CcLexical_MakeIteration(self->lexical, *g); 
     } else CcsParser_SynErr(self, 51);
     if (g == NULL) /* invalid start of TokenFactor */
-	*g = GraphP(NULL, Tab_NewNodeTSL(self->tab, node_eps, NULL, 0));
+	*g = CcGraphP(CcLexical_NewNodeEPS(self->lexical));
 }
 /*---- enable ----*/
-#endif /* 0 */
