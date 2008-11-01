@@ -162,6 +162,11 @@ CcLexical_NewNodeCHR(CcLexical_t * self, int ch)
     return (CcNode_t *)p;
 }
 
+CcNode_t *
+CcLexical_NewNodeCLAS(CcLexical_t * self)
+{
+}
+
 CcCharClass_t *
 CcLexical_NewCharClass(CcLexical_t * self, const char * name, CcCharSet_t * s)
 {
@@ -248,7 +253,7 @@ CcLexical_NewTransition(CcLexical_t * self, CcState_t * from, CcState_t * to,
 			  "token must not start with an iteration");
     t = CcTarget(to);
     a = CcAction(typ, sym, tc); a->target = t;
-    State_AddAction(from, a);
+    CcState_AddAction(from, a);
     if (typ == node_clas) self->curSy->tokenKind = symbol_classToken;
 }
 
@@ -268,7 +273,7 @@ CcLexical_CombineShifts(CcLexical_t * self)
 		    setb = CcLexical_ActionSymbols(self, b);
 		    CcCharSet_Or(seta, setb);
 		    CcLexical_ActionShiftWith(self, a, seta);
-		    c = b; b = b->next; State_DetachAction(state, c);
+		    c = b; b = b->next; CcState_DetachAction(state, c);
 		} else {
 		    b = b->next;
 		}
@@ -484,7 +489,7 @@ CcLexical_MatchLiteral(CcLexical_t * self, const char * s, CcSymbolT_t * sym)
     while (scur < slast) { /* make new CcLexical for s0[i..len-1] */
 	to = CcLexical_NewState(self);
 	CcLexical_NewTransition(self, state, to, node_chr,
-				CcsUTF8Get(&scur, slast),
+				CcsUTF8GetCh(&scur, slast),
 				node_normalTrans);
 	state = to;
     }
@@ -515,16 +520,16 @@ CcLexical_SplitActions(CcLexical_t * self, CcState_t * state,
     seta = CcLexical_ActionSymbols(self, a);
     setb = CcLexical_ActionSymbols(self, b);
     if (CcCharSet_Equals(seta, setb)) {
-	Action_AddTargets(a, b);
-	State_DetachAction(state, b);
+	CcAction_AddTargets(a, b);
+	CcState_DetachAction(state, b);
     } else if (CcCharSet_Includes(seta, setb)) {
 	setc = CcCharSet_Clone(seta); CcCharSet_Subtract(setc, setb);
-	Action_AddTargets(b, a);
+	CcAction_AddTargets(b, a);
 	CcLexical_ActionShiftWith(self, a, setc);
 	CcCharSet_Destruct(setc);
     } else if (CcCharSet_Includes(setb, seta)) {
 	setc = CcCharSet_Clone(setb); CcCharSet_Subtract(setc, seta);
-	Action_AddTargets(a, b);
+	CcAction_AddTargets(a, b);
 	CcLexical_ActionShiftWith(self, b, setc);
 	CcCharSet_Destruct(setc);
     } else {
@@ -590,7 +595,7 @@ CcLexical_MeltStates(CcLexical_t * self, CcState_t * state) {
 	    if (melt == NULL) {
 		s = CcLexical_NewState(self); s->endOf = endOf; s->ctx = ctx;
 		for (targ = action->target; targ != NULL; targ = targ->next)
-		    State_MeltWith(s, targ->state);
+		    CcState_MeltWith(s, targ->state);
 		do { changed = CcLexical_MakeUnique(self, s); } while (changed);
 		melt = CcLexical_NewMelted(self, targets, s);
 	    }

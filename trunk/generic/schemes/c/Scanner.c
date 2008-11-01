@@ -154,7 +154,8 @@ CcsScanner_DecRef(CcsScanner_t * self, CcsToken_t * token)
 }
 
 CcsPosition_t *
-CcsScanner_GetCcsPosition(CcsScanner_t * self, CcsToken_t * begin, CcsToken_t * end)
+CcsScanner_GetPosition(CcsScanner_t * self,
+		       CcsToken_t * begin, CcsToken_t * end)
 {
     int len = end->pos - begin->pos;
     return CcsPosition(begin->pos, len, begin->col,
@@ -162,7 +163,8 @@ CcsScanner_GetCcsPosition(CcsScanner_t * self, CcsToken_t * begin, CcsToken_t * 
 }
 
 CcsPosition_t *
-CcsScanner_GetCcsPositionWithTail(CcsScanner_t * self, CcsToken_t * begin, CcsToken_t * end)
+CcsScanner_GetPositionWithTail(CcsScanner_t * self,
+			       CcsToken_t * begin, CcsToken_t * end)
 {
     int len = (end->pos + strlen(end->val)) - begin->pos;
     return CcsPosition(begin->pos, len, begin->col,

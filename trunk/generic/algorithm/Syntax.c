@@ -41,6 +41,51 @@ CcSyntax_Destruct(CcSyntax_t * self)
     CcArrayList_Destruct(&self->nodes);
 }
 
+CcNode_t *
+CcSyntax_NewNodeEPS(CcSyntax_t * self)
+{
+}
+
+CcNode_t *
+CcSyntax_NewNodeANY(CcSyntax_t * self)
+{
+}
+
+CcNode_t *
+CcSyntax_NewNodeSEM(CcSyntax_t * self)
+{
+}
+
+CcNode_t *
+CcSyntax_NewNodeSYNC(CcSyntax_t * self)
+{
+}
+
+CcNode_t *
+CcSyntax_NewNodeWT(CcSyntax_t * self, CcSymbol_t * sym, int line)
+{
+}
+
+CcNode_t *
+CcSyntax_NewNodeT(CcSyntax_t * self, CcSymbol_t * sym, int line)
+{
+}
+
+CcNode_t *
+CcSyntax_NewNodePR(CcSyntax_t * self, CcSymbol_t * sym, int line)
+{
+}
+
+CcNode_t *
+CcSyntax_NewNodeNT(CcSyntax_t * self, CcSymbol_t * sym, int line)
+{
+}
+
+CcNode_t *
+CcSyntax_NewNodeRSLV(CcSyntax_t * self, CcSymbol_t * sym, int line)
+{
+}
+
 void
 CcSyntax_MakeFirstAlt(CcSyntax_t * self, CcGraph_t * g)
 {
@@ -232,13 +277,13 @@ CcSyntax_Complete(CcSyntax_t * self, CcSymbolNT_t * sym)
 }
 
 static void
-CcSyntax_CompFollowSet(CcSyntax_t * self)
+CcSyntax_CompFollowSets(CcSyntax_t * self)
 {
     int idx; CcSymbolNT_t * sym;
     CcSymbolTable_t * symtab = &self->globals->symbolTab;
 
     for (idx = 0; idx < symtab->nonterminals.Count; ++idx) {
-	sym = (CcSymbolNT_t *)ArrayList_Get(&symtab->nonterminals, idx);
+	sym = (CcSymbolNT_t *)CcArrayList_Get(&symtab->nonterminals, idx);
 	CcBitArray(&sym->follow, symtab->terminals.Count);
 	CcBitArray(&sym->nts, symtab->nonterminals.Count);
     }
@@ -246,13 +291,13 @@ CcSyntax_CompFollowSet(CcSyntax_t * self)
 		   self->eofSy->n, TRUE);
     CcBitArray(&self->visited, self->nodes.Count);
     for (idx = 0; idx < symtab->nonterminals.Count; ++idx) {
-	sym = (CcSymbolNT_t *)ArrayList_Get(&symtab->nonterminals, idx);
+	sym = (CcSymbolNT_t *)CcArrayList_Get(&symtab->nonterminals, idx);
 	self->curSy = (CcSymbol_t *)sym;
 	CcSyntax_CompFollow(self, sym->graph);
     }
     CcBitArray_Destruct(&self->visited);
     for (idx = 0; idx < symtab->nonterminals.Count; ++idx) {
-	sym = (CcSymbolNT_t *)ArrayList_Get(&symtab->nonterminals, idx);
+	sym = (CcSymbolNT_t *)CcArrayList_Get(&symtab->nonterminals, idx);
 	CcBitArray(&self->visited, symtab->nonterminals.Count);
 	self->curSy = (CcSymbol_t *)sym;
 	CcSyntax_Complete(self, sym);
@@ -300,7 +345,7 @@ CcSyntax_FindAS(CcSyntax_t * self, CcNode_t * p)
 		CcBitArray_Destruct(&s0);
 	    }
 	} else if (ptype == node_alt) {
-	    CcCcBitArray(&s1, symtab->terminals.Count);
+	    CcBitArray(&s1, symtab->terminals.Count);
 	    q = p;
 	    while (q != NULL) {
 		CcSyntax_FindAS(self, q->sub);
@@ -329,7 +374,7 @@ CcSyntax_CompAnySets(CcSyntax_t * self)
     CcSymbolTable_t * symtab = &self->globals->symbolTab;
 
     for (idx = 0; idx < symtab->nonterminals.Count; ++idx) {
-	sym = (CcSymbolNT_t *)ArrayList_Get(&symtab->nonterminals, idx);
+	sym = (CcSymbolNT_t *)CcArrayList_Get(&symtab->nonterminals, idx);
 	CcSyntax_FindAS(self, sym->graph);
     }
 }
@@ -340,7 +385,7 @@ CcSyntax_Expected(CcSyntax_t * self, CcBitArray_t * ret,
 {
     CcSyntax_First(self, ret, p);
     if (CcSyntax_DelGraph(self, p))
-	BitArray_Or(ret, &((CcSymbolNT_t *)curSy)->follow);
+	CcBitArray_Or(ret, &((CcSymbolNT_t *)curSy)->follow);
 }
 
 static void
@@ -349,7 +394,7 @@ CcSyntax_Expected0(CcSyntax_t * self, CcBitArray_t * ret,
 {
     CcSymbolTable_t * symtab = &self->globals->symbolTab;
     const CcNodeType_t * ptype = (const CcNodeType_t *)p->base.type;
-    if (ptype == node_rslv) BitArray(ret, symtab->terminals.Count);
+    if (ptype == node_rslv) CcBitArray(ret, symtab->terminals.Count);
     else CcSyntax_Expected(self, ret, p, curSy);
 }
 
@@ -387,7 +432,7 @@ CcSyntax_CompSyncSets(CcSyntax_t * self)
     CcBitArray_Set(&self->allSyncSets, self->eofSy->n, TRUE);
     CcBitArray(&self->visited, self->nodes.Count);
     for (idx = 0; idx < symtab->nonterminals.Count; ++idx) {
-	sym = (CcSymbolNT_t *)ArrayList_Get(&symtab->nonterminals, idx);
+	sym = (CcSymbolNT_t *)CcArrayList_Get(&symtab->nonterminals, idx);
 	self->curSy = (CcSymbol_t *)sym;
 	CcSyntax_CompSync(self, ((CcSymbolNT_t *)self->curSy)->graph);
     }
@@ -410,12 +455,14 @@ CcSyntax_SetupAnys(CcSyntax_t * self)
 {
     int idx; CcNode_t * p;
     const CcNodeType_t * ptype;
+    CcSymbolTable_t * symtab = &self->globals->symbolTab;
+
     for (idx = 0; idx < self->nodes.Count; ++idx) {
 	p = (CcNode_t *)CcArrayList_Get(&self->nodes, idx);
 	ptype = (const CcNodeType_t *)p->base.type;
 	if (ptype == node_any) {
-	    BitArray1(&((CcNodeANY_t *)p)->set);
-	    BitArray_Set(&((CcNodeANY_t *)p)->set, self->eofSy->n, FALSE);
+	    CcBitArray1(&((CcNodeANY_t *)p)->set, symtab->terminals.Count);
+	    CcBitArray_Set(&((CcNodeANY_t *)p)->set, self->eofSy->n, FALSE);
 	}
     }
 }
@@ -429,7 +476,7 @@ CcSyntax_CompDeletableSymbols(CcSyntax_t * self)
     do {
 	changed = FALSE;
 	for (idx = 0; idx < symtab->nonterminals.Count; ++idx) {
-	    sym = (CcSymbolNT_t *)ArrayList_Get(&symtab->nonterminals, idx);
+	    sym = (CcSymbolNT_t *)CcArrayList_Get(&symtab->nonterminals, idx);
 	    if (!sym->deletable && sym->graph != NULL &&
 		CcSyntax_DelGraph(self, sym->graph)) {
 		sym->deletable = TRUE; changed = TRUE;
@@ -437,7 +484,7 @@ CcSyntax_CompDeletableSymbols(CcSyntax_t * self)
 	}
     } while (changed);
     for (idx = 0; idx < symtab->nonterminals.Count; ++idx) {
-	sym = (CcSymbolNT_t *)ArrayList_Get(&symtab->nonterminals, idx);
+	sym = (CcSymbolNT_t *)CcArrayList_Get(&symtab->nonterminals, idx);
 	if (sym->deletable) 
 	    CcsGlobals_Warning(&self->globals->base, NULL,
 			       " %s deletable", sym->base.name);
@@ -494,7 +541,7 @@ CcSyntax_NoCircularProductions(CcSyntax_t * self)
     CcArrayList_t list, singles;
     CcSymbolTable_t * symtab = &self->globals->symbolTab;
 
-    ArrayList(&list);
+    CcArrayList(&list);
     for (idx = 0; idx < symtab->nonterminals.Count; ++idx) {
 	sym = (CcSymbolNT_t *)CcArrayList_Get(&symtab->nonterminals, idx);
 	CcArrayList(&singles);
@@ -503,7 +550,7 @@ CcSyntax_NoCircularProductions(CcSyntax_t * self)
 	for (idxj = 0; idxj < singles.Count; ++idxj) {
 	    s = (CcSymbol_t *)CcArrayList_Get(&singles, idxj);
 	    n = CNode((CcSymbol_t *)sym, s);
-	    ArrayList_Add(&list, n);
+	    CcArrayList_Add(&list, (CcObject_t *)n);
 	}
 	CcArrayList_Destruct(&singles);
     }
@@ -517,7 +564,7 @@ CcSyntax_NoCircularProductions(CcSyntax_t * self)
 		if (m->right == m->left) onLeftSide = TRUE;
 	    }
 	    if (!onLeftSide || !onRightSide) {
-		ArrayList_Remove(&list, n); --idx; changed = TRUE;
+		CcArrayList_Remove(&list, (CcObject_t *)n); --idx; changed = TRUE;
 	    }
 	}
     } while (changed);
@@ -597,7 +644,7 @@ CcSyntax_CheckAlts(CcSyntax_t * self, CcNode_t * p)
 	    }
 	} else if (ptype == node_any) {
 	    /* E.g. {ANY} ANY or [ANY] ANY */
-	    if (BitArray_Elements(&((CcNodeANY_t *)p)->set) == 0)
+	    if (CcBitArray_Elements(&((CcNodeANY_t *)p)->set) == 0)
 		CcSyntax_LL1Error(self, 3, NULL);
 	}
 	if (p->up) break;
@@ -630,22 +677,22 @@ CcSyntax_CheckRes(CcSyntax_t * self, CcNode_t * p, CcsBool_t rslvAllowed)
     while (p != NULL) {
 	ptype = (const CcNodeType_t *)p->base.type;
 	if (ptype == node_alt) {
-	    BitArray(&expected, symtab->terminals.Count);
-	    for (q = p; q = NULL; q = q->down) {
+	    CcBitArray(&expected, symtab->terminals.Count);
+	    for (q = p; q != NULL; q = q->down) {
 		CcSyntax_Expected0(self, &fs, q->sub, self->curSy);
 		CcBitArray_Or(&expected, &fs);
 		CcBitArray_Destruct(&fs);
 	    }
-	    BitArray(&soFar, symtab->terminals.Count);
-	    for (q = p; q = NULL; q = q->down) {
+	    CcBitArray(&soFar, symtab->terminals.Count);
+	    for (q = p; q != NULL; q = q->down) {
 		psubtype = (const CcNodeType_t *)q->sub->base.type;
 		if (psubtype == node_rslv) {
 		    CcSyntax_Expected(self, &fs, q->sub->next, self->curSy);
-		    if (BitArray_Intersect(&fs, &soFar))
+		    if (CcBitArray_Intersect(&fs, &soFar))
 			CcsGlobals_Warning(&self->globals->base, NULL,
 					   "Resolver will never be evaluated. "
 					   "Place it at previous conflicting alternative.");
-		    if (!BitArray_Intersect(&fs, &expected))
+		    if (!CcBitArray_Intersect(&fs, &expected))
 			CcsGlobals_Warning(&self->globals->base, NULL,
 					   "Misplaced resolver: no LL(1) conflict.");
 		    CcBitArray_Destruct(&fs);
@@ -660,7 +707,7 @@ CcSyntax_CheckRes(CcSyntax_t * self, CcNode_t * p, CcsBool_t rslvAllowed)
 	    if (psubtype == node_rslv) {
 		CcSyntax_First(self, &fs, p->sub->next);
 		CcSyntax_Expected(self, &fsNext, p->next, self->curSy);
-		if (!BitArray_Intersect(&fs, &fsNext))
+		if (!CcBitArray_Intersect(&fs, &fsNext))
 		    CcsGlobals_Warning(&self->globals->base, NULL,
 				       "Misplaced resolver: no LL(1) conflict.");
 	    }
@@ -744,6 +791,7 @@ CcSyntax_AllNtReached(CcSyntax_t * self)
 			      " %s cannot be reached", sym->name);
 	}
     }
+    return ok;
 }
 
 /*--------- check if every nts can be derived to terminals  ------------ */

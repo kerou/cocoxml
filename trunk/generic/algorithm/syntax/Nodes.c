@@ -47,6 +47,14 @@ static const CcNodeType_t NodeNT = {
 };
 const CcNodeType_t * node_nt = &NodeNT;
 
+static void CcNodeWT_Destruct(CcObject_t * self)
+{
+}
+static const CcNodeType_t NodeWT = {
+    { sizeof(CcNodeWT_t), "node_wt", CcNodeWT_Destruct }
+};
+const CcNodeType_t * node_wt = &NodeWT;
+
 static void CcNodeANY_Destruct(CcObject_t * self)
 {
 }
