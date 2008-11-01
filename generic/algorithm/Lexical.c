@@ -28,8 +28,10 @@
 #include  "lexical/Nodes.h"
 
 CcLexical_t *
-CcLexical(CcLexical_t * self)
+CcLexical(CcLexical_t * self, CcGlobals_t * globals)
 {
+    self->globals = globals;
+    return self;
 }
 
 void

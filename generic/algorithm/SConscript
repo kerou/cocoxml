@@ -11,3 +11,4 @@ libobjs.extend(map(lambda src: env.Object(src),
                    ['EBNF.c', 'SymbolTable.c', 'Lexical.c', 'Syntax.c']))
 
 SConscript(os.path.join('lexical', 'SConscript'))
+SConscript(os.path.join('syntax', 'SConscript'))

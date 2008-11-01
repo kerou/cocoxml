@@ -32,10 +32,11 @@
 #define  CcContextTrans  1
 
 struct CcLexical_s {
+    CcGlobals_t * globals;
     int dummy;
 };
 
-CcLexical_t * CcLexical(CcLexical_t * self);
+CcLexical_t * CcLexical(CcLexical_t * self, CcGlobals_t * globals);
 void CcLexical_Destruct(CcLexical_t * self);
 
 #endif  /* COCO_LEXICAL_H */

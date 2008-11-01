@@ -22,13 +22,132 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "Syntax.h"
+#include  "Globals.h"
+#include  "BitArray.h"
+#include  "syntax/Nodes.h"
 
 CcSyntax_t *
-CcSyntax(CcSyntax_t * self)
+CcSyntax(CcSyntax_t * self, CcGlobals_t * globals)
 {
+    self->globals = globals;
+    CcArrayList(&self->nodes);
+    CcArrayList(&self->symSet);
+    return self;
 }
 
 void
 CcSyntax_Destruct(CcSyntax_t * self)
 {
+    CcArrayList_Destruct(&self->symSet);
+    CcArrayList_Destruct(&self->nodes);
+}
+
+static CcsBool_t CcSyntax_DelGraph(CcSyntax_t * self, CcNode_t * p);
+static CcsBool_t CcSyntax_DelSubGraph(CcSyntax_t * self, CcNode_t * p);
+static CcsBool_t CcSyntax_DelNode(CcSyntax_t * self, CcNode_t * p);
+
+static CcsBool_t
+CcSyntax_DelGraph(CcSyntax_t * self, CcNode_t * p)
+
+{
+    return p == NULL ||
+	(CcSyntax_DelNode(self, p) && CcSyntax_DelGraph(self, p->next));
+}
+
+static CcsBool_t
+CcSyntax_DelSubGraph(CcSyntax_t * self, CcNode_t * p)
+{
+    return p == NULL ||
+	(CcSyntax_DelNode(self, p) && CcSyntax_DelSubGraph(self, p->next));
+}
+
+static CcsBool_t
+CcSyntax_DelNode(CcSyntax_t * self, CcNode_t * p)
+{
+    const CcNodeType_t * ptype = (const CcNodeType_t *)p->base.type;
+    if (ptype == node_nt) {
+	CcNodeNT_t * p0 = (CcNodeNT_t *)p;
+	CcSymbolNT_t * sym = (CcSymbolNT_t *)p0->sym;
+	return sym->deletable;
+    } else if (ptype == node_alt) {
+	return CcSyntax_DelSubGraph(self, p->sub) ||
+	    (p->down != NULL && CcSyntax_DelSubGraph(self, p->down));
+    }
+    return ptype == node_iter || ptype == node_opt || ptype == node_sem ||
+	ptype == node_eps || ptype == node_rslv || ptype == node_sync;
+}
+
+static void
+CcSyntax_First0(CcSyntax_t * self, CcBitArray_t * ret,
+		CcNode_t * p, CcBitArray_t * mark)
+{
+    CcBitArray_t fs, fs0;
+    const CcNodeType_t * type;
+    CcSymbolTable_t * symtab = &self->globals->symbolTab;
+    CcBitArray(&fs, symtab->terminals.Count);
+    while (p != NULL && !CcBitArray_Get(mark, p->n)) {
+	CcBitArray_Set(mark, p->n, TRUE);
+	type = (const CcNodeType_t *)(((CcObject_t *)p)->type);
+	if (type == node_nt) {
+	    CcNodeNT_t * p0 = (CcNodeNT_t *)p;
+	    CcSymbolNT_t * sym = (CcSymbolNT_t *)p0->sym;
+	    if (sym->firstReady) {
+		CcBitArray_Or(&fs, &sym->first);
+	    } else {
+		CcSyntax_First0(self, &fs0, sym->graph, mark);
+		CcBitArray_Or(&fs, &fs0);
+		CcBitArray_Destruct(&fs0);
+	    }
+	} else if (type == node_t) {
+	    CcNodeT_t * p0 = (CcNodeT_t *)p;
+	    CcBitArray_Set(&fs, p0->sym->n, TRUE);
+	} else if (type == node_wt) {
+	    CcNodeWT_t * p0 = (CcNodeWT_t *)p;
+	    CcBitArray_Set(&fs, p0->sym->n, TRUE);
+	} else if (type == node_any) {
+	    CcNodeANY_t * p0 = (CcNodeANY_t *)p;
+	    CcBitArray_Or(&fs, &p0->set);
+	} else if (type == node_alt) {
+	    CcSyntax_First0(self, &fs0, p->sub, mark);
+	    CcBitArray_Or(&fs, &fs0);
+	    CcBitArray_Destruct(&fs0);
+	    CcSyntax_First0(self, &fs0, p->down, mark);
+	    CcBitArray_Or(&fs, &fs0);
+	    CcBitArray_Destruct(&fs0);
+	} else if (type == node_iter && type == node_opt) {
+	    CcSyntax_First0(self, &fs0, p->sub, mark);
+	    CcBitArray_Or(&fs, &fs0);
+	    CcBitArray_Destruct(&fs0);
+	}
+	if (!CcSyntax_DelNode(self, p)) break;
+	p = p ->next;
+    }
+}
+
+static void
+CcSyntax_First(CcSyntax_t * self, CcBitArray_t * ret, CcNode_t * p)
+{
+    CcBitArray_t fs, fs0;
+
+    CcBitArray(&fs0, self->nodes.Count);
+    CcSyntax_First0(self, &fs, p, &fs0);
+    CcBitArray_Destruct(&fs0);
+    CcBitArray_Destruct(ret);
+    memcpy(ret, &fs, sizeof(fs));
+}
+
+void
+CcSyntax_CompFirstSets(CcSyntax_t * self)
+{
+    int idx; CcSymbolNT_t * sym;
+    CcSymbolTable_t * symtab = &self->globals->symbolTab;
+    for (idx = 0; idx < symtab->nonterminals.Count; ++idx) {
+	sym = (CcSymbolNT_t *)CcArrayList_Get(&symtab->nonterminals, idx);
+	CcBitArray(&sym->first, symtab->terminals.Count);
+	sym->firstReady = FALSE;
+    }
+    for (idx = 0; idx < symtab->nonterminals.Count; ++idx) {
+	CcSyntax_First(self, &sym->first, sym->graph);
+	sym->firstReady = TRUE;
+    }
 }
