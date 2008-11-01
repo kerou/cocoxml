@@ -107,18 +107,6 @@ CcsParser_SynErr(CcsParser_t * self, int n)
     CcsErrorPool_Error(&self->globals->error, self->la->line, self->la->col, "%s", s);
 }
 
-void
-CcsParser_SemErr(CcsParser_t * self, const char * format, ...)
-{
-    va_list ap;
-    /*if (self->errDist >= self->minErrDist) {*/
-    va_start(ap, format);
-    Errors_Error(&self->globals->error, self->t->line, self->t->col, format, ap);
-    va_end(ap);
-    /*}
-      self->errDist = 0;*/
-}
-
 #if 0
 static void
 CcsParser_Get(CcsParser_t * self)
@@ -334,8 +322,12 @@ CcsParser_Coco(CcsParser_t * self) {
 	if (undef) sym = Tab_NewSym(self->tab, node_nt, self->t->val, self->t->line);
 	else {
 	    if (sym->typ == node_nt) {
-		if (sym->graph != NULL) CcsParser_SemErr(self, "name declared twice");
-	    } else CcsParser_SemErr(self, "this symbol kind not allowed on left side of production");
+		if (sym->graph != NULL)
+		    CcsGlobals_SemErr(self->globals, self->t,
+				      "name declared twice");
+	    } else
+		CcsGlobals_SemErr(self->globals, self->t,
+				  "this symbol kind not allowed on left side of production");
 	    sym->line = self->t->line;
 	}
 	Bool_t noAttrs = (sym->attrPos == NULL);
@@ -346,7 +338,8 @@ CcsParser_Coco(CcsParser_t * self) {
 	}
 	if (!undef)
 	    if (noAttrs != (sym->attrPos == NULL))
-		CcsParser_SemErr(self, "attribute mismatch between declaration and use of this symbol");
+		CcsGlobals_SemErr(self->globals, self->t,
+				  "attribute mismatch between declaration and use of this symbol");
 
 	if (self->la->kind == 39) {
 	    CcsParser_SemText(self, &sym->semPos);
@@ -361,14 +354,17 @@ CcsParser_Coco(CcsParser_t * self) {
     CcsParser_Expect(self, 19);
     CcsParser_Expect(self, 1);
     if (strcmp(gramName, self->t->val))
-	CcsParser_SemErr(self, "name does not match grammar name");
+	CcsGlobals_SemErr(self->globals, self->t,
+			  "name does not match grammar name");
     self->tab->gramSy = Tab_FindSym(self->tab, gramName);
     if (self->tab->gramSy == NULL)
-	CcsParser_SemErr(self, "missing production for grammar name");
+	CcsGlobals_SemErr(self->globals, self->t,
+			  "missing production for grammar name");
     else {
 	sym = self->tab->gramSy;
 	if (sym->attrPos != NULL)
-	    CcsParser_SemErr(self, "grammar symbol must not have attributes");
+	    CcsGlobals_SemErr(self->globals, self->t,
+			      "grammar symbol must not have attributes");
     }
     self->tab->noSym = Tab_NewSym(self->tab, node_t, "???", 0); /* noSym gets highest number */
     Tab_SetupAnys(self->tab);
@@ -402,12 +398,14 @@ CcsParser_SetDecl(CcsParser_t * self) {
     const char * name = self->t->val;
     CharClass_t * c = Tab_FindCharClassS(self->tab, name);
 
-    if (c != NULL) CcsParser_SemErr(self, "name declared twice");
+    if (c != NULL) CcsGlobals_SemErr(self->globals, self->t,
+				     "name declared twice");
 
     CcsParser_Expect(self, 17);
     CcsParser_Set(self, &s);
     if (CharSet_Elements(s) == 0)
-	CcsParser_SemErr(self, "character set must not be empty");
+	CcsGlobals_SemErr(self->globals, self->t,
+			  "character set must not be empty");
     Tab_NewCharClass(self->tab, name, s);
 
     CcsParser_Expect(self, 18);
@@ -418,7 +416,8 @@ CcsParser_TokenDecl(CcsParser_t * self, int typ) {
     char * name = NULL; int kind; Symbol_t * sym; Graph_t * g; 
     CcsParser_Sym(self, &name, &kind);
     sym = Tab_FindSym(self->tab, name);
-    if (sym != NULL) CcsParser_SemErr(self, "name declared twice");
+    if (sym != NULL) CcsGlobals_SemErr(self->globals, self->t,
+				       "name declared twice");
     else {
 	sym = Tab_NewSym(self->tab, typ, name, self->t->line);
 	sym->tokenKind = symbol_fixedToken;
@@ -433,14 +432,16 @@ CcsParser_TokenDecl(CcsParser_t * self, int typ) {
 	CcsParser_TokenExpr(self, &g);
 	CcsParser_Expect(self, 18);
 	if (kind == CcsParser_str)
-	    CcsParser_SemErr(self, "a literal must not be declared with a structure");
+	    CcsGlobals_SemErr(self->globals, self->t,
+			      "a literal must not be declared with a structure");
 	Tab_Finish(self->tab, g);
 	if (self->tokenString == NULL ||
 	    !strcmp(self->tokenString, self->noString))
 	    DFA_ConvertToStates(self->dfa, g->l, sym);
 	else { /* CcsParser_TokenExpr is a single string */
 	    if (HashTable_Get(&self->tab->literals, self->tokenString) != NULL)
-		CcsParser_SemErr(self, "token string declared twice");
+		CcsGlobals_SemErr(self->globals, self->t,
+				  "token string declared twice");
 	    HashTable_Set(&self->tab->literals, self->tokenString, sym);
 	    DFA_MatchLiteral(self->dfa, self->tokenString, sym);
 	}
@@ -451,7 +452,8 @@ CcsParser_TokenDecl(CcsParser_t * self, int typ) {
     if (self->la->kind == 39) {
 	CcsParser_SemText(self, &sym->semPos);
 	if (typ != node_pr)
-	    CcsParser_SemErr(self, "semantic action not allowed here"); 
+	    CcsGlobals_SemErr(self->globals, self->t,
+			      "semantic action not allowed here"); 
     }
 }
 
@@ -495,7 +497,8 @@ CcsParser_AttrDecl(CcsParser_t * self, Symbol_t * sym) {
 		CcsParser_Get(self);
 	    } else {
 		CcsParser_Get(self);
-		CcsParser_SemErr(self, "bad string in attributes"); 
+		CcsGlobals_SemErr(self->globals, self->t,
+				  "bad string in attributes"); 
 	    }
 	}
 	CcsParser_Expect(self, 25);
@@ -510,7 +513,8 @@ CcsParser_AttrDecl(CcsParser_t * self, Symbol_t * sym) {
 		CcsParser_Get(self);
 	    } else {
 		CcsParser_Get(self);
-		CcsParser_SemErr(self, "bad string in attributes"); 
+		CcsGlobals_SemErr(self->globals, self->t,
+				  "bad string in attributes"); 
 	    }
 	}
 	CcsParser_Expect(self, 27);
@@ -531,10 +535,12 @@ CcsParser_SemText(CcsParser_t * self, Position_t ** pos) {
 	    CcsParser_Get(self);
 	} else if (self->la->kind == 4) {
 	    CcsParser_Get(self);
-	    CcsParser_SemErr(self, "bad string in semantic action"); 
+	    CcsGlobals_SemErr(self->globals, self->t,
+			      "bad string in semantic action"); 
 	} else {
 	    CcsParser_Get(self);
-	    CcsParser_SemErr(self, "missing end of previous semantic action"); 
+	    CcsGlobals_SemErr(self->globals, self->t,
+			      "missing end of previous semantic action"); 
 	}
     }
     CcsParser_Expect(self, 40);
@@ -561,7 +567,8 @@ CcsParser_SimSet(CcsParser_t * self, CharSet_t ** s) {
     if (self->la->kind == 1) {
 	CcsParser_Get(self);
 	CharClass_t * c = Tab_FindCharClassS(self->tab, self->t->val);
-	if (c == NULL) CcsParser_SemErr(self, "undefined name");
+	if (c == NULL) CcsGlobals_SemErr(self->globals, self->t,
+					 "undefined name");
 	else CharSet_Or(*s, c->set);
     } else if (self->la->kind == 3) {
 	CcsParser_Get(self);
@@ -601,7 +608,8 @@ CcsParser_Char(CcsParser_t * self, int * n) {
     char * name; const char * cur;
     cur = name = Unescape(self->t->val);
     *n = UTF8Get(&cur, EoF);
-    if (*cur != 0) CcsParser_SemErr(self, "unacceptable character value");
+    if (*cur != 0) CcsGlobals_SemErr(self->globals, self->t,
+				     "unacceptable character value");
     CocoFree(name);
     if (self->dfa->ignoreCase) *n = tolower(*n);
 }
@@ -628,7 +636,8 @@ CcsParser_Sym(CcsParser_t * self, char ** name, int * kind) {
 	    for (cur = *name; *cur; ++cur) *cur = tolower(*cur);
 	}
 	if (strchr(*name, ' '))
-	    CcsParser_SemErr(self, "literal tokens \"%s\" can not contain blanks", *name);
+	    CcsGlobals_SemErr(self->globals, self->t,
+			      "literal tokens \"%s\" can not contain blanks", *name);
     } else {
 	CcsParser_SynErr(self, 47);
     }
@@ -691,16 +700,19 @@ CcsParser_Factor(CcsParser_t * self, Graph_t ** g) {
 		sym = Tab_NewSym(self->tab, node_t, name, self->t->line);
 		DFA_MatchLiteral(self->dfa, sym->name, sym);
 	    } else {  /* undefined string in production */
-		CcsParser_SemErr(self, "undefined string in production");
+		CcsGlobals_SemErr(self->globals, self->t,
+				  "undefined string in production");
 		sym = self->tab->eofSy;  /* dummy */
 	    }
 	}
 	int typ = sym->typ;
 	if (typ != node_t && typ != node_nt)
-	    CcsParser_SemErr(self, "this symbol kind is not allowed in a production");
+	    CcsGlobals_SemErr(self->globals, self->t,
+			      "this symbol kind is not allowed in a production");
 	if (weak) {
 	    if (typ == node_t) typ = node_wt;
-	    else CcsParser_SemErr(self, "only terminals may be weak");
+	    else CcsGlobals_SemErr(self->globals, self->t,
+				   "only terminals may be weak");
 	}
 	Node_t * p = Tab_NewNodeTSL(self->tab, typ, sym, self->t->line);
 	*g = GraphP(NULL, p);
@@ -708,12 +720,14 @@ CcsParser_Factor(CcsParser_t * self, Graph_t ** g) {
 	if (self->la->kind == 24 || self->la->kind == 26) {
 	    CcsParser_Attribs(self, p);
 	    if (kind != CcsParser_id)
-		CcsParser_SemErr(self, "a literal must not have attributes");
+		CcsGlobals_SemErr(self->globals, self->t,
+				  "a literal must not have attributes");
 	}
 	if (undef)
 	    sym->attrPos = p->pos;  /* dummy */
 	else if ((p->pos == NULL) != (sym->attrPos == NULL))
-	    CcsParser_SemErr(self, "attribute mismatch between declaration and use of this symbol");
+	    CcsGlobals_SemErr(self->globals, self->t,
+			      "attribute mismatch between declaration and use of this symbol");
 	break;
     }
     case 30: {
@@ -773,7 +787,8 @@ CcsParser_Attribs(CcsParser_t * self, Node_t * p) {
 		CcsParser_Get(self);
 	    } else {
 		CcsParser_Get(self);
-		CcsParser_SemErr(self, "bad string in attributes"); 
+		CcsGlobals_SemErr(self->globals, self->t,
+				  "bad string in attributes");
 	    }
 	}
 	CcsParser_Expect(self, 25);
@@ -788,7 +803,8 @@ CcsParser_Attribs(CcsParser_t * self, Node_t * p) {
 		CcsParser_Get(self);
 	    } else {
 		CcsParser_Get(self);
-		CcsParser_SemErr(self, "bad string in attributes"); 
+		CcsGlobals_SemErr(self->globals, self->t,
+				  "bad string in attributes"); 
 	    }
 	}
 	CcsParser_Expect(self, 27);
@@ -838,7 +854,8 @@ CcsParser_TokenFactor(CcsParser_t * self, Graph_t ** g) {
 	if (kind == CcsParser_id) {
 	    CharClass_t * c = Tab_FindCharClassS(self->tab, name);
 	    if (c == NULL) {
-		CcsParser_SemErr(self, "undefined name");
+		CcsGlobals_SemErr(self->globals, self->t,
+				  "undefined name");
 		c = Tab_NewCharClass(self->tab, name, CharSet(NULL));
 	    }
 	    Node_t * p = Tab_NewNodeTSL(self->tab, node_clas, NULL, 0);

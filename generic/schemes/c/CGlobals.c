@@ -22,6 +22,7 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "CGlobals.h"
+#include  "Token.h"
 
 CcsGlobals_t *
 CcsGlobals(CcsGlobals_t * self, const char * fname, FILE * errfp)
@@ -44,4 +45,14 @@ CcsGlobals_Destruct(CcsGlobals_t * self)
     CcsParser_Destruct(&self->parser);
     CcsScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->error);
+}
+
+void
+CcsGlobals_SemErr(CcsGlobals_t * self, CcsToken_t * t,
+		  const char * format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    CcsErrorPool_VError(&self->error, t->line, t->col, format, ap);
+    va_end(ap);
 }
