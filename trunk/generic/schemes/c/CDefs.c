@@ -33,7 +33,13 @@ _CcsAssertFailed_(const char * vstr, const char * fname, int line)
 void *
 _CcsMalloc_(size_t size, const char * fname, int line)
 {
+#ifdef NDEBUG
     return malloc(size);
+#else
+    void * ptr = malloc(size);
+    memset(ptr, 0xA3, size);
+    return ptr;
+#endif
 }
 
 void *
