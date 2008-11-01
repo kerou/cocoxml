@@ -24,6 +24,10 @@
 #ifndef  COCO_SYNTAX_H
 #define  COCO_SYNTAX_H
 
+#ifndef  COCO_BITARRAY_H
+#include  "BitArray.h"
+#endif
+
 #ifndef  COCO_ARRAYLIST_H
 #include  "ArrayList.h"
 #endif
@@ -32,6 +36,13 @@ struct CcSyntax_s {
     CcGlobals_t * globals;
     CcArrayList_t symSet;
     CcArrayList_t nodes;
+
+    CcSymbol_t * gramSy;
+    CcSymbol_t * eofSy;
+    CcSymbol_t * noSym;
+    CcBitArray_t visited;
+    CcSymbol_t * curSy;
+    CcBitArray_t allSyncSets;
 };
 
 CcSyntax_t * CcSyntax(CcSyntax_t * self, CcGlobals_t * globals);
@@ -41,5 +52,9 @@ void CcSyntax_MakeFirstAlt(CcSyntax_t * self, CcGraph_t * g);
 void CcSyntax_MakeAlternative(CcSyntax_t * self, CcGraph_t * g1, CcGraph_t * g2);
 void CcSyntax_MakeIteration(CcSyntax_t * self, CcGraph_t * g);
 void CcSyntax_MakeOption(CcSyntax_t * self, CcGraph_t * g);
+
+void CcSyntax_SetupAnys(CcSyntax_t * self);
+void CcSyntax_RenumberPragmas(CcSyntax_t * self);
+void CcSyntax_CompSymbolSets(CcSyntax_t * self);
 
 #endif  /* COCO_SYNTAX_H */
