@@ -36,7 +36,7 @@ struct CcMelted_s {
     CcMelted_t   * next;
 };
 
-CcMelted_t * CcMelted(CcMelted_t * self, CcBitArray_t * set, CcState_t * state);
+CcMelted_t * CcMelted(CcBitArray_t * set, CcState_t * state);
 void CcMelted_Destruct(CcMelted_t * self);
 
 EXTC_END

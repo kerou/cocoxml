@@ -33,7 +33,7 @@ struct CcTarget_s {
     CcTarget_t * next;
 };
 
-CcTarget_t * CcTarget(CcTarget_t * self, CcState_t * s);
+CcTarget_t * CcTarget(CcState_t * s);
 void CcTarget_Destruct(CcTarget_t * self);
 
 #endif /* COCO_TARGET_H */

@@ -29,8 +29,9 @@
 #include  "lexical/State.h"
 
 CcAction_t *
-CcAction(CcAction_t * self, const CcNodeType_t * typ, int sym, int tc)
+CcAction(const CcNodeType_t * typ, int sym, int tc)
 {
+    CcAction_t * self = CcMalloc(sizeof(CcAction_t));
     self->typ = typ;
     self->sym = sym;
     self->tc = tc;
@@ -63,7 +64,7 @@ CcAction_AddTargets(CcAction_t * self, CcAction_t * a)
 {
     CcTarget_t * p, * t;
     for (p = a->target; p != NULL; p = p->next) {
-	if (!(t = CcTarget(NULL, p->state))) return -1;
+	if (!(t = CcTarget(p->state))) return -1;
 	CcAction_AddTarget(self, t);
     }
     if (a->tc == CcContextTrans) self->tc = CcContextTrans;

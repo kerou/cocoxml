@@ -34,14 +34,33 @@ EXTC_BEGIN
 #define  CcContextTrans  1
 
 struct CcLexical_s {
-    CcGlobals_t * globals;
-    CcNode_t * dummyNode;
-    CcArrayList_t nodes;
-    CcArrayList_t classes;
+    CcGlobals_t   * globals;
+    int             maxStates;
+    int             lastStateNr;
+    CcState_t     * firstState;
+    CcState_t     * lastState;
+    int             lastSimState;
+    CcSymbolT_t   * curSy;
+    CcNode_t      * curGraph;
+    CcsBool_t       ignoreCase;
+    CcsBool_t       dirtyLexical;
+    CcsBool_t       hasCtxMoves;
+
+    CcArrayList_t   nodes;
+    CcArrayList_t   classes;
+    CcMelted_t    * firstMelted;
+    CcComment_t   * firstComment;
+
+    CcNode_t      * dummyNode;
 };
 
 CcLexical_t * CcLexical(CcLexical_t * self, CcGlobals_t * globals);
 void CcLexical_Destruct(CcLexical_t * self);
+
+void CcLexical_MakeFirstAlt(CcLexical_t * self, CcGraph_t * g);
+void CcLexical_MakeAlternative(CcLexical_t * self, CcGraph_t * g1, CcGraph_t * g2);
+void CcLexical_MakeIteration(CcLexical_t * self, CcGraph_t * g);
+void CcLexical_MakeOption(CcLexical_t * self, CcGraph_t * g);
 
 CcGraph_t *
 CcLexical_StrToGraph(CcLexical_t * self, const char * str, CcsToken_t * t);
@@ -58,8 +77,15 @@ CcLexical_FindCharClassN(CcLexical_t * self, const char * name);
 CcCharClass_t *
 CcLexical_FindCharClassC(CcLexical_t * self, const CcCharSet_t * s);
 
-CcCharSet_t *
-CcLexical_CharClassSet(CcLexical_t * self, int idx);
+CcCharSet_t * CcLexical_CharClassSet(CcLexical_t * self, int idx);
+
+void CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbolT_t * sym);
+void CcLexical_MatchLiteral(CcLexical_t * self, const char * s, CcSymbolT_t * sym);
+void CcLexical_MakeDeterministic(CcLexical_t * self);
+
+void
+CcLexical_NewComment(CcLexical_t * self, const CcsToken_t * token,
+		     CcNode_t * from, CcNode_t * to, CcsBool_t nested);
 
 EXTC_END
 

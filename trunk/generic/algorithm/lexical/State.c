@@ -25,9 +25,10 @@
 #include  "Action.h"
 
 CcState_t *
-CcState(CcState_t * self)
+CcState(int nr)
 {
-    self->nr = 0;
+    CcState_t * self = CcMalloc(sizeof(CcState_t));
+    self->nr = nr;
     self->firstAction = NULL;
     self->endOf = NULL;
     self->ctx = 0;
@@ -66,7 +67,7 @@ CcState_MeltWith(CcState_t * self, CcState_t * s)
 {
     CcAction_t * action, * a;
     for (action = s->firstAction; action != NULL; action = action->next) {
-	if (!(a = CcAction(NULL, action->typ, action->sym, action->tc)))
+	if (!(a = CcAction(action->typ, action->sym, action->tc)))
 	    return -1;
 	CcAction_AddTargets(a, action);
 	CcState_AddAction(self, a);
