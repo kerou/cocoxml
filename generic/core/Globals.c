@@ -28,9 +28,9 @@ CcGlobals_t *
 CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
 {
     if (!CcsGlobals(&self->base, fname, errfp)) goto errquit0;
-    if (!CcSymbolTable(&self->symbolTab)) goto errquit1;
-    if (!CcLexical(&self->lexical)) goto errquit2;
-    if (!CcSyntax(&self->syntax)) goto errquit3;
+    if (!CcSymbolTable(&self->symbolTab, self)) goto errquit1;
+    if (!CcLexical(&self->lexical, self)) goto errquit2;
+    if (!CcSyntax(&self->syntax, self)) goto errquit3;
     return self;
  errquit3:
     CcLexical_Destruct(&self->lexical);

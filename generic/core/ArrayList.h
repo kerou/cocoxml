@@ -37,11 +37,12 @@ struct CcArrayList_s {
 };
 
 CcArrayList_t * CcArrayList(CcArrayList_t * self);
-void CcArrayList_Destruct(CcArrayList_t * self);
+void CcArrayList_Destruct(CcArrayList_t * self,
+			  void (* destruct)(void * data));
 void CcArrayList_Add(CcArrayList_t * self, void * value);
 void CcArrayList_Remove(CcArrayList_t * self, void * value);
 void * CcArrayList_Get(CcArrayList_t * self, int index);
-void CcArrayList_Clear(CcArrayList_t * self);
+void CcArrayList_Clear(CcArrayList_t * self, void (* destruct)(void * data));
 
 EXTC_END
 
