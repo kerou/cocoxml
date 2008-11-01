@@ -42,10 +42,12 @@
 
 struct CcSymbolType_s {
     CcObjectType_t base;
+    void (* vdestruct)(CcSymbol_t * self);
 };
 
 struct CcSymbol_s {
     CcObject_t base;
+    int n;
     char * name;
     int line;
 };
@@ -72,22 +74,24 @@ typedef struct {
 } CcSymbolPR_t;
 
 struct CcSymbolTable_s {
+    CcGlobals_t * globals;
     CcArrayList_t terminals;
     CcArrayList_t pragmas;
     CcArrayList_t nonterminals;
 };
 
-CcSymbolTable_t * CcSymbolTable(CcSymbolTable_t * self);
+CcSymbolTable_t * CcSymbolTable(CcSymbolTable_t * self, CcGlobals_t * globals);
 void CcSymbolTable_Destruct(CcSymbolTable_t * self);
 
 CcSymbol_t *
 CcSymbolTable_NewTerminal(CcSymbolTable_t * self, const char * name, int line);
 
 CcSymbol_t *
+CcSymbolTable_Pragma(CcSymbolTable_t * self, const char * name, int line);
+
+CcSymbol_t *
 CcSymbolTable_NewNonTerminal(CcSymbolTable_t * self,
 			     const char * name, int line);
 
-CcSymbol_t *
-CcSymbolTable_Pragma(CcSymbolTable_t * self, const char * name, int line);
 
 #endif  /* COCO_SYMBOLTABLE_H */

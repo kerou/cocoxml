@@ -22,38 +22,45 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "SymbolTable.h"
+#include  "Object.h"
 
+static void CcSymbolT_Destruct(CcObject_t * self);
 static const CcSymbolType_t SymbolT = {
-    { sizeof(CcSymbolT_t), "symbol_t" }
+    { sizeof(CcSymbolT_t), "symbol_t", CcSymbolT_Destruct }
 };
 const CcSymbolType_t * symbol_t = &SymbolT;
 
+static void CcSymbolNT_Destruct(CcObject_t * self);
 static const CcSymbolType_t SymbolNT = {
-    { sizeof(CcSymbolNT_t), "symbol_nt" }
+    { sizeof(CcSymbolNT_t), "symbol_nt", CcSymbolNT_Destruct }
 };
 const CcSymbolType_t * symbol_nt = &SymbolNT;
 
+static void CcSymbolPR_Destruct(CcObject_t * self);
 static const CcSymbolType_t SymbolPR = {
-    { sizeof(CcSymbolPR_t), "symbol_pr" }
+    { sizeof(CcSymbolPR_t), "symbol_pr", CcSymbolPR_Destruct }
 };
 const CcSymbolType_t * symbol_pr = &SymbolPR;
 
+static void CcSymbolUNKNOWN_Destruct(CcObject_t * self);
 static const CcSymbolType_t SymbolUNKNOWN = {
-    { sizeof(CcSymbolPR_t), "symbol_unknown" }
+    { sizeof(CcSymbolPR_t), "symbol_unknown", CcSymbolUNKNOWN_Destruct }
 };
 const CcSymbolType_t * symbol_unknown = &SymbolUNKNOWN;
 
+static void CcSymbolRSLV_Destruct(CcObject_t * self);
 static const CcSymbolType_t SymbolRSLV = {
-    { sizeof(CcSymbolPR_t), "symbol_rslv" }
+    { sizeof(CcSymbolPR_t), "symbol_rslv", CcSymbolRSLV_Destruct }
 };
 const CcSymbolType_t * symbol_rslv = &SymbolRSLV;
 
 CcSymbolTable_t *
-CcSymbolTable(CcSymbolTable_t * self)
+CcSymbolTable(CcSymbolTable_t * self, CcGlobals_t * globals)
 {
+    self->globals = globals;
     CcArrayList(&self->terminals);
-    CcArrayList(&self->pragmas);
     CcArrayList(&self->nonterminals);
+    CcArrayList(&self->pragmas);
     return self;
 }
 
@@ -61,23 +68,95 @@ void
 CcSymbolTable_Destruct(CcSymbolTable_t * self)
 {
     CcArrayList_Destruct(&self->nonterminals);
-    CcArrayList_Destruct(&self->pragmas);
     CcArrayList_Destruct(&self->terminals);
+    CcArrayList_Destruct(&self->pragmas);
+}
+
+static CcSymbol_t *
+CcSymbol(const CcSymbolType_t * type, int n, const char * name, int line)
+{
+    CcSymbol_t * self;
+
+    self = (CcSymbol_t *)CcObject(&type->base);
+    self->name = CcStrdup(name);
+    self->line = line;
+    return self;
+}
+
+static void
+CcSymbol_Destruct(CcObject_t * self)
+{
+    CcSymbol_t * self0 = (CcSymbol_t *)self;
+    CcFree(self0->name);
+    CcObject_Destruct(self);
 }
 
 CcSymbol_t *
 CcSymbolTable_NewTerminal(CcSymbolTable_t * self, const char * name, int line)
 {
-
+    CcSymbolT_t * symbol = (CcSymbolT_t *)
+	CcSymbol(symbol_t, self->terminals.Count, name, line);
+    /* symbol->tokenKind is not initialized now. */
+    CcArrayList_Add(&self->terminals, (CcObject_t *)symbol);
+    return (CcSymbol_t *)symbol;
 }
 
 CcSymbol_t *
 CcSymbolTable_NewNonTerminal(CcSymbolTable_t * self,
 			     const char * name, int line)
 {
+    CcSymbolNT_t * symbol = (CcSymbolNT_t *)
+	CcSymbol(symbol_nt, self->nonterminals.Count, name, line);
+    symbol->graph = NULL;
+    symbol->deletable = FALSE;
+    symbol->firstReady = FALSE;
+    /* symbol->first, symbol->follow, symbol->nts, symbol->attrPos
+     * are not initialized now. */
+    CcArrayList_Add(&self->nonterminals, (CcObject_t *)symbol);
+    return (CcSymbol_t *)symbol;
 }
 
 CcSymbol_t *
 CcSymbolTable_Pragma(CcSymbolTable_t * self, const char * name, int line)
+{
+    CcSymbolPR_t * symbol = (CcSymbolPR_t *)
+	CcSymbol(symbol_pr, self->pragmas.Count, name, line);
+    /* symbol->semPos is not initialized now. */
+    CcArrayList_Add(&self->pragmas, (CcObject_t *)symbol);
+    return (CcSymbol_t *)symbol;
+}
+
+static void
+CcSymbolT_Destruct(CcObject_t * self)
+{
+    CcSymbol_Destruct(self);
+}
+
+static void
+CcSymbolNT_Destruct(CcObject_t * self)
+{
+    CcSymbolNT_t * self0 = (CcSymbolNT_t *)self;
+    CcsPosition_Destruct(self0->attrPos);
+    CcBitArray_Destruct(&self0->nts);
+    CcBitArray_Destruct(&self0->follow);
+    CcBitArray_Destruct(&self0->first);
+    CcSymbol_Destruct(self);
+}
+
+static void
+CcSymbolPR_Destruct(CcObject_t * self)
+{
+    CcSymbolPR_t * self0 = (CcSymbolPR_t *)self;
+    CcsPosition_Destruct(self0->semPos);
+    CcSymbol_Destruct(self);
+}
+
+static void
+CcSymbolUNKNOWN_Destruct(CcObject_t * self)
+{
+}
+
+static void
+CcSymbolRSLV_Destruct(CcObject_t * self)
 {
 }
