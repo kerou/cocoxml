@@ -66,7 +66,7 @@ CcCharSet_Dump(const CcCharSet_t * self, FILE * fp,
 static void
 ATest(FILE * fp, CcCharSet_t * cs0, CcCharSet_t * cs1)
 {
-    CcCharSet_t cs2;
+    CcCharSet_t * cs2;
     int idx, cnt;
 
     CcCharSet_Dump(cs0, fp, "Charset 0: ", "\n");
@@ -91,40 +91,40 @@ ATest(FILE * fp, CcCharSet_t * cs0, CcCharSet_t * cs1)
 	break;
     }
 
-    COCO_ASSERT((CcCharSet_Clone(&cs2, cs0)));
-    COCO_ASSERT((CcCharSet_Equals(cs0, &cs2)));
+    COCO_ASSERT((cs2 = CcCharSet_Clone(cs0)));
+    COCO_ASSERT((CcCharSet_Equals(cs0, cs2)));
     cnt = 0;
     for (idx = 0; idx < NUMBITS; ++idx) {
-	COCO_ASSERT(CcCharSet_Get(cs0, idx) == CcCharSet_Get(&cs2, idx));
+	COCO_ASSERT(CcCharSet_Get(cs0, idx) == CcCharSet_Get(cs2, idx));
 	if (CcCharSet_Get(cs0, idx)) ++cnt;
     }
     COCO_ASSERT((CcCharSet_Elements(cs0) == cnt));
 
-    CcCharSet_Or(&cs2, cs1);
-    CcCharSet_Dump(&cs2, fp, "Or: ", "\n");
+    CcCharSet_Or(cs2, cs1);
+    CcCharSet_Dump(cs2, fp, "Or: ", "\n");
     for (idx = 0; idx < NUMBITS; ++idx)
-	COCO_ASSERT((CcCharSet_Get(cs0, idx) || CcCharSet_Get(cs1, idx)) == CcCharSet_Get(&cs2, idx));
-    COCO_ASSERT((CcCharSet_Includes(&cs2, cs0)));
-    COCO_ASSERT((CcCharSet_Includes(&cs2, cs1)));
-    CcCharSet_Destruct(&cs2);
+	COCO_ASSERT((CcCharSet_Get(cs0, idx) || CcCharSet_Get(cs1, idx)) == CcCharSet_Get(cs2, idx));
+    COCO_ASSERT((CcCharSet_Includes(cs2, cs0)));
+    COCO_ASSERT((CcCharSet_Includes(cs2, cs1)));
+    CcCharSet_Destruct(cs2);
 
-    COCO_ASSERT((CcCharSet_Clone(&cs2, cs0)));
-    CcCharSet_And(&cs2, cs1);
-    CcCharSet_Dump(&cs2, fp, "And: ", "\n");
+    COCO_ASSERT((cs2 = CcCharSet_Clone(cs0)));
+    CcCharSet_And(cs2, cs1);
+    CcCharSet_Dump(cs2, fp, "And: ", "\n");
     for (idx = 0; idx < NUMBITS; ++idx)
-	COCO_ASSERT((CcCharSet_Get(cs0, idx) && CcCharSet_Get(cs1, idx)) == CcCharSet_Get(&cs2, idx));
-    COCO_ASSERT((CcCharSet_Includes(cs0, &cs2)));
-    COCO_ASSERT((CcCharSet_Includes(cs1, &cs2)));
-    CcCharSet_Destruct(&cs2);
+	COCO_ASSERT((CcCharSet_Get(cs0, idx) && CcCharSet_Get(cs1, idx)) == CcCharSet_Get(cs2, idx));
+    COCO_ASSERT((CcCharSet_Includes(cs0, cs2)));
+    COCO_ASSERT((CcCharSet_Includes(cs1, cs2)));
+    CcCharSet_Destruct(cs2);
 
-    COCO_ASSERT((CcCharSet_Clone(&cs2, cs0)));
-    CcCharSet_Subtract(&cs2, cs1);
-    CcCharSet_Dump(&cs2, fp, "Subtract: ", "\n");
+    COCO_ASSERT((cs2 = CcCharSet_Clone(cs0)));
+    CcCharSet_Subtract(cs2, cs1);
+    CcCharSet_Dump(cs2, fp, "Subtract: ", "\n");
     for (idx = 0; idx < NUMBITS; ++idx)
-	COCO_ASSERT((CcCharSet_Get(cs0, idx) && !CcCharSet_Get(cs1, idx)) == CcCharSet_Get(&cs2, idx));
-    COCO_ASSERT(CcCharSet_Includes(cs0, &cs2));
-    COCO_ASSERT(!CcCharSet_Intersects(cs1, &cs2));
-    CcCharSet_Destruct(&cs2);
+	COCO_ASSERT((CcCharSet_Get(cs0, idx) && !CcCharSet_Get(cs1, idx)) == CcCharSet_Get(cs2, idx));
+    COCO_ASSERT(CcCharSet_Includes(cs0, cs2));
+    COCO_ASSERT(!CcCharSet_Intersects(cs1, cs2));
+    CcCharSet_Destruct(cs2);
 
     fprintf(fp, "\n");
 }
@@ -132,42 +132,43 @@ ATest(FILE * fp, CcCharSet_t * cs0, CcCharSet_t * cs1)
 void
 TestCharSet(FILE * fp)
 {
-    CcCharSet_t cs0, cs1, cs2;
+    CcCharSet_t * cs0,  * cs1, * cs2;
     int idx;
 
-    COCO_ASSERT((CcCharSet(&cs0)));
-    COCO_ASSERT((CcCharSet(&cs1)));
-    ATest(fp, &cs0, &cs1);
-    CcCharSet_Destruct(&cs0); CcCharSet_Destruct(&cs1);
+    COCO_ASSERT((cs0 = CcCharSet()));
+    COCO_ASSERT((cs1 = CcCharSet()));
+    ATest(fp, cs0, cs1);
+    CcCharSet_Destruct(cs0); CcCharSet_Destruct(cs1);
 
-    COCO_ASSERT((CcCharSet(&cs0))); CcCharSet_AllSet(&cs0);
-    COCO_ASSERT((CcCharSet(&cs1)));
-    ATest(fp, &cs0, &cs1);
-    CcCharSet_Destruct(&cs0); CcCharSet_Destruct(&cs1);
+    COCO_ASSERT((cs0 = CcCharSet())); CcCharSet_AllSet(cs0);
+    COCO_ASSERT((cs1 = CcCharSet()));
+    ATest(fp, cs0, cs1);
+    CcCharSet_Destruct(cs0); CcCharSet_Destruct(cs1);
 
-    COCO_ASSERT((CcCharSet(&cs0)));
-    COCO_ASSERT((CcCharSet(&cs1))); CcCharSet_AllSet(&cs1);
-    ATest(fp, &cs0, &cs1);
-    CcCharSet_Destruct(&cs0); CcCharSet_Destruct(&cs1);
+    COCO_ASSERT((cs0 = CcCharSet()));
+    COCO_ASSERT((cs1 = CcCharSet())); CcCharSet_AllSet(cs1);
+    ATest(fp, cs0, cs1);
+    CcCharSet_Destruct(cs0); CcCharSet_Destruct(cs1);
 
-    COCO_ASSERT((CcCharSet(&cs0))); CcCharSet_AllSet(&cs0);
-    COCO_ASSERT((CcCharSet(&cs1))); CcCharSet_AllSet(&cs1);
-    ATest(fp, &cs0, &cs1);
-    CcCharSet_Destruct(&cs0); CcCharSet_Destruct(&cs1);
+    COCO_ASSERT((cs0 = CcCharSet())); CcCharSet_AllSet(cs0);
+    COCO_ASSERT((cs1 = CcCharSet())); CcCharSet_AllSet(cs1);
+    ATest(fp, cs0, cs1);
+    CcCharSet_Destruct(cs0); CcCharSet_Destruct(cs1);
 
     for (idx = 0; idx < 128; ++idx) {
-	COCO_ASSERT((CcCharSet(&cs0))); CcCharSet_RandomSet(&cs0);
-	COCO_ASSERT((CcCharSet(&cs1))); CcCharSet_RandomSet(&cs1);
-	ATest(fp, &cs0, &cs1);
+	COCO_ASSERT((cs0 = CcCharSet())); CcCharSet_RandomSet(cs0);
+	COCO_ASSERT((cs1 = CcCharSet())); CcCharSet_RandomSet(cs1);
+	ATest(fp, cs0, cs1);
 
-	COCO_ASSERT((CcCharSet_Clone(&cs2, &cs0)));
-	CcCharSet_Subtract(&cs2, &cs1);
+	COCO_ASSERT((cs2 = CcCharSet_Clone(cs0)));
+	CcCharSet_Subtract(cs2, cs1);
 
-	ATest(fp, &cs0, &cs2);
-	ATest(fp, &cs2, &cs0);
-	ATest(fp, &cs1, &cs2);
-	ATest(fp, &cs2, &cs1);
+	ATest(fp, cs0, cs2);
+	ATest(fp, cs2, cs0);
+	ATest(fp, cs1, cs2);
+	ATest(fp, cs2, cs1);
 
-	CcCharSet_Destruct(&cs0); CcCharSet_Destruct(&cs1); CcCharSet_Destruct(&cs2);
+	CcCharSet_Destruct(cs0); CcCharSet_Destruct(cs1);
+	CcCharSet_Destruct(cs2);
     }
 }

@@ -37,7 +37,7 @@ struct CcCharClass_s {
 };
 
 CcCharClass_t *
-CcCharClass(CcCharClass_t * self, const char * name, CcCharSet_t * s);
+CcCharClass(const char * name, CcCharSet_t * s);
 
 void
 CcCharClass_Destruct(CcCharClass_t * self);
