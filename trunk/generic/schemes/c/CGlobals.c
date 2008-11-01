@@ -48,7 +48,7 @@ CcsGlobals_Destruct(CcsGlobals_t * self)
 }
 
 void
-CcsGlobals_Warning(CcsGlobals_t * self, CcsToken_t * t,
+CcsGlobals_Warning(CcsGlobals_t * self, const CcsToken_t * t,
 		   const char * format, ...)
 {
     va_list ap;
@@ -60,7 +60,7 @@ CcsGlobals_Warning(CcsGlobals_t * self, CcsToken_t * t,
 
 
 void
-CcsGlobals_SemErr(CcsGlobals_t * self, CcsToken_t * t,
+CcsGlobals_SemErr(CcsGlobals_t * self, const CcsToken_t * t,
 		  const char * format, ...)
 {
     va_list ap;
