@@ -101,11 +101,11 @@ void
 CcLexical_DeleteNodes(CcLexical_t * self)
 {
     CcArrayList_Clear(&self->nodes);
-    self->dummyNode = CcLexical_NewNodeEps(self);
+    self->dummyNode = CcLexical_NewNodeEPS(self);
 }
 
 CcGraph_t *
-CcLexical_StrToGraph(CcLexical_t * self, const char * str, CcsToken_t * t)
+CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
 {
     CcGraph_t * g; CcNode_t * p;
     const char * cur, * slast;
@@ -116,7 +116,7 @@ CcLexical_StrToGraph(CcLexical_t * self, const char * str, CcsToken_t * t)
     g->r = self->dummyNode;
     slast = s + strlen(s);
     for (cur = s; cur < slast; ++cur) {
-	p = CcLexical_NewNodeChr(self, CcsUTF8GetCh(&cur, slast));
+	p = CcLexical_NewNodeCHR(self, CcsUTF8GetCh(&cur, slast));
 	g->r->next = p; g->r = p;
     }
     g->l = self->dummyNode->next; self->dummyNode->next = NULL;
@@ -146,7 +146,7 @@ CcLexical_SetContextTrans(CcLexical_t * self, CcNode_t * p)
 }
 
 CcNode_t *
-CcLexical_NewNodeEps(CcLexical_t * self)
+CcLexical_NewNodeEPS(CcLexical_t * self)
 {
     CcNode_t * p  = CcNode(node_eps, 0);
     CcArrayList_Add(&self->nodes, (CcObject_t *)p);
@@ -154,7 +154,7 @@ CcLexical_NewNodeEps(CcLexical_t * self)
 }
 
 CcNode_t *
-CcLexical_NewNodeChr(CcLexical_t * self, int ch)
+CcLexical_NewNodeCHR(CcLexical_t * self, int ch)
 {
     CcNodeChr_t * p;
     p = CcNodeChr(self->nodes.Count, ch);
@@ -437,6 +437,7 @@ CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbolT_t * sym)
     CcBitArray_t stepped, marked;
     const CcNodeType_t * ptype;
 
+    CcsAssert((const CcSymbolType_t *)sym->base.base.type == symbol_t);
     self->curGraph = p; self->curSy = sym;
     if (CcSyntax_DelGraph(&self->globals->syntax, self->curGraph))
 	CcsGlobals_SemErr(&self->globals->base, NULL, "token might be empty");
@@ -465,6 +466,7 @@ CcLexical_MatchLiteral(CcLexical_t * self, const char * s, CcSymbolT_t * sym)
     CcAction_t * a = NULL;
     CcSymbolT_t * matchedSym;
 
+    CcsAssert((const CcSymbolType_t *)sym->base.base.type == symbol_t);
     /* Try to match s against existing CcLexical. */
     scur = s0; slast = scur + strlen(s0);
     while (scur < slast) {

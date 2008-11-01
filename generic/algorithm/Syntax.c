@@ -69,6 +69,12 @@ CcSyntax_MakeOption(CcSyntax_t * self, CcGraph_t * g)
     CcArrayList_Add(&self->nodes, (CcObject_t *)p);
 }
 
+void
+CcSyntax_DeleteNodes(CcSyntax_t * self)
+{
+    CcArrayList_Clear(&self->nodes);
+}
+
 static CcsBool_t CcSyntax_DelGraph(CcSyntax_t * self, CcNode_t * p);
 static CcsBool_t CcSyntax_DelSubGraph(CcSyntax_t * self, CcNode_t * p);
 static CcsBool_t CcSyntax_DelNode(CcSyntax_t * self, CcNode_t * p);
