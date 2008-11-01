@@ -29,10 +29,12 @@
 #endif
 
 struct CcSyntax_s {
+    CcGlobals_t * globals;
     CcArrayList_t symSet;
+    CcArrayList_t nodes;
 };
 
-CcSyntax_t * CcSyntax(CcSyntax_t * self);
+CcSyntax_t * CcSyntax(CcSyntax_t * self, CcGlobals_t * globals);
 void CcSyntax_Destruct(CcSyntax_t * self);
 
 #endif  /* COCO_SYNTAX_H */

@@ -34,6 +34,7 @@ struct CcNodeType_s {
 
 struct CcNode_s {
     CcObject_t   base;
+    int          n;
     CcNode_t   * next;
     CcNode_t   * down;
     CcNode_t   * sub;
