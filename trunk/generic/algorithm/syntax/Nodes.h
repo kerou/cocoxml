@@ -66,11 +66,6 @@ extern const CcNodeType_t * node_any;
 
 typedef struct {
     CcNode_t base;
-} CcNodeEPS_t;
-extern const CcNodeType_t * node_eps;
-
-typedef struct {
-    CcNode_t base;
     CcBitArray_t set;
 } CcNodeSYNC_t;
 extern const CcNodeType_t * node_sync;

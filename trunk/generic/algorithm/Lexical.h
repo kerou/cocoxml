@@ -28,6 +28,10 @@
 #include "ArrayList.h"
 #endif
 
+#ifndef  COCO_HASHTABLE_H
+#include "HashTable.h"
+#endif
+
 EXTC_BEGIN
 
 #define  CcNormalTrans   0
@@ -43,11 +47,13 @@ struct CcLexical_s {
     CcSymbolT_t   * curSy;
     CcNode_t      * curGraph;
     CcsBool_t       ignoreCase;
+    CcCharSet_t   * ignored;
     CcsBool_t       dirtyLexical;
     CcsBool_t       hasCtxMoves;
 
     CcArrayList_t   nodes;
     CcArrayList_t   classes;
+    CcHashTable_t   literals;
     CcMelted_t    * firstMelted;
     CcComment_t   * firstComment;
 
@@ -62,10 +68,13 @@ void CcLexical_MakeAlternative(CcLexical_t * self, CcGraph_t * g1, CcGraph_t * g
 void CcLexical_MakeIteration(CcLexical_t * self, CcGraph_t * g);
 void CcLexical_MakeOption(CcLexical_t * self, CcGraph_t * g);
 
+void CcLexical_DeleteNodes(CcLexical_t * self);
+
 CcGraph_t *
 CcLexical_StrToGraph(CcLexical_t * self, const char * str, CcsToken_t * t);
 void CcLexical_SetContextTrans(CcLexical_t * self, CcNode_t * p);
 
+CcNode_t * CcLexical_NewNodeEps(CcLexical_t * self);
 CcNode_t * CcLexical_NewNodeChr(CcLexical_t * self, int ch);
 
 CcCharClass_t *

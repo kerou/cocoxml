@@ -51,6 +51,7 @@ struct CcGraph_s {
 extern const CcNodeType_t * node_alt;
 extern const CcNodeType_t * node_iter;
 extern const CcNodeType_t * node_opt;
+extern const CcNodeType_t * node_eps;
 
 CcNode_t * CcNode(const CcNodeType_t * type, int n);
 CcNode_t * CcNode_NewWithSub(const CcNodeType_t * type, int n, CcNode_t * sub);
