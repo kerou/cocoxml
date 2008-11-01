@@ -42,6 +42,34 @@ CcSyntax_Destruct(CcSyntax_t * self)
     CcArrayList_Destruct(&self->nodes);
 }
 
+void
+CcSyntax_MakeFirstAlt(CcSyntax_t * self, CcGraph_t * g)
+{
+    CcNode_t * p = CcGraph_MakeFirstAlt(g, self->nodes.Count);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+}
+
+void
+CcSyntax_MakeAlternative(CcSyntax_t * self, CcGraph_t * g1, CcGraph_t * g2)
+{
+    CcNode_t * p = CcGraph_MakeAlternative(g1, g2, self->nodes.Count);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+}
+
+void
+CcSyntax_MakeIteration(CcSyntax_t * self, CcGraph_t * g)
+{
+    CcNode_t * p = CcGraph_MakeIteration(g, self->nodes.Count);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+}
+
+void
+CcSyntax_MakeOption(CcSyntax_t * self, CcGraph_t * g)
+{
+    CcNode_t * p = CcGraph_MakeOption(g, self->nodes.Count);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+}
+
 static CcsBool_t CcSyntax_DelGraph(CcSyntax_t * self, CcNode_t * p);
 static CcsBool_t CcSyntax_DelSubGraph(CcSyntax_t * self, CcNode_t * p);
 static CcsBool_t CcSyntax_DelNode(CcSyntax_t * self, CcNode_t * p);

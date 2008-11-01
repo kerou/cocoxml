@@ -37,4 +37,9 @@ struct CcSyntax_s {
 CcSyntax_t * CcSyntax(CcSyntax_t * self, CcGlobals_t * globals);
 void CcSyntax_Destruct(CcSyntax_t * self);
 
+void CcSyntax_MakeFirstAlt(CcSyntax_t * self, CcGraph_t * g);
+void CcSyntax_MakeAlternative(CcSyntax_t * self, CcGraph_t * g1, CcGraph_t * g2);
+void CcSyntax_MakeIteration(CcSyntax_t * self, CcGraph_t * g);
+void CcSyntax_MakeOption(CcSyntax_t * self, CcGraph_t * g);
+
 #endif  /* COCO_SYNTAX_H */

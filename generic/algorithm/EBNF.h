@@ -51,18 +51,19 @@ extern const CcNodeType_t * node_alt;
 extern const CcNodeType_t * node_iter;
 extern const CcNodeType_t * node_opt;
 
-CcNode_t * CcNode_NewWithSub(const CcNodeType_t * type, CcNode_t * sub);
+CcNode_t * CcNode(const CcNodeType_t * type, int n);
+CcNode_t * CcNode_NewWithSub(const CcNodeType_t * type, int n, CcNode_t * sub);
 void CcNode_Destruct(CcNode_t * self);
 
 CcGraph_t * CcGraph(void);
 CcGraph_t * CcGraphP(CcNode_t * p);
 void CcGraph_Destruct(CcGraph_t * self);
 
-void CcGraph_MakeFirstAlt(CcGraph_t * g);
-void CcGraph_MakeAlternative(CcGraph_t * g1, CcGraph_t * g2);
+CcNode_t * CcGraph_MakeFirstAlt(CcGraph_t * g, int n);
+CcNode_t * CcGraph_MakeAlternative(CcGraph_t * g1, CcGraph_t * g2, int n);
 void CcGraph_MakeSequence(CcGraph_t * g1, CcGraph_t * g2);
-void CcGraph_MakeIteration(CcGraph_t * g);
-void CcGraph_MakeOption(CcGraph_t * g);
+CcNode_t * CcGraph_MakeIteration(CcGraph_t * g, int n);
+CcNode_t * CcGraph_MakeOption(CcGraph_t * g, int n);
 void CcGraph_Finish(CcGraph_t * g);
 
 #endif /* COCO_EBNF_H */
