@@ -33,9 +33,9 @@ CcArrayList(CcArrayList_t * self)
 }
 
 void
-CcArrayList_Destruct(CcArrayList_t * self)
+CcArrayList_Destruct(CcArrayList_t * self, void (* destruct)(void * data))
 {
-    CcArrayList_Clear(self);
+    CcArrayList_Clear(self, destruct);
     if (self->Data)  CcFree(self->Data);
 }
 
@@ -71,6 +71,10 @@ CcArrayList_Get(CcArrayList_t * self, int index)
 }
 
 void
-CcArrayList_Clear(CcArrayList_t * self)
+CcArrayList_Clear(CcArrayList_t * self, void (* destruct)(void * data))
 {
+    int idx;
+    if (destruct != NULL)
+	for (idx = 0; idx < self->Count; ++idx)
+	    destruct(self->Data[idx]);
 }

@@ -45,9 +45,17 @@ CcHashTable(CcHashTable_t * self, size_t size)
     return self;
 }
 
-void CcHashTable_Destruct(CcHashTable_t * self)
+void CcHashTable_Destruct(CcHashTable_t * self,
+			  void (* destruct)(void * value))
 {
-    if (self->first)  CcFree(self->first);
+    CcHTEntry_t ** cur;
+    if (!self->first) return;
+    for (cur = self->first; cur < self->last; ++cur) {
+	if (!*cur) continue;
+	if (destruct && (*cur)->value) destruct((*cur)->value);
+	CcFree(*cur);
+    }
+    CcFree(self->first);
 }
 
 int
