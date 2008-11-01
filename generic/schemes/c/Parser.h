@@ -30,39 +30,43 @@
 #include  "CDefs.h"
 #endif
 
-EXTC_BEGIN
-
 /*---- headerdef ----*/
+#include  "Defs.h"
 /*---- enable ----*/
 
-struct CcsParser_s {
-    CcsGlobals_t  * globals;
-    /*
-    int             errDist;
-    int             minErrDist;
+EXTC_BEGIN
 
-    Scanner_t     * scanner;
-    Errors_t        errors;
-    */
-    CcsToken_t    * t;
-    CcsToken_t    * la;
+struct CcsParser_s {
+    CcsGlobals_t    * globals;
+    CcsScanner_t    * scanner;
     /*
-    int             maxT;
+    int               errDist;
+    int               minErrDist;
     */
+    CcsToken_t      * t;
+    CcsToken_t      * la;
+
+    int               maxT;
+
     /*FILE          * trace;*/
     /*Tab_t         * tab;*/
     /*CcsParserGen_t   * pgen;*/
-    /*char          * tokenString;*/
-    /*char          * noString;*/
-    /*Bool_t          genScanner;*/
-    /*DFA_t         * dfa;*/
+    char            * tokenString;
+    char            * noString;
+    CcsBool_t         genScanner;
+
     /*---- declarations ----*/
+    /* Shortcut pointers */
+    CcSymbolTable_t * symtab;
+    CcLexical_t     * lexical;
+    CcSyntax_t      * syntax;
+
+    CcsPosition_t   * usingPos;
     /*---- enable ----*/
 };
 
 CcsParser_t * CcsParser(CcsParser_t * self, CcsGlobals_t * globals);
 void CcsParser_Destruct(CcsParser_t * self);
-void CcsParser_SynErr(CcsParser_t * self, int n);
 void CcsParser_Parse(CcsParser_t * self);
 
 EXTC_END
