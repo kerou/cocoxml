@@ -45,21 +45,20 @@ CcHashTable(CcHashTable_t * self, size_t size)
     return self;
 }
 
-void CcHashTable_Destruct(CcHashTable_t * self,
-			  void (* destruct)(void * value))
+void CcHashTable_Destruct(CcHashTable_t * self)
 {
     CcHTEntry_t ** cur;
     if (!self->first) return;
     for (cur = self->first; cur < self->last; ++cur) {
 	if (!*cur) continue;
-	if (destruct && (*cur)->value) destruct((*cur)->value);
+	CcObject_VDestruct((*cur)->value);
 	CcFree(*cur);
     }
     CcFree(self->first);
 }
 
 int
-CcHashTable_Set(CcHashTable_t * self, const char * key, void * value)
+CcHashTable_Set(CcHashTable_t * self, const char * key, CcObject_t * value)
 {
     CcHTEntry_t ** start, ** cur;
     start = cur = self->first + strhash(key, self->last - self->first);
@@ -76,7 +75,7 @@ CcHashTable_Set(CcHashTable_t * self, const char * key, void * value)
     return -1; /* Full */
 }
 
-void *
+CcObject_t *
 CcHashTable_Get(const CcHashTable_t * self, const char * key)
 {
     CcHTEntry_t ** start, ** cur;
@@ -113,7 +112,7 @@ CcHTIterator_Key(CcHTIterator_t * iter)
     return (*(iter->cur))->key;
 }
 
-void *
+CcObject_t *
 CcHTIterator_Value(CcHTIterator_t * iter)
 {
     return (*(iter->cur))->value;

@@ -24,8 +24,8 @@
 #ifndef  COCO_ARRAYLIST_H
 #define  COCO_ARRAYLIST_H
 
-#ifndef   COCO_DEFS_H
-#include "Defs.h"
+#ifndef  COCO_OBJECT_H
+#include  "Object.h"
 #endif
 
 EXTC_BEGIN
@@ -33,16 +33,15 @@ EXTC_BEGIN
 struct CcArrayList_s {
     int Count;
     int Capacity;
-    void ** Data;
+    CcObject_t ** Data;
 };
 
 CcArrayList_t * CcArrayList(CcArrayList_t * self);
-void CcArrayList_Destruct(CcArrayList_t * self,
-			  void (* destruct)(void * data));
-void CcArrayList_Add(CcArrayList_t * self, void * value);
-void CcArrayList_Remove(CcArrayList_t * self, void * value);
-void * CcArrayList_Get(CcArrayList_t * self, int index);
-void CcArrayList_Clear(CcArrayList_t * self, void (* destruct)(void * data));
+void CcArrayList_Destruct(CcArrayList_t * self);
+void CcArrayList_Add(CcArrayList_t * self, CcObject_t * value);
+void CcArrayList_Remove(CcArrayList_t * self, CcObject_t * value);
+CcObject_t * CcArrayList_Get(CcArrayList_t * self, int index);
+void CcArrayList_Clear(CcArrayList_t * self);
 
 EXTC_END
 

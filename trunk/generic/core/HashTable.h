@@ -24,8 +24,8 @@
 #ifndef  COCO_HASHTABLE_H
 #define  COCO_HASHTABLE_H
 
-#ifndef  COCO_DEFS_H
-#include "Defs.h"
+#ifndef  COCO_OBJECT_H
+#include  "Object.h"
 #endif
 
 typedef struct CcHTEntry_s CcHTEntry_t;
@@ -39,17 +39,17 @@ struct CcHashTable_s {
 };
 
 CcHashTable_t * CcHashTable(CcHashTable_t * self, size_t size);
-void CcHashTable_Destruct(CcHashTable_t * self,
-			  void (* destruct)(void * data));
+void CcHashTable_Destruct(CcHashTable_t * self);
 
-int CcHashTable_Set(CcHashTable_t * self, const char * key, void * value);
-void * CcHashTable_Get(const CcHashTable_t * self, const char * key);
+int CcHashTable_Set(CcHashTable_t * self,
+		    const char * key, CcObject_t * value);
+CcObject_t * CcHashTable_Get(const CcHashTable_t * self, const char * key);
 
 CcHTIterator_t *
 CcHashTable_GetIterator(const CcHashTable_t * self, CcHTIterator_t * iter);
 
 CcsBool_t CcHTIterator_Forward(CcHTIterator_t * self);
 const char * CcHTIterator_Key(CcHTIterator_t * iter);
-void * CcHTIterator_Value(CcHTIterator_t * iter);
+CcObject_t * CcHTIterator_Value(CcHTIterator_t * iter);
 
 #endif  /* COCO_HASHTABLE_H */
