@@ -52,10 +52,17 @@ CcsErrorPool_Warning(CcsErrorPool_t * self, int line, int col,
 		    const char * format, ...)
 {
     va_list ap;
-    fprintf(self->fp, "Warning(%d,%d): ", line, col);
     va_start(ap, format);
-    vfprintf(self->fp, format, ap);
+    CcsErrorPool_VWarning(self, line, col, format, ap);
     va_end(ap);
+
+}
+void
+CcsErrorPool_VWarning(CcsErrorPool_t * self, int line, int col,
+		      const char * format, va_list ap)
+{
+    fprintf(self->fp, "Warning(%d,%d): ", line, col);
+    vfprintf(self->fp, format, ap);
     ++self->warningCount;
 }
 
