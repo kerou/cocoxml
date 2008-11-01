@@ -33,14 +33,14 @@ CcArrayList(CcArrayList_t * self)
 }
 
 void
-CcArrayList_Destruct(CcArrayList_t * self, void (* destruct)(void * data))
+CcArrayList_Destruct(CcArrayList_t * self)
 {
-    CcArrayList_Clear(self, destruct);
+    CcArrayList_Clear(self);
     if (self->Data)  CcFree(self->Data);
 }
 
 void
-CcArrayList_Add(CcArrayList_t * self, void * value)
+CcArrayList_Add(CcArrayList_t * self, CcObject_t * value)
 {
     int newCapacity;
     if (self->Count >= self->Capacity) {
@@ -52,9 +52,9 @@ CcArrayList_Add(CcArrayList_t * self, void * value)
 }
 
 void
-CcArrayList_Remove(CcArrayList_t * self, void * value)
+CcArrayList_Remove(CcArrayList_t * self, CcObject_t * value)
 {
-    void ** cur;
+    CcObject_t ** cur;
     for (cur = self->Data; cur - self->Data < self->Count; ++cur)
 	if (*cur == value) {
 	    memmove(cur, cur + 1,
@@ -64,17 +64,16 @@ CcArrayList_Remove(CcArrayList_t * self, void * value)
 	}
 }
 
-void *
+CcObject_t *
 CcArrayList_Get(CcArrayList_t * self, int index)
 {
     return (index >= 0 && index < self->Count) ? self->Data[index] : NULL;
 }
 
 void
-CcArrayList_Clear(CcArrayList_t * self, void (* destruct)(void * data))
+CcArrayList_Clear(CcArrayList_t * self)
 {
     int idx;
-    if (destruct != NULL)
-	for (idx = 0; idx < self->Count; ++idx)
-	    destruct(self->Data[idx]);
+    for (idx = 0; idx < self->Count; ++idx)
+	CcObject_VDestruct(self->Data[idx]);
 }

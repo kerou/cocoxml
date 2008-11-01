@@ -36,3 +36,9 @@ CcObject_Destruct(CcObject_t * self)
 {
     CcFree(self);
 }
+
+void
+CcObject_VDestruct(CcObject_t * self)
+{
+    self->type->destruct(self);
+}
