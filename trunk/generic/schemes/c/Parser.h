@@ -63,7 +63,6 @@ struct CcsParser_s {
 CcsParser_t * CcsParser(CcsParser_t * self, CcsGlobals_t * globals);
 void CcsParser_Destruct(CcsParser_t * self);
 void CcsParser_SynErr(CcsParser_t * self, int n);
-void CcsParser_SemErr(CcsParser_t * self, const char * format, ...);
 void CcsParser_Parse(CcsParser_t * self);
 
 EXTC_END
