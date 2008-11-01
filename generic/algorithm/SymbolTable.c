@@ -117,13 +117,28 @@ CcSymbolTable_NewNonTerminal(CcSymbolTable_t * self,
 }
 
 CcSymbol_t *
-CcSymbolTable_Pragma(CcSymbolTable_t * self, const char * name, int line)
+CcSymbolTable_NewPragma(CcSymbolTable_t * self, const char * name, int line)
 {
     CcSymbolPR_t * symbol = (CcSymbolPR_t *)
 	CcSymbol(symbol_pr, self->pragmas.Count, name, line);
     /* symbol->semPos is not initialized now. */
     CcArrayList_Add(&self->pragmas, (CcObject_t *)symbol);
     return (CcSymbol_t *)symbol;
+}
+
+CcSymbol_t *
+CcSymbolTable_FindSym(CcSymbolTable_t * self, const char * name)
+{
+    int idx; CcSymbol_t * sym;
+    for (idx = 0; idx < self->terminals.Count; ++idx) {
+	sym = (CcSymbol_t *)CcArrayList_Get(&self->terminals, idx);
+	if (!strcmp(sym->name, name)) return sym;
+    }
+    for (idx = 0; idx < self->nonterminals.Count; ++idx) {
+	sym = (CcSymbol_t *)CcArrayList_Get(&self->nonterminals, idx);
+	if (!strcmp(sym->name, name)) return sym;
+    }
+    return NULL;
 }
 
 static void
