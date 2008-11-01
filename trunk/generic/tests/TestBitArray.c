@@ -67,8 +67,8 @@ ATest(FILE * fp, CcBitArray_t * ba0, CcBitArray_t * ba1)
     CcBitArray_t ba2;
     int idx, cnt, numbits = CcBitArray_getCount(ba0);
 
-    CcBitArray_Dump(ba0, fp, "Charset 0: ", "\n");
-    CcBitArray_Dump(ba1, fp, "Charset 1: ", "\n");
+    CcBitArray_Dump(ba0, fp, "BitArray 0: ", "\n");
+    CcBitArray_Dump(ba1, fp, "BitArray 1: ", "\n");
 
     cnt = 0;
     for (idx = 0; idx < numbits; ++idx)
