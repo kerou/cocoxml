@@ -102,7 +102,7 @@ CcsParser_SynErr(CcsParser_t * self, int n)
 	s = format;
 	break;
     }
-    CcsGlobals_Error(self->globals, self->la->line, self->la->col, "%s", s);
+    CcsGlobals_SemErr(self->globals, self->la, "%s", s);
 }
 
 static void
@@ -594,11 +594,11 @@ CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s) {
 	}
 	cur0 = name;
 	while (*cur0) {
-	    ch = CcsUTF8Get(&cur0, name + strlen(name));
-	    CcAssert(ch >= 0);
+	    ch = CcsUTF8GetCh(&cur0, name + strlen(name));
+	    CcsAssert(ch >= 0);
 	    CcCharSet_Set(*s, ch);
 	}
-	CocoFree(name);
+	CcFree(name);
     } else if (self->la->kind == 5) {
 	CcsParser_Char(self, &n1);
 	CcCharSet_Set(*s, n1);
@@ -622,10 +622,10 @@ CcsParser_Char(CcsParser_t * self, int * n) {
     *n = 0;
     char * name; const char * cur;
     cur = name = CcsUnescape(self->t->val);
-    *n = UTF8Get(&cur, name + strlen(name));
+    *n = CcsUTF8GetCh(&cur, name + strlen(name));
     if (*cur != 0)
 	CcsGlobals_SemErr(self->globals, self->t, "unacceptable character value");
-    CocoFree(name);
+    CcFree(name);
     if (self->lexical->ignoreCase) *n = tolower(*n);
 }
 
@@ -668,11 +668,11 @@ CcsParser_Term(CcsParser_t * self, CcGraph_t ** g) {
 	    *g = CcGraphP(rslv);
 	}
 	CcsParser_Factor(self, &g2);
-	if (rslv != NULL) CcSyntax_MakeSequence(self->syntax, *g, g2);
+	if (rslv != NULL) CcGraph_MakeSequence(*g, g2);
 	else *g = g2;
 	while (CcsParser_StartOf(self, 18)) {
 	    CcsParser_Factor(self, &g2);
-	    CcSyntax_MakeSequence(self->syntax, *g, g2);
+	    CcGraph_MakeSequence(*g, g2);
 	}
     } else if (CcsParser_StartOf(self, 19)) {
 	*g = CcGraphP(CcSyntax_NewNodeEPS(self->syntax)); 
@@ -706,7 +706,7 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g) {
 	CcsParser_Sym(self, &name, &kind);
 	CcSymbol_t * sym = CcSymbolTable_FindSym(self->symtab, name);
 	if (sym == NULL && kind == CcsParser_str)
-	    sym = (CcSymbol_t *)HashTable_Get(&self->lexical->literals, name);
+	    sym = (CcSymbol_t *)CcHashTable_Get(&self->lexical->literals, name);
 	CcsBool_t undef = (sym == NULL);
 	if (undef) {
 	    if (kind == CcsParser_id) {
@@ -890,7 +890,7 @@ CcsParser_TokenTerm(CcsParser_t * self, CcGraph_t ** g) {
     CcsParser_TokenFactor(self, g);
     while (CcsParser_StartOf(self, 8)) {
 	CcsParser_TokenFactor(self, &g2);
-	CcLexical_MakeSequence(self->lexical, *g, g2);
+	CcGraph_MakeSequence(*g, g2);
     }
     if (self->la->kind == 38) {
 	CcsParser_Get(self);
@@ -898,7 +898,7 @@ CcsParser_TokenTerm(CcsParser_t * self, CcGraph_t ** g) {
 	CcsParser_TokenExpr(self, &g2);
 	CcLexical_SetContextTrans(self->lexical, g2->l);
 	self->lexical->hasCtxMoves = TRUE;
-	CcLexical_MakeSequence(self->lexical, *g, g2);
+	CcGraph_MakeSequence(*g, g2);
 	CcsParser_Expect(self, 31);
     }
 }

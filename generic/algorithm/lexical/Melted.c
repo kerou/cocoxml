@@ -23,6 +23,8 @@
 -------------------------------------------------------------------------*/
 #include  <stdlib.h>
 #include  "Melted.h"
+#include  "BitArray.h"
+#include  "State.h"
 
 CcMelted_t *
 CcMelted(CcBitArray_t * set, CcState_t * state)
@@ -37,7 +39,7 @@ CcMelted(CcBitArray_t * set, CcState_t * state)
 void
 CcMelted_Destruct(CcMelted_t * self)
 {
-    CcBitArrary_Destruct(self->set);
+    CcBitArray_Destruct(self->set);
     CcFree(self->set);
     CcState_Destruct(self->state);
     CcFree(self);
