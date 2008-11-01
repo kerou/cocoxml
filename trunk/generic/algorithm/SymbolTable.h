@@ -87,11 +87,13 @@ CcSymbol_t *
 CcSymbolTable_NewTerminal(CcSymbolTable_t * self, const char * name, int line);
 
 CcSymbol_t *
-CcSymbolTable_Pragma(CcSymbolTable_t * self, const char * name, int line);
+CcSymbolTable_NewPragma(CcSymbolTable_t * self, const char * name, int line);
 
 CcSymbol_t *
 CcSymbolTable_NewNonTerminal(CcSymbolTable_t * self,
 			     const char * name, int line);
 
+CcSymbol_t *
+CcSymbolTable_FindSym(CcSymbolTable_t * self, const char * name);
 
 #endif  /* COCO_SYMBOLTABLE_H */
