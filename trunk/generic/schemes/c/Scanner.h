@@ -62,7 +62,8 @@ struct CcsScanner_s {
     CcsBuffer_t    buffer;
 };
 
-CcsScanner_t * CcsScanner(CcsScanner_t * self, CcsGlobals_t * globals, const char * filename);
+CcsScanner_t *
+CcsScanner(CcsScanner_t * self, CcsGlobals_t * globals, const char * filename);
 void CcsScanner_Destruct(CcsScanner_t * self);
 CcsToken_t * CcsScanner_GetDummy(CcsScanner_t * self);
 CcsToken_t * CcsScanner_Scan(CcsScanner_t * self);
@@ -72,9 +73,11 @@ void CcsScanner_IncRef(CcsScanner_t * self, CcsToken_t * token);
 void CcsScanner_DecRef(CcsScanner_t * self, CcsToken_t * token);
 
 CcsPosition_t *
-CcsScanner_GetPosition(CcsScanner_t * self, CcsToken_t * begin, CcsToken_t * end);
+CcsScanner_GetPosition(CcsScanner_t * self,
+		       CcsToken_t * begin, CcsToken_t * end);
 CcsPosition_t *
-CcsScanner_GetPositionWithTail(CcsScanner_t * self, CcsToken_t * begin, CcsToken_t * end);
+CcsScanner_GetPositionWithTail(CcsScanner_t * self,
+			       CcsToken_t * begin, CcsToken_t * end);
 
 EXTC_END
 

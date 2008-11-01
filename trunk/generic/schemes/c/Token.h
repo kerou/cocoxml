@@ -24,8 +24,8 @@
 #ifndef  COCO_TOKEN_H
 #define  COCO_TOKEN_H
 
-#ifndef  COCO_DEFS_H
-#include  "Defs.h"
+#ifndef  COCO_CDEFS_H
+#include  "CDefs.h"
 #endif
 
 EXTC_BEGIN
