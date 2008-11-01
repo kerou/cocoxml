@@ -34,6 +34,9 @@
 #include  "lexical/State.h"
 #include  "lexical/Target.h"
 
+/* SZ_LITERALS is a prime number, auto-extending is not supported now */
+#define  SZ_LITERALS 127
+
 static CcAction_t *
 CcLexical_FindAction(CcLexical_t * self, CcState_t *state, int ch);
 static void
@@ -50,16 +53,20 @@ CcLexical_t *
 CcLexical(CcLexical_t * self, CcGlobals_t * globals)
 {
     self->globals = globals;
+    self->ignored = CcCharSet();
     CcArrayList(&self->nodes);
     CcArrayList(&self->classes);
+    CcHashTable(&self->literals, SZ_LITERALS);
     return self;
 }
 
 void
 CcLexical_Destruct(CcLexical_t * self)
 {
+    CcHashTable_Destruct(&self->literals);
     CcArrayList_Destruct(&self->classes);
     CcArrayList_Destruct(&self->nodes);
+    CcCharSet_Destruct(self->ignored);
 }
 
 void
@@ -88,6 +95,13 @@ CcLexical_MakeOption(CcLexical_t * self, CcGraph_t * g)
 {
     CcNode_t * p = CcGraph_MakeOption(g, self->nodes.Count);
     CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+}
+
+void
+CcLexical_DeleteNodes(CcLexical_t * self)
+{
+    CcArrayList_Clear(&self->nodes);
+    self->dummyNode = CcLexical_NewNodeEps(self);
 }
 
 CcGraph_t *
@@ -129,6 +143,14 @@ CcLexical_SetContextTrans(CcLexical_t * self, CcNode_t * p)
 	if (p->up) break;
 	p = p->next;
     }
+}
+
+CcNode_t *
+CcLexical_NewNodeEps(CcLexical_t * self)
+{
+    CcNode_t * p  = CcNode(node_eps, 0);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+    return p;
 }
 
 CcNode_t *

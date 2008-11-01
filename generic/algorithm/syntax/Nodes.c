@@ -55,14 +55,6 @@ static const CcNodeType_t NodeANY = {
 };
 const CcNodeType_t * node_any = &NodeANY;
 
-static void CcNodeEPS_Destruct(CcObject_t * self)
-{
-}
-static const CcNodeType_t NodeEPS = {
-    { sizeof(CcNodeEPS_t), "node_eps", CcNodeEPS_Destruct }
-};
-const CcNodeType_t * node_eps = &NodeEPS;
-
 static void CcNodeSYNC_Destruct(CcObject_t * self)
 {
 }
