@@ -31,17 +31,17 @@
 EXTC_BEGIN
 
 struct CcState_s {
-    int          nr;
-    CcAction_t * firstAction;
-    CcSymbol_t * endOf;
-    int          ctx;
-    CcState_t  * next;
+    int           nr;
+    CcAction_t  * firstAction;
+    CcSymbolT_t * endOf;
+    int           ctx;
+    CcState_t   * next;
 };
 
-CcState_t * CcState(CcState_t * self);
+CcState_t * CcState(int nr);
 void CcState_Destruct(CcState_t * self);
-void CcState_AddCcAction(CcState_t * self, CcAction_t * act);
-void CcState_DetachCcAction(CcState_t * self, CcAction_t * act);
+void CcState_AddAction(CcState_t * self, CcAction_t * act);
+void CcState_DetachAction(CcState_t * self, CcAction_t * act);
 int CcState_MeltWith(CcState_t * self, CcState_t * s);
 
 EXTC_END

@@ -38,7 +38,7 @@ struct CcAction_s {
     CcAction_t         * next;
 };
 
-CcAction_t * CcAction(CcAction_t * self, const CcNodeType_t * typ, int sym, int tc);
+CcAction_t * CcAction(const CcNodeType_t * typ, int sym, int tc);
 void CcAction_Destruct(CcAction_t * self);
 void CcAction_AddTarget(CcAction_t * self, CcTarget_t * t);
 int CcAction_AddTargets(CcAction_t * self, CcAction_t * a);

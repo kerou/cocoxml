@@ -32,17 +32,17 @@
 #define  node_contextTrans 1
 
 typedef struct {
-    CcNode_t base;
-    int      chr;
-    int      code;  /* Transition code */
+    CcNode_t    base;
+    int         chr;
+    int         code;  /* Transition code */
 } CcNodeChr_t;
 extern const CcNodeType_t * node_chr;
 CcNodeChr_t * CcNodeChr(int n, int chr);
 
 typedef struct {
-    CcNode_t base;
-    int      clas; /* The index of CharClass */
-    int      code;     /* Transition code */
+    CcNode_t    base;
+    int         clas; /* The index of CharClass */
+    int         code; /* Transition code */
 } CcNodeClas_t;
 extern const CcNodeType_t * node_clas;
 CcNodeClas_t * CcNodeClas(int n, int clas);

@@ -25,8 +25,9 @@
 #include  "Melted.h"
 
 CcMelted_t *
-CcMelted(CcMelted_t * self, CcBitArray_t * set, CcState_t * state)
+CcMelted(CcBitArray_t * set, CcState_t * state)
 {
+    CcMelted_t * self = CcMalloc(sizeof(CcMelted_t));
     self->set = set;
     self->state = state;
     self->next = NULL;
@@ -36,4 +37,8 @@ CcMelted(CcMelted_t * self, CcBitArray_t * set, CcState_t * state)
 void
 CcMelted_Destruct(CcMelted_t * self)
 {
+    CcBitArrary_Destruct(self->set);
+    CcFree(self->set);
+    CcState_Destruct(self->state);
+    CcFree(self);
 }
