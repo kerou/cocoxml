@@ -24,19 +24,43 @@
 #ifndef  COCO_LEXICAL_H
 #define  COCO_LEXICAL_H
 
-#ifndef  COCO_DEFS_H
-#include "Defs.h"
+#ifndef  COCO_ARRAYLIST_H
+#include "ArrayList.h"
 #endif
+
+EXTC_BEGIN
 
 #define  CcNormalTrans   0
 #define  CcContextTrans  1
 
 struct CcLexical_s {
     CcGlobals_t * globals;
-    int dummy;
+    CcNode_t * dummyNode;
+    CcArrayList_t nodes;
+    CcArrayList_t classes;
 };
 
 CcLexical_t * CcLexical(CcLexical_t * self, CcGlobals_t * globals);
 void CcLexical_Destruct(CcLexical_t * self);
+
+CcGraph_t *
+CcLexical_StrToGraph(CcLexical_t * self, const char * str, CcsToken_t * t);
+void CcLexical_SetContextTrans(CcLexical_t * self, CcNode_t * p);
+
+CcNode_t * CcLexical_NewNodeChr(CcLexical_t * self, int ch);
+
+CcCharClass_t *
+CcLexical_NewCharClass(CcLexical_t * self, const char * name, CcCharSet_t * s);
+
+CcCharClass_t *
+CcLexical_FindCharClassN(CcLexical_t * self, const char * name);
+
+CcCharClass_t *
+CcLexical_FindCharClassC(CcLexical_t * self, const CcCharSet_t * s);
+
+CcCharSet_t *
+CcLexical_CharClassSet(CcLexical_t * self, int idx);
+
+EXTC_END
 
 #endif  /* COCO_LEXICAL_H */

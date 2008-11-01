@@ -22,6 +22,8 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "Lexical.h"
+#include  "ArrayList.h"
+#include  "Globals.h"
 #include  "lexical/Action.h"
 #include  "lexical/CharSet.h"
 #include  "lexical/CharClass.h"
@@ -31,12 +33,130 @@ CcLexical_t *
 CcLexical(CcLexical_t * self, CcGlobals_t * globals)
 {
     self->globals = globals;
+    CcArrayList(&self->nodes);
+    CcArrayList(&self->classes);
     return self;
 }
 
 void
 CcLexical_Destruct(CcLexical_t * self)
 {
+    CcArrayList_Destruct(&self->classes);
+    CcArrayList_Destruct(&self->nodes);
+}
+
+void
+CcLexical_MakeFirstAlt(CcLexical_t * self, CcGraph_t * g)
+{
+    CcNode_t * p = CcGraph_MakeFirstAlt(g, self->nodes.Count);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+}
+
+void
+CcLexical_MakeAlternative(CcLexical_t * self, CcGraph_t * g1, CcGraph_t * g2)
+{
+    CcNode_t * p = CcGraph_MakeAlternative(g1, g2, self->nodes.Count);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+}
+
+void
+CcLexical_MakeIteration(CcLexical_t * self, CcGraph_t * g)
+{
+    CcNode_t * p = CcGraph_MakeIteration(g, self->nodes.Count);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+}
+
+void
+CcLexical_MakeOption(CcLexical_t * self, CcGraph_t * g)
+{
+    CcNode_t * p = CcGraph_MakeOption(g, self->nodes.Count);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+}
+
+CcGraph_t *
+CcLexical_StrToGraph(CcLexical_t * self, const char * str, CcsToken_t * t)
+{
+    CcGraph_t * g; CcNode_t * p;
+    const char * cur, * slast;
+    char * s = CcsUnescape(str);
+    if (strlen(s) == 0)
+	CcsGlobals_SemErr(&self->globals->base, t, "empty token not allowed");
+    g = CcGraph();
+    g->r = self->dummyNode;
+    slast = s + strlen(s);
+    for (cur = s; cur < slast; ++cur) {
+	p = CcLexical_NewNodeChr(self, CcsUTF8GetCh(&cur, slast));
+	g->r->next = p; g->r = p;
+    }
+    g->l = self->dummyNode->next; self->dummyNode->next = NULL;
+    CcFree(s);
+    return g;
+}
+
+void
+CcLexical_SetContextTrans(CcLexical_t * self, CcNode_t * p)
+{
+    const CcNodeType_t * ptype;
+    while (p != NULL) {
+	ptype = (const CcNodeType_t *)p->base.type;
+	if (ptype == node_chr) {
+	    ((CcNodeChr_t *)p)->code = node_contextTrans;
+	} else if (ptype == node_clas) {
+	    ((CcNodeClas_t *)p)->code = node_contextTrans;
+	} else if (ptype == node_opt || ptype == node_iter) {
+	    CcLexical_SetContextTrans(self, p->sub);
+	} else if (ptype == node_alt) {
+	    CcLexical_SetContextTrans(self, p->sub);
+	    CcLexical_SetContextTrans(self, p->down);
+	}
+	if (p->up) break;
+	p = p->next;
+    }
+}
+
+CcNode_t *
+CcLexical_NewNodeChr(CcLexical_t * self, int ch)
+{
+    CcNodeChr_t * p;
+    p = CcNodeChr(self->nodes.Count, ch);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+    return (CcNode_t *)p;
+}
+
+CcCharClass_t *
+CcLexical_NewCharClass(CcLexical_t * self, const char * name, CcCharSet_t * s)
+{
+    CcCharClass_t * c = CcCharClass(self->classes.Count, name, s);
+    CcArrayList_Add(&self->classes, (CcObject_t *)c);
+    return c;
+}
+
+CcCharClass_t *
+CcLexical_FindCharClassN(CcLexical_t * self, const char * name)
+{
+    int idx; CcCharClass_t * c;
+    for (idx = 0; idx < self->classes.Count; ++idx) {
+	c = (CcCharClass_t *)CcArrayList_Get(&self->classes, idx);
+	if (!strcmp(name, c->name)) return c;
+    }
+    return NULL;
+}
+
+CcCharClass_t *
+CcLexical_FindCharClassC(CcLexical_t * self, const CcCharSet_t * s)
+{
+    int idx; CcCharClass_t * c;
+    for (idx = 0; idx < self->classes.Count; ++idx) {
+	c = (CcCharClass_t *)CcArrayList_Get(&self->classes, idx);
+	if (CcCharSet_Equals(s, c->set)) return c;
+    }
+    return NULL;
+}
+
+CcCharSet_t *
+CcLexical_CharClassSet(CcLexical_t * self, int idx)
+{
+    return ((CcCharClass_t *)CcArrayList_Get(&self->classes, idx))->set;
 }
 
 CcCharSet_t *
@@ -45,10 +165,9 @@ CcLexical_ActionSymbols(CcLexical_t * self, CcAction_t * action)
     CcCharSet_t * s;
 
     if (action->typ == node_clas) {
-	s = CcCharSet_Clone(CcMalloc(sizeof(CcCharSet_t)),
-			    CcLexical_CharClassSet(self, action->sym));
+	s = CcCharSet_Clone(CcLexical_CharClassSet(self, action->sym));
     } else {
-	s = CcCharSet(CcMalloc(sizeof(CcCharSet_t)));
+	s = CcCharSet();
 	CcCharSet_Set(s, action->sym);
     }
     return s;
