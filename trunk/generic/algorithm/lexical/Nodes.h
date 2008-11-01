@@ -28,18 +28,23 @@
 #include  "EBNF.h"
 #endif
 
+#define  node_normalTrans  0
+#define  node_contextTrans 1
+
 typedef struct {
     CcNode_t base;
     int      chr;
     int      code;  /* Transition code */
 } CcNodeChr_t;
 extern const CcNodeType_t * node_chr;
+CcNodeChr_t * CcNodeChr(int n, int chr);
 
 typedef struct {
     CcNode_t base;
-    int      chrclass; /* The index of CharClass */
+    int      clas; /* The index of CharClass */
     int      code;     /* Transition code */
 } CcNodeClas_t;
 extern const CcNodeType_t * node_clas;
+CcNodeClas_t * CcNodeClas(int n, int clas);
 
 #endif  /* COCO_LEXICAL_NODES_H */
