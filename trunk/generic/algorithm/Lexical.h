@@ -71,11 +71,12 @@ void CcLexical_MakeOption(CcLexical_t * self, CcGraph_t * g);
 void CcLexical_DeleteNodes(CcLexical_t * self);
 
 CcGraph_t *
-CcLexical_StrToGraph(CcLexical_t * self, const char * str, CcsToken_t * t);
+CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t);
 void CcLexical_SetContextTrans(CcLexical_t * self, CcNode_t * p);
 
-CcNode_t * CcLexical_NewNodeEps(CcLexical_t * self);
-CcNode_t * CcLexical_NewNodeChr(CcLexical_t * self, int ch);
+CcNode_t * CcLexical_NewNodeEPS(CcLexical_t * self);
+CcNode_t * CcLexical_NewNodeCHR(CcLexical_t * self, int ch);
+CcNode_t * CcLexical_NewNodeCLAS(CcLexical_t * self);
 
 CcCharClass_t *
 CcLexical_NewCharClass(CcLexical_t * self, const char * name, CcCharSet_t * s);
