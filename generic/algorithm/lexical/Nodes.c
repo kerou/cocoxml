@@ -24,11 +24,11 @@
 #include  "lexical/Nodes.h"
 
 static const CcNodeType_t NodeChr = {
-    { sizeof(CcChrNode_t), "chr" }
+    { sizeof(CcNodeChr_t), "node_chr" }
 };
 const CcNodeType_t * node_chr = &NodeChr;
 
 static const CcNodeType_t NodeClas = {
-    { sizeof(CcChrNode_t), "clas" }
+    { sizeof(CcNodeClas_t), "node_clas" }
 };
 const CcNodeType_t * node_clas = &NodeClas;
