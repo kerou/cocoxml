@@ -42,6 +42,8 @@ void CcsErrorPool_Destruct(CcsErrorPool_t * self);
 void CcsErrorPool_Info(CcsErrorPool_t *, const char * format, ...);
 void CcsErrorPool_Warning(CcsErrorPool_t * self, int line, int col,
 			  const char * format, ...);
+void CcsErrorPool_VWarning(CcsErrorPool_t * slef, int line, int col,
+			   const char * format, va_list ap);
 void CcsErrorPool_Error(CcsErrorPool_t * self, int line, int col,
 			const char * format, ...);
 void CcsErrorPool_VError(CcsErrorPool_t * self, int line, int col,

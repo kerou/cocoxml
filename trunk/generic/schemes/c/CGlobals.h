@@ -46,6 +46,8 @@ CcsGlobals_t *
 CcsGlobals(CcsGlobals_t * self, const char * fname, FILE * errfp);
 void CcsGlobals_Destruct(CcsGlobals_t * self);
 void CcsGlobals_Parse(CcsGlobals_t * self);
+void CcsGlobals_Warning(CcsGlobals_t * self, CcsToken_t * t,
+			const char * format, ...);
 void CcsGlobals_SemErr(CcsGlobals_t * self, CcsToken_t * t,
 		       const char * format, ...);
 
