@@ -25,10 +25,10 @@
 #include  "lexical/CharSet.h"
 
 CcCharClass_t *
-CcCharClass(const char * name, CcCharSet_t * s)
+CcCharClass(int n, const char * name, CcCharSet_t * s)
 {
     CcCharClass_t * self = CcMalloc(sizeof(CcCharClass_t));
-    self->n = 0;
+    self->n = n;
     self->name = CcStrdup(name);
     self->set = s;
     return self;

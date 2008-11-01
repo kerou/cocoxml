@@ -23,12 +23,34 @@
 -------------------------------------------------------------------------*/
 #include  "lexical/Nodes.h"
 
+static void CcNodeChr_Destruct(CcObject_t * self)
+{
+}
 static const CcNodeType_t NodeChr = {
-    { sizeof(CcNodeChr_t), "node_chr" }
+    { sizeof(CcNodeChr_t), "node_chr", CcNodeChr_Destruct }
 };
 const CcNodeType_t * node_chr = &NodeChr;
+CcNodeChr_t *
+CcNodeChr(int n, int chr)
+{
+    CcNodeChr_t * self = (CcNodeChr_t *)CcNode(node_chr, n);
+    self->chr = chr;
+    self->code = node_normalTrans;
+    return self;
+}
 
+static void CcNodeClas_Destruct(CcObject_t * self)
+{
+}
 static const CcNodeType_t NodeClas = {
-    { sizeof(CcNodeClas_t), "node_clas" }
+    { sizeof(CcNodeClas_t), "node_clas", CcNodeClas_Destruct }
 };
 const CcNodeType_t * node_clas = &NodeClas;
+CcNodeClas_t *
+CcNodeClas(int n, int clas)
+{
+    CcNodeClas_t * self = (CcNodeClas_t *)CcNode(node_clas, n);
+    self->clas = clas;
+    self->code = node_normalTrans;
+    return self;
+}
