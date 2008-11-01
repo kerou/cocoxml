@@ -60,12 +60,15 @@ typedef struct CcSymbolTable_s CcSymbolTable_t;
 /* Symbol */
 typedef struct CcSymbolType_s CcSymbolType_t;
 typedef struct CcSymbol_s CcSymbol_t;
+typedef struct CcSymbolT_s CcSymbolT_t;
+typedef struct CcSymbolPR_s CcSymbolPR_t;
+typedef struct CcSymbolNT_s CcSymbolNT_t;
 
 typedef enum {
     symbol_fixedToken = 0,
     symbol_classToken = 1,
     symbol_litToken = 2,
-    symbol_classlitToken = 3,
+    symbol_classLitToken = 3,
 } CcSymbolT_TokenKind_t;
 extern const CcSymbolType_t * symbol_t;
 extern const CcSymbolType_t * symbol_nt;

@@ -52,12 +52,17 @@ struct CcSymbol_s {
     int line;
 };
 
-typedef struct {
+struct CcSymbolT_s {
     CcSymbol_t base;
     CcSymbolT_TokenKind_t tokenKind;
-} CcSymbolT_t;
+};
 
-typedef struct {
+struct CcSymbolPR_s {
+    CcSymbol_t      base;
+    CcsPosition_t * semPos;
+};
+
+struct CcSymbolNT_s {
     CcSymbol_t      base;
     CcNode_t      * graph;
     CcsBool_t       deletable;
@@ -66,12 +71,7 @@ typedef struct {
     CcBitArray_t    follow;
     CcBitArray_t    nts;
     CcsPosition_t * attrPos;
-} CcSymbolNT_t;
-
-typedef struct {
-    CcSymbol_t      base;
-    CcsPosition_t * semPos;
-} CcSymbolPR_t;
+};
 
 struct CcSymbolTable_s {
     CcGlobals_t * globals;
