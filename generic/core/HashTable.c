@@ -57,7 +57,7 @@ void CcHashTable_Destruct(CcHashTable_t * self)
     CcFree(self->first);
 }
 
-int
+CcsBool_t
 CcHashTable_Set(CcHashTable_t * self, const char * key, CcObject_t * value)
 {
     CcHTEntry_t ** start, ** cur;
@@ -67,16 +67,16 @@ CcHashTable_Set(CcHashTable_t * self, const char * key, CcObject_t * value)
 	    *cur = CcMalloc(sizeof(CcHTEntry_t) + strlen(key) + 1);
 	    (*cur)->key = (char *)(*cur + 1); strcpy((*cur)->key, key);
 	    (*cur)->value = value;
-	    return 0;
+	    return TRUE;
 	}
 	if (++cur == self->last) cur = self->first;
 	if (cur == start) break;
     }
-    return -1; /* Full */
+    return  FALSE; /* Full */
 }
 
 CcObject_t *
-CcHashTable_Get(const CcHashTable_t * self, const char * key)
+CcHashTable_Get(CcHashTable_t * self, const char * key)
 {
     CcHTEntry_t ** start, ** cur;
     start = cur = self->first + strhash(key, self->last - self->first);

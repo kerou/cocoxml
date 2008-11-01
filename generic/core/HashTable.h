@@ -43,7 +43,7 @@ void CcHashTable_Destruct(CcHashTable_t * self);
 
 int CcHashTable_Set(CcHashTable_t * self,
 		    const char * key, CcObject_t * value);
-CcObject_t * CcHashTable_Get(const CcHashTable_t * self, const char * key);
+CcObject_t * CcHashTable_Get(CcHashTable_t * self, const char * key);
 
 CcHTIterator_t *
 CcHashTable_GetIterator(const CcHashTable_t * self, CcHTIterator_t * iter);
