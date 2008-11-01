@@ -25,8 +25,9 @@
 #include  "lexical/CharSet.h"
 
 CcCharClass_t *
-CcCharClass(CcCharClass_t * self, const char * name, CcCharSet_t * s)
+CcCharClass(const char * name, CcCharSet_t * s)
 {
+    CcCharClass_t * self = CcMalloc(sizeof(CcCharClass_t));
     self->n = 0;
     self->name = CcStrdup(name);
     self->set = s;
@@ -37,5 +38,5 @@ void
 CcCharClass_Destruct(CcCharClass_t * self)
 {
     if (self->set) { CcCharSet_Destruct(self->set); CcFree(self->set); }
-    if (self->name) CcFree(self->name);
+    CcFree(self);
 }

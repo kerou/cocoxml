@@ -33,8 +33,9 @@ new_Range(int from, int to)
 #define Del_Range(range)  CcFree(range)
 
 CcCharSet_t *
-CcCharSet(CcCharSet_t * self)
+CcCharSet(void)
 {
+    CcCharSet_t * self = CcMalloc(sizeof(CcCharSet_t));
     self->head = NULL;
     return self;
 }
@@ -43,6 +44,7 @@ void
 CcCharSet_Destruct(CcCharSet_t * self)
 {
     CcCharSet_Clear(self);
+    CcFree(self);
 }
 
 CcsBool_t
@@ -90,11 +92,11 @@ CcCharSet_Set(CcCharSet_t * self, int i)
 }
 
 CcCharSet_t *
-CcCharSet_Clone(CcCharSet_t * self, const CcCharSet_t * s)
+CcCharSet_Clone(const CcCharSet_t * s)
 {
     CcRange_t * prev, * curnew;
     const CcRange_t * cur1;
-
+    CcCharSet_t * self = CcMalloc(sizeof(CcCharSet_t));
     self->head = NULL; prev = NULL;
     for (cur1 = s->head; cur1; cur1 = cur1->next) {
 	curnew = new_Range(cur1->from, cur1->to);

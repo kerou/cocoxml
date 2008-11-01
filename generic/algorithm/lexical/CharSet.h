@@ -39,11 +39,11 @@ struct CcCharSet_s {
     CcRange_t * head;
 };
 
-CcCharSet_t * CcCharSet(CcCharSet_t * self);
+CcCharSet_t * CcCharSet(void);
 void CcCharSet_Destruct(CcCharSet_t * self);
 CcsBool_t CcCharSet_Get(const CcCharSet_t * self, int i);
 void CcCharSet_Set(CcCharSet_t * self, int i);
-CcCharSet_t * CcCharSet_Clone(CcCharSet_t * self, const CcCharSet_t * s);
+CcCharSet_t * CcCharSet_Clone(const CcCharSet_t * s);
 CcsBool_t CcCharSet_Equals(const CcCharSet_t * self, const CcCharSet_t * s);
 int CcCharSet_Elements(const CcCharSet_t * self);
 int CcCharSet_First(const CcCharSet_t * self);
