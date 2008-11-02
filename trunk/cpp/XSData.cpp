@@ -189,10 +189,10 @@ namespace CocoXml{
         errors->Exception(L" -- incomplete or corrupt scanner frame file\n");
     }
     void XmlScannerData::WriteOptions(){
+        int i;
         fwprintf(gen, L"    enum Options {\n");
-        map<const wchar_t*, int>::iterator iter;
-        for (iter=optionsMap.begin(); iter!=optionsMap.end(); iter++)
-            fwprintf(gen, L"        %ls,\n", iter->first);
+        for(i=0; enum_options[i].value>=0; i++)
+            fwprintf(gen, L"        %s,\n", enum_options[i].name);
         fwprintf(gen, L"    };\n");
     }
     void XmlScannerData::WriteDeclarations(){
