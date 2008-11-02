@@ -76,7 +76,7 @@ void CcLexical_SetContextTrans(CcLexical_t * self, CcNode_t * p);
 
 CcNode_t * CcLexical_NewNodeEPS(CcLexical_t * self);
 CcNode_t * CcLexical_NewNodeCHR(CcLexical_t * self, int ch);
-CcNode_t * CcLexical_NewNodeCLAS(CcLexical_t * self);
+CcNode_t * CcLexical_NewNodeCLAS(CcLexical_t * self, int clas);
 
 CcCharClass_t *
 CcLexical_NewCharClass(CcLexical_t * self, const char * name, CcCharSet_t * s);

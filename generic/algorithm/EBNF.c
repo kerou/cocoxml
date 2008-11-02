@@ -22,6 +22,9 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "EBNF.h"
+#include  "lexical/Nodes.h"
+#include  "syntax/Nodes.h"
+#include  "SymbolTable.h"
 
 static void CcNodeAlt_Destruct(CcObject_t * self)
 {
@@ -99,6 +102,40 @@ void
 CcGraph_Destruct(CcGraph_t * self)
 {
     CcFree(self);
+}
+
+CcsBool_t
+CcNode_DelGraph(CcNode_t * self)
+{
+    return self == NULL ||
+	(CcNode_DelNode(self) && CcNode_DelGraph(self->next));
+}
+
+CcsBool_t
+CcNode_DelSubGraph(CcNode_t * self)
+{
+    return self == NULL ||
+	(CcNode_DelNode(self) && CcNode_DelSubGraph(self->next));
+}
+
+CcsBool_t
+CcNode_DelNode(CcNode_t * self)
+{
+    const CcNodeType_t * type = (const CcNodeType_t *)self->base.type;
+    /* In fact, the check of the deletablity of a node should be placed in
+     * a virtual function, I just write all of them here for convenience.
+     * This way include some extra dependencies, may be I shall fix it
+     * in future. */
+    if (type == node_nt) {
+	CcNodeNT_t * p0 = (CcNodeNT_t *)self;
+	CcSymbolNT_t * sym = (CcSymbolNT_t *)p0->sym;
+	return sym->deletable;
+    } else if (type == node_alt) {
+	return CcNode_DelSubGraph(self->sub) ||
+	    (self->down != NULL && CcNode_DelSubGraph(self->down));
+    }
+    return type == node_iter || type == node_opt || type == node_sem ||
+	type == node_eps || type == node_rslv || type == node_sync;
 }
 
 CcNode_t *
