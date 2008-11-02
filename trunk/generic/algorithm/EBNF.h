@@ -61,6 +61,11 @@ CcGraph_t * CcGraph(void);
 CcGraph_t * CcGraphP(CcNode_t * p);
 void CcGraph_Destruct(CcGraph_t * self);
 
+/* Deletablity checks */
+CcsBool_t CcNode_DelGraph(CcNode_t * self);
+CcsBool_t CcNode_DelSubGraph(CcNode_t * self);
+CcsBool_t CcNode_DelNode(CcNode_t * self);
+
 CcNode_t * CcGraph_MakeFirstAlt(CcGraph_t * g, int n);
 CcNode_t * CcGraph_MakeAlternative(CcGraph_t * g1, CcGraph_t * g2, int n);
 void CcGraph_MakeSequence(CcGraph_t * g1, CcGraph_t * g2);

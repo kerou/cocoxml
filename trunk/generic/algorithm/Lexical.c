@@ -156,15 +156,17 @@ CcLexical_NewNodeEPS(CcLexical_t * self)
 CcNode_t *
 CcLexical_NewNodeCHR(CcLexical_t * self, int ch)
 {
-    CcNodeChr_t * p;
-    p = CcNodeChr(self->nodes.Count, ch);
+    CcNodeChr_t * p = CcNodeChr(self->nodes.Count, ch);
     CcArrayList_Add(&self->nodes, (CcObject_t *)p);
     return (CcNode_t *)p;
 }
 
 CcNode_t *
-CcLexical_NewNodeCLAS(CcLexical_t * self)
+CcLexical_NewNodeCLAS(CcLexical_t * self, int clas)
 {
+    CcNodeClas_t * p = CcNodeClas(self->nodes.Count, clas);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+    return (CcNode_t *)p;
 }
 
 CcCharClass_t *
@@ -388,7 +390,7 @@ CcLexical_NumberNodes(CcLexical_t * self, CcNode_t * p,
     if ((state == NULL) || (ptype == node_iter && renumIter))
 	state = CcLexical_NewState(self);
     p->state = state;
-    if (CcSyntax_DelGraph(&self->globals->syntax, p))
+    if (CcNode_DelGraph(p))
 	state->endOf = self->curSy;
 
     if (ptype == node_clas || ptype == node_chr) {
@@ -444,7 +446,7 @@ CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbolT_t * sym)
 
     CcsAssert((const CcSymbolType_t *)sym->base.base.type == symbol_t);
     self->curGraph = p; self->curSy = sym;
-    if (CcSyntax_DelGraph(&self->globals->syntax, self->curGraph))
+    if (CcNode_DelGraph(self->curGraph))
 	CcsGlobals_SemErr(&self->globals->base, NULL, "token might be empty");
     CcLexical_NumberNodes(self, self->curGraph, self->firstState, TRUE);
 
@@ -667,7 +669,6 @@ CcLexical_StateWithSet(CcLexical_t * self, CcBitArray_t * s)
 static CcAction_t *
 CcLexical_FindAction(CcLexical_t * self, CcState_t *state, int ch) {
     CcAction_t * a; CcCharSet_t * s;
-    const CcNodeType_t * atype;
 
     for (a = state->firstAction; a != NULL; a = a->next) {
 	if (a->typ == node_chr && ch == a->sym) return a;
