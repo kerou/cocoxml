@@ -247,7 +247,8 @@ CcsParser_Coco(CcsParser_t * self) {
     char * gramName = NULL;
     CcCharSet_t * s;
 
-    InitDeclarations();
+    self->tokenString = NULL;
+    self->noString = CcStrdup("-none-");
     CcsToken_t * beg;
     CcsScanner_IncRef(self->scanner, beg = self->la);
     while (CcsParser_StartOf(self, 1)) {
@@ -916,8 +917,7 @@ CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g) {
 				  "undefined name");
 		c = CcLexical_NewCharClass(self->lexical, name, CcCharSet());
 	    }
-	    CcNode_t * p = CcLexical_NewNodeCLAS(self->lexical);
-	    ((CcNodeClas_t *)p)->clas = c->n;
+	    CcNode_t * p = CcLexical_NewNodeCLAS(self->lexical, c->n);
 	    *g = CcGraphP(p);
 	    self->tokenString = CcStrdup(self->noString);
 	} else { /* CcsParser_str */
