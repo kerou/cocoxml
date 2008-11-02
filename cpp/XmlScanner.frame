@@ -546,8 +546,11 @@ void XMLCALL startElementHandler(void *userData, const char *name, const char **
         elename = coco_string_create(wname);
     }
     kind = scanner->StartElement2Kind(nm, elename);
-    wprintf(L"Start(%s:%d)get namespace:[%ls], start elename:[%ls]\n", name, kind, nm, elename);
+    //wprintf(L"Start(%s:%d)get namespace:[%ls], start elename:[%ls]\n", name, kind, nm, elename);
     scanner->AppendToken(kind, 0, 0, elename);
+
+    if (kind < 0) 
+        goto out;
     
     inx = 0;
     while(*(atts+inx)){
@@ -564,7 +567,8 @@ void XMLCALL startElementHandler(void *userData, const char *name, const char **
         coco_string_delete(wkey);
         coco_string_delete(wvalue);        
     }
-    
+
+out:
     coco_string_delete(wname);
     coco_string_delete(nm);
     coco_string_delete(elename);
@@ -587,12 +591,29 @@ void XMLCALL endElementHandler(void *userData, const char *name)
         elename = coco_string_create(wname);
     }
     kind = scanner->EndElement2Kind(nm, elename);
-    wprintf(L"End(%s:%d)get namespace:[%ls], start elename:[%ls]\n", name, kind, nm, elename);
+    //wprintf(L"End(%s:%d)get namespace:[%ls], start elename:[%ls]\n", name, kind, nm, elename);
     scanner->AppendToken(kind, 0, 0, elename);
 
     coco_string_delete(wname);
     coco_string_delete(nm);
     coco_string_delete(elename);
+}
+
+int is_xml_whitespace(const XML_Char *s, int len)
+{
+    int ret=0, i;
+    for(i=0; i<len; i++){
+        if(('\r' == s[i]) ||
+           ('\n' == s[i]) ||
+           ('\t' == s[i]) ||
+           (' ' == s[i]))
+            ret++;
+        else{
+            ret = 0;
+            break;
+        }
+    }
+    return ret;
 }
 
 void XMLCALL charDataHandler(void *userData, const XML_Char *s, int len)
@@ -608,10 +629,16 @@ void XMLCALL charDataHandler(void *userData, const XML_Char *s, int len)
     snprintf(buf, len, "%s", s);
     value = coco_string_create(buf);
 
-    if (curEle->unknownNamespace) opt = Token::UNS_TEXT;
-    else if (curEle->unknownTag) opt = Token::UT_TEXT;
-    else opt = Token::TEXT;
-    
+    wprintf(L"F:%s,%d, char:%ls\n", __FUNCTION__, __LINE__, value);
+    if (is_xml_whitespace(s, len)){
+        if (curEle->unknownNamespace) opt = Token::UNS_WHITESPACE;
+        else if (curEle->unknownTag) opt = Token::UT_WHITESPACE;
+        else opt = Token::WHITESPACE;  
+    }else{
+        if (curEle->unknownNamespace) opt = Token::UNS_TEXT;
+        else if (curEle->unknownTag) opt = Token::UT_TEXT;
+        else opt = Token::TEXT;
+    }
     kind = curEle->xldef->useVector[(int)opt] ? scanner->useKindVector[(int)opt] : -1;
 
     scanner->AppendToken(kind, 0, 0, value);
@@ -656,11 +683,10 @@ void XMLCALL commentHandler(void *userData, const XML_Char *data)
 
 void XMLCALL cdataHandler(void *userData)
 {
-#if 0
     XmlScanner *scanner=(XmlScanner *)userData;
     int opt;
     tagStackEle* curEle = scanner->tagStack.top();
-    wchar_t *value = coco_string_create(data);
+    wchar_t *value = coco_string_create((char *)userData);
     int kind;
 
     if (curEle->unknownNamespace) opt = Token::UNS_CDATA;
@@ -672,22 +698,24 @@ void XMLCALL cdataHandler(void *userData)
     scanner->AppendToken(kind, 0, 0, value);
     
     coco_string_delete(value);
-#endif
 }
 
 void XmlScanner::AppendToken(int kind, int linenumber, int lineposition, wchar_t* value)
 {    
     Token* new_token = NULL;
 
+    if(kind < 0) return;
+
     new_token = new Token();
     new_token->kind = kind;
     new_token->line = linenumber;
     new_token->col = lineposition;
     new_token->val = value?coco_string_create(value):NULL;
+    //wprintf(L"F:%s,%d, append:%ls(%d)\n", __FUNCTION__, __LINE__, new_token->val, kind);
     tokens.push_back(new_token);
 }
 
-#define BUFF_SIZE 1024
+#define BUFF_SIZE 1023
 void XmlScanner::AppendTokens() {
     if(eof) return;
 
@@ -712,23 +740,20 @@ void XmlScanner::AppendTokens() {
         }
     }
 
-    //AppendToken(eofSym, 0, 0, NULL);
     AppendToken(0, 0, 0, NULL);
     eof = 1;
 }
 
 Token* XmlScanner::Scan () {
     Token* token;
-    wprintf(L"F:%s,%d\n", __FUNCTION__, __LINE__);
     if (tokens.size() == 0) AppendTokens();
     token = tokens.front();
-    wprintf(L"F:%s,%d, token->value:%ls\n", __FUNCTION__, __LINE__, token->val);
+    //wprintf(L"F:%s,%d, token->value:%ls\n", __FUNCTION__, __LINE__, token->val);
     tokens.erase(tokens.begin());
     return token;
 }
 
 Token* XmlScanner::Peek () {
-    wprintf(L"F:%s,%d\n", __FUNCTION__, __LINE__);
     if (peek == tokens.size()) AppendTokens();
     return tokens[peek ++];
 }
