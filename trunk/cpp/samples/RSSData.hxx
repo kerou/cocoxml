@@ -18,7 +18,7 @@
 #ifndef __RSS_DATA_H
 #define __RSS_DATA_H
 
-#include <list>
+#include <vector>
 
 using namespace std;
 
@@ -29,8 +29,8 @@ public:
     wchar_t* path;
     wchar_t* registerProcedure;
     wchar_t* protocol;
-
-    friend ostream &operator<<(ostream &s, CloudClass p);
+    
+    void Print();
 };
 
 class ImageClass {
@@ -41,7 +41,7 @@ public:
     wchar_t* width;
     wchar_t* height;
 
-    friend ostream &operator<<(ostream &s, ImageClass p);
+    void Print();
 };
 
 class TextInputClass {
@@ -51,7 +51,7 @@ public:
     wchar_t* name;
     wchar_t* link;
 
-    friend ostream &operator<<(ostream &s, TextInputClass p);
+    void Print();
 };
 
 class ItemClass {
@@ -68,7 +68,7 @@ public:
     wchar_t* source;
     ImageClass*  image;
 
-    friend ostream &operator<<(ostream &s, ItemClass p);
+    void Print();
 };
 
 class ChannelClass {
@@ -92,22 +92,18 @@ public:
     TextInputClass*  textInput;
     wchar_t*    skipHours;
     wchar_t*    skipDays;
-    list<ItemClass*>  *itemList;
+    vector<ItemClass*>  itemList;
 
-    ChannelClass();
     void AddItem(ItemClass *item);
-
-    friend ostream &operator<<(ostream &s, ChannelClass p);
+    void Print();
 };
     
 class RssClass {
 public:
-    list<ChannelClass*>  *channelList;
+    vector<ChannelClass*>  channelList;
     
-    RssClass();
     void AddChannel(ChannelClass *channel);
-
-    friend ostream &operator<<(ostream &s, RssClass p);
+    void Print();
 };
 
 #endif

@@ -19,100 +19,99 @@
 #include <iostream>
 #include "RSSData.hxx"
 
-ostream &operator<<(ostream &s, CloudClass p){
-    s << "Cloud('" << 
-        p.domain << "', '" << 
-        p.port << "', '" << 
-        p.path << "', '" << 
-        p.registerProcedure << "', '" << 
-        p.protocol << "')";
-    return s;
+void CloudClass::Print(){
+    wprintf(L"Cloud('%ls,%ls,%ls,%ls')",
+            this->domain,
+            this->port,
+            this->path,
+            this->registerProcedure,
+            this->protocol);
 };
 
-ostream &operator<<(ostream &s, ImageClass p){
-    s << "Image('" << p.url << "', '" << p.title << "', '" << p.link << "', '" << p.width << "', '" << p.height << "')";
-    return s;
+void ImageClass::Print(){
+    wprintf(L"Image('%ls,%ls,%ls,%ls')",
+            this->url,
+            this->title,
+            this->link,
+            this->width,
+            this->height);
 };
 
-ostream &operator<<(ostream &s, TextInputClass p){
-    s <<  "TextInput('" << 
-        p.title << "', '" << 
-        p.description << "', '" << 
-        p.name << "', '" << 
-        p.link << "')";
-    return s;
+void TextInputClass::Print(){
+    wprintf(L"TextInput('%ls,%ls,%ls,%ls')",
+            this->title,
+            this->description,
+            this->name,
+            this->link);
 };
 
-ostream &operator<<(ostream &s, ItemClass p)
-{
-    s << "Item('" << 
-        p.title << "', '" << 
-        p.link << "', '" << 
-        p.description << "', '" << 
-        p.author << "', '" << 
-        p.category << "', '" << 
-        p.comments << "', '" << 
-        p.enclosure << "', '" << 
-        p.guid << "', '" << 
-        p.pubdate << "', '" << 
-        p.source << "', '" << 
-        p.image << "')";
-    return s;
+void ItemClass::Print(){
+    wprintf(L"Item('%ls,%ls,%ls,%ls,%ls,%ls,%ls,%ls,%ls,%ls,%ls')",
+            this->title,
+            this->link,
+            this->description,
+            this->author,
+            this->category,
+            this->comments,
+            this->enclosure,
+            this->guid,
+            this->pubdate,
+            this->source,
+            this->image);
 };
 
-ChannelClass::ChannelClass() {
-    itemList = new list<ItemClass*>();
+void ChannelClass::AddItem(ItemClass *item){
+        itemList.push_back(item);
 };
 
-void ChannelClass::AddItem(ItemClass *item) {
-        itemList->push_back(item);
-};
+void ChannelClass::Print(){
+    wprintf(L"Channel: '%ls'\n", this->title);
+    wprintf(L"\tlink: '%ls'\n", this->link);
+    wprintf(L"\tdescription: '%ls'\n", this->description);
+    wprintf(L"\tlanguage: '%ls'\n", this->language);
+    wprintf(L"\tcopyright: '%ls'\n", this->copyright);
+    wprintf(L"\tmanagingEditor: '%ls'\n", this->managingEditor);
+    wprintf(L"\twebMaster: '%ls'\n", this->webMaster);
+    wprintf(L"\tpubDate: '%ls'\n", this->pubDate);
+    wprintf(L"\tlastBuildDate: '%ls'\n", this->lastBuildDate);
+    wprintf(L"\tcategory: '%ls'\n", this->category);
+    wprintf(L"\tgenerator: '%ls'\n", this->generator);
+    wprintf(L"\tdocs: '%ls'\n", this->docs);
 
-ostream &operator<<(ostream &s, ChannelClass p)
-{
-    s << "Channel: '" << p.title << "'\n" <<
-        "\tlink: '" << p.link << "'\n" <<
-        "\tdescription: '" << p.description << "'\n" <<
-        "\tlanguage: '" << p.language << "'\n" <<
-        "\tcopyright: '" << p.copyright << "'\n" <<
-        "\tmanagingEditor: '" << p.managingEditor << "'\n" <<
-        "\twebMaster: '" << p.webMaster << "'\n" <<
-        "\tpubDate: '" << p.pubDate << "'\n" <<
-        "\tlastBuildDate: '" << p.lastBuildDate << "'\n" <<
-        "\tcategory: '" << p.category << "'\n" <<
-        "\tgenerator: '" << p.generator << "'\n" <<
-        "\tdocs: '" << p.docs << "'\n" <<
-        "\tcloud: '" << p.cloud << "'\n" <<
-        "\tttl: '" << p.ttl << "'\n" <<
-        "\timage: '" << p.image << "'\n" <<
-        "\trating: '" << p.rating << "'\n" <<
-        "\ttextInput: '" << p.textInput << "'\n" <<
-        "\tskipHours: '" << p.skipHours << "'\n" <<
-        "\tskipDays: '" << p.skipDays << "'\n";
-#if 0
-    foreach (Item i in itemList) {
-        s << s << "\t" << i << "\n";
+    wprintf(L"\tcloud: '");
+    this->cloud->Print();
+    wprintf(L"\n");
+
+    wprintf(L"\tttl: '%ls'\n", this->ttl);
+
+    wprintf(L"\timage: '");
+    this->image->Print();
+    wprintf(L"\n");
+
+    wprintf(L"\trating: '%ls'\n", this->rating);
+
+    wprintf(L"\ttextInput: '");
+    this->textInput->Print();
+    wprintf(L"\n");
+
+    wprintf(L"\tskipHours: '%ls'\n", this->skipHours);
+    wprintf(L"\tskipDays: '%ls'\n", this->skipDays);
+
+    vector<ItemClass *>::iterator it;
+    for(it=itemList.begin(); it!=itemList.end(); it++){
+        /* print item */
+        (*it)->Print();
     }
-#endif
-    return s;
-};
-
-RssClass::RssClass() {
-    channelList = new list<ChannelClass*>();
 };
 
 void RssClass::AddChannel(ChannelClass* channel) {
-        channelList->push_back(channel);
+        channelList.push_back(channel);
 };
 
-ostream &operator<<(ostream &s, RssClass p)
-{
-#if 0
-    string s = "";
-    foreach (Channel c in channelList) {
-        s = s << c << "\n";
+void RssClass::Print(){
+    vector<ChannelClass*>::iterator it;
+    for(it=channelList.begin(); it!=channelList.end(); it++){
+        /* print channel */
+        (*it)->Print();
     }
-#endif
-    s<<"???";
-    return s;
 }
