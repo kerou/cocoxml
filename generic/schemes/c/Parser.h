@@ -39,29 +39,27 @@ EXTC_BEGIN
 struct CcsParser_s {
     CcsGlobals_t    * globals;
     CcsScanner_t    * scanner;
+    CcsToken_t      * t;
+    CcsToken_t      * la;
+    int               maxT;
     /*
     int               errDist;
     int               minErrDist;
-    */
-    CcsToken_t      * t;
-    CcsToken_t      * la;
-
-    int               maxT;
-
-    /*FILE          * trace;*/
-    /*Tab_t         * tab;*/
-    /*CcsParserGen_t   * pgen;*/
-    char            * tokenString;
-    char            * noString;
-    CcsBool_t         genScanner;
+    FILE            * trace;
+    Tab_t           * tab;
+    CcsParserGen_t  * pgen;*/
 
     /*---- declarations ----*/
+    char            * tokenString;
+    char            * noString;
+
+    CcsBool_t         genScanner;
+    CcsPosition_t   * usingPos;
+
     /* Shortcut pointers */
     CcSymbolTable_t * symtab;
     CcLexical_t     * lexical;
     CcSyntax_t      * syntax;
-
-    CcsPosition_t   * usingPos;
     /*---- enable ----*/
 };
 
