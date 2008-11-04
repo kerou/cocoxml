@@ -561,6 +561,9 @@ void XMLCALL startElementHandler(void *userData, const char *name, const char **
     wchar_t *nm=NULL, *elename=NULL;
     int kind;
 
+    /* clear text string */
+    scanner->charDatas.clear();
+
     /* append start element */
     int inx = coco_string_indexof(wname, L':');
     if(inx>0){
@@ -627,8 +630,9 @@ void XMLCALL endElementHandler(void *userData, const char *name)
             off += ele->len;
         }
         buf[len] = 0;
-        scanner->charDatas.clear();
         value = coco_string_create(buf);
+        /* clear text string */
+        scanner->charDatas.clear();
 
         if(is_xml_whitespace(buf, len)){
             if (curEle->unknownNamespace) opt = Token::UNS_WHITESPACE;
@@ -746,7 +750,7 @@ void XmlScanner::AppendToken(int kind, int linenumber, int lineposition, wchar_t
     tokens.push_back(new_token);
 }
 
-#define BUFF_SIZE 1023
+#define BUFF_SIZE 1024
 void XmlScanner::AppendTokens() {
     if(eof) {
         AppendToken(0, 0, 0, NULL);
