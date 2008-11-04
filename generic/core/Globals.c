@@ -50,3 +50,9 @@ CcGlobals_Destruct(CcGlobals_t * self)
     CcSymbolTable_Destruct(&self->symbolTab);
     CcsGlobals_Destruct(&self->base);
 }
+
+void
+CcGlobals_Parse(CcGlobals_t * self)
+{
+    CcsGlobals_Parse(&self->base);
+}

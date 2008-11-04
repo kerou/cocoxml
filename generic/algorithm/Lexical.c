@@ -37,6 +37,7 @@
 /* SZ_LITERALS is a prime number, auto-extending is not supported now */
 #define  SZ_LITERALS 127
 
+static CcState_t * CcLexical_NewState(CcLexical_t * self);
 static CcAction_t *
 CcLexical_FindAction(CcLexical_t * self, CcState_t *state, int ch);
 static void
@@ -53,10 +54,25 @@ CcLexical_t *
 CcLexical(CcLexical_t * self, CcGlobals_t * globals)
 {
     self->globals = globals;
+    self->maxStates = 0;
+    self->lastStateNr = -1;
+    self->firstState = NULL;
+    self->lastState = NULL;
+    self->lastSimState = 0;
+    self->curSy = NULL;
+    self->curGraph = NULL;
+    self->ignoreCase = FALSE;
     self->ignored = CcCharSet();
+    self->dirtyLexical = FALSE;
+    self->hasCtxMoves = FALSE;
     CcArrayList(&self->nodes);
     CcArrayList(&self->classes);
     CcHashTable(&self->literals, SZ_LITERALS);
+    self->firstMelted = NULL;
+    self->firstComment = NULL;
+    self->dummyNode = NULL;
+
+    CcLexical_NewState(self);
     return self;
 }
 

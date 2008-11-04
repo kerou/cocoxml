@@ -48,6 +48,12 @@ CcsGlobals_Destruct(CcsGlobals_t * self)
 }
 
 void
+CcsGlobals_Parse(CcsGlobals_t * self)
+{
+    CcsParser_Parse(&self->parser);
+}
+
+void
 CcsGlobals_Warning(CcsGlobals_t * self, const CcsToken_t * t,
 		   const char * format, ...)
 {

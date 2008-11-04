@@ -35,7 +35,10 @@ CcsScanner(CcsScanner_t * self, CcsGlobals_t * globals, const char * filename)
 {
     FILE * fp;
     self->globals = globals;
-    if (!(fp = fopen(filename, "r"))) goto errquit0;
+    if (!(fp = fopen(filename, "r"))) {
+	fprintf(stderr, "Can not open '%s'.\n", filename);
+	goto errquit0;
+    }
     if (!(self->dummyToken = CcsToken(0, 0, 0, 0, dummyval, strlen(dummyval))))
 	goto errquit1;
     if (CcsBuffer(&self->buffer, fp) == NULL) goto errquit2;
