@@ -57,46 +57,73 @@ CcSyntax_Destruct(CcSyntax_t * self)
 CcNode_t *
 CcSyntax_NewNodeEPS(CcSyntax_t * self)
 {
+    CcNode_t * p = CcNode(node_eps, 0);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+    return p;
 }
 
 CcNode_t *
 CcSyntax_NewNodeANY(CcSyntax_t * self)
 {
+    CcNode_t * p = CcNode(node_any, 0);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+    return p;
 }
 
 CcNode_t *
 CcSyntax_NewNodeSEM(CcSyntax_t * self)
 {
+    CcNode_t * p = CcNode(node_sem, 0);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+    return p;
 }
 
 CcNode_t *
 CcSyntax_NewNodeSYNC(CcSyntax_t * self)
 {
+    CcNode_t * p = CcNode(node_sync, 0);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+    return p;
 }
 
 CcNode_t *
 CcSyntax_NewNodeWT(CcSyntax_t * self, CcSymbol_t * sym, int line)
 {
+    CcNode_t * p = CcNode(node_wt, line);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+    return p;
 }
 
 CcNode_t *
 CcSyntax_NewNodeT(CcSyntax_t * self, CcSymbol_t * sym, int line)
 {
+    CcNode_t * p = CcNode(node_t, line);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+    return p;
 }
 
 CcNode_t *
 CcSyntax_NewNodePR(CcSyntax_t * self, CcSymbol_t * sym, int line)
 {
+    CcNode_t * p = CcNode(node_pr, line);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+    return p;
 }
 
 CcNode_t *
 CcSyntax_NewNodeNT(CcSyntax_t * self, CcSymbol_t * sym, int line)
 {
+    CcNode_t * p = CcNode(node_nt, line);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+    return p;
 }
 
 CcNode_t *
 CcSyntax_NewNodeRSLV(CcSyntax_t * self, CcSymbol_t * sym, int line)
 {
+    CcNode_t * p = CcNode(node_rslv, line);
+    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
+    return p;
 }
 
 void

@@ -220,15 +220,19 @@ CcsParser(CcsParser_t * self, CcsGlobals_t * globals)
 {
     self->globals = globals;
     self->scanner = &globals->scanner;
+    self->t = self->la = NULL;
     /*---- constants ----*/
     self->maxT = 41;
     /*---- enable ----*/
     /*---- init ----*/
+    self->tokenString = self->noString = NULL;
+    self->genScanner = FALSE;
+    self->usingPos = NULL;
+
     self->symtab = &((CcGlobals_t *)globals)->symbolTab;
     self->lexical = &((CcGlobals_t *)globals)->lexical;
     self->syntax = &((CcGlobals_t *)globals)->syntax;
     /*---- enable ----*/
-    self->t = self->la = NULL;
     return self;
 }
 
@@ -236,6 +240,9 @@ void
 CcsParser_Destruct(CcsParser_t * self)
 {
     /*---- destruct ----*/
+    if (self->usingPos) CcsPosition_Destruct(self->usingPos);
+    if (self->noString) CcsFree(self->noString);
+    if (self->tokenString) CcsFree(self->tokenString);
     /*---- enable ----*/
 }
 
