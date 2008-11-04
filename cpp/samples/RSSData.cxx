@@ -19,8 +19,16 @@
 #include <iostream>
 #include "RSSData.hxx"
 
+CloudClass::CloudClass(){
+    this->domain = (wchar_t*)L"";
+    this->port = (wchar_t*)L"";
+    this->path = (wchar_t*)L"";
+    this->registerProcedure = (wchar_t*)L"";
+    this->protocol = (wchar_t*)L"";
+};
+
 void CloudClass::Print(){
-    wprintf(L"Cloud('%ls,%ls,%ls,%ls')",
+    wprintf(L"Cloud('%ls','%ls','%ls','%ls'')",
             this->domain,
             this->port,
             this->path,
@@ -28,8 +36,16 @@ void CloudClass::Print(){
             this->protocol);
 };
 
+ImageClass::ImageClass(){
+    this->url = (wchar_t*)L"";
+    this->title = (wchar_t*)L"";
+    this->link = (wchar_t*)L"";
+    this->width = (wchar_t*)L"";
+    this->height = (wchar_t*)L"";
+};
+
 void ImageClass::Print(){
-    wprintf(L"Image('%ls,%ls,%ls,%ls')",
+    wprintf(L"Image('%ls','%ls','%ls','%ls')",
             this->url,
             this->title,
             this->link,
@@ -37,16 +53,37 @@ void ImageClass::Print(){
             this->height);
 };
 
+TextInputClass::TextInputClass(){
+    this->title = (wchar_t*)L"";
+    this->description = (wchar_t*)L"";
+    this->name = (wchar_t*)L"";
+    this->link = (wchar_t*)L"";
+};
+
 void TextInputClass::Print(){
-    wprintf(L"TextInput('%ls,%ls,%ls,%ls')",
+    wprintf(L"TextInput('%ls','%ls','%ls','%ls')",
             this->title,
             this->description,
             this->name,
             this->link);
 };
 
+ItemClass::ItemClass(){
+    this->title = (wchar_t*)L"";
+    this->link = (wchar_t*)L"";
+    this->description = (wchar_t*)L"";
+    this->author = (wchar_t*)L"";
+    this->category = (wchar_t*)L"";
+    this->comments = (wchar_t*)L"";
+    this->enclosure = (wchar_t*)L"";
+    this->guid = (wchar_t*)L"";
+    this->pubdate = (wchar_t*)L"";
+    this->source = (wchar_t*)L"";
+    this->image = NULL;
+};
+
 void ItemClass::Print(){
-    wprintf(L"Item('%ls,%ls,%ls,%ls,%ls,%ls,%ls,%ls,%ls,%ls,%ls')",
+    wprintf(L"Item('%ls','%ls','%ls','%ls','%ls','%ls','%ls','%ls','%ls','%ls','",
             this->title,
             this->link,
             this->description,
@@ -56,12 +93,37 @@ void ItemClass::Print(){
             this->enclosure,
             this->guid,
             this->pubdate,
-            this->source,
-            this->image);
+            this->source);
+    if(this->image)
+        this->image->Print();
+    wprintf(L"')");
 };
 
 void ChannelClass::AddItem(ItemClass *item){
-        itemList.push_back(item);
+    itemList.push_back(item);
+};
+
+ChannelClass::ChannelClass(){
+    this->title = (wchar_t*)L"";
+    this->link = (wchar_t*)L"";
+    this->description = (wchar_t*)L"";
+    this->language = (wchar_t*)L"";
+    this->copyright = (wchar_t*)L"";
+    this->managingEditor = (wchar_t*)L"";
+    this->webMaster = (wchar_t*)L"";
+    this->pubDate = (wchar_t*)L"";
+    this->lastBuildDate = (wchar_t*)L"";
+    this->category = (wchar_t*)L"";
+    this->generator = (wchar_t*)L"";
+    this->docs = (wchar_t*)L"";
+    this->ttl = (wchar_t*)L"";
+    this->rating = (wchar_t*)L"";
+    this->skipHours = (wchar_t*)L"";
+    this->skipDays = (wchar_t*)L"";
+
+    this->cloud = NULL;
+    this->image = NULL;
+    this->textInput = NULL;
 };
 
 void ChannelClass::Print(){
@@ -79,20 +141,23 @@ void ChannelClass::Print(){
     wprintf(L"\tdocs: '%ls'\n", this->docs);
 
     wprintf(L"\tcloud: '");
-    this->cloud->Print();
-    wprintf(L"\n");
+    if(this->cloud) 
+        this->cloud->Print();
+    wprintf(L"'\n");
 
     wprintf(L"\tttl: '%ls'\n", this->ttl);
 
     wprintf(L"\timage: '");
-    this->image->Print();
-    wprintf(L"\n");
+    if(this->image)
+        this->image->Print();
+    wprintf(L"'\n");
 
     wprintf(L"\trating: '%ls'\n", this->rating);
 
     wprintf(L"\ttextInput: '");
-    this->textInput->Print();
-    wprintf(L"\n");
+    if(this->textInput)
+        this->textInput->Print();
+    wprintf(L"'\n");
 
     wprintf(L"\tskipHours: '%ls'\n", this->skipHours);
     wprintf(L"\tskipDays: '%ls'\n", this->skipDays);
@@ -101,11 +166,12 @@ void ChannelClass::Print(){
     for(it=itemList.begin(); it!=itemList.end(); it++){
         /* print item */
         (*it)->Print();
+        wprintf(L"\n");
     }
 };
 
 void RssClass::AddChannel(ChannelClass* channel) {
-        channelList.push_back(channel);
+    channelList.push_back(channel);
 };
 
 void RssClass::Print(){
