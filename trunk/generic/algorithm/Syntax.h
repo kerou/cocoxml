@@ -40,9 +40,11 @@ struct CcSyntax_s {
     CcSymbol_t * gramSy;
     CcSymbol_t * eofSy;
     CcSymbol_t * noSym;
-    CcBitArray_t visited;
     CcSymbol_t * curSy;
-    CcBitArray_t allSyncSets;
+    CcBitArray_t * visited;
+    CcBitArray_t visitedSpace;
+    CcBitArray_t * allSyncSets;
+    CcBitArray_t allSyncSetsSpace;
 };
 
 CcSyntax_t * CcSyntax(CcSyntax_t * self, CcGlobals_t * globals);

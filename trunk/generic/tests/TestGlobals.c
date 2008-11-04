@@ -32,7 +32,10 @@ main(int argc, char * argv[])
 	fprintf(stderr, "Usage: %s Grammar.atg\n", argv[0]);
 	return -1;
     }
-    CcGlobals(&globals, argv[1], stderr);
+    if (!CcGlobals(&globals, argv[1], stderr)) {
+	return -1;
+    }
+    CcGlobals_Parse(&globals);
     CcGlobals_Destruct(&globals);
     return 0;
 }
