@@ -30,6 +30,7 @@ public:
     wchar_t* registerProcedure;
     wchar_t* protocol;
     
+    CloudClass();
     void Print();
 };
 
@@ -41,6 +42,7 @@ public:
     wchar_t* width;
     wchar_t* height;
 
+    ImageClass();
     void Print();
 };
 
@@ -51,6 +53,7 @@ public:
     wchar_t* name;
     wchar_t* link;
 
+    TextInputClass();
     void Print();
 };
 
@@ -68,6 +71,7 @@ public:
     wchar_t* source;
     ImageClass*  image;
 
+    ItemClass();
     void Print();
 };
 
@@ -94,6 +98,7 @@ public:
     wchar_t*    skipDays;
     vector<ItemClass*>  itemList;
 
+    ChannelClass();
     void AddItem(ItemClass *item);
     void Print();
 };
