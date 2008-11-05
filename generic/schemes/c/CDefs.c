@@ -180,16 +180,16 @@ CcsUnescapeCh(const char ** str, const char * stop)
 }
 
 char *
-CcsUnescape(const char * str)
+CcsUnescape(const char * str, char stripCh)
 {
     const char * cursrc, * stop;
     char * curtgt, * retval = CcsMalloc(strlen(str) + 1);
 
     if (!retval) return NULL;
     cursrc = str; curtgt = retval; stop = str + strlen(str);
-    if (*cursrc == '"') ++cursrc;
+    if (*cursrc == stripCh) ++cursrc;
     while (*cursrc) {
-	if (cursrc[0] == '"' && cursrc[1] == 0) break;
+	if (cursrc[0] == stripCh && cursrc[1] == 0) break;
 	*curtgt++ = (char)CcsUnescapeCh(&cursrc, stop);
     }
     *curtgt = 0;
