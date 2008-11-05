@@ -596,7 +596,7 @@ CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s) {
     } else if (self->la->kind == 3) {
 	CcsParser_Get(self);
 	const char * cur0; int ch;
-	char * cur, * name = CcsUnescape(self->t->val);
+	char * cur, * name = CcsUnescape(self->t->val, '"');
 	if (self->lexical->ignoreCase) {
 	    for (cur = name; *cur; ++cur) *cur = tolower(*cur);
 	}
@@ -629,7 +629,7 @@ CcsParser_Char(CcsParser_t * self, int * n) {
     CcsParser_Expect(self, 5);
     *n = 0;
     char * name; const char * cur;
-    cur = name = CcsUnescape(self->t->val);
+    cur = name = CcsUnescape(self->t->val, '\'');
     *n = CcsUTF8GetCh(&cur, name + strlen(name));
     if (*cur != 0)
 	CcsGlobals_SemErr(self->globals, self->t, "unacceptable character value");

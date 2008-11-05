@@ -125,7 +125,7 @@ CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
 {
     CcGraph_t * g; CcNode_t * p;
     const char * cur, * slast;
-    char * s = CcsUnescape(str);
+    char * s = CcsUnescape(str, '"');
     if (strlen(s) == 0)
 	CcsGlobals_SemErr(&self->globals->base, t, "empty token not allowed");
     g = CcGraph();
@@ -483,7 +483,7 @@ CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbolT_t * sym)
 void
 CcLexical_MatchLiteral(CcLexical_t * self, const char * s, CcSymbolT_t * sym)
 {
-    char * s0 = CcsUnescape(s);
+    char * s0 = CcsUnescape(s, '"');
     const char * scur, * slast;
     CcState_t * to, * state = self->firstState;
     CcAction_t * a = NULL;
