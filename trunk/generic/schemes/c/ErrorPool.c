@@ -44,12 +44,13 @@ CcsErrorPool_Info(CcsErrorPool_t * self, const char * format, ...)
     va_list ap;
     va_start(ap, format);
     vfprintf(self->fp, format, ap);
+    fprintf(self->fp, "\n");
     va_end(ap);
 }
 
 void
 CcsErrorPool_Warning(CcsErrorPool_t * self, int line, int col,
-		    const char * format, ...)
+		     const char * format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -63,12 +64,13 @@ CcsErrorPool_VWarning(CcsErrorPool_t * self, int line, int col,
 {
     fprintf(self->fp, "Warning(%d,%d): ", line, col);
     vfprintf(self->fp, format, ap);
+    fprintf(self->fp, "\n");
     ++self->warningCount;
 }
 
 void
 CcsErrorPool_Error(CcsErrorPool_t * self, int line, int col,
-		  const char * format, ...)
+		   const char * format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -82,17 +84,26 @@ CcsErrorPool_VError(CcsErrorPool_t * self, int line, int col,
 {
     fprintf(self->fp, "Error(%d,%d): ", line, col);
     vfprintf(self->fp, format, ap);
+    fprintf(self->fp, "\n");
     ++self->errorCount;
 }
 
 void
 CcsErrorPool_Fatal(CcsErrorPool_t * self, int line, int col,
-		  const char * format, ...)
+		   const char * format, ...)
 {
     va_list ap;
-    fprintf(self->fp, "Fatal Error(%d,%d): ", line, col);
     va_start(ap, format);
-    vfprintf(self->fp, format, ap);
+    CcsErrorPool_VFatal(self, line, col, format, ap);
     va_end(ap);
+}
+
+void
+CcsErrorPool_VFatal(CcsErrorPool_t * self, int line, int col,
+		    const char * format, va_list ap)
+{
+    fprintf(self->fp, "Fatal Error(%d,%d): ", line, col);
+    vfprintf(self->fp, format, ap);
+    fprintf(self->fp, "\n");
     exit(-1);
 }
