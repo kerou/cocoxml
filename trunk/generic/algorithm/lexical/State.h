@@ -31,11 +31,11 @@
 EXTC_BEGIN
 
 struct CcState_s {
-    int           nr;
-    CcAction_t  * firstAction;
-    CcSymbolT_t * endOf;
-    int           ctx;
-    CcState_t   * next;
+    int          nr;
+    CcAction_t * firstAction;
+    CcSymbol_t * endOf;
+    int          ctx;
+    CcState_t  * next;
 };
 
 CcState_t * CcState(int nr);

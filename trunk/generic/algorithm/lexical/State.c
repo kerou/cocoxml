@@ -39,6 +39,7 @@ CcState(int nr)
 void
 CcState_Destruct(CcState_t * self)
 {
+    CcFree(self);
 }
 
 void
