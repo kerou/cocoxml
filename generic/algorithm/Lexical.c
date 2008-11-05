@@ -126,6 +126,9 @@ CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
     CcGraph_t * g; CcNode_t * p;
     const char * cur, * slast;
     char * s = CcsUnescape(str, '"');
+    if (s == NULL)
+	CcsGlobals_Fatal(&self->globals->base, t,
+			 "Invalid character encountered or out of memory.");
     if (strlen(s) == 0)
 	CcsGlobals_SemErr(&self->globals->base, t, "empty token not allowed");
     g = CcGraph();
@@ -481,7 +484,8 @@ CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbolT_t * sym)
 /* match string against current automaton; store it either as a
  * fixedToken or as a litToken */
 void
-CcLexical_MatchLiteral(CcLexical_t * self, const char * s, CcSymbolT_t * sym)
+CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
+		       const char * s, CcSymbolT_t * sym)
 {
     char * s0 = CcsUnescape(s, '"');
     const char * scur, * slast;
@@ -489,6 +493,9 @@ CcLexical_MatchLiteral(CcLexical_t * self, const char * s, CcSymbolT_t * sym)
     CcAction_t * a = NULL;
     CcSymbolT_t * matchedSym;
 
+    if (s0 == NULL)
+	CcsGlobals_Fatal(&self->globals->base, t,
+			 "Invalid character encountered or out of memory.");
     CcsAssert((const CcSymbolType_t *)sym->base.base.type == symbol_t);
     /* Try to match s against existing CcLexical. */
     scur = s0; slast = scur + strlen(s0);

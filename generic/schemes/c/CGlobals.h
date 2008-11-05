@@ -50,5 +50,7 @@ void CcsGlobals_Warning(CcsGlobals_t * self, const CcsToken_t * t,
 			const char * format, ...);
 void CcsGlobals_SemErr(CcsGlobals_t * self, const CcsToken_t * t,
 		       const char * format, ...);
+void CcsGlobals_Fatal(CcsGlobals_t * self, const CcsToken_t * t,
+		      const char * format, ...);
 
 #endif  /* COCO_CGLOBALS_H */
