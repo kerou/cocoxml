@@ -66,7 +66,6 @@ CcNode_t *
 CcNode(const CcNodeType_t * type, int n)
 {
     CcNode_t * self = (CcNode_t *)CcObject(&type->base);
-    memset(self, 0, type->base.size);
     self->n = n;
     return self;
 }
