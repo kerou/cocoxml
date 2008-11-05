@@ -126,7 +126,7 @@ CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
 {
     CcGraph_t * g; CcNode_t * p;
     const char * cur, * slast;
-    char * s = CcsUnescape(str, '"');
+    char * s = CcsUnescape(str);
     if (s == NULL)
 	CcsGlobals_Fatal(&self->globals->base, t,
 			 "Invalid character encountered or out of memory.");
@@ -134,8 +134,8 @@ CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
 	CcsGlobals_SemErr(&self->globals->base, t, "empty token not allowed");
     g = CcGraph();
     g->r = self->dummyNode;
-    slast = s + strlen(s);
-    for (cur = s; cur < slast; ++cur) {
+    cur = s; slast = s + strlen(s);
+    while (cur < slast) {
 	p = CcLexical_NewNodeCHR(self, CcsUTF8GetCh(&cur, slast));
 	g->r->next = p; g->r = p;
     }
@@ -497,7 +497,7 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
     CcAction_t * a;
     CcSymbol_t * matchedSym;
 
-    if ((s0 = CcsUnescape(s, '"')) == NULL)
+    if ((s0 = CcsUnescape(s)) == NULL)
 	CcsGlobals_Fatal(&self->globals->base, t,
 			 "Invalid character encountered or out of memory.");
     state = self->firstState; a = NULL;
