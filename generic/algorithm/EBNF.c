@@ -28,6 +28,7 @@
 
 static void CcNodeAlt_Destruct(CcObject_t * self)
 {
+    CcObject_Destruct(self);
 }
 static const CcNodeType_t NodeAlt = {
     { sizeof(CcNode_t), "node_alt", CcNodeAlt_Destruct }
@@ -36,6 +37,7 @@ const CcNodeType_t * node_alt = &NodeAlt;
 
 static void CcNodeIter_Destruct(CcObject_t * self)
 {
+    CcObject_Destruct(self);
 }
 static const CcNodeType_t NodeIter = {
     { sizeof(CcNode_t), "node_iter", CcNodeIter_Destruct }
@@ -44,6 +46,7 @@ const CcNodeType_t * node_iter = &NodeIter;
 
 static void CcNodeOpt_Destruct(CcObject_t * self)
 {
+    CcObject_Destruct(self);
 }
 static const CcNodeType_t NodeOpt = {
     { sizeof(CcNode_t), "node_opt", CcNodeOpt_Destruct }
@@ -52,6 +55,7 @@ const CcNodeType_t * node_opt = &NodeOpt;
 
 static void CcNodeEps_Destruct(CcObject_t * self)
 {
+    CcObject_Destruct(self);
 }
 static const CcNodeType_t NodeEps = {
     { sizeof(CcNode_t), "node_opt", CcNodeEps_Destruct }
@@ -70,8 +74,7 @@ CcNode(const CcNodeType_t * type, int n)
 CcNode_t *
 CcNode_NewWithSub(const CcNodeType_t * type, int n, CcNode_t * sub)
 {
-    CcNode_t * self = (CcNode_t *)CcObject(&type->base);
-    self->n = n;
+    CcNode_t * self = CcNode(type, n);
     self->sub = sub;
     return self;
 }

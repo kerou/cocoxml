@@ -70,7 +70,7 @@ CcLexical(CcLexical_t * self, CcGlobals_t * globals)
     CcHashTable(&self->literals, SZ_LITERALS);
     self->firstMelted = NULL;
     self->firstComment = NULL;
-    self->dummyNode = NULL;
+    self->dummyNode = CcLexical_NewNodeEPS(self);
 
     CcLexical_NewState(self);
     return self;
@@ -79,6 +79,7 @@ CcLexical(CcLexical_t * self, CcGlobals_t * globals)
 void
 CcLexical_Destruct(CcLexical_t * self)
 {
+    /* CcObject_VDestruct(self->dummyNode); */
     CcHashTable_Destruct(&self->literals);
     CcArrayList_Destruct(&self->classes);
     CcArrayList_Destruct(&self->nodes);
