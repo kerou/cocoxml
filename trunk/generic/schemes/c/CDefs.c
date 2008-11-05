@@ -182,7 +182,7 @@ CcsUnescapeCh(const char ** str, const char * stop)
 char *
 CcsUnescape(const char * str, char stripCh)
 {
-    const char * cursrc, * stop;
+    const char * cursrc, * stop; int ch;
     char * curtgt, * retval = CcsMalloc(strlen(str) + 1);
 
     if (!retval) return NULL;
@@ -190,8 +190,12 @@ CcsUnescape(const char * str, char stripCh)
     if (*cursrc == stripCh) ++cursrc;
     while (*cursrc) {
 	if (cursrc[0] == stripCh && cursrc[1] == 0) break;
-	*curtgt++ = (char)CcsUnescapeCh(&cursrc, stop);
+	if ((ch = CcsUnescapeCh(&cursrc, stop)) == ErrorChr) goto errquit;
+	*curtgt++ = (char)ch;
     }
     *curtgt = 0;
     return retval;
+ errquit:
+    CcsFree(retval);
+    return NULL;
 }

@@ -64,7 +64,6 @@ CcsGlobals_Warning(CcsGlobals_t * self, const CcsToken_t * t,
     va_end(ap);
 }
 
-
 void
 CcsGlobals_SemErr(CcsGlobals_t * self, const CcsToken_t * t,
 		  const char * format, ...)
@@ -73,5 +72,15 @@ CcsGlobals_SemErr(CcsGlobals_t * self, const CcsToken_t * t,
     va_start(ap, format);
     if (t) CcsErrorPool_VError(&self->error, t->line, t->col, format, ap);
     else CcsErrorPool_VError(&self->error, 0, 0, format, ap);
+    va_end(ap);
+}
+
+void CcsGlobals_Fatal(CcsGlobals_t * self, const CcsToken_t * t,
+		      const char * format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    if (t) CcsErrorPool_VFatal(&self->error, t->line, t->col, format, ap);
+    else CcsErrorPool_VFatal(&self->error, 0, 0, format, ap);
     va_end(ap);
 }

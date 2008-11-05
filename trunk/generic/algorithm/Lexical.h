@@ -90,7 +90,8 @@ CcLexical_FindCharClassC(CcLexical_t * self, const CcCharSet_t * s);
 CcCharSet_t * CcLexical_CharClassSet(CcLexical_t * self, int idx);
 
 void CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbolT_t * sym);
-void CcLexical_MatchLiteral(CcLexical_t * self, const char * s, CcSymbolT_t * sym);
+void CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
+			    const char * s, CcSymbolT_t * sym);
 void CcLexical_MakeDeterministic(CcLexical_t * self);
 
 void

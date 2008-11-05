@@ -464,12 +464,12 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcSymbolType_t * typ) {
 				  "token string declared twice");
 	    CcHashTable_Set(&self->lexical->literals,
 			    self->tokenString, (CcObject_t *)sym);
-	    CcLexical_MatchLiteral(self->lexical,
+	    CcLexical_MatchLiteral(self->lexical, self->t,
 				   self->tokenString, (CcSymbolT_t *)sym);
 	}
     } else if (CcsParser_StartOf(self, 6)) {
 	if (kind == CcsParser_id) self->genScanner = FALSE;
-	else CcLexical_MatchLiteral(self->lexical,
+	else CcLexical_MatchLiteral(self->lexical, self->t,
 				    sym->name, (CcSymbolT_t *)sym);
     } else CcsParser_SynErr(self, 44);
     if (self->la->kind == 39) {
@@ -597,6 +597,9 @@ CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s) {
 	CcsParser_Get(self);
 	const char * cur0; int ch;
 	char * cur, * name = CcsUnescape(self->t->val, '"');
+	if (name == NULL)
+	    CcsGlobals_Fatal(self->globals, self->t,
+			     "Invalid character encountered or out of memory.");
 	if (self->lexical->ignoreCase) {
 	    for (cur = name; *cur; ++cur) *cur = tolower(*cur);
 	}
@@ -630,6 +633,9 @@ CcsParser_Char(CcsParser_t * self, int * n) {
     *n = 0;
     char * name; const char * cur;
     cur = name = CcsUnescape(self->t->val, '\'');
+    if (cur == NULL)
+	CcsGlobals_Fatal(self->globals, self->t,
+			 "Invalid character is encountered or out of memory.");
     *n = CcsUTF8GetCh(&cur, name + strlen(name));
     if (*cur != 0)
 	CcsGlobals_SemErr(self->globals, self->t, "unacceptable character value");
@@ -722,7 +728,8 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g) {
 		sym = CcSymbolTable_NewNonTerminal(self->symtab, name, 0);
 	    } else if (self->genScanner) { 
 		sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
-		CcLexical_MatchLiteral(self->lexical, sym->name, (CcSymbolT_t *)sym);
+		CcLexical_MatchLiteral(self->lexical, self->t,
+				       sym->name, (CcSymbolT_t *)sym);
 	    } else {  /* undefined string in production */
 		CcsGlobals_SemErr(self->globals, self->t,
 				  "undefined string in production");
