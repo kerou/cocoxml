@@ -309,7 +309,7 @@ CcsParser_Coco(CcsParser_t * self) {
 	CcsParser_TokenExpr(self, &g2);
 	if (self->la->kind == 14) {
 	    CcsParser_Get(self);
-	    nested = TRUE; 
+	    nested = TRUE;
 	}
 	CcLexical_NewComment(self->lexical, self->t, g1->l, g2->l, nested);
     }
@@ -595,7 +595,7 @@ CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s) {
     } else if (self->la->kind == 3) {
 	CcsParser_Get(self);
 	const char * cur0; int ch;
-	char * cur, * name = CcsUnescape(self->t->val, '"');
+	char * cur, * name = CcsUnescape(self->t->val);
 	if (name == NULL)
 	    CcsGlobals_Fatal(self->globals, self->t,
 			     "Invalid character encountered or out of memory.");
@@ -631,7 +631,7 @@ CcsParser_Char(CcsParser_t * self, int * n) {
     CcsParser_Expect(self, 5);
     *n = 0;
     char * name; const char * cur;
-    cur = name = CcsUnescape(self->t->val, '\'');
+    cur = name = CcsUnescape(self->t->val);
     if (cur == NULL)
 	CcsGlobals_Fatal(self->globals, self->t,
 			 "Invalid character is encountered or out of memory.");

@@ -139,7 +139,7 @@ CcsUnescapeCh(const char ** str, const char * stop)
     const char * cur = *str;
 
     if (cur >= stop) return EoF;
-    if (*cur++ != '\\') { *str = cur; return *cur; }
+    if ((val = *cur++) != '\\') { *str = cur; return val; }
     if (cur >= stop) return ErrorChr;
     switch (*cur) {
     case 'a': *str = cur + 1; return '\a';
@@ -180,14 +180,14 @@ CcsUnescapeCh(const char ** str, const char * stop)
 }
 
 char *
-CcsUnescape(const char * str, char stripCh)
+CcsUnescape(const char * str)
 {
-    const char * cursrc, * stop; int ch;
+    const char * cursrc, * stop; int ch; char stripCh;
     char * curtgt, * retval = CcsMalloc(strlen(str) + 1);
 
     if (!retval) return NULL;
     cursrc = str; curtgt = retval; stop = str + strlen(str);
-    if (*cursrc == stripCh) ++cursrc;
+    if (*cursrc == '\'' || *cursrc == '"') stripCh = *cursrc++;
     while (*cursrc) {
 	if (cursrc[0] == stripCh && cursrc[1] == 0) break;
 	if ((ch = CcsUnescapeCh(&cursrc, stop)) == ErrorChr) goto errquit;
