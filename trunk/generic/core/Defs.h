@@ -69,7 +69,7 @@ typedef enum {
     symbol_classToken = 1,
     symbol_litToken = 2,
     symbol_classLitToken = 3,
-} CcSymbolT_TokenKind_t;
+} CcSymbol_TokenKind_t;
 extern const CcSymbolType_t * symbol_t;
 extern const CcSymbolType_t * symbol_nt;
 extern const CcSymbolType_t * symbol_pr;

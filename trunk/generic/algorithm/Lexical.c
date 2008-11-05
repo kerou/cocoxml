@@ -42,7 +42,7 @@ static CcAction_t *
 CcLexical_FindAction(CcLexical_t * self, CcState_t *state, int ch);
 static void
 CcLexical_GetTargetStates(CcLexical_t * self, CcAction_t * a,
-			  CcBitArray_t ** targets, CcSymbolT_t ** endOf,
+			  CcBitArray_t ** targets, CcSymbol_t ** endOf,
 			  CcsBool_t * ctx);
 static CcMelted_t *
 CcLexical_NewMelted(CcLexical_t * self, CcBitArray_t * set, CcState_t * state);
@@ -276,7 +276,8 @@ CcLexical_NewTransition(CcLexical_t * self, CcState_t * from, CcState_t * to,
     t = CcTarget(to);
     a = CcAction(typ, sym, tc); a->target = t;
     CcState_AddAction(from, a);
-    if (typ == node_clas) self->curSy->tokenKind = symbol_classToken;
+    if (typ == node_clas)
+	CcSymbol_SetTokenKind(self->curSy, symbol_classToken);
 }
 
 static void
@@ -459,12 +460,13 @@ CcLexical_FindTrans(CcLexical_t * self, CcNode_t * p, CcsBool_t start, CcBitArra
 }
 
 void
-CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbolT_t * sym)
+CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbol_t * sym)
 {
     CcBitArray_t stepped, marked;
     const CcNodeType_t * ptype;
 
-    CcsAssert((const CcSymbolType_t *)sym->base.base.type == symbol_t);
+    CcsAssert((const CcSymbolType_t *)sym->base.type == symbol_t ||
+	      (const CcSymbolType_t *)sym->base.type == symbol_pr);
     self->curGraph = p; self->curSy = sym;
     if (CcNode_DelGraph(self->curGraph))
 	CcsGlobals_SemErr(&self->globals->base, NULL, "token might be empty");
@@ -486,18 +488,20 @@ CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbolT_t * sym)
  * fixedToken or as a litToken */
 void
 CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
-		       const char * s, CcSymbolT_t * sym)
+		       const char * s, CcSymbol_t * sym)
 {
-    char * s0 = CcsUnescape(s, '"');
+    char * s0;
     const char * scur, * slast;
-    CcState_t * to, * state = self->firstState;
-    CcAction_t * a = NULL;
-    CcSymbolT_t * matchedSym;
+    CcState_t * to, * state;
+    CcAction_t * a;
+    CcSymbol_t * matchedSym;
 
-    if (s0 == NULL)
+    if ((s0 = CcsUnescape(s, '"')) == NULL)
 	CcsGlobals_Fatal(&self->globals->base, t,
 			 "Invalid character encountered or out of memory.");
-    CcsAssert((const CcSymbolType_t *)sym->base.base.type == symbol_t);
+    state = self->firstState; a = NULL;
+    CcsAssert((const CcSymbolType_t *)sym->base.type == symbol_t ||
+	      (const CcSymbolType_t *)sym->base.type == symbol_pr);
     /* Try to match s against existing CcLexical. */
     scur = s0; slast = scur + strlen(s0);
     while (scur < slast) {
@@ -524,16 +528,16 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
     matchedSym = state->endOf;
     if (state->endOf == NULL) {
 	state->endOf = sym;
-    } else if (matchedSym->tokenKind == symbol_fixedToken ||
+    } else if (CcSymbol_GetTokenKind(matchedSym) == symbol_fixedToken ||
 	       (a != NULL && a->tc == node_contextTrans)) {
 	/* s matched a token with a fixed definition or a token with
 	 * an appendix that will be cut off */
 	CcsGlobals_SemErr(&self->globals->base, NULL,
-		      "tokens %ls and %ls cannot be distinguished",
-		      sym->base.name, matchedSym->base.name);
+			  "tokens %ls and %ls cannot be distinguished",
+			  sym->name, matchedSym->name);
     } else { /* matchedSym == classToken || classLitToken */
-	matchedSym->tokenKind = symbol_classLitToken;
-	sym->tokenKind = symbol_litToken;
+	CcSymbol_SetTokenKind(matchedSym, symbol_classLitToken);
+	CcSymbol_SetTokenKind(sym, symbol_litToken);
     }
 }
 
@@ -608,7 +612,7 @@ static void
 CcLexical_MeltStates(CcLexical_t * self, CcState_t * state) {
     CcsBool_t changed, ctx;
     CcBitArray_t * targets;
-    CcSymbolT_t * endOf;
+    CcSymbol_t * endOf;
     CcAction_t * action;
     CcMelted_t * melt;
     CcState_t * s;
@@ -706,7 +710,7 @@ CcLexical_FindAction(CcLexical_t * self, CcState_t *state, int ch) {
 
 void
 CcLexical_GetTargetStates(CcLexical_t * self, CcAction_t * a,
-			  CcBitArray_t ** targets, CcSymbolT_t ** endOf,
+			  CcBitArray_t ** targets, CcSymbol_t ** endOf,
 			  CcsBool_t * ctx)
 {
     CcTarget_t * t; int stateNr;
@@ -726,8 +730,8 @@ CcLexical_GetTargetStates(CcLexical_t * self, CcAction_t * a,
 	    else {
 		CcsGlobals_SemErr(&self->globals->base, NULL, 
 				  "Tokens %s and %s cannot be distinguished\n",
-				  (*endOf)->base.name,
-				  t->state->endOf->base.name);
+				  (*endOf)->name,
+				  t->state->endOf->name);
 	    }
 	}
 	if (t->state->ctx) {

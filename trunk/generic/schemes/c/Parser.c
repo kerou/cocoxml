@@ -438,6 +438,7 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcSymbolType_t * typ) {
 	((CcSymbolT_t *)sym)->tokenKind = symbol_fixedToken;
     } else if (typ == symbol_pr) {
 	sym = CcSymbolTable_NewPragma(self->symtab, name, self->t->line);
+	((CcSymbolPR_t *)sym)->tokenKind = symbol_fixedToken;
 	((CcSymbolPR_t *)sym)->semPos = NULL;
     }
     self->tokenString = NULL;
@@ -455,20 +456,20 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcSymbolType_t * typ) {
 	CcGraph_Finish(g);
 	if (self->tokenString == NULL ||
 	    !strcmp(self->tokenString, self->noString))
-	    CcLexical_ConvertToStates(self->lexical, g->l, (CcSymbolT_t *)sym);
+	    CcLexical_ConvertToStates(self->lexical, g->l, sym);
 	else { /* CcsParser_TokenExpr is a single string */
-	    if (CcHashTable_Get(&self->lexical->literals, self->tokenString) != NULL)
+	    if (CcHashTable_Get(&self->lexical->literals,
+				self->tokenString) != NULL)
 		CcsGlobals_SemErr(self->globals, self->t,
 				  "token string declared twice");
 	    CcHashTable_Set(&self->lexical->literals,
 			    self->tokenString, (CcObject_t *)sym);
 	    CcLexical_MatchLiteral(self->lexical, self->t,
-				   self->tokenString, (CcSymbolT_t *)sym);
+				   self->tokenString, sym);
 	}
     } else if (CcsParser_StartOf(self, 6)) {
 	if (kind == CcsParser_id) self->genScanner = FALSE;
-	else CcLexical_MatchLiteral(self->lexical, self->t,
-				    sym->name, (CcSymbolT_t *)sym);
+	else CcLexical_MatchLiteral(self->lexical, self->t, sym->name, sym);
     } else CcsParser_SynErr(self, 44);
     if (self->la->kind == 39) {
 	CcsParser_SemText(self, &((CcSymbolPR_t *)sym)->semPos);
@@ -725,9 +726,9 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g) {
 		/* forward nt */
 		sym = CcSymbolTable_NewNonTerminal(self->symtab, name, 0);
 	    } else if (self->genScanner) { 
-		sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
-		CcLexical_MatchLiteral(self->lexical, self->t,
-				       sym->name, (CcSymbolT_t *)sym);
+		sym = CcSymbolTable_NewTerminal(self->symtab,
+						name, self->t->line);
+		CcLexical_MatchLiteral(self->lexical, self->t, sym->name, sym);
 	    } else {  /* undefined string in production */
 		CcsGlobals_SemErr(self->globals, self->t,
 				  "undefined string in production");
