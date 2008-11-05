@@ -27,6 +27,7 @@ CcObject_t *
 CcObject(const CcObjectType_t * type)
 {
     CcObject_t * self = CcMalloc(type->size);
+    memset(self, 0, type->size);
     self->type = type;
     return self;
 }
