@@ -25,6 +25,7 @@
 
 static void CcNodeChr_Destruct(CcObject_t * self)
 {
+    CcObject_Destruct(self);
 }
 static const CcNodeType_t NodeChr = {
     { sizeof(CcNodeChr_t), "node_chr", CcNodeChr_Destruct }
@@ -41,6 +42,7 @@ CcNodeChr(int n, int chr)
 
 static void CcNodeClas_Destruct(CcObject_t * self)
 {
+    CcObject_Destruct(self);
 }
 static const CcNodeType_t NodeClas = {
     { sizeof(CcNodeClas_t), "node_clas", CcNodeClas_Destruct }

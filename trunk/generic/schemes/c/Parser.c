@@ -436,11 +436,9 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcSymbolType_t * typ) {
     } else if (typ == symbol_t) {
 	sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
 	((CcSymbolT_t *)sym)->tokenKind = symbol_fixedToken;
-	/*
     } else if (typ == symbol_pr) {
 	sym = CcSymbolTable_NewPragma(self->symtab, name, self->t->line);
-	((CcSymbolPR_t *)sym)->tokenKind = symbol_fixedToken;
-	*/
+	((CcSymbolPR_t *)sym)->semPos = NULL;
     }
     self->tokenString = NULL;
 

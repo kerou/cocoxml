@@ -25,6 +25,7 @@
 
 static void CcNodeT_Destruct(CcObject_t * self)
 {
+    CcObject_Destruct(self);
 }
 static const CcNodeType_t NodeT = {
     { sizeof(CcNodeT_t), "node_t", CcNodeT_Destruct }
@@ -33,6 +34,7 @@ const CcNodeType_t * node_t = &NodeT;
 
 static void CcNodePR_Destruct(CcObject_t * self)
 {
+    CcObject_Destruct(self);
 }
 static const CcNodeType_t NodePR = {
     { sizeof(CcNodePR_t), "node_pr", CcNodePR_Destruct }
@@ -41,6 +43,7 @@ const CcNodeType_t * node_pr = &NodePR;
 
 static void CcNodeNT_Destruct(CcObject_t * self)
 {
+    CcObject_Destruct(self);
 }
 static const CcNodeType_t NodeNT = {
     { sizeof(CcNodeNT_t), "node_nt", CcNodeNT_Destruct }
@@ -49,6 +52,7 @@ const CcNodeType_t * node_nt = &NodeNT;
 
 static void CcNodeWT_Destruct(CcObject_t * self)
 {
+    CcObject_Destruct(self);
 }
 static const CcNodeType_t NodeWT = {
     { sizeof(CcNodeWT_t), "node_wt", CcNodeWT_Destruct }
@@ -57,6 +61,7 @@ const CcNodeType_t * node_wt = &NodeWT;
 
 static void CcNodeANY_Destruct(CcObject_t * self)
 {
+    CcObject_Destruct(self);
 }
 static const CcNodeType_t NodeANY = {
     { sizeof(CcNodeANY_t), "node_any", CcNodeANY_Destruct }
@@ -65,6 +70,7 @@ const CcNodeType_t * node_any = &NodeANY;
 
 static void CcNodeSYNC_Destruct(CcObject_t * self)
 {
+    CcObject_Destruct(self);
 }
 static const CcNodeType_t NodeSYNC = {
     { sizeof(CcNodeSYNC_t), "node_sync", CcNodeSYNC_Destruct }
@@ -73,6 +79,7 @@ const CcNodeType_t * node_sync = &NodeSYNC;
 
 static void CcNodeSEM_Destruct(CcObject_t * self)
 {
+    CcObject_Destruct(self);
 }
 static const CcNodeType_t NodeSEM = {
     { sizeof(CcNodeSEM_t), "node_sem", CcNodeSEM_Destruct }
@@ -81,6 +88,7 @@ const CcNodeType_t * node_sem = &NodeSEM;
 
 static void CcNodeRSLV_Destruct(CcObject_t * self)
 {
+    CcObject_Destruct(self);
 }
 static const CcNodeType_t NodeRSLV = {
     { sizeof(CcNodeSEM_t), "node_rslv", CcNodeRSLV_Destruct }

@@ -66,7 +66,7 @@ CHARACTERS
     tab       = '\t'.
     stringCh  = ANY - '"' - '\\' - cr - lf.
     charCh    = ANY - '\'' - '\\' - cr - lf.
-    printable =  '\u0020' .. '\u007e'.
+    printable =  '\x20' .. '\x7e'.
     hex       = "0123456789abcdef".
 
 TOKENS
