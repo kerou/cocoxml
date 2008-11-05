@@ -53,13 +53,14 @@ struct CcSymbol_s {
 };
 
 struct CcSymbolT_s {
-    CcSymbol_t base;
-    CcSymbolT_TokenKind_t tokenKind;
+    CcSymbol_t             base;
+    CcSymbol_TokenKind_t   tokenKind;
 };
 
 struct CcSymbolPR_s {
-    CcSymbol_t      base;
-    CcsPosition_t * semPos;
+    CcSymbol_t             base;
+    CcSymbol_TokenKind_t   tokenKind;
+    CcsPosition_t        * semPos;
 };
 
 struct CcSymbolNT_s {
@@ -79,6 +80,9 @@ struct CcSymbolTable_s {
     CcArrayList_t pragmas;
     CcArrayList_t nonterminals;
 };
+
+CcSymbol_TokenKind_t CcSymbol_GetTokenKind(CcSymbol_t * self);
+void CcSymbol_SetTokenKind(CcSymbol_t * self, CcSymbol_TokenKind_t tokenKind);
 
 CcSymbolTable_t * CcSymbolTable(CcSymbolTable_t * self, CcGlobals_t * globals);
 void CcSymbolTable_Destruct(CcSymbolTable_t * self);
