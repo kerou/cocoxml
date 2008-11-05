@@ -404,10 +404,11 @@ static void
 CcLexical_NumberNodes(CcLexical_t * self, CcNode_t * p,
 		      CcState_t * state, CcsBool_t renumIter)
 {
-    const CcNodeType_t * ptype = (const CcNodeType_t *)p->base.type;
+    const CcNodeType_t * ptype;
 
     if (p == NULL) return;
-    if (p->state != NULL) return;
+    if (p->state != NULL) return; /* already visited */
+    ptype = (const CcNodeType_t *)p->base.type;
     if ((state == NULL) || (ptype == node_iter && renumIter))
 	state = CcLexical_NewState(self);
     p->state = state;
