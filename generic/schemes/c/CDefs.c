@@ -72,7 +72,7 @@ CcsUTF8GetCh(const char ** str, const char * stop)
 	fprintf(stderr, "Inside UTF-8 character!\n");
 	exit(-1);
     }
-    if (ch < 128 || ch == EoF) return ch;
+    if (ch < 128 || ch == EoF) { *str = cur; return ch; }
     if ((ch & 0xF0) == 0xF0) {
 	/* 1110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
 	c1 = ch & 0x07;
