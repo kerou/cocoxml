@@ -20,83 +20,83 @@
 #include "RSSData.hxx"
 
 CloudClass::CloudClass(){
-    this->domain = (wchar_t*)L"";
-    this->port = (wchar_t*)L"";
-    this->path = (wchar_t*)L"";
-    this->registerProcedure = (wchar_t*)L"";
-    this->protocol = (wchar_t*)L"";
+    this->domain = "";
+    this->port = "";
+    this->path = "";
+    this->registerProcedure = "";
+    this->protocol = "";
 };
 
 void CloudClass::Print(){
-    wprintf(L"Cloud('%ls','%ls','%ls','%ls'')",
-            this->domain,
-            this->port,
-            this->path,
-            this->registerProcedure,
-            this->protocol);
+    printf("Cloud('%s','%s','%s','%s'')",
+           this->domain,
+           this->port,
+           this->path,
+           this->registerProcedure,
+           this->protocol);
 };
 
 ImageClass::ImageClass(){
-    this->url = (wchar_t*)L"";
-    this->title = (wchar_t*)L"";
-    this->link = (wchar_t*)L"";
-    this->width = (wchar_t*)L"";
-    this->height = (wchar_t*)L"";
+    this->url = "";
+    this->title = "";
+    this->link = "";
+    this->width = "";
+    this->height = "";
 };
 
 void ImageClass::Print(){
-    wprintf(L"Image('%ls','%ls','%ls','%ls')",
-            this->url,
-            this->title,
-            this->link,
-            this->width,
-            this->height);
+    printf("Image('%s','%s','%s','%s')",
+           this->url,
+           this->title,
+           this->link,
+           this->width,
+           this->height);
 };
 
 TextInputClass::TextInputClass(){
-    this->title = (wchar_t*)L"";
-    this->description = (wchar_t*)L"";
-    this->name = (wchar_t*)L"";
-    this->link = (wchar_t*)L"";
+    this->title = (char*)"";
+    this->description = (char*)"";
+    this->name = (char*)"";
+    this->link = (char*)"";
 };
 
 void TextInputClass::Print(){
-    wprintf(L"TextInput('%ls','%ls','%ls','%ls')",
-            this->title,
-            this->description,
-            this->name,
-            this->link);
+    printf("TextInput('%s','%s','%s','%s')",
+           this->title,
+           this->description,
+           this->name,
+           this->link);
 };
 
 ItemClass::ItemClass(){
-    this->title = (wchar_t*)L"";
-    this->link = (wchar_t*)L"";
-    this->description = (wchar_t*)L"";
-    this->author = (wchar_t*)L"";
-    this->category = (wchar_t*)L"";
-    this->comments = (wchar_t*)L"";
-    this->enclosure = (wchar_t*)L"";
-    this->guid = (wchar_t*)L"";
-    this->pubdate = (wchar_t*)L"";
-    this->source = (wchar_t*)L"";
+    this->title = "";
+    this->link = "";
+    this->description = "";
+    this->author = "";
+    this->category = "";
+    this->comments = "";
+    this->enclosure = "";
+    this->guid = "";
+    this->pubdate = "";
+    this->source = "";
     this->image = NULL;
 };
 
 void ItemClass::Print(){
-    wprintf(L"Item('%ls','%ls','%ls','%ls','%ls','%ls','%ls','%ls','%ls','%ls','",
-            this->title,
-            this->link,
-            this->description,
-            this->author,
-            this->category,
-            this->comments,
-            this->enclosure,
-            this->guid,
-            this->pubdate,
-            this->source);
+    printf("Item('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','",
+           this->title,
+           this->link,
+           this->description,
+           this->author,
+           this->category,
+           this->comments,
+           this->enclosure,
+           this->guid,
+           this->pubdate,
+           this->source);
     if(this->image)
         this->image->Print();
-    wprintf(L"')");
+    printf("')");
 };
 
 void ChannelClass::AddItem(ItemClass *item){
@@ -104,22 +104,22 @@ void ChannelClass::AddItem(ItemClass *item){
 };
 
 ChannelClass::ChannelClass(){
-    this->title = (wchar_t*)L"";
-    this->link = (wchar_t*)L"";
-    this->description = (wchar_t*)L"";
-    this->language = (wchar_t*)L"";
-    this->copyright = (wchar_t*)L"";
-    this->managingEditor = (wchar_t*)L"";
-    this->webMaster = (wchar_t*)L"";
-    this->pubDate = (wchar_t*)L"";
-    this->lastBuildDate = (wchar_t*)L"";
-    this->category = (wchar_t*)L"";
-    this->generator = (wchar_t*)L"";
-    this->docs = (wchar_t*)L"";
-    this->ttl = (wchar_t*)L"";
-    this->rating = (wchar_t*)L"";
-    this->skipHours = (wchar_t*)L"";
-    this->skipDays = (wchar_t*)L"";
+    this->title = "";
+    this->link = "";
+    this->description = "";
+    this->language = "";
+    this->copyright = "";
+    this->managingEditor = "";
+    this->webMaster = "";
+    this->pubDate = "";
+    this->lastBuildDate = "";
+    this->category = "";
+    this->generator = "";
+    this->docs = "";
+    this->ttl = "";
+    this->rating = "";
+    this->skipHours = "";
+    this->skipDays = "";
 
     this->cloud = NULL;
     this->image = NULL;
@@ -127,46 +127,46 @@ ChannelClass::ChannelClass(){
 };
 
 void ChannelClass::Print(){
-    wprintf(L"Channel: '%ls'\n", this->title);
-    wprintf(L"\tlink: '%ls'\n", this->link);
-    wprintf(L"\tdescription: '%ls'\n", this->description);
-    wprintf(L"\tlanguage: '%ls'\n", this->language);
-    wprintf(L"\tcopyright: '%ls'\n", this->copyright);
-    wprintf(L"\tmanagingEditor: '%ls'\n", this->managingEditor);
-    wprintf(L"\twebMaster: '%ls'\n", this->webMaster);
-    wprintf(L"\tpubDate: '%ls'\n", this->pubDate);
-    wprintf(L"\tlastBuildDate: '%ls'\n", this->lastBuildDate);
-    wprintf(L"\tcategory: '%ls'\n", this->category);
-    wprintf(L"\tgenerator: '%ls'\n", this->generator);
-    wprintf(L"\tdocs: '%ls'\n", this->docs);
+    printf("Channel: '%s'\n", this->title);
+    printf("\tlink: '%s'\n", this->link);
+    printf("\tdescription: '%s'\n", this->description);
+    printf("\tlanguage: '%s'\n", this->language);
+    printf("\tcopyright: '%s'\n", this->copyright);
+    printf("\tmanagingEditor: '%s'\n", this->managingEditor);
+    printf("\twebMaster: '%s'\n", this->webMaster);
+    printf("\tpubDate: '%s'\n", this->pubDate);
+    printf("\tlastBuildDate: '%s'\n", this->lastBuildDate);
+    printf("\tcategory: '%s'\n", this->category);
+    printf("\tgenerator: '%s'\n", this->generator);
+    printf("\tdocs: '%s'\n", this->docs);
 
-    wprintf(L"\tcloud: '");
+    printf("\tcloud: '");
     if(this->cloud) 
         this->cloud->Print();
-    wprintf(L"'\n");
+    printf("'\n");
 
-    wprintf(L"\tttl: '%ls'\n", this->ttl);
+    printf("\tttl: '%s'\n", this->ttl);
 
-    wprintf(L"\timage: '");
+    printf("\timage: '");
     if(this->image)
         this->image->Print();
-    wprintf(L"'\n");
+    printf("'\n");
 
-    wprintf(L"\trating: '%ls'\n", this->rating);
+    printf("\trating: '%s'\n", this->rating);
 
-    wprintf(L"\ttextInput: '");
+    printf("\ttextInput: '");
     if(this->textInput)
         this->textInput->Print();
-    wprintf(L"'\n");
+    printf("'\n");
 
-    wprintf(L"\tskipHours: '%ls'\n", this->skipHours);
-    wprintf(L"\tskipDays: '%ls'\n", this->skipDays);
+    printf("\tskipHours: '%s'\n", this->skipHours);
+    printf("\tskipDays: '%s'\n", this->skipDays);
 
     vector<ItemClass *>::iterator it;
     for(it=itemList.begin(); it!=itemList.end(); it++){
         /* print item */
         (*it)->Print();
-        wprintf(L"\n");
+        printf("\n");
     }
 };
 

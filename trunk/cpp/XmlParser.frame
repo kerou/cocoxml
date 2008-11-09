@@ -39,46 +39,46 @@ Coco/R itself) does not fall under the GNU General Public License.
 
 class Errors {
 public:
-	int count;			// number of errors detected
+    int count;          // number of errors detected
 
-	Errors();
-	void SynErr(int line, int col, int n);
-	void Error(int line, int col, const wchar_t *s);
-	void Warning(int line, int col, const wchar_t *s);
-	void Warning(const wchar_t *s);
-	void Exception(const wchar_t *s);
+    Errors();
+    void SynErr(int line, int col, int n);
+    void Error(int line, int col, const char *s);
+    void Warning(int line, int col, const char *s);
+    void Warning(const char *s);
+    void Exception(const char *s);
 
 }; // Errors
 
 class XmlParser {
 private:
 /*---- constantsheader ----*/
-	Token *dummyToken;
-	int errDist;
-	int minErrDist;
+    Token *dummyToken;
+    int errDist;
+    int minErrDist;
 
-	void SynErr(int n);
-	void Get();
-	void Expect(int n);
-	bool StartOf(int s);
-	void ExpectWeak(int n, int follow);
-	bool WeakSeparator(int n, int syFol, int repFol);
+    void SynErr(int n);
+    void Get();
+    void Expect(int n);
+    bool StartOf(int s);
+    void ExpectWeak(int n, int follow);
+    bool WeakSeparator(int n, int syFol, int repFol);
 
 public:
-	XmlScanner *scanner;
-	Errors  *errors;
+    XmlScanner *scanner;
+    Errors  *errors;
 
-	Token *t;			// last recognized token
-	Token *la;			// lookahead token
+    Token *t;           // last recognized token
+    Token *la;          // lookahead token
 
 /*---- declarations ----*/
 
-	XmlParser(XmlScanner *scanner);
-	~XmlParser();
-	void SemErr(const wchar_t* msg);
+    XmlParser(XmlScanner *scanner);
+    ~XmlParser();
+    void SemErr(const char* msg);
 
 /*---- productionsheader ----*/
-	void Parse();
+    void Parse();
 
 }; // end Parser
 
@@ -116,7 +116,6 @@ Coco/R itself) does not fall under the GNU General Public License.
 -----------------------------------------------------------------------*/
 /*---- begin ----*/
 
-#include <wchar.h>
 #include "XmlParser.hxx"
 #include "XmlScanner.hxx"
 
@@ -124,131 +123,131 @@ Coco/R itself) does not fall under the GNU General Public License.
 /*---- namespace_open ----*/
 
 void XmlParser::SynErr(int n) {
-	if (errDist >= minErrDist) errors->SynErr(la->line, la->col, n);
-	errDist = 0;
+    if (errDist >= minErrDist) errors->SynErr(la->line, la->col, n);
+    errDist = 0;
 }
 
-void XmlParser::SemErr(const wchar_t* msg) {
-	if (errDist >= minErrDist) errors->Error(t->line, t->col, msg);
-	errDist = 0;
+void XmlParser::SemErr(const char* msg) {
+    if (errDist >= minErrDist) errors->Error(t->line, t->col, msg);
+    errDist = 0;
 }
 
 void XmlParser::Get() {
-	for (;;) {
-		t = la;
-		la = scanner->Scan();
-		if (la->kind <= maxT) { ++errDist; break; }
+    for (;;) {
+        t = la;
+        la = scanner->Scan();
+        if (la->kind <= maxT) { ++errDist; break; }
 /*---- pragmas ----*/
-		if (dummyToken != t) {
-			dummyToken->kind = t->kind;
+        if (dummyToken != t) {
+            dummyToken->kind = t->kind;
             //dummyToken->pos = t->pos;
-			dummyToken->col = t->col;
-			dummyToken->line = t->line;
-			//dummyToken->next = NULL;
-			coco_string_delete(dummyToken->val);
-			dummyToken->val = coco_string_create(t->val);
-			t = dummyToken;
-		}
-		la = t;
-	}
+            dummyToken->col = t->col;
+            dummyToken->line = t->line;
+            //dummyToken->next = NULL;
+            free(dummyToken->val);
+            dummyToken->val = strdup(t->val);
+            t = dummyToken;
+        }
+        la = t;
+    }
 }
 
 void XmlParser::Expect(int n) {
-	if (la->kind==n) Get(); else { SynErr(n); }
+    if (la->kind==n) Get(); else { SynErr(n); }
 }
 
 void XmlParser::ExpectWeak(int n, int follow) {
-	if (la->kind == n) Get();
-	else {
-		SynErr(n);
-		while (!StartOf(follow)) Get();
-	}
+    if (la->kind == n) Get();
+    else {
+        SynErr(n);
+        while (!StartOf(follow)) Get();
+    }
 }
 
 bool XmlParser::WeakSeparator(int n, int syFol, int repFol) {
-	if (la->kind == n) {Get(); return true;}
-	else if (StartOf(repFol)) {return false;}
-	else {
-		SynErr(n);
-		while (!(StartOf(syFol) || StartOf(repFol) || StartOf(0))) {
-			Get();
-		}
-		return StartOf(syFol);
-	}
+    if (la->kind == n) {Get(); return true;}
+    else if (StartOf(repFol)) {return false;}
+    else {
+        SynErr(n);
+        while (!(StartOf(syFol) || StartOf(repFol) || StartOf(0))) {
+            Get();
+        }
+        return StartOf(syFol);
+    }
 }
 
 /*---- productions ----*/
 
 void XmlParser::Parse() {
-	t = NULL;
-	la = dummyToken = new Token();
-	la->val = coco_string_create(L"Dummy Token");
-	Get();
+    t = NULL;
+    la = dummyToken = new Token();
+    la->val = strdup("Dummy Token");
+    Get();
 /*---- parseRoot ----*/
-	Expect(0);
+    Expect(0);
 }
 
 XmlParser::XmlParser(XmlScanner *scanner) {
 /*---- constants ----*/
-	dummyToken = NULL;
-	t = la = NULL;
-	minErrDist = 2;
-	errDist = minErrDist;
-	this->scanner = scanner;
-	errors = new Errors();
+    dummyToken = NULL;
+    t = la = NULL;
+    minErrDist = 2;
+    errDist = minErrDist;
+    this->scanner = scanner;
+    errors = new Errors();
 }
 
 bool XmlParser::StartOf(int s) {
-	const bool T = true;
-	const bool x = false;
+    const bool T = true;
+    const bool x = false;
 
 /*---- initialization ----*/
 
-	return set[s][la->kind];
+    return set[s][la->kind];
 }
 
 XmlParser::~XmlParser() {
-	delete errors;
-	delete dummyToken;
+    delete errors;
+    delete dummyToken;
 }
 
 Errors::Errors() {
-	count = 0;
+    count = 0;
 }
 
 void Errors::SynErr(int line, int col, int n) {
-	wchar_t* s;
-	switch (n) {
+    char* s;
+    switch (n) {
 /*---- errors ----*/
-		default:
-		{
-			wchar_t format[20];
-			coco_swprintf(format, 20, L"error %d", n);
-			s = coco_string_create(format);
-		}
-		break;
-	}
-	wprintf(L"-- line %d col %d: %ls\n", line, col, s);
-	coco_string_delete(s);
-	count++;
+        default:
+        {
+            char format[20];
+            snprintf(format, 20, "error %d", n);
+            s = strdup(format);
+        }
+        break;
+    }
+    printf("-- line %d col %d: %s\n", line, col, s);
+    free(s);
+    count++;
 }
 
-void Errors::Error(int line, int col, const wchar_t *s) {
-	wprintf(L"-- line %d col %d: %ls\n", line, col, s);
-	count++;
+void Errors::Error(int line, int col, const char *s) {
+    printf("-- line %d col %d: %s\n", line, col, s);
+    count++;
 }
 
-void Errors::Warning(int line, int col, const wchar_t *s) {
-	wprintf(L"-- line %d col %d: %ls\n", line, col, s);
+void Errors::Warning(int line, int col, const char *s) {
+    printf("-- line %d col %d: %s\n", line, col, s);
 }
 
-void Errors::Warning(const wchar_t *s) {
-	wprintf(L"%ls\n", s);
+void Errors::Warning(const char *s) {
+    printf("%s\n", s);
 }
 
-void Errors::Exception(const wchar_t* s) {
-	wprintf(L"%ls", s); 
-	exit(1);
+void Errors::Exception(const char* s) {
+    printf("%s", s); 
+    exit(1);
 }
 
 /*---- namespace_close ----*/

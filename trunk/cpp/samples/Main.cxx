@@ -11,7 +11,7 @@ int main(int argc, char **argv)
         std::cerr << "Usage:" << argv[0] << " <xml file>\n" << std::endl;
         return 1;
     }
-    XmlScanner *scanner = new XmlScanner(coco_string_create(argv[1]));
+    XmlScanner *scanner = new XmlScanner(argv[1]);
     XmlParser *parser = new XmlParser(scanner);
     
     parser->Parse();

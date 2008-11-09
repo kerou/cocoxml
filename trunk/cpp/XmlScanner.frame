@@ -34,7 +34,6 @@ Coco/R itself) does not fall under the GNU General Public License.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <wchar.h>
 #include <vector>
 #include <map>
 #include <stack>
@@ -49,51 +48,17 @@ using namespace std;
 #include <fcntl.h>
 #endif
 
-#if _MSC_VER >= 1400
-#define coco_swprintf swprintf_s
-#elif _MSC_VER >= 1300
-#define coco_swprintf _snwprintf
-#elif defined __GNUC__
-#define coco_swprintf swprintf
-#else 
-#error unknown compiler!
-#endif 
-
-#define COCO_WCHAR_MAX 65535
+#define COCO_CHAR_MAX 65535
 #define MIN_BUFFER_LENGTH 1024
 #define MAX_BUFFER_LENGTH (64*MIN_BUFFER_LENGTH)
 #define HEAP_BLOCK_SIZE (64*1024)
-#define COCO_CPP_NAMESPACE_SEPARATOR L':'
-
-// string handling, wide character
-wchar_t* coco_string_create(const wchar_t *value);
-wchar_t* coco_string_create(const wchar_t *value, int startIndex, int length);
-wchar_t* coco_string_create_upper(const wchar_t* data);
-wchar_t* coco_string_create_lower(const wchar_t* data);
-wchar_t* coco_string_create_lower(const wchar_t* data, int startIndex, int dataLen);
-wchar_t* coco_string_create_append(const wchar_t* data1, const wchar_t* data2);
-wchar_t* coco_string_create_append(const wchar_t* data, const wchar_t value);
-void  coco_string_delete(wchar_t* &data);
-int   coco_string_length(const wchar_t* data);
-bool  coco_string_endswith(const wchar_t* data, const wchar_t *value);
-int   coco_string_indexof(const wchar_t* data, const wchar_t value);
-int   coco_string_lastindexof(const wchar_t* data, const wchar_t value);
-void  coco_string_merge(wchar_t* &data, const wchar_t* value);
-bool  coco_string_equal(const wchar_t* data1, const wchar_t* data2);
-int   coco_string_compareto(const wchar_t* data1, const wchar_t* data2);
-int   coco_string_hash(const wchar_t* data);
-
-// string handling, ascii character
-wchar_t* coco_string_create(const char *value);
-char* coco_string_create_char(const wchar_t *value);
-void  coco_string_delete(char* &data);
-
+#define COCO_CPP_NAMESPACE_SEPARATOR ':'
 
 /*---- Namespace Begin ----*/
 
-struct wcharCmp {
-	bool operator()(const wchar_t* s1, const wchar_t* s2 ) const{
-        return coco_string_compareto(s1, s2) < 0;
+struct charCmp {
+	bool operator()(const char* s1, const char* s2 ) const{
+        return strcmp(s1, s2) < 0;
 	}
 };
 
@@ -105,7 +70,7 @@ public:
     int kind;     // token kind
     int col;      // token column (starting at 1)
     int line;     // token line (starting at 1)
-    wchar_t* val; // token value
+    char* val; // token value
 
     Token();
     ~Token();
@@ -120,16 +85,16 @@ public:
 class XmlLangDefinition {
 public:
     vector<bool> useVector;
-    map<const wchar_t*, TagInfo*, wcharCmp> Tags;
-    map<const wchar_t*, int, wcharCmp>      Attrs;
-    map<const wchar_t*, int, wcharCmp>      PInstructions;
+    map<const char*, TagInfo*, charCmp> Tags;
+    map<const char*, int, charCmp>      Attrs;
+    map<const char*, int, charCmp>      PInstructions;
 
     XmlLangDefinition();
     ~XmlLangDefinition();
 
-    void AddTag(const wchar_t* Name, int StartToken, int EndToken);
-    void AddAttr(const wchar_t* Name, int AttrToken);
-    void AddProcessingInstruction(const wchar_t* PIName, int PIToken);
+    void AddTag(const char* Name, int StartToken, int EndToken);
+    void AddAttr(const char* Name, int AttrToken);
+    void AddProcessingInstruction(const char* PIName, int PIToken);
 };
 
 class tagStackEle {
@@ -157,7 +122,7 @@ class XmlScanner {
 public:
     int eof;
 /*---- Declarations ----*/
-    map<const wchar_t*, XmlLangDefinition*, wcharCmp> XmlLangMap;
+    map<const char*, XmlLangDefinition*, charCmp> XmlLangMap;
     stack<tagStackEle*>                    tagStack;
     vector<charDataEle*>                   charDatas;
     vector<Token*>                         tokens;
@@ -165,15 +130,15 @@ public:
     FILE*                                  xmlstream;                                   
     XML_Parser                             xmlparser;
     
-    XmlScanner (const wchar_t* fileName);
+    XmlScanner (const char* fileName);
     ~XmlScanner ();
     void Init();
-    int StartElement2Kind(const wchar_t* NamespaceURI, const wchar_t* TagName);
-    int EndElement2Kind(const wchar_t* NamespaceURI, const wchar_t* TagName);
-    int Attribute2Kind(const wchar_t* NamespaceURI, const wchar_t* AttrName);
-    int ProcessingInstruction2Kind(const wchar_t* PIName);
+    int StartElement2Kind(const char* NamespaceURI, const char* TagName);
+    int EndElement2Kind(const char* NamespaceURI, const char* TagName);
+    int Attribute2Kind(const char* NamespaceURI, const char* AttrName);
+    int ProcessingInstruction2Kind(const char* PIName);
 
-    void AppendToken(int kind, int linenumber, int lineposition, wchar_t* value);
+    void AppendToken(int kind, int linenumber, int lineposition, char* value);
     void AppendTokens();
     Token* Scan ();
     Token* Peek ();
@@ -221,179 +186,6 @@ Coco/R itself) does not fall under the GNU General Public License.
 
 using namespace std;
 
-// string handling, wide character
-
-wchar_t* coco_string_create(const wchar_t* value) {
-    wchar_t* data;
-    int len = 0;
-    if (value) { len = wcslen(value); }
-    data = new wchar_t[len + 1];
-    wcsncpy(data, value, len);
-    data[len] = 0;
-    return data;
-}
-
-wchar_t* coco_string_create(const wchar_t *value , int startIndex, int length) {
-    int len = 0;
-    wchar_t* data;
-
-    if (value) { len = length; }
-    data = new wchar_t[len + 1];
-    wcsncpy(data, &(value[startIndex]), len);
-    data[len] = 0;
-
-    return data;
-}
-
-wchar_t* coco_string_create_upper(const wchar_t* data) {
-    if (!data) { return NULL; }
-
-    int dataLen = 0;
-    if (data) { dataLen = wcslen(data); }
-
-    wchar_t *newData = new wchar_t[dataLen + 1];
-
-    for (int i = 0; i <= dataLen; i++) {
-        if ((L'a' <= data[i]) && (data[i] <= L'z')) {
-            newData[i] = data[i] + (L'A' - L'a');
-        }
-        else { newData[i] = data[i]; }
-    }
-
-    newData[dataLen] = L'\0';
-    return newData;
-}
-
-wchar_t* coco_string_create_lower(const wchar_t* data) {
-    if (!data) { return NULL; }
-    int dataLen = wcslen(data);
-    return coco_string_create_lower(data, 0, dataLen);
-}
-
-wchar_t* coco_string_create_lower(const wchar_t* data, int startIndex, int dataLen) {
-    if (!data) { return NULL; }
-
-    wchar_t* newData = new wchar_t[dataLen + 1];
-
-    for (int i = 0; i <= dataLen; i++) {
-        wchar_t ch = data[startIndex + i];
-        if ((L'A' <= ch) && (ch <= L'Z')) {
-            newData[i] = ch - (L'A' - L'a');
-        }
-        else { newData[i] = ch; }
-    }
-    newData[dataLen] = L'\0';
-    return newData;
-}
-
-wchar_t* coco_string_create_append(const wchar_t* data1, const wchar_t* data2) {
-    wchar_t* data;
-    int data1Len = 0;
-    int data2Len = 0;
-
-    if (data1) { data1Len = wcslen(data1); }
-    if (data2) {data2Len = wcslen(data2); }
-
-    data = new wchar_t[data1Len + data2Len + 1];
-
-    if (data1) { wcscpy(data, data1); }
-    if (data2) { wcscpy(data + data1Len, data2); }
-
-    data[data1Len + data2Len] = 0;
-
-    return data;
-}
-
-wchar_t* coco_string_create_append(const wchar_t *target, const wchar_t appendix) {
-    int targetLen = coco_string_length(target);
-    wchar_t* data = new wchar_t[targetLen + 2];
-    wcsncpy(data, target, targetLen);
-    data[targetLen] = appendix;
-    data[targetLen + 1] = 0;
-    return data;
-}
-
-void coco_string_delete(wchar_t* &data) {
-    delete [] data;
-    data = NULL;
-}
-
-int coco_string_length(const wchar_t* data) {
-    if (data) { return wcslen(data); }
-    return 0;
-}
-
-bool coco_string_endswith(const wchar_t* data, const wchar_t *end) {
-    int dataLen = wcslen(data);
-    int endLen = wcslen(end);
-    return (endLen <= dataLen) && (wcscmp(data + dataLen - endLen, end) == 0);
-}
-
-int coco_string_indexof(const wchar_t* data, const wchar_t value) {
-    const wchar_t* chr = wcschr(data, value);
-
-    if (chr) { return (chr-data); }
-    return -1;
-}
-
-int coco_string_lastindexof(const wchar_t* data, const wchar_t value) {
-    const wchar_t* chr = wcsrchr(data, value);
-
-    if (chr) { return (chr-data); }
-    return -1;
-}
-
-void coco_string_merge(wchar_t* &target, const wchar_t* appendix) {
-    if (!appendix) { return; }
-    wchar_t* data = coco_string_create_append(target, appendix);
-    delete [] target;
-    target = data;
-}
-
-bool coco_string_equal(const wchar_t* data1, const wchar_t* data2) {
-    return wcscmp( data1, data2 ) == 0;
-}
-
-int coco_string_compareto(const wchar_t* data1, const wchar_t* data2) {
-    return wcscmp(data1, data2);
-}
-
-int coco_string_hash(const wchar_t *data) {
-    int h = 0;
-    if (!data) { return 0; }
-    while (*data != 0) {
-        h = (h * 7) ^ *data;
-        ++data;
-    }
-    if (h < 0) { h = -h; }
-    return h;
-}
-
-// string handling, ascii character
-
-wchar_t* coco_string_create(const char* value) {
-    int len = 0;
-    if (value) { len = strlen(value); }
-    wchar_t* data = new wchar_t[len + 1];
-    for (int i = 0; i < len; ++i) { data[i] = (wchar_t) value[i]; }
-    data[len] = 0;
-    return data;
-}
-
-char* coco_string_create_char(const wchar_t *value) {
-    int len = coco_string_length(value);
-    char *res = new char[len + 1];
-    for (int i = 0; i < len; ++i) { res[i] = (char) value[i]; }
-    res[len] = 0;
-    return res;
-}
-
-void coco_string_delete(char* &data) {
-    delete [] data;
-    data = NULL;
-}
-
-
 /*---- Namespace Begin ----*/
 
 Token::Token() 
@@ -407,31 +199,30 @@ Token::Token()
 }
 
 Token::~Token() {
-    coco_string_delete(val);
+    free(val);
 }
 
 XmlLangDefinition::XmlLangDefinition() {
 /*---- Init UseVector ----*/
 }
 
-void XmlLangDefinition::AddTag(const wchar_t* Name, int StartToken, int EndToken) {
+void XmlLangDefinition::AddTag(const char* Name, int StartToken, int EndToken) {
     TagInfo *tinfo = new TagInfo();
     tinfo->startToken = StartToken;
     tinfo->endToken = EndToken;
     Tags.insert(make_pair(Name, tinfo));
 }
 
-void XmlLangDefinition::AddAttr(const wchar_t* Name, int AttrToken) {
+void XmlLangDefinition::AddAttr(const char* Name, int AttrToken) {
     Attrs.insert(make_pair(Name, AttrToken));
 }
 
-void XmlLangDefinition::AddProcessingInstruction(const wchar_t* PIName, int PIToken) {
+void XmlLangDefinition::AddProcessingInstruction(const char* PIName, int PIToken) {
     PInstructions.insert(make_pair(PIName, PIToken));
 }
 
-XmlScanner::XmlScanner (const wchar_t* fileName) {
-    char *chFileName = coco_string_create_char(fileName);
-    xmlstream = fopen(chFileName, "r");
+XmlScanner::XmlScanner (const char* fileName) {
+    xmlstream = fopen(fileName, "r");
     if(xmlstream){
        Init();
     }else{
@@ -467,15 +258,15 @@ void XmlScanner::Init() {
     tagStackEle *tsEle = new tagStackEle();
     tsEle->unknownNamespace = false;
     tsEle->unknownTag = false;
-    tsEle->xldef = XmlLangMap[coco_string_create("")];
+    tsEle->xldef = XmlLangMap[""];
     tagStack.push(tsEle);
 }
 
-int XmlScanner::StartElement2Kind(const wchar_t* NamespaceURI, const wchar_t* TagName) {
+int XmlScanner::StartElement2Kind(const char* NamespaceURI, const char* TagName) {
     tagStackEle *curEle = tagStack.top();
     tagStackEle *newEle = new tagStackEle();
 
-    map<const wchar_t*, XmlLangDefinition*>::iterator it1=XmlLangMap.find(NamespaceURI);
+    map<const char*, XmlLangDefinition*>::iterator it1=XmlLangMap.find(NamespaceURI);
     if (it1 == XmlLangMap.end()) {
         newEle->unknownNamespace = true;
         newEle->unknownTag = false;
@@ -485,7 +276,7 @@ int XmlScanner::StartElement2Kind(const wchar_t* NamespaceURI, const wchar_t* Ta
     }
     newEle->unknownNamespace = false;
     newEle->xldef = XmlLangMap[NamespaceURI];
-    map<const wchar_t*, TagInfo*>::iterator it2=newEle->xldef->Tags.find(TagName);
+    map<const char*, TagInfo*>::iterator it2=newEle->xldef->Tags.find(TagName);
     if (it2 == newEle->xldef->Tags.end()) {
         newEle->unknownTag = true;
         tagStack.push(newEle);
@@ -496,7 +287,7 @@ int XmlScanner::StartElement2Kind(const wchar_t* NamespaceURI, const wchar_t* Ta
     return newEle->xldef->Tags[TagName]->startToken;
 }
 
-int XmlScanner::EndElement2Kind(const wchar_t* NamespaceURI, const wchar_t* TagName) {
+int XmlScanner::EndElement2Kind(const char* NamespaceURI, const char* TagName) {
     tagStackEle* curEle = tagStack.top();
     tagStack.pop();
 
@@ -508,29 +299,29 @@ int XmlScanner::EndElement2Kind(const wchar_t* NamespaceURI, const wchar_t* TagN
     return curEle->xldef->Tags[TagName]->endToken;
 }
 
-int XmlScanner::Attribute2Kind(const wchar_t* NamespaceURI, const wchar_t* AttrName) {
+int XmlScanner::Attribute2Kind(const char* NamespaceURI, const char* AttrName) {
     XmlLangDefinition *xldef;
     tagStackEle *curEle = tagStack.top();
 
-    if (!coco_string_compareto(NamespaceURI, L""))
+    if (!strcmp(NamespaceURI, ""))
         xldef = curEle->xldef;
     else {
-        map<const wchar_t*, XmlLangDefinition*>::iterator it1=XmlLangMap.find(NamespaceURI);
+        map<const char*, XmlLangDefinition*>::iterator it1=XmlLangMap.find(NamespaceURI);
         if (it1 == XmlLangMap.end())
             return useKindVector[(int)Token::UNKNOWN_ATTR_NAMESPACE];
         else 
             xldef = XmlLangMap[NamespaceURI];
     }
-    map<const wchar_t*, int>::iterator it2=xldef->Attrs.find(AttrName);
+    map<const char*, int>::iterator it2=xldef->Attrs.find(AttrName);
     if (it2 == xldef->Attrs.end())
         return useKindVector[(int)Token::UNKNOWN_ATTR];
     return xldef->Attrs[AttrName];
 }
 
-int XmlScanner::ProcessingInstruction2Kind(const wchar_t* PIName) {
+int XmlScanner::ProcessingInstruction2Kind(const char* PIName) {
     tagStackEle *curEle = tagStack.top();
 
-    map<const wchar_t*, int>::iterator it=curEle->xldef->PInstructions.find(PIName);
+    map<const char*, int>::iterator it=curEle->xldef->PInstructions.find(PIName);
     if (it == curEle->xldef->PInstructions.end())
         return useKindVector[(int)Token::UNKNOWN_PROCESSING_INSTRUCTION];
     return curEle->xldef->PInstructions[PIName];
@@ -557,26 +348,33 @@ int is_xml_whitespace(const char *s, int len)
 void XMLCALL startElementHandler(void *userData, const char *name, const char **atts)
 {
     XmlScanner *scanner=(XmlScanner *)userData;
-    wchar_t *wname = coco_string_create(name);
-    wchar_t *nm=NULL, *elename=NULL;
+    char *wname = strdup(name);
+    char *nm=NULL, *elename=NULL;
     int kind;
 
     /* clear text string */
     scanner->charDatas.clear();
 
     /* append start element */
-    int inx = coco_string_indexof(wname, L':');
+    char* p = strchr(wname, ':');
+    int inx = -1;
+    if(p){
+        inx = p - wname;
+    }
+
     if(inx>0){
         /* have namespace indication */
-        nm = coco_string_create(wname, 0, inx);
-        elename = coco_string_create(wname, inx+1, strlen(name)-(inx+1));
+        nm = strdup(wname);
+        nm[inx] = '\0'; 
+
+        elename = strdup(wname+inx+1);
     }else{
         /* No namespace */
-        nm = coco_string_create("");
-        elename = coco_string_create(wname);
+        nm = strdup("");
+        elename = strdup(wname);
     }
     kind = scanner->StartElement2Kind(nm, elename);
-    //wprintf(L"Start(%s:%d)get namespace:[%ls], start elename:[%ls]\n", name, kind, nm, elename);
+    //printf("Start(%s:%d)get namespace:[%s], start elename:[%s]\n", name, kind, nm, elename);
     scanner->AppendToken(kind, 0, 0, elename);
 
     if (kind < 0) 
@@ -584,37 +382,37 @@ void XMLCALL startElementHandler(void *userData, const char *name, const char **
     
     inx = 0;
     while(*(atts+inx)){
-        wchar_t *wkey=NULL, *wvalue=NULL;
+        char *wkey=NULL, *wvalue=NULL;
 
-        wkey = coco_string_create(atts[inx+0]);
-        wvalue = coco_string_create(atts[inx+1]);
-        //wprintf(L"\t key:%ls, value:%ls\n", wkey, wvalue);
+        wkey = strdup(atts[inx+0]);
+        wvalue = strdup(atts[inx+1]);
+        //printf("\t key:%s, value:%s\n", wkey, wvalue);
         inx += 2;
         
         kind = scanner->Attribute2Kind(nm, wkey);
 
         scanner->AppendToken(kind, 0/*line number*/, 0/*line position*/, wvalue);
-        coco_string_delete(wkey);
-        coco_string_delete(wvalue);        
+        free(wkey);
+        free(wvalue);        
     }
 
 out:
-    coco_string_delete(wname);
-    coco_string_delete(nm);
-    coco_string_delete(elename);
+    free(wname);
+    free(nm);
+    free(elename);
 }
 
 void XMLCALL endElementHandler(void *userData, const char *name)
 {
     XmlScanner *scanner=(XmlScanner *)userData;
-    wchar_t *wname = coco_string_create(name);
-    wchar_t *nm=NULL, *elename=NULL;
+    char *wname = strdup(name);
+    char *nm=NULL, *elename=NULL;
     int kind;
 
     /* append text string */
     if(!scanner->charDatas.empty()){
         tagStackEle* curEle = scanner->tagStack.top();
-        wchar_t* value;
+        char* value;
         int len = 0, opt;
         unsigned int i;
         char *buf;
@@ -630,7 +428,7 @@ void XMLCALL endElementHandler(void *userData, const char *name)
             off += ele->len;
         }
         buf[len] = 0;
-        value = coco_string_create(buf);
+        value = strdup(buf);
         /* clear text string */
         scanner->charDatas.clear();
 
@@ -646,27 +444,33 @@ void XMLCALL endElementHandler(void *userData, const char *name)
         kind = curEle->xldef->useVector[(int)opt] ? scanner->useKindVector[(int)opt] : -1;
         scanner->AppendToken(kind, 0, 0, value);
 
-        coco_string_delete(value);
+        free(value);
     }
 
     /* append end element */
-    int inx = coco_string_indexof(wname, L':');
+    char* p = strchr(wname, ':');
+    int inx = -1;
+    if(p){
+        inx = p - wname;
+    }
     if(inx>0){
         /* have namespace indication */
-        nm = coco_string_create(wname, 0, inx+1);
-        elename = coco_string_create(wname, inx+1, strlen(name)-(inx+1));
+        nm = strdup(wname);
+        nm[inx] = '\0';
+
+        elename = strdup(wname+inx+1);
     }else{
         /* No namespace */
-        nm = coco_string_create("");
-        elename = coco_string_create(wname);
+        nm = strdup("");
+        elename = strdup(wname);
     }
     kind = scanner->EndElement2Kind(nm, elename);
-    //wprintf(L"End(%s:%d)get namespace:[%ls], start elename:[%ls]\n", name, kind, nm, elename);
+    //printf("End(%s:%d)get namespace:[%s], start elename:[%s]\n", name, kind, nm, elename);
     scanner->AppendToken(kind, 0, 0, elename);
 
-    coco_string_delete(wname);
-    coco_string_delete(nm);
-    coco_string_delete(elename);
+    free(wname);
+    free(nm);
+    free(elename);
 }
 
 void XMLCALL charDataHandler(void *userData, const XML_Char *s, int len)
@@ -684,17 +488,17 @@ void XMLCALL charDataHandler(void *userData, const XML_Char *s, int len)
 void XMLCALL processingInstructionHandler(void *userData, const XML_Char *target, const XML_Char *data)
 {
     XmlScanner *scanner=(XmlScanner *)userData;
-    wchar_t *wtarget, *wdata;
+    char *wtarget, *wdata;
     int kind;
     
-    wtarget = coco_string_create(target);
-    wdata = coco_string_create(data);
+    wtarget = strdup(target);
+    wdata = strdup(data);
     
     kind = scanner->ProcessingInstruction2Kind(wtarget);
     scanner->AppendToken(kind, 0, 0, wdata);
 
-    coco_string_delete(wtarget);
-    coco_string_delete(wdata);
+    free(wtarget);
+    free(wdata);
 }
 
 void XMLCALL commentHandler(void *userData, const XML_Char *data)
@@ -702,7 +506,7 @@ void XMLCALL commentHandler(void *userData, const XML_Char *data)
     XmlScanner *scanner=(XmlScanner *)userData;
     int opt;
     tagStackEle* curEle = scanner->tagStack.top();
-    wchar_t *value = coco_string_create(data);
+    char *value = strdup(data);
     int kind;
 
     if (curEle->unknownNamespace) opt = Token::UNS_CDATA;
@@ -713,7 +517,7 @@ void XMLCALL commentHandler(void *userData, const XML_Char *data)
     
     scanner->AppendToken(kind, 0, 0, value);
     
-    coco_string_delete(value);
+    free(value);
 }
 
 void XMLCALL cdataHandler(void *userData)
@@ -721,7 +525,7 @@ void XMLCALL cdataHandler(void *userData)
     XmlScanner *scanner=(XmlScanner *)userData;
     int opt;
     tagStackEle* curEle = scanner->tagStack.top();
-    wchar_t *value = coco_string_create((char *)userData);
+    char *value = strdup((char *)userData);
     int kind;
 
     if (curEle->unknownNamespace) opt = Token::UNS_CDATA;
@@ -732,10 +536,10 @@ void XMLCALL cdataHandler(void *userData)
     
     scanner->AppendToken(kind, 0, 0, value);
     
-    coco_string_delete(value);
+    free(value);
 }
 
-void XmlScanner::AppendToken(int kind, int linenumber, int lineposition, wchar_t* value)
+void XmlScanner::AppendToken(int kind, int linenumber, int lineposition, char* value)
 {    
     Token* new_token = NULL;
 
@@ -745,8 +549,8 @@ void XmlScanner::AppendToken(int kind, int linenumber, int lineposition, wchar_t
     new_token->kind = kind;
     new_token->line = linenumber;
     new_token->col = lineposition;
-    new_token->val = value?coco_string_create(value):NULL;
-    //wprintf(L"F:%s,%d, append:%ls(%d)\n", __FUNCTION__, __LINE__, new_token->val, kind);
+    new_token->val = value?strdup(value):NULL;
+    //printf("F:%s,%d, append:%s(%d)\n", __FUNCTION__, __LINE__, new_token->val, kind);
     tokens.push_back(new_token);
 }
 
@@ -786,7 +590,7 @@ Token* XmlScanner::Scan () {
     Token* token;
     if (tokens.size() == 0) AppendTokens();
     token = tokens.front();
-    //wprintf(L"F:%s,%d, token->kind:%d\n", __FUNCTION__, __LINE__, token->kind);
+    //printf("F:%s,%d, token->kind:%d\n", __FUNCTION__, __LINE__, token->kind);
     tokens.erase(tokens.begin());
     return token;
 }

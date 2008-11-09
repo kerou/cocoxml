@@ -110,7 +110,7 @@ namespace CocoXml{
         PInstructions.insert(make_pair(pinstruction, value));
     }
     void XmlLangDefinition::Write(FILE* gen){
-        int option;
+        unsigned int option;
         for (option = 0; option < useVector.size(); ++option)
             if (useVector[option]){
                 const char *optionname = enum_options[option].name;
@@ -123,14 +123,14 @@ namespace CocoXml{
             }
         map<const wchar_t*, TagInfo*>::iterator iter;
         for (iter=Tags.begin(); iter!=Tags.end(); ++iter)
-            fwprintf(gen, L"    curXLDef->AddTag(L%ls, %d, %d);\n", 
+            fwprintf(gen, L"    curXLDef->AddTag(%ls, %d, %d);\n", 
                      iter->first, iter->second->startToken, iter->second->endToken);
         map<const wchar_t*, int>::iterator iter1;
         for (iter1=Attrs.begin(); iter1!=Attrs.end(); ++iter1)
-            fwprintf(gen, L"    curXLDef->AddAttr(L%ls, %d);\n", iter1->first, iter1->second);
+            fwprintf(gen, L"    curXLDef->AddAttr(%ls, %d);\n", iter1->first, iter1->second);
         map<const wchar_t*, int>::iterator iter2;
         for (iter2=PInstructions.begin(); iter2!=PInstructions.end(); ++iter2)
-            fwprintf(gen, L"    curXLDef->AddProcessInstruction(L%ls, %d);\n", iter2->first, iter2->second);
+            fwprintf(gen, L"    curXLDef->AddProcessInstruction(%ls, %d);\n", iter2->first, iter2->second);
     }
     XmlScannerData::XmlScannerData(Parser *parser){
         this->tab = parser->tab;
@@ -223,7 +223,7 @@ namespace CocoXml{
             for (iter=XmlLangMap.begin(); iter!=XmlLangMap.end(); ++iter){
                 fwprintf(gen, L"    curXLDef = new XmlLangDefinition();\n");
                 iter->second->Write(gen);
-                fwprintf(gen, L"    XmlLangMap.insert(make_pair(L\"%ls\", curXLDef));\n", iter->first);
+                fwprintf(gen, L"    XmlLangMap.insert(make_pair(\"%ls\", curXLDef));\n", iter->first);
             }
         }
     }
