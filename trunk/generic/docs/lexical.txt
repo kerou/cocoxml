@@ -1,0 +1,37 @@
+DFA 确定自动机。
+
+State 是有限自动机的状态(结点)，Node、Symbol、State 对象的管理，都是保存到一个数组或者列表之中，并在新建对象时把列表现有元素的个数作为对象序列号。只是 State 是用链表管理，而Node、Symbol是用ArrayList管理；
+Action 有限自动机的动作；
+Target 实际上是一个 State 的列表(State内部的next用作连接管理链表)；
+Melted 是把一个 State 和一个 BitArray 关联起来。
+Melted 的作用，是把一个 State 和一个 BitArray 关联起来。可以从 State 的 id 查找到对应的 BitArray( BitArray MeltedSet(int nr) )。可以从 BitArray 查找到对应的 State( Melted StateWithSet(BitArray s) )；
+Comment 一个实例对应一个注释方式；
+CharSet 是字符集；
+CharClass 是有名字的字符集，也就是给 CharSet 加了个名字而已。
+
+State 对象的三个成员函数：
+AddAction：为状态对象增加新的动作。State 含有一个按照动作类型排序的动作对象列表，在该列表中 CharClass 动作被放置在 Chr 动作之前以改善性能。
+DetachAction 在动作列表中搜索给出对象并从列表中删除它。
+MeltWith 把给出 State 对象 s 的动作列表合并到当前 State 对象中。(实现细节：当前 State 对象新增的 Action 对象是复制的 Action 对象，所以 Action 对象应该有一个 Clone 功能)
+
+Action 的成员 typ 可能的值是: clas、chr，这里又借用别人的类型值。或许应该分成两个派生类比较好。或者是 State 对象中管理两个 Action 链表(或数组)，一个管理 clas，一个管理chr。
+Action 对象附带一个 Target 对象，也就是 State 列表。即一个动作的目标可能到达的目标状态。
+Symbols 成员根据 typ 的不同含义不同。如果是 clas 则返回以 sym 为序列号的 CharClass；如果是 chr，则 sym 被看作字符，并返回只含有该字符的 CharSet。
+ShiftWith 根据 CharSet s 的值设定/修改自身数据成员，具体作用不详。在 ShiftWith 中可能遭遇未命名的字符集，这时候就定义以“#”为名称的字符集。这是可能造成重名的。
+
+DFA 类：
+成员 maxStates、lastStateNr、firstState、lastState、lastSimState。
+
+NewState：新建一个 State 对象，并纳入 State 列表进行管理。
+NewTransition：创建一个从 from 状态到 to 状态的 Action 对象，并指定该 Action 对象的类型，字符和 tc。
+CombineShifts：扫描所有结点的所有动作，把起点与终点完全相同的Action对象全部合并成一个。
+FindUsedStates：是一个递归实现的函数，BitArray used 是其输出。即把所有从给定状态能够达到的状态，设置到 used 之中。
+DeleteRedundantStates：删除冗余状态。具体步骤是：
+    首先找出 firstState 可能到达的所有状态(通过FindUsedStates)。在随后的处理中只处理从 firstState 可到达的这部分状态。
+    判断任意两个终结状态(可为状态增加一个 isFinal 以判断当前状态是否是终结状态)是否生成相同的符号，如果发现生成相同状态的符号，则进行合并。即把其中的一个状态标志为无效，并把所有指向它的 Action 改为指向仍然有效的那个状态。(两个for循环)
+    对剩下的状态进行重新编号。即重新从0开始逐个加一，这也许就是 State 对象没有用 ArrayList管理的原因吧？当然细心设计的话仍然是可以用 ArrayList 的。
+TheState：如果给出的 Node 已含有 state，那么就返回该state；否则就自动生成一个以curSy为终点的终点状态。Node 一定是 t 或者 pr 类型的结点。
+Step：
+NumberNodes：
+FindTrans：
+ConvertToStates：
