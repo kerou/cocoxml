@@ -132,7 +132,7 @@ CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
     cur = s; slast = s + strlen(s);
     while (cur < slast) {
 	p = CcLexical_NewNodeCHR(self, CcsUTF8GetCh(&cur, slast));
-	if (g->r == NULL)  g->l = p;
+	if (g->r == NULL)  g->head = p;
 	else g->r->next = p;
 	g->r = p;
     }

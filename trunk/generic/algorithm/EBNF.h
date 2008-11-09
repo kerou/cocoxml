@@ -44,7 +44,7 @@ struct CcNode_s {
 };
 
 struct CcGraph_s {
-    CcNode_t * l;
+    CcNode_t * head;
     CcNode_t * r;
 };
 

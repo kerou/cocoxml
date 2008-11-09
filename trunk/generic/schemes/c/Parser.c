@@ -311,7 +311,7 @@ CcsParser_Coco(CcsParser_t * self) {
 	    CcsParser_Get(self);
 	    nested = TRUE;
 	}
-	CcLexical_NewComment(self->lexical, self->t, g1->l, g2->l, nested);
+	CcLexical_NewComment(self->lexical, self->t, g1->head, g2->head, nested);
     }
     while (self->la->kind == 15) {
 	CcsParser_Get(self);
@@ -357,7 +357,7 @@ CcsParser_Coco(CcsParser_t * self) {
 	}
 	CcsParser_ExpectWeak(self, 17, 3);
 	CcsParser_Expression(self, &g);
-	((CcSymbolNT_t *)sym)->graph = g->l;
+	((CcSymbolNT_t *)sym)->graph = g->head;
 	CcGraph_Finish(g);
 	
 	CcsParser_ExpectWeak(self, 18, 4);
@@ -456,7 +456,7 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcSymbolType_t * typ) {
 	CcGraph_Finish(g);
 	if (self->tokenString == NULL ||
 	    !strcmp(self->tokenString, self->noString))
-	    CcLexical_ConvertToStates(self->lexical, g->l, sym);
+	    CcLexical_ConvertToStates(self->lexical, g->head, sym);
 	else { /* CcsParser_TokenExpr is a single string */
 	    if (CcHashTable_Get(&self->lexical->literals,
 				self->tokenString) != NULL)
@@ -910,7 +910,7 @@ CcsParser_TokenTerm(CcsParser_t * self, CcGraph_t ** g) {
 	CcsParser_Get(self);
 	CcsParser_Expect(self, 30);
 	CcsParser_TokenExpr(self, &g2);
-	CcLexical_SetContextTrans(self->lexical, g2->l);
+	CcLexical_SetContextTrans(self->lexical, g2->head);
 	self->lexical->hasCtxMoves = TRUE;
 	CcGraph_MakeSequence(*g, g2);
 	CcsParser_Expect(self, 31);

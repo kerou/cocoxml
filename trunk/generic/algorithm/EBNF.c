@@ -88,7 +88,7 @@ CcGraph_t *
 CcGraph(void)
 {
     CcGraph_t * self = CcMalloc(sizeof(CcGraph_t));
-    self->l = self->r = NULL;
+    self->head = self->r = NULL;
     return self;
 }
 
@@ -96,7 +96,7 @@ CcGraph_t *
 CcGraphP(CcNode_t * p)
 {
     CcGraph_t * self = CcMalloc(sizeof(CcGraph_t));
-    self->l = self->r = p;
+    self->head = self->r = p;
     return self;
 }
 
@@ -143,36 +143,36 @@ CcNode_DelNode(CcNode_t * self)
 CcNode_t *
 CcGraph_MakeFirstAlt(CcGraph_t * self, int n)
 {
-    self->l = CcNode_NewWithSub(node_alt, n, self->l);
-    self->l->line = self->l->sub->line;
-    self->l->next = self->r;
-    self->r = self->l;
-    return self->l;
+    self->head = CcNode_NewWithSub(node_alt, n, self->head);
+    self->head->line = self->head->sub->line;
+    self->head->next = self->r;
+    self->r = self->head;
+    return self->head;
 }
 
 CcNode_t *
 CcGraph_MakeAlternative(CcGraph_t * self, CcGraph_t * g2, int n)
 {
     CcNode_t * p;
-    g2->l = CcNode_NewWithSub(node_alt, n, g2->l);
-    g2->l->line = g2->l->sub->line;
-    p = self->l; while (p->down != NULL) p = p->down;
-    p->down = g2->l;
+    g2->head = CcNode_NewWithSub(node_alt, n, g2->head);
+    g2->head->line = g2->head->sub->line;
+    p = self->head; while (p->down != NULL) p = p->down;
+    p->down = g2->head;
     p = self->r; while (p->next != NULL) p = p->next;
     /* Append alternative to self end list. */
-    p->next = g2->l;
+    p->next = g2->head;
     /* Append g2 end list to self end list. */
-    g2->l->next = g2->r;
-    return g2->l;
+    g2->head->next = g2->r;
+    return g2->head;
 }
 
 void
 CcGraph_MakeSequence(CcGraph_t * self, CcGraph_t * g2)
 {
     CcNode_t * q, * p;
-    p = self->r->next; self->r->next = g2->l; /* link head node */
+    p = self->r->next; self->r->next = g2->head; /* link head node */
     while (p != NULL) { /* link substructure */
-	q = p->next; p->next = g2->l; p->up = TRUE;
+	q = p->next; p->next = g2->head; p->up = TRUE;
 	p = q;
     }
     self->r = g2->r;
@@ -182,23 +182,23 @@ CcNode_t *
 CcGraph_MakeIteration(CcGraph_t * self, int n)
 {
     CcNode_t * p , * q;
-    self->l = CcNode_NewWithSub(node_iter, n, self->l);
+    self->head = CcNode_NewWithSub(node_iter, n, self->head);
     p = self->r;
-    self->r = self->l;
+    self->r = self->head;
     while (p != NULL) {
-	q = p->next; p->next = self->l; p->up = TRUE;
+	q = p->next; p->next = self->head; p->up = TRUE;
 	p = q;
     }
-    return self->l;
+    return self->head;
 }
 
 CcNode_t *
 CcGraph_MakeOption(CcGraph_t * self, int n)
 {
-    self->l = CcNode_NewWithSub(node_opt, n, self->l);
-    self->l->next = self->r;
-    self->r = self->l;
-    return self->l;
+    self->head = CcNode_NewWithSub(node_opt, n, self->head);
+    self->head->next = self->r;
+    self->r = self->head;
+    return self->head;
 }
 
 void
