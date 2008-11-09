@@ -28,7 +28,7 @@ CcArrayList(CcArrayList_t * self)
 {
     self->Count = 0;
     self->Capacity = 16;
-    self->Data = CcMalloc(sizeof(void *) * self->Capacity);
+    self->Objects = CcMalloc(sizeof(void *) * self->Capacity);
     return self;
 }
 
@@ -36,7 +36,7 @@ void
 CcArrayList_Destruct(CcArrayList_t * self)
 {
     CcArrayList_Clear(self);
-    if (self->Data)  CcFree(self->Data);
+    if (self->Objects)  CcFree(self->Objects);
 }
 
 void
@@ -45,20 +45,20 @@ CcArrayList_Add(CcArrayList_t * self, CcObject_t * value)
     int newCapacity;
     if (self->Count >= self->Capacity) {
 	newCapacity = self->Capacity + self->Capacity;
-	self->Data = CcRealloc(self->Data, sizeof(void *) * newCapacity);
+	self->Objects = CcRealloc(self->Objects, sizeof(void *) * newCapacity);
 	self->Capacity = newCapacity;
     }
-    self->Data[self->Count++] = value;
+    self->Objects[self->Count++] = value;
 }
 
 void
 CcArrayList_Remove(CcArrayList_t * self, CcObject_t * value)
 {
     CcObject_t ** cur;
-    for (cur = self->Data; cur - self->Data < self->Count; ++cur)
+    for (cur = self->Objects; cur - self->Objects < self->Count; ++cur)
 	if (*cur == value) {
 	    memmove(cur, cur + 1,
-		    sizeof(void *) * (self->Count - (cur + 1 - self->Data)));
+		    sizeof(void *) * (self->Count - (cur + 1 - self->Objects)));
 	    --self->Count;
 	    break;
 	}
@@ -67,7 +67,7 @@ CcArrayList_Remove(CcArrayList_t * self, CcObject_t * value)
 CcObject_t *
 CcArrayList_Get(CcArrayList_t * self, int index)
 {
-    return (index >= 0 && index < self->Count) ? self->Data[index] : NULL;
+    return (index >= 0 && index < self->Count) ? self->Objects[index] : NULL;
 }
 
 void
@@ -75,5 +75,19 @@ CcArrayList_Clear(CcArrayList_t * self)
 {
     int idx;
     for (idx = 0; idx < self->Count; ++idx)
-	CcObject_VDestruct(self->Data[idx]);
+	CcObject_VDestruct(self->Objects[idx]);
+}
+
+void
+CcArrayList_Filter(CcArrayList_t * self, CcArrayList_FilterFunc_t func)
+{
+    int curidx, newidx;
+    CcObject_t * obj;
+
+    newidx = 0;
+    for (curidx = 0; curidx < self->Count; ++curidx) {
+	if ((obj = func(self->Objects[curidx], curidx, newidx)))
+	    self->Objects[newidx++] = obj;
+    }
+    self->Count = newidx;
 }

@@ -33,7 +33,7 @@ EXTC_BEGIN
 struct CcArrayList_s {
     int Count;
     int Capacity;
-    CcObject_t ** Data;
+    CcObject_t ** Objects;
 };
 
 CcArrayList_t * CcArrayList(CcArrayList_t * self);
@@ -42,6 +42,10 @@ void CcArrayList_Add(CcArrayList_t * self, CcObject_t * value);
 void CcArrayList_Remove(CcArrayList_t * self, CcObject_t * value);
 CcObject_t * CcArrayList_Get(CcArrayList_t * self, int index);
 void CcArrayList_Clear(CcArrayList_t * self);
+
+typedef CcObject_t *
+(* CcArrayList_FilterFunc_t)(CcObject_t * object, int curidx, int newidx);
+void CcArrayList_Filter(CcArrayList_t * self, CcArrayList_FilterFunc_t func);
 
 EXTC_END
 
