@@ -80,7 +80,7 @@ Rss = (. ChannelClass *channel; rss = new RssClass(); .)
 Channel<.ChannelClass* &channel.> = (. channel = new ChannelClass(); .)
     CHANNEL { ChannelProperty<channel> } END_CHANNEL.
 
-ChannelProperty<ChannelClass *channel>  (. wchar_t* value;
+ChannelProperty<ChannelClass *channel>  (. char* value;
                          CloudClass *cloud;
                      ImageClass *image;
                      TextInputClass *textInput;
@@ -120,7 +120,7 @@ Cloud<.CloudClass* &cloud.> = (. cloud = new CloudClass(); .)
 Image<.ImageClass* &image.> = (. image = new ImageClass(); .)
     IMAGE { ImageProperty<image> } END_IMAGE.
 
-ImageProperty<ImageClass *image>  (. wchar_t* value; .) =
+ImageProperty<ImageClass *image>  (. char* value; .) =
     Url<.value.>      (. image->url = value; .)
     | Title<.value.>  (. image->title = value; .)
     | Link<.value.>   (. image->link = value; .)
@@ -131,7 +131,7 @@ ImageProperty<ImageClass *image>  (. wchar_t* value; .) =
 TextInput<.TextInputClass* &textInput.> = (. textInput = new TextInputClass(); .)
     TEXT_INPUT { TextInputProperty<textInput> } END_TEXT_INPUT.
 
-TextInputProperty<TextInputClass* &textInput> (. wchar_t* value; .) =
+TextInputProperty<TextInputClass* &textInput> (. char* value; .) =
     Title<.value.>         (. textInput->title = value; .)
     | Description<.value.> (. textInput->description = value; .)
     | Name<.value.>        (. textInput->name = value; .)
@@ -141,7 +141,7 @@ TextInputProperty<TextInputClass* &textInput> (. wchar_t* value; .) =
 Item<.ItemClass* &item.> = (. item = new ItemClass(); .)
     ITEM { ItemProperty<item> } END_ITEM.
 
-ItemProperty<ItemClass *item> (. wchar_t* value; ImageClass *image; .) =
+ItemProperty<ItemClass *item> (. char* value; ImageClass *image; .) =
     Title<.value.>          (. item->title = value; .)
     | Link<.value.>         (. item->link = value; .)
     | Description<.value.>  (. item->description = value; .)
@@ -156,54 +156,54 @@ ItemProperty<ItemClass *item> (. wchar_t* value; ImageClass *image; .) =
 .
 
 
-Title<.wchar_t* &value.> = TITLE TEXT (. value = coco_string_create(t->val); .) END_TITLE.
+Title<.char* &value.> = TITLE TEXT (. value = strdup(t->val); .) END_TITLE.
 
-Link<.wchar_t* &value.> = LINK TEXT (. value = coco_string_create(t->val); .) END_LINK .
+Link<.char* &value.> = LINK TEXT (. value = strdup(t->val); .) END_LINK .
 
-Description<.wchar_t* &value.> = DESCRIPTION TEXT (. value = coco_string_create(t->val); .) END_DESCRIPTION .
+Description<.char* &value.> = DESCRIPTION TEXT (. value = strdup(t->val); .) END_DESCRIPTION .
 
-Language<.wchar_t* &value.> = LANGUAGE TEXT (. value = coco_string_create(t->val); .) END_LANGUAGE.
+Language<.char* &value.> = LANGUAGE TEXT (. value = strdup(t->val); .) END_LANGUAGE.
 
-Copyright<.wchar_t* &value.> = COPYRIGHT TEXT (. value = coco_string_create(t->val); .) END_COPYRIGHT.
+Copyright<.char* &value.> = COPYRIGHT TEXT (. value = strdup(t->val); .) END_COPYRIGHT.
 
-ManagingEditor<.wchar_t* &value.> = MANAGING_EDITOR TEXT (. value = coco_string_create(t->val); .) END_MANAGING_EDITOR.
+ManagingEditor<.char* &value.> = MANAGING_EDITOR TEXT (. value = strdup(t->val); .) END_MANAGING_EDITOR.
 
-WebMaster<.wchar_t* &value.> = WEB_MASTER TEXT (. value = coco_string_create(t->val); .) END_WEB_MASTER.
+WebMaster<.char* &value.> = WEB_MASTER TEXT (. value = strdup(t->val); .) END_WEB_MASTER.
 
-PubDate<.wchar_t* &value.> = PUB_DATE TEXT (. value = coco_string_create(t->val); .) END_PUB_DATE.
+PubDate<.char* &value.> = PUB_DATE TEXT (. value = strdup(t->val); .) END_PUB_DATE.
 
-LastBuildDate<.wchar_t* &value.> = LAST_BUILD_DATE TEXT (. value = coco_string_create(t->val); .) END_LAST_BUILD_DATE.
+LastBuildDate<.char* &value.> = LAST_BUILD_DATE TEXT (. value = strdup(t->val); .) END_LAST_BUILD_DATE.
 
-Category<.wchar_t* &value.> = CATEGORY TEXT (. value = coco_string_create(t->val); .) END_CATEGORY.
+Category<.char* &value.> = CATEGORY TEXT (. value = strdup(t->val); .) END_CATEGORY.
 
-Generator<.wchar_t* &value.> = GENERATOR TEXT (. value = coco_string_create(t->val); .) END_GENERATOR.
+Generator<.char* &value.> = GENERATOR TEXT (. value = strdup(t->val); .) END_GENERATOR.
 
-Docs<.wchar_t* &value.> = DOCS TEXT (. value = coco_string_create(t->val); .) END_DOCS.
+Docs<.char* &value.> = DOCS TEXT (. value = strdup(t->val); .) END_DOCS.
 
-Ttl<.wchar_t* &value.> = TTL TEXT (. value = coco_string_create(t->val); .) END_TTL.
+Ttl<.char* &value.> = TTL TEXT (. value = strdup(t->val); .) END_TTL.
 
-Url<.wchar_t* &value.> = URL TEXT (. value = coco_string_create(t->val); .) END_URL.
+Url<.char* &value.> = URL TEXT (. value = strdup(t->val); .) END_URL.
 
-Width<.wchar_t* &value.> = WIDTH TEXT (. value = coco_string_create(t->val); .) END_WIDTH.
+Width<.char* &value.> = WIDTH TEXT (. value = strdup(t->val); .) END_WIDTH.
 
-Height<.wchar_t* &value.> = HEIGHT TEXT (. value = coco_string_create(t->val); .) END_HEIGHT.
+Height<.char* &value.> = HEIGHT TEXT (. value = strdup(t->val); .) END_HEIGHT.
 
-Rating<.wchar_t* &value.> = RATING TEXT (. value = coco_string_create(t->val); .) END_RATING.
+Rating<.char* &value.> = RATING TEXT (. value = strdup(t->val); .) END_RATING.
 
-Name<.wchar_t* &value.> = NAME TEXT (. value = coco_string_create(t->val); .) END_NAME.
+Name<.char* &value.> = NAME TEXT (. value = strdup(t->val); .) END_NAME.
 
-SkipHours<.wchar_t* &value.> = SKIP_HOURS TEXT (. value = coco_string_create(t->val); .) END_SKIP_HOURS.
+SkipHours<.char* &value.> = SKIP_HOURS TEXT (. value = strdup(t->val); .) END_SKIP_HOURS.
 
-SkipDays<.wchar_t* &value.> = SKIP_DAYS TEXT (. value = coco_string_create(t->val); .) END_SKIP_DAYS.
+SkipDays<.char* &value.> = SKIP_DAYS TEXT (. value = strdup(t->val); .) END_SKIP_DAYS.
 
-Author<.wchar_t* &value.> = AUTHOR TEXT (. value = coco_string_create(t->val); .) END_AUTHOR.
+Author<.char* &value.> = AUTHOR TEXT (. value = strdup(t->val); .) END_AUTHOR.
 
-Comments<.wchar_t* &value.> = COMMENTS TEXT (. value = coco_string_create(t->val); .) END_COMMENTS.
+Comments<.char* &value.> = COMMENTS TEXT (. value = strdup(t->val); .) END_COMMENTS.
 
-Enclosure<.wchar_t* &value.> = ENCLOSURE TEXT (. value = coco_string_create(t->val); .) END_ENCLOSURE.
+Enclosure<.char* &value.> = ENCLOSURE TEXT (. value = strdup(t->val); .) END_ENCLOSURE.
 
-Guid<.wchar_t* &value.> = GUID TEXT (. value = coco_string_create(t->val); .) END_GUID.
+Guid<.char* &value.> = GUID TEXT (. value = strdup(t->val); .) END_GUID.
 
-Source<.wchar_t* &value.> = SOURCE TEXT (. value = coco_string_create(t->val); .) END_SOURCE.
+Source<.char* &value.> = SOURCE TEXT (. value = strdup(t->val); .) END_SOURCE.
 
 END Rss.

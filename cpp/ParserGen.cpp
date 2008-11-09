@@ -131,7 +131,7 @@ void ParserGen::GenErrorMsg (int errTyp, Symbol *sym) {
 	errorNr++;
 	const int formatLen = 1000;
 	wchar_t format[formatLen];
-	coco_swprintf(format, formatLen, L"\t\t\tcase %d: s = coco_string_create(L\"", errorNr);
+	coco_swprintf(format, formatLen, L"\t\t\tcase %d: s = strdup(\"", errorNr);
 	coco_string_merge(err, format);
 	if (errTyp == tErr) {
 		if (sym->name[0] == L'"') {

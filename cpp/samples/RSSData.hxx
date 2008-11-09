@@ -24,11 +24,11 @@ using namespace std;
 
 class CloudClass {
 public:
-    wchar_t* domain;
-    wchar_t* port;
-    wchar_t* path;
-    wchar_t* registerProcedure;
-    wchar_t* protocol;
+    char* domain;
+    char* port;
+    char* path;
+    char* registerProcedure;
+    char* protocol;
     
     CloudClass();
     void Print();
@@ -36,11 +36,11 @@ public:
 
 class ImageClass {
 public:
-    wchar_t* url;
-    wchar_t* title;
-    wchar_t* link;
-    wchar_t* width;
-    wchar_t* height;
+    char* url;
+    char* title;
+    char* link;
+    char* width;
+    char* height;
 
     ImageClass();
     void Print();
@@ -48,10 +48,10 @@ public:
 
 class TextInputClass {
 public:
-    wchar_t* title;
-    wchar_t* description;
-    wchar_t* name;
-    wchar_t* link;
+    char* title;
+    char* description;
+    char* name;
+    char* link;
 
     TextInputClass();
     void Print();
@@ -59,16 +59,16 @@ public:
 
 class ItemClass {
 public:
-    wchar_t* title;
-    wchar_t* link;
-    wchar_t* description;
-    wchar_t* author;
-    wchar_t* category;
-    wchar_t* comments;
-    wchar_t* enclosure;
-    wchar_t* guid;
-    wchar_t* pubdate;
-    wchar_t* source;
+    char* title;
+    char* link;
+    char* description;
+    char* author;
+    char* category;
+    char* comments;
+    char* enclosure;
+    char* guid;
+    char* pubdate;
+    char* source;
     ImageClass*  image;
 
     ItemClass();
@@ -77,25 +77,25 @@ public:
 
 class ChannelClass {
 public:
-    wchar_t*    title;
-    wchar_t*    link;
-    wchar_t*    description;
-    wchar_t*    language;
-    wchar_t*    copyright;
-    wchar_t*    managingEditor;
-    wchar_t*    webMaster;
-    wchar_t*    pubDate;
-    wchar_t*    lastBuildDate;
-    wchar_t*    category;
-    wchar_t*    generator;
-    wchar_t*    docs;
+    char*    title;
+    char*    link;
+    char*    description;
+    char*    language;
+    char*    copyright;
+    char*    managingEditor;
+    char*    webMaster;
+    char*    pubDate;
+    char*    lastBuildDate;
+    char*    category;
+    char*    generator;
+    char*    docs;
     CloudClass* cloud;
-    wchar_t*    ttl;
+    char*    ttl;
     ImageClass* image;
-    wchar_t*    rating;
+    char*    rating;
     TextInputClass*  textInput;
-    wchar_t*    skipHours;
-    wchar_t*    skipDays;
+    char*    skipHours;
+    char*    skipDays;
     vector<ItemClass*>  itemList;
 
     ChannelClass();
