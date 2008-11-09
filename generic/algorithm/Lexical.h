@@ -56,8 +56,6 @@ struct CcLexical_s {
     CcHashTable_t   literals;
     CcMelted_t    * firstMelted;
     CcComment_t   * firstComment;
-
-    CcNode_t      * dummyNode;
 };
 
 CcLexical_t * CcLexical(CcLexical_t * self, CcGlobals_t * globals);

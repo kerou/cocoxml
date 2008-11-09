@@ -70,8 +70,6 @@ CcLexical(CcLexical_t * self, CcGlobals_t * globals)
     CcHashTable(&self->literals, SZ_LITERALS);
     self->firstMelted = NULL;
     self->firstComment = NULL;
-    self->dummyNode = CcLexical_NewNodeEPS(self);
-
     CcLexical_NewState(self);
     return self;
 }
@@ -79,7 +77,6 @@ CcLexical(CcLexical_t * self, CcGlobals_t * globals)
 void
 CcLexical_Destruct(CcLexical_t * self)
 {
-    /* CcObject_VDestruct(self->dummyNode); */
     CcHashTable_Destruct(&self->literals);
     CcArrayList_Destruct(&self->classes);
     CcArrayList_Destruct(&self->nodes);
@@ -118,7 +115,6 @@ void
 CcLexical_DeleteNodes(CcLexical_t * self)
 {
     CcArrayList_Clear(&self->nodes);
-    self->dummyNode = CcLexical_NewNodeEPS(self);
 }
 
 CcGraph_t *
@@ -133,13 +129,13 @@ CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
     if (strlen(s) == 0)
 	CcsGlobals_SemErr(&self->globals->base, t, "empty token not allowed");
     g = CcGraph();
-    g->r = self->dummyNode;
     cur = s; slast = s + strlen(s);
     while (cur < slast) {
 	p = CcLexical_NewNodeCHR(self, CcsUTF8GetCh(&cur, slast));
-	g->r->next = p; g->r = p;
+	if (g->r == NULL)  g->l = p;
+	else g->r->next = p;
+	g->r = p;
     }
-    g->l = self->dummyNode->next; self->dummyNode->next = NULL;
     CcFree(s);
     return g;
 }
