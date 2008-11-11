@@ -54,26 +54,6 @@ static const CcSymbolType_t SymbolRSLV = {
 };
 const CcSymbolType_t * symbol_rslv = &SymbolRSLV;
 
-CcSymbol_TokenKind_t
-CcSymbol_GetTokenKind(CcSymbol_t * self)
-{
-    if ((const CcSymbolType_t *)self->base.type == symbol_t)
-	return ((CcSymbolT_t *)self)->tokenKind;
-    CcsAssert((const CcSymbolType_t *)self->base.type == symbol_pr);
-    return ((CcSymbolPR_t *)self)->tokenKind;
-}
-
-void
-CcSymbol_SetTokenKind(CcSymbol_t * self, CcSymbol_TokenKind_t tokenKind)
-{
-    if ((const CcSymbolType_t *)self->base.type == symbol_t) {
-	((CcSymbolT_t *)self)->tokenKind = tokenKind;
-    } else {
-	CcsAssert((const CcSymbolType_t *)self->base.type == symbol_pr);
-	((CcSymbolPR_t *)self)->tokenKind = tokenKind;
-    }
-}
-
 CcSymbolTable_t *
 CcSymbolTable(CcSymbolTable_t * self, CcGlobals_t * globals)
 {

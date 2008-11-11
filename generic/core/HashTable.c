@@ -51,7 +51,6 @@ void CcHashTable_Destruct(CcHashTable_t * self)
     if (!self->first) return;
     for (cur = self->first; cur < self->last; ++cur) {
 	if (!*cur) continue;
-	CcObject_VDestruct((*cur)->value);
 	CcFree(*cur);
     }
     CcFree(self->first);

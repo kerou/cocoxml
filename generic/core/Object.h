@@ -33,14 +33,16 @@ EXTC_BEGIN
 struct CcObjectType_s {
     size_t size;
     const char * name;
+    void (* construct)(CcObject_t * self, va_list ap);
     void (* destruct)(CcObject_t * self);
 };
 
 struct CcObject_s {
     const CcObjectType_t * type;
+    int index;
 };
 
-CcObject_t * CcObject(const CcObjectType_t * type);
+CcObject_t * CcObject(const CcObjectType_t * type, int index, va_list ap);
 void CcObject_Destruct(CcObject_t * self);
 
 void CcObject_VDestruct(CcObject_t * self);

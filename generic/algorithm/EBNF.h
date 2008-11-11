@@ -28,10 +28,6 @@
 #include "Object.h"
 #endif
 
-struct CcNodeType_s {
-    CcObjectType_t base;
-};
-
 struct CcNode_s {
     CcObject_t   base;
     int          n;

@@ -24,11 +24,13 @@
 #include  "Object.h"
 
 CcObject_t *
-CcObject(const CcObjectType_t * type)
+CcObject(const CcObjectType_t * type, int index, va_list ap)
 {
     CcObject_t * self = CcMalloc(type->size);
     memset(self, 0, type->size);
     self->type = type;
+    self->index = index;
+    if (type->construct) type->construct(self, ap);
     return self;
 }
 

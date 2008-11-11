@@ -38,13 +38,12 @@ typedef struct CcBitArray_s CcBitArray_t;
 typedef struct CcHashTable_s CcHashTable_t;
 
 /* EBNF types */
-typedef struct CcNodeType_s CcNodeType_t;
 typedef struct CcNode_s  CcNode_t;
 typedef struct CcGraph_s CcGraph_t;
 
-extern const CcNodeType_t * node_alt;
-extern const CcNodeType_t * node_iter;
-extern const CcNodeType_t * node_opt;
+extern const CcObjectType_t * node_alt;
+extern const CcObjectType_t * node_iter;
+extern const CcObjectType_t * node_opt;
 
 /* OutputScheme types. */
 typedef struct CcOutputSchemeType_s CcOutputSchemeType_t;
@@ -58,7 +57,6 @@ typedef struct CcSyntax_s CcSyntax_t;
 typedef struct CcSymbolTable_s CcSymbolTable_t;
 
 /* Symbol */
-typedef struct CcSymbolType_s CcSymbolType_t;
 typedef struct CcSymbol_s CcSymbol_t;
 typedef struct CcSymbolT_s CcSymbolT_t;
 typedef struct CcSymbolPR_s CcSymbolPR_t;
@@ -70,11 +68,11 @@ typedef enum {
     symbol_litToken = 2,
     symbol_classLitToken = 3,
 } CcSymbol_TokenKind_t;
-extern const CcSymbolType_t * symbol_t;
-extern const CcSymbolType_t * symbol_nt;
-extern const CcSymbolType_t * symbol_pr;
-extern const CcSymbolType_t * symbol_unknown;
-extern const CcSymbolType_t * symbol_rslv;
+extern const CcObjectType_t * symbol_t;
+extern const CcObjectType_t * symbol_nt;
+extern const CcObjectType_t * symbol_pr;
+extern const CcObjectType_t * symbol_unknown;
+extern const CcObjectType_t * symbol_rslv;
 
 /* Lexical types */
 typedef struct CcAction_s CcAction_t;

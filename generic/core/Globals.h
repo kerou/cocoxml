@@ -41,11 +41,11 @@
 #endif
 
 struct CcGlobals_s {
-    CcsGlobals_t       base;
+    CcsGlobals_t      base;
 
-    CcSymbolTable_t symbolTab;
-    CcLexical_t     lexical;
-    CcSyntax_t      syntax;
+    CcSymbolTable_t   symtab;
+    CcLexical_t       lexical;
+    CcSyntax_t        syntax;
 };
 
 CcGlobals_t *

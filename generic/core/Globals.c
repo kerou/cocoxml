@@ -28,14 +28,14 @@ CcGlobals_t *
 CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
 {
     if (!CcsGlobals(&self->base, fname, errfp)) goto errquit0;
-    if (!CcSymbolTable(&self->symbolTab, self)) goto errquit1;
+    if (!CcSymbolTable(&self->symtab)) goto errquit1;
     if (!CcLexical(&self->lexical, self)) goto errquit2;
     if (!CcSyntax(&self->syntax, self)) goto errquit3;
     return self;
  errquit3:
     CcLexical_Destruct(&self->lexical);
  errquit2:
-    CcSymbolTable_Destruct(&self->symbolTab);
+    CcSymbolTable_Destruct(&self->symtab);
  errquit1:
     CcsGlobals_Destruct(&self->base);
  errquit0:
@@ -47,7 +47,7 @@ CcGlobals_Destruct(CcGlobals_t * self)
 {
     CcSyntax_Destruct(&self->syntax);
     CcLexical_Destruct(&self->lexical);
-    CcSymbolTable_Destruct(&self->symbolTab);
+    CcSymbolTable_Destruct(&self->symtab);
     CcsGlobals_Destruct(&self->base);
 }
 
