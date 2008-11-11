@@ -42,8 +42,19 @@ CcArrayList_Destruct(CcArrayList_t * self)
 CcObject_t *
 CcArrayList_New(CcArrayList_t * self, const CcObjectType_t * type, ...)
 {
-    int newCapacity;
     va_list ap;
+    CcObject_t * object;
+    va_start(ap, type);
+    object = CcArrayList_VNew(self, type, ap);
+    va_end(ap);
+    return object;
+}
+
+CcObject_t *
+CcArrayList_VNew(CcArrayList_t * self, const CcObjectType_t * type, va_list ap)
+{
+    int newCapacity;
+
     CcObject_t * object;
 
     if (self->Count >= self->Capacity) {
@@ -51,9 +62,7 @@ CcArrayList_New(CcArrayList_t * self, const CcObjectType_t * type, ...)
 	self->Objects = CcRealloc(self->Objects, sizeof(void *) * newCapacity);
 	self->Capacity = newCapacity;
     }
-    va_start(ap, type);
     object = CcObject(type, self->Count, ap);
-    va_end(ap);
     self->Objects[self->Count++] = object;
     return object;
 }

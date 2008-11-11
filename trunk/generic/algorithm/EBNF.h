@@ -24,49 +24,63 @@
 #ifndef  COCO_EBNF_H
 #define  COCO_EBNF_H
 
-#ifndef  COCO_OBJECT_H
-#include "Object.h"
+#ifndef  COCO_ARRAYLIST_H
+#include  "ArrayList.h"
 #endif
+
+typedef struct CcNodeType_s CcNodeType_t;
+typedef struct CcNode_s CcNode_t;
+typedef struct CcGraph_s CcGraph_t;
+extern const CcObjectType_t * node_alt;
+extern const CcObjectType_t * node_iter;
+extern const CcObjectType_t * node_opt;
+extern const CcObjectType_t * node_eps;
+
+struct CcNodeType_s {
+    CcObjectType_t base;
+    CcsBool_t (* deletable)(CcNode_t * self);
+};
+
+CcsBool_t CcNode_Deletable(CcNode_t * self);
+CcsBool_t CcNode_NoDeletable(CcNode_t * self);
 
 struct CcNode_s {
     CcObject_t   base;
-    int          n;
     CcNode_t   * next;
     CcNode_t   * down;
     CcNode_t   * sub;
     CcsBool_t    up;
     int          line;
-    CcState_t  * state; /* Used by CcLexical only */
 };
-
-struct CcGraph_s {
-    CcNode_t * head;
-    CcNode_t * r;
-};
-
-extern const CcNodeType_t * node_alt;
-extern const CcNodeType_t * node_iter;
-extern const CcNodeType_t * node_opt;
-extern const CcNodeType_t * node_eps;
-
-CcNode_t * CcNode(const CcNodeType_t * type, int n);
-CcNode_t * CcNode_NewWithSub(const CcNodeType_t * type, int n, CcNode_t * sub);
-void CcNode_Destruct(CcNode_t * self);
-
-CcGraph_t * CcGraph(void);
-CcGraph_t * CcGraphP(CcNode_t * p);
-void CcGraph_Destruct(CcGraph_t * self);
 
 /* Deletablity checks */
 CcsBool_t CcNode_DelGraph(CcNode_t * self);
 CcsBool_t CcNode_DelSubGraph(CcNode_t * self);
 CcsBool_t CcNode_DelNode(CcNode_t * self);
 
-CcNode_t * CcGraph_MakeFirstAlt(CcGraph_t * g, int n);
-CcNode_t * CcGraph_MakeAlternative(CcGraph_t * g1, CcGraph_t * g2, int n);
-void CcGraph_MakeSequence(CcGraph_t * g1, CcGraph_t * g2);
-CcNode_t * CcGraph_MakeIteration(CcGraph_t * g, int n);
-CcNode_t * CcGraph_MakeOption(CcGraph_t * g, int n);
-void CcGraph_Finish(CcGraph_t * g);
+struct CcGraph_s {
+    CcNode_t * head;
+    CcNode_t * r;
+};
+
+CcGraph_t * CcGraph(void);
+CcGraph_t * CcGraphP(CcNode_t * p);
+void CcGraph_Destruct(CcGraph_t * self);
+
+typedef struct {
+    CcArrayList_t nodes;
+}  CcEBNF_t;
+
+CcEBNF_t * CcEBNF(CcEBNF_t * self);
+void CcEBNF_Destruct(CcEBNF_t * self);
+
+CcNode_t * CcEBNF_NewNode(CcEBNF_t * self, const CcObjectType_t * type, ...);
+
+CcNode_t * CcEBNF_MakeFirstAlt(CcEBNF_t * self, CcGraph_t * g);
+CcNode_t * CcEBNF_MakeAlternative(CcEBNF_t * self, CcGraph_t * g1, CcGraph_t * g2);
+void CcEBNF_MakeSequence(CcEBNF_t * self, CcGraph_t * g1, CcGraph_t * g2);
+CcNode_t * CcEBNF_MakeIteration(CcEBNF_t * self, CcGraph_t * g);
+CcNode_t * CcEBNF_MakeOption(CcEBNF_t * self, CcGraph_t * g);
+void CcEBNF_Finish(CcEBNF_t * self, CcGraph_t * g);
 
 #endif /* COCO_EBNF_H */
