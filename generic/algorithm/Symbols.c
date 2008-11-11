@@ -58,31 +58,31 @@ static const CcObjectType_t SymbolT = {
     sizeof(CcSymbolT_t), "symbol_t",
     CcSymbol_Construct, CcSymbol_Destruct
 };
-const CcObjectType_t * symbol_t = (const CcObjectType_t *)&SymbolT;
+const CcObjectType_t * symbol_t = &SymbolT;
 
 static const CcObjectType_t SymbolPR = {
     sizeof(CcSymbolPR_t), "symbol_pr",
     CcSymbol_Construct, CcSymbol_Destruct
 };
-const CcObjectType_t * symbol_pr = (const CcObjectType_t *)&SymbolPR;
+const CcObjectType_t * symbol_pr = &SymbolPR;
 
 static const CcObjectType_t SymbolNT = {
     sizeof(CcSymbolNT_t), "symbol_nt",
     CcSymbolNT_Construct, CcSymbolNT_Destruct
 };
-const CcObjectType_t * symbol_nt = (const CcObjectType_t *)&SymbolNT;
+const CcObjectType_t * symbol_nt = &SymbolNT;
 
 static const CcObjectType_t SymbolUnknown = {
     sizeof(CcSymbolUnknown_t), "symbol_unknown",
     CcSymbol_Construct, CcSymbol_Destruct
 };
-const CcObjectType_t * symbol_unknown = (const CcObjectType_t *)&SymbolUnknown;
+const CcObjectType_t * symbol_unknown = &SymbolUnknown;
 
 static const CcObjectType_t SymbolRSLV = {
     sizeof(CcSymbolRSLV_t), "symbol_rslv",
     CcSymbol_Construct, CcSymbol_Destruct
 };
-const CcObjectType_t * symbol_rslv = (const CcObjectType_t *)&SymbolRSLV;
+const CcObjectType_t * symbol_rslv = &SymbolRSLV;
 
 CcSymbol_TokenKind_t
 CcSymbol_GetTokenKind(CcSymbol_t * self)
