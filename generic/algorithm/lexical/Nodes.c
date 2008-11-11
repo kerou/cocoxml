@@ -23,36 +23,30 @@
 -------------------------------------------------------------------------*/
 #include  "lexical/Nodes.h"
 
-static void CcNodeChr_Destruct(CcObject_t * self)
+static void
+CcNodeChr_Construct(CcObject_t * self, va_list ap)
 {
-    CcObject_Destruct(self);
+    CcNodeChr_t * ccself = (CcNodeChr_t *)self;
+    CcNode_Construct(self, ap);
+    ccself->code = node_normalTrans;
+    ccself->chr = va_arg(ap, int);
 }
 static const CcNodeType_t NodeChr = {
-    { sizeof(CcNodeChr_t), "node_chr", CcNodeChr_Destruct }
+    { sizeof(CcNodeChr_t), "node_chr", CcNodeChr_Construct, CcNode_Destruct },
+    CcNode_NoDeletable
 };
-const CcNodeType_t * node_chr = &NodeChr;
-CcNodeChr_t *
-CcNodeChr(int n, int chr)
-{
-    CcNodeChr_t * self = (CcNodeChr_t *)CcNode(node_chr, n);
-    self->chr = chr;
-    self->code = node_normalTrans;
-    return self;
-}
+const CcObjectType_t * node_chr = (CcObjectType_t *)&NodeChr;
 
-static void CcNodeClas_Destruct(CcObject_t * self)
+static void
+CcNodeClas_Construct(CcObject_t * self, va_list ap)
 {
-    CcObject_Destruct(self);
+    CcNodeClas_t * ccself = (CcNodeClas_t *)self;
+    CcNode_Construct(self, ap);
+    ccself->code = node_normalTrans;
+    ccself->clas = va_arg(ap, int);
 }
 static const CcNodeType_t NodeClas = {
-    { sizeof(CcNodeClas_t), "node_clas", CcNodeClas_Destruct }
+    { sizeof(CcNodeClas_t), "node_clas", CcNodeClas_Construct, CcNode_Destruct },
+    CcNode_NoDeletable
 };
-const CcNodeType_t * node_clas = &NodeClas;
-CcNodeClas_t *
-CcNodeClas(int n, int clas)
-{
-    CcNodeClas_t * self = (CcNodeClas_t *)CcNode(node_clas, n);
-    self->clas = clas;
-    self->code = node_normalTrans;
-    return self;
-}
+const CcObjectType_t * node_clas = (CcObjectType_t *)&NodeClas;

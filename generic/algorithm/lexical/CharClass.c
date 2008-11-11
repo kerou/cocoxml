@@ -24,19 +24,25 @@
 #include  "lexical/CharClass.h"
 #include  "lexical/CharSet.h"
 
-CcCharClass_t *
-CcCharClass(int n, const char * name, CcCharSet_t * s)
+static void
+CcCharClass_Construct(CcObject_t * self, va_list ap)
 {
-    CcCharClass_t * self = CcMalloc(sizeof(CcCharClass_t));
-    self->n = n;
-    self->name = CcStrdup(name);
-    self->set = s;
-    return self;
+    CcCharClass_t * ccself = (CcCharClass_t *)self;
+    ccself->name = CcStrdup(va_arg(ap, const char *));
+    ccself->set = va_arg(ap, CcCharSet_t *);
 }
 
-void
-CcCharClass_Destruct(CcCharClass_t * self)
+static void
+CcCharClass_Destruct(CcObject_t * self)
 {
-    if (self->set) { CcCharSet_Destruct(self->set); CcFree(self->set); }
-    CcFree(self);
+    CcCharClass_t * ccself;
+    CcCharSet_Destruct(ccself->set);
+    CcFree(ccself->name);
+    CcObject_Destruct(self);
 }
+
+static const CcObjectType_t CharClass = {
+    sizeof(CcCharClass_t), "char_class",
+    CcCharClass_Construct, CcCharClass_Destruct
+};
+const CcObjectType_t * char_class = &CharClass;
