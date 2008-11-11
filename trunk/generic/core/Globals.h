@@ -40,6 +40,8 @@
 #include  "Syntax.h"
 #endif
 
+EXTC_BEGIN
+
 struct CcGlobals_s {
     CcsGlobals_t      base;
 
@@ -53,5 +55,7 @@ CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp);
 void CcGlobals_Destruct(CcGlobals_t * self);
 
 void CcGlobals_Parse(CcGlobals_t * self);
+
+EXTC_END
 
 #endif  /* COCO_GLOBALS_H */

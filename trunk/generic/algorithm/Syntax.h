@@ -32,19 +32,24 @@
 #include  "ArrayList.h"
 #endif
 
-struct CcSyntax_s {
-    CcGlobals_t * globals;
-    CcArrayList_t symSet;
-    CcArrayList_t nodes;
+#ifndef  COCO_EBNF_H
+#include  "EBNF.h"
+#endif
 
-    CcSymbol_t * gramSy;
-    CcSymbol_t * eofSy;
-    CcSymbol_t * noSym;
-    CcSymbol_t * curSy;
+EXTC_BEGIN
+
+struct CcSyntax_s {
+    CcGlobals_t  * globals;
+    CcEBNF_t       ebnf;
+
+    CcSymbol_t   * gramSy;
+    CcSymbol_t   * eofSy;
+    CcSymbol_t   * noSym;
+    CcSymbol_t   * curSy;
     CcBitArray_t * visited;
-    CcBitArray_t visitedSpace;
+    CcBitArray_t   visitedSpace;
     CcBitArray_t * allSyncSets;
-    CcBitArray_t allSyncSetsSpace;
+    CcBitArray_t   allSyncSetsSpace;
 };
 
 CcSyntax_t * CcSyntax(CcSyntax_t * self, CcGlobals_t * globals);
@@ -70,5 +75,7 @@ void CcSyntax_DeleteNodes(CcSyntax_t * self);
 void CcSyntax_SetupAnys(CcSyntax_t * self);
 void CcSyntax_RenumberPragmas(CcSyntax_t * self);
 void CcSyntax_CompSymbolSets(CcSyntax_t * self);
+
+EXTC_END
 
 #endif  /* COCO_SYNTAX_H */
