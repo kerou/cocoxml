@@ -42,6 +42,8 @@ struct CcNodeType_s {
     CcsBool_t (* deletable)(CcNode_t * self);
 };
 
+void CcNode_Construct(CcObject_t * self, va_list ap);
+void CcNode_Destruct(CcObject_t * self);
 CcsBool_t CcNode_Deletable(CcNode_t * self);
 CcsBool_t CcNode_NoDeletable(CcNode_t * self);
 
