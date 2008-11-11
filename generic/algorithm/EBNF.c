@@ -23,26 +23,24 @@
 -------------------------------------------------------------------------*/
 #include  "EBNF.h"
 
+void CcNode_Construct(CcObject_t * self, va_list ap)
+{
+    CcNode_t * ccself = (CcNode_t *)self;
+    ccself->line = va_arg(ap, int);
+}
+void CcNode_Destruct(CcObject_t * self)
+{
+    CcObject_Destruct(self);
+}
 CcsBool_t
 CcNode_Deletable(CcNode_t * self)
 {
     return TRUE;
 }
-
 CcsBool_t
 CcNode_NoDeletable(CcNode_t * self)
 {
     return FALSE;
-}
-
-static void CcNode_Construct(CcObject_t * self, va_list ap)
-{
-    CcNode_t * ccself = (CcNode_t *)self;
-    ccself->line = va_arg(ap, int);
-}
-static void CcNode_Destruct(CcObject_t * self)
-{
-    CcObject_Destruct(self);
 }
 
 static CcsBool_t
