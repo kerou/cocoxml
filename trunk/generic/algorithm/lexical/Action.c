@@ -29,7 +29,7 @@
 #include  "lexical/State.h"
 
 CcAction_t *
-CcAction(const CcNodeType_t * typ, int sym, int tc)
+CcAction(const CcObjectType_t * typ, int sym, CcNode_Transition_t tc)
 {
     CcAction_t * self = CcMalloc(sizeof(CcAction_t));
     self->typ = typ;
@@ -43,14 +43,21 @@ CcAction(const CcNodeType_t * typ, int sym, int tc)
 void
 CcAction_Destruct(CcAction_t * self)
 {
+    CcTarget_t * cur, * next;
+
+    for (cur = self->target; cur; cur = next) {
+	next = cur->next;
+	CcTarget_Destruct(cur);
+    }
+    CcFree(self);
 }
 
-void
+static void
 CcAction_AddTarget(CcAction_t * self, CcTarget_t * t)
 {
     CcTarget_t * last = NULL;
     CcTarget_t * p = self->target;
-    while (p != NULL && t->state->nr >= p->state->nr) {
+    while (p != NULL && t->state->base.index >= p->state->base.index) {
 	if (t->state == p->state) return;
 	last = p; p = p->next;
     }
@@ -59,14 +66,11 @@ CcAction_AddTarget(CcAction_t * self, CcTarget_t * t)
     else  last->next = t;
 }
 
-int
+void
 CcAction_AddTargets(CcAction_t * self, CcAction_t * a)
 {
-    CcTarget_t * p, * t;
-    for (p = a->target; p != NULL; p = p->next) {
-	if (!(t = CcTarget(p->state))) return -1;
-	CcAction_AddTarget(self, t);
-    }
+    CcTarget_t * p;
+    for (p = a->target; p != NULL; p = p->next)
+	CcAction_AddTarget(self, CcTarget(p->state));
     if (a->tc == CcContextTrans) self->tc = CcContextTrans;
-    return 0;
 }

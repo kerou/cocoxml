@@ -41,6 +41,5 @@ CcMelted_Destruct(CcMelted_t * self)
 {
     CcBitArray_Destruct(self->set);
     CcFree(self->set);
-    CcState_Destruct(self->state);
     CcFree(self);
 }

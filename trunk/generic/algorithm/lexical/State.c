@@ -24,29 +24,42 @@
 #include  "State.h"
 #include  "Action.h"
 
-CcState_t *
-CcState(int nr)
+static void
+CcState_Construct(CcObject_t * self, va_list ap)
 {
-    CcState_t * self = CcMalloc(sizeof(CcState_t));
-    self->nr = nr;
-    self->firstAction = NULL;
-    self->endOf = NULL;
-    self->ctx = 0;
-    self->next = NULL;
-    return self;
+    CcState_t * ccself = (CcState_t *)self;
+    ccself->firstAction = NULL;
+    ccself->endOf = NULL;
+    ccself->ctx = 0;
+}
+static void
+CcState_Destruct(CcObject_t * self)
+{
+    CcAction_t * cur, * next;
+    CcState_t * ccself = (CcState_t *)self;
+
+    for (cur = ccself->firstAction; cur; cur = next) {
+	next = cur->next;
+	CcAction_Destruct(cur);
+    }
+    CcObject_Destruct(self);
 }
 
-void
-CcState_Destruct(CcState_t * self)
-{
-    CcFree(self);
-}
+static CcObjectType_t StateType = {
+    sizeof(CcState_t), "State", CcState_Construct, CcState_Destruct
+};
+const CcObjectType_t * state = &StateType;
 
 void
 CcState_AddAction(CcState_t * self, CcAction_t * act)
 {
     CcAction_t * lasta = NULL, * a = self->firstAction;
-    while (a != NULL && act->typ >= a->typ) { lasta = a; a = a->next; }
+    /* Collect classes at the beginning gives better performance. */
+    if (node_clas < node_chr) {
+	while (a != NULL && act->typ >= a->typ) { lasta = a; a = a->next; }
+    } else {
+	while (a != NULL && act->typ <= a->typ) { lasta = a; a = a->next; }
+    }
     act->next = a;
     if (a == self->firstAction) self->firstAction = act;
     else  lasta->next = act;
