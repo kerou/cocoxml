@@ -56,24 +56,6 @@ typedef struct CcLexical_s CcLexical_t;
 typedef struct CcSyntax_s CcSyntax_t;
 typedef struct CcSymbolTable_s CcSymbolTable_t;
 
-/* Symbol */
-typedef struct CcSymbol_s CcSymbol_t;
-typedef struct CcSymbolT_s CcSymbolT_t;
-typedef struct CcSymbolPR_s CcSymbolPR_t;
-typedef struct CcSymbolNT_s CcSymbolNT_t;
-
-typedef enum {
-    symbol_fixedToken = 0,
-    symbol_classToken = 1,
-    symbol_litToken = 2,
-    symbol_classLitToken = 3,
-} CcSymbol_TokenKind_t;
-extern const CcObjectType_t * symbol_t;
-extern const CcObjectType_t * symbol_nt;
-extern const CcObjectType_t * symbol_pr;
-extern const CcObjectType_t * symbol_unknown;
-extern const CcObjectType_t * symbol_rslv;
-
 /* Lexical types */
 typedef struct CcAction_s CcAction_t;
 typedef struct CcCharSet_s CcCharSet_t;
