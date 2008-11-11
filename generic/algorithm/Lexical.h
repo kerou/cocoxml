@@ -32,6 +32,10 @@
 #include "HashTable.h"
 #endif
 
+#ifndef  COCO_EBNF_H
+#include "EBNF.h"
+#endif
+
 EXTC_BEGIN
 
 #define  CcNormalTrans   0
@@ -39,6 +43,7 @@ EXTC_BEGIN
 
 struct CcLexical_s {
     CcGlobals_t   * globals;
+    CcEBNF_t        ebnf;
     int             maxStates;
     int             lastStateNr;
     CcState_t     * firstState;
@@ -51,7 +56,6 @@ struct CcLexical_s {
     CcsBool_t       dirtyLexical;
     CcsBool_t       hasCtxMoves;
 
-    CcArrayList_t   nodes;
     CcArrayList_t   classes;
     CcHashTable_t   literals;
     CcMelted_t    * firstMelted;

@@ -32,6 +32,8 @@
 #include  "Symbols.h"
 #endif
 
+EXTC_BEGIN
+
 struct CcSymbolTable_s {
     CcArrayList_t terminals;
     CcArrayList_t pragmas;
@@ -53,5 +55,7 @@ CcSymbolTable_NewNonTerminal(CcSymbolTable_t * self,
 
 CcSymbol_t *
 CcSymbolTable_FindSym(CcSymbolTable_t * self, const char * name);
+
+EXTC_END
 
 #endif  /* COCO_SYMBOLTABLE_H */

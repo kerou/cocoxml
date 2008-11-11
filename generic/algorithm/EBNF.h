@@ -28,8 +28,9 @@
 #include  "ArrayList.h"
 #endif
 
+EXTC_BEGIN
+
 typedef struct CcNodeType_s CcNodeType_t;
-typedef struct CcNode_s CcNode_t;
 typedef struct CcGraph_s CcGraph_t;
 extern const CcObjectType_t * node_alt;
 extern const CcObjectType_t * node_iter;
@@ -82,5 +83,7 @@ void CcEBNF_MakeSequence(CcEBNF_t * self, CcGraph_t * g1, CcGraph_t * g2);
 CcNode_t * CcEBNF_MakeIteration(CcEBNF_t * self, CcGraph_t * g);
 CcNode_t * CcEBNF_MakeOption(CcEBNF_t * self, CcGraph_t * g);
 void CcEBNF_Finish(CcEBNF_t * self, CcGraph_t * g);
+
+EXTC_END
 
 #endif /* COCO_EBNF_H */

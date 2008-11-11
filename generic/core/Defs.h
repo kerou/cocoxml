@@ -37,6 +37,9 @@ typedef struct CcArrayList_s CcArrayList_t;
 typedef struct CcBitArray_s CcBitArray_t;
 typedef struct CcHashTable_s CcHashTable_t;
 
+typedef struct CcSymbol_s CcSymbol_t;
+typedef struct CcNode_s CcNode_t;
+
 /* OutputScheme types. */
 typedef struct CcOutputSchemeType_s CcOutputSchemeType_t;
 typedef struct CcOutputScheme_s CcOutputScheme_t;

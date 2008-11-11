@@ -36,7 +36,8 @@
 #include "c/Position.h"
 #endif
 
-typedef struct CcSymbol_s CcSymbol_t;
+EXTC_BEGIN
+
 typedef struct CcSymbolT_s CcSymbolT_t;
 typedef struct CcSymbolPR_s CcSymbolPR_t;
 typedef struct CcSymbolNT_s CcSymbolNT_t;
@@ -97,5 +98,7 @@ extern const CcObjectType_t * symbol_rslv;
 
 CcSymbol_TokenKind_t CcSymbol_GetTokenKind(CcSymbol_t * self);
 void CcSymbol_SetTokenKind(CcSymbol_t * self, CcSymbol_TokenKind_t tokenKind);
+
+EXTC_END
 
 #endif  /* COCO_SYMBOLS_H */

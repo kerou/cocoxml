@@ -28,6 +28,8 @@
 #include  "Object.h"
 #endif
 
+EXTC_BEGIN
+
 typedef struct CcHTEntry_s CcHTEntry_t;
 
 typedef struct {
@@ -51,5 +53,7 @@ CcHashTable_GetIterator(const CcHashTable_t * self, CcHTIterator_t * iter);
 CcsBool_t CcHTIterator_Forward(CcHTIterator_t * self);
 const char * CcHTIterator_Key(CcHTIterator_t * iter);
 CcObject_t * CcHTIterator_Value(CcHTIterator_t * iter);
+
+EXTC_END
 
 #endif  /* COCO_HASHTABLE_H */
