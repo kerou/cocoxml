@@ -22,67 +22,95 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "EBNF.h"
-#include  "lexical/Nodes.h"
-#include  "syntax/Nodes.h"
-#include  "SymbolTable.h"
 
-static void CcNodeAlt_Destruct(CcObject_t * self)
+CcsBool_t
+CcNode_Deletable(CcNode_t * self)
+{
+    return TRUE;
+}
+
+CcsBool_t
+CcNode_NoDeletable(CcNode_t * self)
+{
+    return FALSE;
+}
+
+static void CcNode_Construct(CcObject_t * self, va_list ap)
+{
+    CcNode_t * ccself = (CcNode_t *)self;
+    ccself->line = va_arg(ap, int);
+}
+static void CcNode_Destruct(CcObject_t * self)
 {
     CcObject_Destruct(self);
 }
+
+static CcsBool_t
+CcNodeAlt_Deletable(CcNode_t * self)
+{
+    return CcNode_DelSubGraph(self->sub) ||
+	(self->down != NULL && CcNode_DelSubGraph(self->down));
+}
+
 static const CcNodeType_t NodeAlt = {
-    { sizeof(CcNode_t), "node_alt", CcNodeAlt_Destruct }
+    { sizeof(CcNode_t), "node_alt", CcNode_Construct, CcNode_Destruct },
+    CcNodeAlt_Deletable
 };
-const CcNodeType_t * node_alt = &NodeAlt;
+const CcObjectType_t * node_alt = (const CcObjectType_t *)&NodeAlt;
 
-static void CcNodeIter_Destruct(CcObject_t * self)
-{
-    CcObject_Destruct(self);
-}
 static const CcNodeType_t NodeIter = {
-    { sizeof(CcNode_t), "node_iter", CcNodeIter_Destruct }
+    { sizeof(CcNode_t), "node_iter", CcNode_Construct, CcNode_Destruct },
+    CcNode_Deletable
 };
-const CcNodeType_t * node_iter = &NodeIter;
+const CcObjectType_t * node_iter = (const CcObjectType_t *)&NodeIter;
 
-static void CcNodeOpt_Destruct(CcObject_t * self)
-{
-    CcObject_Destruct(self);
-}
 static const CcNodeType_t NodeOpt = {
-    { sizeof(CcNode_t), "node_opt", CcNodeOpt_Destruct }
+    { sizeof(CcNode_t), "node_opt", CcNode_Construct, CcNode_Destruct },
+    CcNode_Deletable
 };
-const CcNodeType_t * node_opt = &NodeOpt;
+const CcObjectType_t * node_opt = (const CcObjectType_t *)&NodeOpt;
 
-static void CcNodeEps_Destruct(CcObject_t * self)
-{
-    CcObject_Destruct(self);
-}
 static const CcNodeType_t NodeEps = {
-    { sizeof(CcNode_t), "node_opt", CcNodeEps_Destruct }
+    { sizeof(CcNode_t), "node_eps", CcNode_Construct, CcNode_Destruct },
+    CcNode_Deletable
 };
-const CcNodeType_t * node_eps = &NodeEps;
+const CcObjectType_t * node_eps = (const CcObjectType_t *)&NodeEps;
 
-CcNode_t *
-CcNode(const CcNodeType_t * type, int n)
+CcsBool_t
+CcNode_DelGraph(CcNode_t * self)
 {
-    CcNode_t * self = (CcNode_t *)CcObject(&type->base);
-    self->n = n;
-    return self;
+    return self == NULL ||
+	(CcNode_DelNode(self) && CcNode_DelGraph(self->next));
 }
 
-CcNode_t *
-CcNode_NewWithSub(const CcNodeType_t * type, int n, CcNode_t * sub)
+CcsBool_t
+CcNode_DelSubGraph(CcNode_t * self)
 {
-    CcNode_t * self = CcNode(type, n);
-    self->sub = sub;
-    return self;
+    return self == NULL ||
+	(CcNode_DelNode(self) && CcNode_DelSubGraph(self->next));
 }
 
-void
-CcNode_Destruct(CcNode_t * self)
+CcsBool_t
+CcNode_DelNode(CcNode_t * self)
 {
-    CcObject_Destruct(&self->base);
+    const CcNodeType_t * type = (const CcNodeType_t *)self->base.type;
+    return type->deletable(self);
 }
+
+#if 0
+    /* In fact, the check of the deletablity of a node should be placed in
+     * a virtual function, I just write all of them here for convenience.
+     * This way include some extra dependencies, may be I shall fix it
+     * in future. */
+    if (type == node_nt) {
+	CcNodeNT_t * p0 = (CcNodeNT_t *)self;
+	CcSymbolNT_t * sym = (CcSymbolNT_t *)p0->sym;
+	return sym->deletable;
+    } else if (type == node_alt) {
+    }
+    return type == node_iter || type == node_opt || type == node_sem ||
+	type == node_eps || type == node_rslv || type == node_sync;
+#endif
 
 CcGraph_t *
 CcGraph(void)
@@ -106,59 +134,58 @@ CcGraph_Destruct(CcGraph_t * self)
     CcFree(self);
 }
 
-CcsBool_t
-CcNode_DelGraph(CcNode_t * self)
+CcEBNF_t *
+CcEBNF(CcEBNF_t * self)
 {
-    return self == NULL ||
-	(CcNode_DelNode(self) && CcNode_DelGraph(self->next));
+    CcArrayList(&self->nodes);
+    return self;
 }
 
-CcsBool_t
-CcNode_DelSubGraph(CcNode_t * self)
+void
+CcEBNF_Destruct(CcEBNF_t * self)
 {
-    return self == NULL ||
-	(CcNode_DelNode(self) && CcNode_DelSubGraph(self->next));
-}
-
-CcsBool_t
-CcNode_DelNode(CcNode_t * self)
-{
-    const CcNodeType_t * type = (const CcNodeType_t *)self->base.type;
-    /* In fact, the check of the deletablity of a node should be placed in
-     * a virtual function, I just write all of them here for convenience.
-     * This way include some extra dependencies, may be I shall fix it
-     * in future. */
-    if (type == node_nt) {
-	CcNodeNT_t * p0 = (CcNodeNT_t *)self;
-	CcSymbolNT_t * sym = (CcSymbolNT_t *)p0->sym;
-	return sym->deletable;
-    } else if (type == node_alt) {
-	return CcNode_DelSubGraph(self->sub) ||
-	    (self->down != NULL && CcNode_DelSubGraph(self->down));
-    }
-    return type == node_iter || type == node_opt || type == node_sem ||
-	type == node_eps || type == node_rslv || type == node_sync;
+    CcArrayList_Destruct(&self->nodes);
 }
 
 CcNode_t *
-CcGraph_MakeFirstAlt(CcGraph_t * self, int n)
+CcEBNF_NewNode(CcEBNF_t * self, const CcObjectType_t * type, ...)
 {
-    self->head = CcNode_NewWithSub(node_alt, n, self->head);
-    self->head->line = self->head->sub->line;
-    self->head->next = self->r;
-    self->r = self->head;
-    return self->head;
+    va_list ap;
+    CcNode_t * node;
+    va_start(ap, type);
+    node = (CcNode_t *)CcArrayList_VNew(&self->nodes, type, ap);
+    va_end(ap);
+    return node;
+}
+
+static CcNode_t *
+CcEBNF_NewNodeWithSub(CcEBNF_t * self, const CcObjectType_t * type,
+		      CcNode_t * sub)
+{
+    CcNode_t * node = CcEBNF_NewNode(self, type, 0);
+    node->sub = sub;
+    node->line = sub->line;
+    return node;
 }
 
 CcNode_t *
-CcGraph_MakeAlternative(CcGraph_t * self, CcGraph_t * g2, int n)
+CcEBNF_MakeFirstAlt(CcEBNF_t * self, CcGraph_t * g)
+{
+    g->head = CcEBNF_NewNodeWithSub(self, node_alt, g->head);
+    g->head->next = g->r;
+    g->r = g->head;
+    return g->head;
+}
+
+CcNode_t *
+CcEBNF_MakeAlternative(CcEBNF_t * self, CcGraph_t * g1, CcGraph_t * g2)
 {
     CcNode_t * p;
-    g2->head = CcNode_NewWithSub(node_alt, n, g2->head);
-    g2->head->line = g2->head->sub->line;
-    p = self->head; while (p->down != NULL) p = p->down;
+
+    g2->head = CcEBNF_NewNodeWithSub(self, node_alt, g2->head);
+    p = g1->head; while (p->down != NULL) p = p->down;
     p->down = g2->head;
-    p = self->r; while (p->next != NULL) p = p->next;
+    p = g1->r; while (p->next != NULL) p = p->next;
     /* Append alternative to self end list. */
     p->next = g2->head;
     /* Append g2 end list to self end list. */
@@ -167,45 +194,45 @@ CcGraph_MakeAlternative(CcGraph_t * self, CcGraph_t * g2, int n)
 }
 
 void
-CcGraph_MakeSequence(CcGraph_t * self, CcGraph_t * g2)
+CcEBNF_MakeSequence(CcEBNF_t * self, CcGraph_t * g1, CcGraph_t * g2)
 {
     CcNode_t * q, * p;
-    p = self->r->next; self->r->next = g2->head; /* link head node */
+    p = g1->r->next; g1->r->next = g2->head; /* link head node */
     while (p != NULL) { /* link substructure */
 	q = p->next; p->next = g2->head; p->up = TRUE;
 	p = q;
     }
-    self->r = g2->r;
+    g1->r = g2->r;
 }
 
 CcNode_t *
-CcGraph_MakeIteration(CcGraph_t * self, int n)
+CcEBNF_MakeIteration(CcEBNF_t * self, CcGraph_t * g)
 {
     CcNode_t * p , * q;
-    self->head = CcNode_NewWithSub(node_iter, n, self->head);
-    p = self->r;
-    self->r = self->head;
+    g->head = CcEBNF_NewNodeWithSub(self, node_iter, g->head);
+    p = g->r;
+    g->r = g->head;
     while (p != NULL) {
-	q = p->next; p->next = self->head; p->up = TRUE;
+	q = p->next; p->next = g->head; p->up = TRUE;
 	p = q;
     }
-    return self->head;
+    return g->head;
 }
 
 CcNode_t *
-CcGraph_MakeOption(CcGraph_t * self, int n)
+CcEBNF_MakeOption(CcEBNF_t * self, CcGraph_t * g)
 {
-    self->head = CcNode_NewWithSub(node_opt, n, self->head);
-    self->head->next = self->r;
-    self->r = self->head;
-    return self->head;
+    g->head = CcEBNF_NewNodeWithSub(self, node_opt, g->head);
+    g->head->next = g->r;
+    g->r = g->head;
+    return g->head;
 }
 
 void
-CcGraph_Finish(CcGraph_t * self)
+CcEBNF_Finish(CcEBNF_t * self, CcGraph_t * g)
 {
     CcNode_t * p, * q;
-    p = self->r;
+    p = g->r;
     while (p != NULL) {
 	q = p->next; p->next = NULL; p = q;
     }

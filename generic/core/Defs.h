@@ -37,14 +37,6 @@ typedef struct CcArrayList_s CcArrayList_t;
 typedef struct CcBitArray_s CcBitArray_t;
 typedef struct CcHashTable_s CcHashTable_t;
 
-/* EBNF types */
-typedef struct CcNode_s  CcNode_t;
-typedef struct CcGraph_s CcGraph_t;
-
-extern const CcObjectType_t * node_alt;
-extern const CcObjectType_t * node_iter;
-extern const CcObjectType_t * node_opt;
-
 /* OutputScheme types. */
 typedef struct CcOutputSchemeType_s CcOutputSchemeType_t;
 typedef struct CcOutputScheme_s CcOutputScheme_t;
