@@ -29,8 +29,7 @@ CcSyntax_t *
 CcSyntax(CcSyntax_t * self, CcGlobals_t * globals)
 {
     self->globals = globals;
-    CcArrayList(&self->symSet);
-    CcArrayList(&self->nodes);
+    CcEBNF(&self->ebnf);
     self->gramSy = NULL;
     self->eofSy = NULL;
     self->noSym = NULL;
@@ -45,8 +44,7 @@ CcSyntax_Destruct(CcSyntax_t * self)
 {
     if (self->allSyncSets) CcBitArray_Destruct(self->allSyncSets);
     if (self->visited) CcBitArray_Destruct(self->visited);
-    CcArrayList_Destruct(&self->nodes);
-    CcArrayList_Destruct(&self->symSet);
+    CcEBNF_Destruct(&self->ebnf);
 }
 
 CcNode_t *
