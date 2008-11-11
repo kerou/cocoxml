@@ -25,7 +25,11 @@
 #define  COCO_SYMBOLTABLE_H
 
 #ifndef  COCO_ARRAYLIST_H
-#include "ArrayList.h"
+#include  "ArrayList.h"
+#endif
+
+#ifndef  COCO_SYMBOLS_H
+#include  "Symbols.h"
 #endif
 
 struct CcSymbolTable_s {
