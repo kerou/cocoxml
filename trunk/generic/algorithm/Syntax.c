@@ -45,11 +45,6 @@ CcSyntax_Destruct(CcSyntax_t * self)
 {
     if (self->allSyncSets) CcBitArray_Destruct(self->allSyncSets);
     if (self->visited) CcBitArray_Destruct(self->visited);
-    /* May be the follow symbols should not be destructed */
-    if (self->curSy) CcObject_VDestruct((CcObject_t *)self->curSy);
-    if (self->noSym) CcObject_VDestruct((CcObject_t *)self->noSym);
-    if (self->eofSy) CcObject_VDestruct((CcObject_t *)self->eofSy);
-    if (self->gramSy) CcObject_VDestruct((CcObject_t *)self->gramSy);
     CcArrayList_Destruct(&self->nodes);
     CcArrayList_Destruct(&self->symSet);
 }

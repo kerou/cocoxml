@@ -39,29 +39,36 @@ CcArrayList_Destruct(CcArrayList_t * self)
     if (self->Objects)  CcFree(self->Objects);
 }
 
-void
-CcArrayList_Add(CcArrayList_t * self, CcObject_t * value)
+CcObject_t *
+CcArrayList_New(CcArrayList_t * self, const CcObjectType_t * type, ...)
 {
     int newCapacity;
+    va_list ap;
+    CcObject_t * object;
+
     if (self->Count >= self->Capacity) {
 	newCapacity = self->Capacity + self->Capacity;
 	self->Objects = CcRealloc(self->Objects, sizeof(void *) * newCapacity);
 	self->Capacity = newCapacity;
     }
-    self->Objects[self->Count++] = value;
+    va_start(ap, type);
+    object = CcObject(type, self->Count, ap);
+    va_end(ap);
+    self->Objects[self->Count++] = object;
+    return object;
 }
 
 void
-CcArrayList_Remove(CcArrayList_t * self, CcObject_t * value)
+CcArrayList_Remove(CcArrayList_t * self, CcObject_t * object)
 {
-    CcObject_t ** cur;
-    for (cur = self->Objects; cur - self->Objects < self->Count; ++cur)
-	if (*cur == value) {
-	    memmove(cur, cur + 1,
-		    sizeof(void *) * (self->Count - (cur + 1 - self->Objects)));
-	    --self->Count;
-	    break;
-	}
+    CcObject_t ** cur, ** last;
+
+    CcsAssert(object->index >= 0 && object->index < self->Count);
+    CcsAssert(object == self->Objects[object->index]);
+    cur = self->Objects + object->index; last = self->Objects + self->Count;
+    if (cur + 1< last)
+	memmove(cur, cur + 1, sizeof(CcObject_t *) * (last - (cur + 1)));
+    --self->Count;
 }
 
 CcObject_t *
@@ -78,16 +85,31 @@ CcArrayList_Clear(CcArrayList_t * self)
 	CcObject_VDestruct(self->Objects[idx]);
 }
 
+CcObject_t *
+CcArrayList_First(CcArrayList_t * self, CcArrayListIter_t * iter)
+{
+    iter->index = 0;
+    return CcArrayList_Next(self, iter);
+}
+
+CcObject_t *
+CcArrayList_Next(CcArrayList_t * self, CcArrayListIter_t * iter)
+{
+    return iter->index < self->Count ? self->Objects[iter->index++] : NULL;
+}
+
 void
 CcArrayList_Filter(CcArrayList_t * self, CcArrayList_FilterFunc_t func)
 {
     int curidx, newidx;
-    CcObject_t * obj;
+    CcObject_t * object;
 
     newidx = 0;
     for (curidx = 0; curidx < self->Count; ++curidx) {
-	if ((obj = func(self->Objects[curidx], curidx, newidx)))
-	    self->Objects[newidx++] = obj;
+	if ((object = func(self->Objects[curidx], curidx, newidx))) {
+	    object->index = newidx;
+	    self->Objects[newidx++] = object;
+	}
     }
     self->Count = newidx;
 }

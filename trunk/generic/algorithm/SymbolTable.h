@@ -24,67 +24,17 @@
 #ifndef  COCO_SYMBOLTABLE_H
 #define  COCO_SYMBOLTABLE_H
 
-#ifndef  COCO_OBJECT_H
-#include "Object.h"
-#endif
-
 #ifndef  COCO_ARRAYLIST_H
 #include "ArrayList.h"
 #endif
 
-#ifndef  COCO_BITARRAY_H
-#include "BitArray.h"
-#endif
-
-#ifndef  COCO_POSITION_H
-#include "c/Position.h"
-#endif
-
-struct CcSymbolType_s {
-    CcObjectType_t base;
-    void (* vdestruct)(CcSymbol_t * self);
-};
-
-struct CcSymbol_s {
-    CcObject_t base;
-    int n;
-    char * name;
-    int line;
-};
-
-struct CcSymbolT_s {
-    CcSymbol_t             base;
-    CcSymbol_TokenKind_t   tokenKind;
-};
-
-struct CcSymbolPR_s {
-    CcSymbol_t             base;
-    CcSymbol_TokenKind_t   tokenKind;
-    CcsPosition_t        * semPos;
-};
-
-struct CcSymbolNT_s {
-    CcSymbol_t      base;
-    CcNode_t      * graph;
-    CcsBool_t       deletable;
-    CcsBool_t       firstReady;
-    CcBitArray_t    first;
-    CcBitArray_t    follow;
-    CcBitArray_t    nts;
-    CcsPosition_t * attrPos;
-};
-
 struct CcSymbolTable_s {
-    CcGlobals_t * globals;
     CcArrayList_t terminals;
     CcArrayList_t pragmas;
     CcArrayList_t nonterminals;
 };
 
-CcSymbol_TokenKind_t CcSymbol_GetTokenKind(CcSymbol_t * self);
-void CcSymbol_SetTokenKind(CcSymbol_t * self, CcSymbol_TokenKind_t tokenKind);
-
-CcSymbolTable_t * CcSymbolTable(CcSymbolTable_t * self, CcGlobals_t * globals);
+CcSymbolTable_t * CcSymbolTable(CcSymbolTable_t * self);
 void CcSymbolTable_Destruct(CcSymbolTable_t * self);
 
 CcSymbol_t *
