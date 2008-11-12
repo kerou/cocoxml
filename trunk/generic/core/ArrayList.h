@@ -45,8 +45,6 @@ CcArrayList_New(CcArrayList_t * self, const CcObjectType_t * type, ...);
 CcObject_t *
 CcArrayList_VNew(CcArrayList_t * self, const CcObjectType_t * type, va_list ap);
 
-void CcArrayList_Remove(CcArrayList_t * self, CcObject_t * value);
-
 CcObject_t * CcArrayList_Get(CcArrayList_t * self, int index);
 
 void CcArrayList_Clear(CcArrayList_t * self);

@@ -67,19 +67,6 @@ CcArrayList_VNew(CcArrayList_t * self, const CcObjectType_t * type, va_list ap)
     return object;
 }
 
-void
-CcArrayList_Remove(CcArrayList_t * self, CcObject_t * object)
-{
-    CcObject_t ** cur, ** last;
-
-    CcsAssert(object->index >= 0 && object->index < self->Count);
-    CcsAssert(object == self->Objects[object->index]);
-    cur = self->Objects + object->index; last = self->Objects + self->Count;
-    if (cur + 1< last)
-	memmove(cur, cur + 1, sizeof(CcObject_t *) * (last - (cur + 1)));
-    --self->Count;
-}
-
 CcObject_t *
 CcArrayList_Get(CcArrayList_t * self, int index)
 {
