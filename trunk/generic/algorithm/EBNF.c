@@ -95,21 +95,6 @@ CcNode_DelNode(CcNode_t * self)
     return type->deletable(self);
 }
 
-#if 0
-    /* In fact, the check of the deletablity of a node should be placed in
-     * a virtual function, I just write all of them here for convenience.
-     * This way include some extra dependencies, may be I shall fix it
-     * in future. */
-    if (type == node_nt) {
-	CcNodeNT_t * p0 = (CcNodeNT_t *)self;
-	CcSymbolNT_t * sym = (CcSymbolNT_t *)p0->sym;
-	return sym->deletable;
-    } else if (type == node_alt) {
-    }
-    return type == node_iter || type == node_opt || type == node_sem ||
-	type == node_eps || type == node_rslv || type == node_sync;
-#endif
-
 CcGraph_t *
 CcGraph(void)
 {
@@ -124,6 +109,24 @@ CcGraphP(CcNode_t * p)
     CcGraph_t * self = CcMalloc(sizeof(CcGraph_t));
     self->head = self->r = p;
     return self;
+}
+
+void
+CcGraph_Append(CcGraph_t * self, CcNode_t * p)
+{
+    if (self->r == NULL) self->head = p;
+    else self->r->next = p;
+    self->r = p;
+}
+
+void
+CcGraph_Finish(CcGraph_t * self)
+{
+    CcNode_t * p, * q;
+    p = self->r;
+    while (p != NULL) {
+	q = p->next; p->next = NULL; p = q;
+    }
 }
 
 void
@@ -143,6 +146,12 @@ void
 CcEBNF_Destruct(CcEBNF_t * self)
 {
     CcArrayList_Destruct(&self->nodes);
+}
+
+void
+CcEBNF_Clear(CcEBNF_t * self)
+{
+    CcArrayList_Clear(&self->nodes);
 }
 
 CcNode_t *
@@ -224,14 +233,4 @@ CcEBNF_MakeOption(CcEBNF_t * self, CcGraph_t * g)
     g->head->next = g->r;
     g->r = g->head;
     return g->head;
-}
-
-void
-CcEBNF_Finish(CcEBNF_t * self, CcGraph_t * g)
-{
-    CcNode_t * p, * q;
-    p = g->r;
-    while (p != NULL) {
-	q = p->next; p->next = NULL; p = q;
-    }
 }
