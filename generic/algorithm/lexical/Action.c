@@ -77,7 +77,7 @@ CcAction_ShiftSize(CcAction_t * self)
 CcCharSet_t *
 CcAction_GetShift(CcAction_t * self)
 {
-    CcCharSet_t * s; CcCharClass_t * c;
+    CcCharSet_t * s;
     if (self->single) {
 	s = CcCharSet();
 	CcCharSet_Set(s, self->u.chr);
@@ -92,7 +92,7 @@ CcAction_SetShift(CcAction_t * self, const CcCharSet_t * s)
 {
     CcCharClass_t * c; CcArrayListIter_t iter;
 
-    if (CcCharSet_Element(s) == 1) {
+    if (CcCharSet_Elements(s) == 1) {
 	self->single = TRUE;
 	self->u.chr = CcCharSet_First(s);
 	return;
