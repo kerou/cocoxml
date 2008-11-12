@@ -35,7 +35,7 @@ CcCharClass_Construct(CcObject_t * self, va_list ap)
 static void
 CcCharClass_Destruct(CcObject_t * self)
 {
-    CcCharClass_t * ccself;
+    CcCharClass_t * ccself = (CcCharClass_t *)self;
     CcCharSet_Destruct(ccself->set);
     CcFree(ccself->name);
     CcObject_Destruct(self);
