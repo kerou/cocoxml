@@ -28,8 +28,8 @@
 CcSyntax_t *
 CcSyntax(CcSyntax_t * self, CcGlobals_t * globals)
 {
+    CcEBNF(&self->base);
     self->globals = globals;
-    CcEBNF(&self->ebnf);
     self->gramSy = NULL;
     self->eofSy = NULL;
     self->noSym = NULL;
@@ -44,113 +44,7 @@ CcSyntax_Destruct(CcSyntax_t * self)
 {
     if (self->allSyncSets) CcBitArray_Destruct(self->allSyncSets);
     if (self->visited) CcBitArray_Destruct(self->visited);
-    CcEBNF_Destruct(&self->ebnf);
-}
-
-CcNode_t *
-CcSyntax_NewNodeEPS(CcSyntax_t * self)
-{
-    CcNode_t * p = CcNode(node_eps, 0);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-    return p;
-}
-
-CcNode_t *
-CcSyntax_NewNodeANY(CcSyntax_t * self)
-{
-    CcNode_t * p = CcNode(node_any, 0);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-    return p;
-}
-
-CcNode_t *
-CcSyntax_NewNodeSEM(CcSyntax_t * self)
-{
-    CcNode_t * p = CcNode(node_sem, 0);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-    return p;
-}
-
-CcNode_t *
-CcSyntax_NewNodeSYNC(CcSyntax_t * self)
-{
-    CcNode_t * p = CcNode(node_sync, 0);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-    return p;
-}
-
-CcNode_t *
-CcSyntax_NewNodeWT(CcSyntax_t * self, CcSymbol_t * sym, int line)
-{
-    CcNode_t * p = CcNode(node_wt, line);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-    return p;
-}
-
-CcNode_t *
-CcSyntax_NewNodeT(CcSyntax_t * self, CcSymbol_t * sym, int line)
-{
-    CcNode_t * p = CcNode(node_t, line);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-    return p;
-}
-
-CcNode_t *
-CcSyntax_NewNodePR(CcSyntax_t * self, CcSymbol_t * sym, int line)
-{
-    CcNode_t * p = CcNode(node_pr, line);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-    return p;
-}
-
-CcNode_t *
-CcSyntax_NewNodeNT(CcSyntax_t * self, CcSymbol_t * sym, int line)
-{
-    CcNode_t * p = CcNode(node_nt, line);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-    return p;
-}
-
-CcNode_t *
-CcSyntax_NewNodeRSLV(CcSyntax_t * self, CcSymbol_t * sym, int line)
-{
-    CcNode_t * p = CcNode(node_rslv, line);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-    return p;
-}
-
-void
-CcSyntax_MakeFirstAlt(CcSyntax_t * self, CcGraph_t * g)
-{
-    CcNode_t * p = CcGraph_MakeFirstAlt(g, self->nodes.Count);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-}
-
-void
-CcSyntax_MakeAlternative(CcSyntax_t * self, CcGraph_t * g1, CcGraph_t * g2)
-{
-    CcNode_t * p = CcGraph_MakeAlternative(g1, g2, self->nodes.Count);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-}
-
-void
-CcSyntax_MakeIteration(CcSyntax_t * self, CcGraph_t * g)
-{
-    CcNode_t * p = CcGraph_MakeIteration(g, self->nodes.Count);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-}
-
-void
-CcSyntax_MakeOption(CcSyntax_t * self, CcGraph_t * g)
-{
-    CcNode_t * p = CcGraph_MakeOption(g, self->nodes.Count);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-}
-
-void
-CcSyntax_DeleteNodes(CcSyntax_t * self)
-{
-    CcArrayList_Clear(&self->nodes);
+    CcEBNF_Destruct(&self->base);
 }
 
 static void

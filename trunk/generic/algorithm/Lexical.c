@@ -53,6 +53,7 @@ CcLexical_StateWithSet(CcLexical_t * self, CcBitArray_t * s);
 CcLexical_t *
 CcLexical(CcLexical_t * self, CcGlobals_t * globals)
 {
+    self = CcEBNF(&self->base);
     self->globals = globals;
     self->maxStates = 0;
     self->lastStateNr = -1;
@@ -65,7 +66,6 @@ CcLexical(CcLexical_t * self, CcGlobals_t * globals)
     self->ignored = CcCharSet();
     self->dirtyLexical = FALSE;
     self->hasCtxMoves = FALSE;
-    CcArrayList(&self->nodes);
     CcArrayList(&self->classes);
     CcHashTable(&self->literals, SZ_LITERALS);
     self->firstMelted = NULL;
@@ -79,63 +79,25 @@ CcLexical_Destruct(CcLexical_t * self)
 {
     CcHashTable_Destruct(&self->literals);
     CcArrayList_Destruct(&self->classes);
-    CcArrayList_Destruct(&self->nodes);
     CcCharSet_Destruct(self->ignored);
-}
-
-void
-CcLexical_MakeFirstAlt(CcLexical_t * self, CcGraph_t * g)
-{
-    CcNode_t * p = CcGraph_MakeFirstAlt(g, self->nodes.Count);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-}
-
-void
-CcLexical_MakeAlternative(CcLexical_t * self, CcGraph_t * g1, CcGraph_t * g2)
-{
-    CcNode_t * p = CcGraph_MakeAlternative(g1, g2, self->nodes.Count);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-}
-
-void
-CcLexical_MakeIteration(CcLexical_t * self, CcGraph_t * g)
-{
-    CcNode_t * p = CcGraph_MakeIteration(g, self->nodes.Count);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-}
-
-void
-CcLexical_MakeOption(CcLexical_t * self, CcGraph_t * g)
-{
-    CcNode_t * p = CcGraph_MakeOption(g, self->nodes.Count);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-}
-
-void
-CcLexical_DeleteNodes(CcLexical_t * self)
-{
-    CcArrayList_Clear(&self->nodes);
+    CcEBNF_Destruct(&self->base);
 }
 
 CcGraph_t *
 CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
 {
-    CcGraph_t * g; CcNode_t * p;
+    CcGraph_t * g;
     const char * cur, * slast;
-    char * s = CcsUnescape(str);
-    if (s == NULL)
+    char * s;
+    if ((s = CcsUnescape(str)) == NULL)
 	CcsGlobals_Fatal(&self->globals->base, t,
 			 "Invalid character encountered or out of memory.");
     if (strlen(s) == 0)
 	CcsGlobals_SemErr(&self->globals->base, t, "empty token not allowed");
     g = CcGraph();
     cur = s; slast = s + strlen(s);
-    while (cur < slast) {
-	p = CcLexical_NewNodeCHR(self, CcsUTF8GetCh(&cur, slast));
-	if (g->r == NULL)  g->head = p;
-	else g->r->next = p;
-	g->r = p;
-    }
+    while (cur < slast)
+	CcGraph_Append(CcLexical_NewNodeCHR(self, CcsUTF8GetCh(&cur, slast)));
     CcFree(s);
     return g;
 }
@@ -143,16 +105,14 @@ CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
 void
 CcLexical_SetContextTrans(CcLexical_t * self, CcNode_t * p)
 {
-    const CcNodeType_t * ptype;
     while (p != NULL) {
-	ptype = (const CcNodeType_t *)p->base.type;
-	if (ptype == node_chr) {
+	if (p->base.type == node_chr) {
 	    ((CcNodeChr_t *)p)->code = node_contextTrans;
-	} else if (ptype == node_clas) {
+	} else if (p->base.type == node_clas) {
 	    ((CcNodeClas_t *)p)->code = node_contextTrans;
-	} else if (ptype == node_opt || ptype == node_iter) {
+	} else if (p->base.type == node_opt || p->base.type == node_iter) {
 	    CcLexical_SetContextTrans(self, p->sub);
-	} else if (ptype == node_alt) {
+	} else if (p->base.type == node_alt) {
 	    CcLexical_SetContextTrans(self, p->sub);
 	    CcLexical_SetContextTrans(self, p->down);
 	}
@@ -161,93 +121,27 @@ CcLexical_SetContextTrans(CcLexical_t * self, CcNode_t * p)
     }
 }
 
-CcNode_t *
-CcLexical_NewNodeEPS(CcLexical_t * self)
-{
-    CcNode_t * p  = CcNode(node_eps, 0);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-    return p;
-}
-
-CcNode_t *
-CcLexical_NewNodeCHR(CcLexical_t * self, int ch)
-{
-    CcNodeChr_t * p = CcNodeChr(self->nodes.Count, ch);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-    return (CcNode_t *)p;
-}
-
-CcNode_t *
-CcLexical_NewNodeCLAS(CcLexical_t * self, int clas)
-{
-    CcNodeClas_t * p = CcNodeClas(self->nodes.Count, clas);
-    CcArrayList_Add(&self->nodes, (CcObject_t *)p);
-    return (CcNode_t *)p;
-}
-
 CcCharClass_t *
 CcLexical_NewCharClass(CcLexical_t * self, const char * name, CcCharSet_t * s)
 {
-    CcCharClass_t * c = CcCharClass(self->classes.Count, name, s);
-    CcArrayList_Add(&self->classes, (CcObject_t *)c);
-    return c;
+    return (CcCharClass_t *)
+	CcArrayList_New(&self->classes, char_class, name, s);
 }
 
 CcCharClass_t *
 CcLexical_FindCharClassN(CcLexical_t * self, const char * name)
 {
-    int idx; CcCharClass_t * c;
-    for (idx = 0; idx < self->classes.Count; ++idx) {
-	c = (CcCharClass_t *)CcArrayList_Get(&self->classes, idx);
+    CcCharClass_t * c; CcArrayListIter_t iter;
+    for (c = (CcCharClass_t *)CcArrayList_First(&self->classes, &iter);
+	 c; c = (CcCharClass_t *)CcArrayList_Next(&self->classes, &iter))
 	if (!strcmp(name, c->name)) return c;
-    }
-    return NULL;
-}
-
-CcCharClass_t *
-CcLexical_FindCharClassC(CcLexical_t * self, const CcCharSet_t * s)
-{
-    int idx; CcCharClass_t * c;
-    for (idx = 0; idx < self->classes.Count; ++idx) {
-	c = (CcCharClass_t *)CcArrayList_Get(&self->classes, idx);
-	if (CcCharSet_Equals(s, c->set)) return c;
-    }
     return NULL;
 }
 
 CcCharSet_t *
-CcLexical_CharClassSet(CcLexical_t * self, int idx)
+CcLexical_CharClassSet(CcLexical_t * self, int index)
 {
-    return ((CcCharClass_t *)CcArrayList_Get(&self->classes, idx))->set;
-}
-
-CcCharSet_t *
-CcLexical_ActionSymbols(CcLexical_t * self, CcAction_t * action)
-{
-    CcCharSet_t * s;
-
-    if (action->typ == node_clas) {
-	s = CcCharSet_Clone(CcLexical_CharClassSet(self, action->sym));
-    } else {
-	s = CcCharSet();
-	CcCharSet_Set(s, action->sym);
-    }
-    return s;
-}
-
-void
-CcLexical_ActionShiftWith(CcLexical_t * self,
-			  CcAction_t * action, CcCharSet_t * s)
-{
-    CcCharClass_t * c;
-
-    if (CcCharSet_Elements(s) == 1) {
-	action->typ = node_chr; action->sym = CcCharSet_First(s);
-    } else {
-	CcLexical_FindCharClassC(self, s);
-	if (c == NULL) c = CcLexical_NewCharClass(self, "#", s);
-	action->typ = node_clas; action->sym = c->n;
-    }
+    return ((CcCharClass_t *)CcArrayList_Get(&self->classes, index))->set;
 }
 
 static CcState_t *
