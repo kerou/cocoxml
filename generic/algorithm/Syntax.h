@@ -56,8 +56,8 @@ CcSyntax_t * CcSyntax(CcSyntax_t * self, CcGlobals_t * globals);
 void CcSyntax_Destruct(CcSyntax_t * self);
 
 void CcSyntax_SetupAnys(CcSyntax_t * self);
-void CcSyntax_RenumberPragmas(CcSyntax_t * self);
 void CcSyntax_CompSymbolSets(CcSyntax_t * self);
+CcsBool_t CcSyntax_GrammarOk(CcSyntax_t * self);
 
 EXTC_END
 
