@@ -23,74 +23,144 @@
 -------------------------------------------------------------------------*/
 #include  "syntax/Nodes.h"
 
-static void CcNodeT_Destruct(CcObject_t * self)
+static void
+CcNodeT_Construct(CcObject_t * self, va_list ap)
 {
-    CcObject_Destruct(self);
+    CcNodeT_t * ccself = (CcNodeT_t *)self;
+    ccself->sym = va_arg(ap, CcSymbol_t *);
+    ccself->pos = va_arg(ap, CcsPosition_t *);
+}
+static void
+CcNodeT_Destruct(CcObject_t * self)
+{
+    CcNodeT_t * ccself = (CcNodeT_t *)self;
+    if (ccself->pos) CcsPosition_Destruct(ccself->pos);
+    CcNode_Destruct(self);
 }
 static const CcNodeType_t NodeT = {
-    { sizeof(CcNodeT_t), "node_t", CcNodeT_Destruct }
+    { sizeof(CcNodeT_t), "node_t", CcNodeT_Construct, CcNodeT_Destruct },
+    CcNode_NoDeletable
 };
-const CcNodeType_t * node_t = &NodeT;
+const CcObjectType_t * node_t = (const CcObjectType_t *)&NodeT;
 
-static void CcNodePR_Destruct(CcObject_t * self)
-{
-    CcObject_Destruct(self);
-}
 static const CcNodeType_t NodePR = {
-    { sizeof(CcNodePR_t), "node_pr", CcNodePR_Destruct }
+    { sizeof(CcNodePR_t), "node_pr", CcNode_Construct, CcNode_Destruct },
+    CcNode_NoDeletable
 };
-const CcNodeType_t * node_pr = &NodePR;
+const CcObjectType_t * node_pr = (const CcObjectType_t *)&NodePR;
 
-static void CcNodeNT_Destruct(CcObject_t * self)
+static void
+CcNodeNT_Construct(CcObject_t * self, va_list ap)
 {
-    CcObject_Destruct(self);
+    CcNodeNT_t * ccself = (CcNodeNT_t *)self;
+    ccself->sym = va_arg(ap, CcSymbol_t *);
+    ccself->pos = va_arg(ap, CcsPosition_t *);
+}
+static void
+CcNodeNT_Destruct(CcObject_t * self)
+{
+    CcNodeNT_t * ccself = (CcNodeNT_t *)self;
+    if (ccself->pos) CcsPosition_Destruct(ccself->pos);
+    CcNode_Destruct(self);
 }
 static const CcNodeType_t NodeNT = {
-    { sizeof(CcNodeNT_t), "node_nt", CcNodeNT_Destruct }
+    { sizeof(CcNodeNT_t), "node_nt", CcNodeNT_Construct, CcNodeNT_Destruct },
+    CcNode_NoDeletable
 };
-const CcNodeType_t * node_nt = &NodeNT;
+const CcObjectType_t * node_nt = (const CcObjectType_t *)&NodeNT;
 
-static void CcNodeWT_Destruct(CcObject_t * self)
+static void
+CcNodeWT_Construct(CcObject_t * self, va_list ap)
 {
-    CcObject_Destruct(self);
+    CcNodeWT_t * ccself = (CcNodeWT_t *)self;
+    ccself->sym = va_arg(ap, CcSymbol_t *);
+    ccself->pos = va_arg(ap, CcsPosition_t *);
+}
+static void
+CcNodeWT_Destruct(CcObject_t * self)
+{
+    CcNodeWT_t * ccself = (CcNodeWT_t *)self;
+    if (ccself->pos) CcsPosition_Destruct(ccself->pos);
+    CcNode_Destruct(self);
 }
 static const CcNodeType_t NodeWT = {
-    { sizeof(CcNodeWT_t), "node_wt", CcNodeWT_Destruct }
+    { sizeof(CcNodeWT_t), "node_wt", CcNodeWT_Construct, CcNodeWT_Destruct },
+    CcNode_NoDeletable
 };
-const CcNodeType_t * node_wt = &NodeWT;
+const CcObjectType_t * node_wt = (const CcObjectType_t *)&NodeWT;
 
-static void CcNodeANY_Destruct(CcObject_t * self)
+static void
+CcNodeANY_Construct(CcObject_t * self, va_list ap)
 {
-    CcObject_Destruct(self);
+    CcNodeANY_t * ccself = (CcNodeANY_t *)self;
+    ccself->set = NULL;
+}
+static void
+CcNodeANY_Destruct(CcObject_t * self)
+{
+    CcNodeANY_t * ccself = (CcNodeANY_t *)self;
+    if (ccself->set) CcBitArray_Destruct(ccself->set);
+    CcNode_Destruct(self);
 }
 static const CcNodeType_t NodeANY = {
-    { sizeof(CcNodeANY_t), "node_any", CcNodeANY_Destruct }
+    { sizeof(CcNodeANY_t), "node_any", CcNodeANY_Construct, CcNodeANY_Destruct },
+    CcNode_NoDeletable
 };
-const CcNodeType_t * node_any = &NodeANY;
+const CcObjectType_t * node_any = (const CcObjectType_t *)&NodeANY;
 
-static void CcNodeSYNC_Destruct(CcObject_t * self)
+static void
+CcNodeSYNC_Construct(CcObject_t * self, va_list ap)
 {
-    CcObject_Destruct(self);
+    CcNodeSYNC_t * ccself = (CcNodeSYNC_t *)self;
+    ccself->set = NULL;
+}
+static void
+CcNodeSYNC_Destruct(CcObject_t * self)
+{
+    CcNodeSYNC_t * ccself = (CcNodeSYNC_t *)self;
+    if (ccself->set) CcBitArray_Destruct(ccself->set);
+    CcNode_Destruct(self);
 }
 static const CcNodeType_t NodeSYNC = {
-    { sizeof(CcNodeSYNC_t), "node_sync", CcNodeSYNC_Destruct }
+    { sizeof(CcNodeSYNC_t), "node_sync", CcNodeSYNC_Construct, CcNodeSYNC_Destruct },
+    CcNode_Deletable
 };
-const CcNodeType_t * node_sync = &NodeSYNC;
+const CcObjectType_t * node_sync = (const CcObjectType_t *)&NodeSYNC;
 
-static void CcNodeSEM_Destruct(CcObject_t * self)
+static void
+CcNodeSEM_Construct(CcObject_t * self, va_list ap)
 {
-    CcObject_Destruct(self);
+    CcNodeSEM_t * ccself = (CcNodeSEM_t *)self;
+    ccself->pos = va_arg(ap, CcsPosition_t *);
+}
+static void
+CcNodeSEM_Destruct(CcObject_t * self)
+{
+    CcNodeSEM_t * ccself = (CcNodeSEM_t *)self;
+    if (ccself->pos) CcsPosition_Destruct(ccself->pos);
+    CcNode_Destruct(self);
 }
 static const CcNodeType_t NodeSEM = {
-    { sizeof(CcNodeSEM_t), "node_sem", CcNodeSEM_Destruct }
+    { sizeof(CcNodeSEM_t), "node_sem", CcNodeSEM_Construct, CcNodeSEM_Destruct },
+    CcNode_Deletable
 };
-const CcNodeType_t * node_sem = &NodeSEM;
+const CcObjectType_t * node_sem = (const CcObjectType_t *)&NodeSEM;
 
-static void CcNodeRSLV_Destruct(CcObject_t * self)
+static void
+CcNodeRSLV_Construct(CcObject_t * self, va_list ap)
 {
-    CcObject_Destruct(self);
+    CcNodeRSLV_t * ccself = (CcNodeRSLV_t *)self;
+    ccself->pos = va_arg(ap, CcsPosition_t *);
+}
+static void
+CcNodeRSLV_Destruct(CcObject_t * self)
+{
+    CcNodeRSLV_t * ccself = (CcNodeRSLV_t *)self;
+    if (ccself->pos) CcsPosition_Destruct(ccself->pos);
+    CcNode_Destruct(self);
 }
 static const CcNodeType_t NodeRSLV = {
-    { sizeof(CcNodeSEM_t), "node_rslv", CcNodeRSLV_Destruct }
+    { sizeof(CcNodeRSLV_t), "node_rslv", CcNodeRSLV_Construct, CcNodeRSLV_Destruct },
+    CcNode_Deletable
 };
-const CcNodeType_t * node_rslv = &NodeRSLV;
+const CcObjectType_t * node_rslv = (const CcObjectType_t *)&NodeRSLV;
