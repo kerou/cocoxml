@@ -68,6 +68,8 @@ struct CcGraph_s {
 
 CcGraph_t * CcGraph(void);
 CcGraph_t * CcGraphP(CcNode_t * p);
+void CcGraph_Append(CcGraph_t * self, CcNode_t * p);
+void CcGraph_Finish(CcGraph_t * self);
 void CcGraph_Destruct(CcGraph_t * self);
 
 typedef struct {
@@ -77,6 +79,8 @@ typedef struct {
 CcEBNF_t * CcEBNF(CcEBNF_t * self);
 void CcEBNF_Destruct(CcEBNF_t * self);
 
+void CcEBNF_Clear(CcEBNF_t * self);
+
 CcNode_t * CcEBNF_NewNode(CcEBNF_t * self, const CcObjectType_t * type, ...);
 
 CcNode_t * CcEBNF_MakeFirstAlt(CcEBNF_t * self, CcGraph_t * g);
@@ -84,7 +88,6 @@ CcNode_t * CcEBNF_MakeAlternative(CcEBNF_t * self, CcGraph_t * g1, CcGraph_t * g
 void CcEBNF_MakeSequence(CcEBNF_t * self, CcGraph_t * g1, CcGraph_t * g2);
 CcNode_t * CcEBNF_MakeIteration(CcEBNF_t * self, CcGraph_t * g);
 CcNode_t * CcEBNF_MakeOption(CcEBNF_t * self, CcGraph_t * g);
-void CcEBNF_Finish(CcEBNF_t * self, CcGraph_t * g);
 
 EXTC_END
 
