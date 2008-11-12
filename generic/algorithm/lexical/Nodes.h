@@ -28,6 +28,8 @@
 #include  "EBNF.h"
 #endif
 
+EXTC_BEGIN
+
 typedef enum {
     node_normalTrans = 0,
     node_contextTrans = 1
@@ -46,5 +48,7 @@ typedef struct {
     int                 clas; /* The index of CharClass */
 } CcNodeClas_t;
 extern const CcObjectType_t * node_clas;
+
+EXTC_END
 
 #endif  /* COCO_LEXICAL_NODES_H */
