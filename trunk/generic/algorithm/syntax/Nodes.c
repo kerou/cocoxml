@@ -22,6 +22,7 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "syntax/Nodes.h"
+#include  "Symbols.h"
 
 static void
 CcNodeT_Construct(CcObject_t * self, va_list ap)
@@ -63,9 +64,16 @@ CcNodeNT_Destruct(CcObject_t * self)
     if (ccself->pos) CcsPosition_Destruct(ccself->pos);
     CcNode_Destruct(self);
 }
+static CcsBool_t
+CcNodeNT_Deletable(CcNode_t * self)
+{
+    CcNodeNT_t * ccself = (CcNodeNT_t *)self;
+    CcSymbolNT_t * sym = (CcSymbolNT_t *)ccself->sym;
+    return sym->deletable;
+}
 static const CcNodeType_t NodeNT = {
     { sizeof(CcNodeNT_t), "node_nt", CcNodeNT_Construct, CcNodeNT_Destruct },
-    CcNode_NoDeletable
+    CcNodeNT_Deletable
 };
 const CcObjectType_t * node_nt = (const CcObjectType_t *)&NodeNT;
 
