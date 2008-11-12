@@ -31,16 +31,34 @@
 EXTC_BEGIN
 
 struct CcAction_s {
-    const CcObjectType_t * typ; /* possible values: node_chr, node_clas */
-    int                    sym; /* node_chr: char value, node_clas: char class index */
-    CcNode_Transition_t    tc;
-    CcTarget_t           * target;
-    CcAction_t           * next;
+    CcArrayList_t         * classes;
+    CcNode_Transition_t     tc;
+    CcTarget_t            * target;
+    CcAction_t            * next;
+    CcsBool_t               single;
+    union {
+	int                 chr; /* single is TRUE. */
+	const CcCharSet_t * set; /* single is FALSE.
+				    Point into CharClass in classes. */
+    } u;
 };
 
-CcAction_t * CcAction(const CcObjectType_t * typ, int sym, CcNode_Transition_t tc);
+CcAction_t *
+CcAction(const CcCharSet_t * s, CcNode_Transition_t tc,
+	 CcArrayList_t * classes);
+
+CcAction_t * CcAction_Clone(const CcAction_t * action);
+
 void CcAction_Destruct(CcAction_t * self);
-void CcAction_AddTargets(CcAction_t * self, CcAction_t * a);
+
+int CcAction_ShiftSize(CcAction_t * self);
+
+/* The returned CcCharSet_t must be destructed */
+CcCharSet_t * CcAction_GetShift(CcAction_t * self);
+
+void CcAction_SetShift(CcAction_t * self, const CcCharSet_t * s);
+
+void CcAction_AddTargets(CcAction_t * self, const CcAction_t * action);
 
 EXTC_END
 
