@@ -37,49 +37,51 @@ typedef struct {
     CcSymbol_t * sym;
     CcsPosition_t * pos;
 } CcNodeT_t;
-extern const CcNodeType_t * node_t;
+extern const CcObjectType_t * node_t;
 
 typedef struct {
     CcNode_t base;
 } CcNodePR_t;
-extern const CcNodeType_t * node_pr;
+extern const CcObjectType_t * node_pr;
 
 typedef struct {
     CcNode_t base;
     CcSymbol_t * sym;
     CcsPosition_t * pos;
 } CcNodeNT_t;
-extern const CcNodeType_t * node_nt;
+extern const CcObjectType_t * node_nt;
 
 typedef struct {
     CcNode_t base;
     CcSymbol_t * sym;
     CcsPosition_t * pos;
 } CcNodeWT_t;
-extern const CcNodeType_t * node_wt;
+extern const CcObjectType_t * node_wt;
 
 typedef struct {
     CcNode_t base;
-    CcBitArray_t set;
+    CcBitArray_t * set;
+    CcBitArray_t setSpace;
 } CcNodeANY_t;
-extern const CcNodeType_t * node_any;
+extern const CcObjectType_t * node_any;
 
 typedef struct {
     CcNode_t base;
-    CcBitArray_t set;
+    CcBitArray_t * set;
+    CcBitArray_t setSpace;
 } CcNodeSYNC_t;
-extern const CcNodeType_t * node_sync;
+extern const CcObjectType_t * node_sync;
 
 typedef struct {
     CcNode_t base;
     CcsPosition_t * pos;
 } CcNodeSEM_t;
-extern const CcNodeType_t * node_sem;
+extern const CcObjectType_t * node_sem;
 
 typedef struct {
     CcNode_t base;
     CcsPosition_t * pos;
 } CcNodeRSLV_t;
-extern const CcNodeType_t * node_rslv;
+extern const CcObjectType_t * node_rslv;
 
 #endif  /* COCO_SYNTAX_NODES_H */
