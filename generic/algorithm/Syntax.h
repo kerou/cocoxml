@@ -39,8 +39,8 @@
 EXTC_BEGIN
 
 struct CcSyntax_s {
+    CcEBNF_t       base;
     CcGlobals_t  * globals;
-    CcEBNF_t       ebnf;
 
     CcSymbol_t   * gramSy;
     CcSymbol_t   * eofSy;
@@ -54,23 +54,6 @@ struct CcSyntax_s {
 
 CcSyntax_t * CcSyntax(CcSyntax_t * self, CcGlobals_t * globals);
 void CcSyntax_Destruct(CcSyntax_t * self);
-
-CcNode_t * CcSyntax_NewNodeEPS(CcSyntax_t * self);
-CcNode_t * CcSyntax_NewNodeANY(CcSyntax_t * self);
-CcNode_t * CcSyntax_NewNodeSEM(CcSyntax_t * self);
-CcNode_t * CcSyntax_NewNodeSYNC(CcSyntax_t * self);
-CcNode_t * CcSyntax_NewNodeWT(CcSyntax_t * self, CcSymbol_t * sym, int line);
-CcNode_t * CcSyntax_NewNodeT(CcSyntax_t * self, CcSymbol_t * sym, int line);
-CcNode_t * CcSyntax_NewNodePR(CcSyntax_t * self, CcSymbol_t * sym, int line);
-CcNode_t * CcSyntax_NewNodeNT(CcSyntax_t * self, CcSymbol_t * sym, int line);
-CcNode_t * CcSyntax_NewNodeRSLV(CcSyntax_t * self, CcSymbol_t * sym, int line);
-
-void CcSyntax_MakeFirstAlt(CcSyntax_t * self, CcGraph_t * g);
-void CcSyntax_MakeAlternative(CcSyntax_t * self, CcGraph_t * g1, CcGraph_t * g2);
-void CcSyntax_MakeIteration(CcSyntax_t * self, CcGraph_t * g);
-void CcSyntax_MakeOption(CcSyntax_t * self, CcGraph_t * g);
-
-void CcSyntax_DeleteNodes(CcSyntax_t * self);
 
 void CcSyntax_SetupAnys(CcSyntax_t * self);
 void CcSyntax_RenumberPragmas(CcSyntax_t * self);

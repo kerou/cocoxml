@@ -42,8 +42,8 @@ EXTC_BEGIN
 #define  CcContextTrans  1
 
 struct CcLexical_s {
+    CcEBNF_t        base;
     CcGlobals_t   * globals;
-    CcEBNF_t        ebnf;
     int             maxStates;
     int             lastStateNr;
     CcState_t     * firstState;
@@ -64,13 +64,6 @@ struct CcLexical_s {
 
 CcLexical_t * CcLexical(CcLexical_t * self, CcGlobals_t * globals);
 void CcLexical_Destruct(CcLexical_t * self);
-
-void CcLexical_MakeFirstAlt(CcLexical_t * self, CcGraph_t * g);
-void CcLexical_MakeAlternative(CcLexical_t * self, CcGraph_t * g1, CcGraph_t * g2);
-void CcLexical_MakeIteration(CcLexical_t * self, CcGraph_t * g);
-void CcLexical_MakeOption(CcLexical_t * self, CcGraph_t * g);
-
-void CcLexical_DeleteNodes(CcLexical_t * self);
 
 CcGraph_t *
 CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t);
