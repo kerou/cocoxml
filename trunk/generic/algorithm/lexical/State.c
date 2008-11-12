@@ -53,12 +53,12 @@ const CcObjectType_t * state = &StateType;
 void
 CcState_AddAction(CcState_t * self, CcAction_t * act)
 {
+    int actSize = CcAction_ShiftSize(act);
     CcAction_t * lasta = NULL, * a = self->firstAction;
-    /* Collect classes at the beginning gives better performance. */
-    if (node_clas < node_chr) {
-	while (a != NULL && act->typ >= a->typ) { lasta = a; a = a->next; }
-    } else {
-	while (a != NULL && act->typ <= a->typ) { lasta = a; a = a->next; }
+
+    /* Collect bigger classes at the beginning gives better performance. */
+    while (a != NULL && actSize <= CcAction_ShiftSize(a)) {
+	lasta = a; a = a->next;
     }
     act->next = a;
     if (a == self->firstAction) self->firstAction = act;
@@ -79,12 +79,8 @@ CcState_DetachAction(CcState_t * self, CcAction_t * act)
 int
 CcState_MeltWith(CcState_t * self, CcState_t * s)
 {
-    CcAction_t * action, * a;
-    for (action = s->firstAction; action != NULL; action = action->next) {
-	if (!(a = CcAction(action->typ, action->sym, action->tc)))
-	    return -1;
-	CcAction_AddTargets(a, action);
-	CcState_AddAction(self, a);
-    }
+    CcAction_t * action;
+    for (action = s->firstAction; action != NULL; action = action->next)
+	CcState_AddAction(self, CcAction_Clone(action));
     return 0;
 }
