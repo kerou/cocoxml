@@ -44,6 +44,7 @@ void CcCharSet_Destruct(CcCharSet_t * self);
 CcsBool_t CcCharSet_Get(const CcCharSet_t * self, int i);
 void CcCharSet_Set(CcCharSet_t * self, int i);
 CcCharSet_t * CcCharSet_Clone(const CcCharSet_t * s);
+CcsBool_t CcCharSet_IsEmpty(const CcCharSet_t * self);
 CcsBool_t CcCharSet_Equals(const CcCharSet_t * self, const CcCharSet_t * s);
 int CcCharSet_Elements(const CcCharSet_t * self);
 int CcCharSet_First(const CcCharSet_t * self);
