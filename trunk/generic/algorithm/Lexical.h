@@ -41,22 +41,22 @@ EXTC_BEGIN
 struct CcLexical_s {
     CcEBNF_t        base;
     CcGlobals_t   * globals;
-    int             maxStates;
-    int             lastStateNr;
-    CcState_t     * firstState;
-    CcState_t     * lastState;
-    int             lastSimState;
-    CcSymbol_t    * curSy;
-    CcNode_t      * curGraph;
-    CcsBool_t       ignoreCase;
-    CcCharSet_t   * ignored;
-    CcsBool_t       dirtyLexical;
-    CcsBool_t       hasCtxMoves;
 
+    CcCharSet_t   * ignored;
+    CcsBool_t       ignoreCase;
+    CcArrayList_t   states;
     CcArrayList_t   classes;
     CcHashTable_t   literals;
     CcMelted_t    * firstMelted;
     CcComment_t   * firstComment;
+
+    int             lastSimState;
+    int             maxStates;
+
+    CcSymbol_t    * curSy;
+    CcNode_t      * curGraph;
+    CcsBool_t       dirtyLexical;
+    CcsBool_t       hasCtxMoves;
 };
 
 CcLexical_t * CcLexical(CcLexical_t * self, CcGlobals_t * globals);

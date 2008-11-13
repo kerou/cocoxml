@@ -37,9 +37,6 @@
 /* SZ_LITERALS is a prime number, auto-extending is not supported now */
 #define  SZ_LITERALS 127
 
-static CcState_t * CcLexical_NewState(CcLexical_t * self);
-static CcAction_t *
-CcLexical_FindAction(CcLexical_t * self, CcState_t *state, int ch);
 static void
 CcLexical_GetTargetStates(CcLexical_t * self, CcAction_t * a,
 			  CcBitArray_t ** targets, CcSymbol_t ** endOf,
@@ -55,28 +52,34 @@ CcLexical(CcLexical_t * self, CcGlobals_t * globals)
 {
     self = (CcLexical_t *)CcEBNF(&self->base);
     self->globals = globals;
-    self->maxStates = 0;
-    self->lastStateNr = -1;
-    self->firstState = NULL;
-    self->lastState = NULL;
-    self->lastSimState = 0;
-    self->curSy = NULL;
-    self->curGraph = NULL;
-    self->ignoreCase = FALSE;
+
     self->ignored = CcCharSet();
-    self->dirtyLexical = FALSE;
-    self->hasCtxMoves = FALSE;
+    self->ignoreCase = FALSE;
+    CcArrayList(&self->states);
     CcArrayList(&self->classes);
     CcHashTable(&self->literals, SZ_LITERALS);
     self->firstMelted = NULL;
     self->firstComment = NULL;
-    CcLexical_NewState(self);
+
+    self->lastSimState = 0;
+    self->curSy = NULL;
+    self->curGraph = NULL;
+    self->dirtyLexical = FALSE;
+    self->hasCtxMoves = FALSE;
+
+    CcArrayList_New(&self->states, stateType);
     return self;
 }
 
 void
 CcLexical_Destruct(CcLexical_t * self)
 {
+    CcComment_t * cur, * next;
+
+    for (cur = self->firstComment; cur; cur = next) {
+	next = cur->next;
+	CcComment_Destruct(cur);
+    }
     CcHashTable_Destruct(&self->literals);
     CcArrayList_Destruct(&self->classes);
     CcCharSet_Destruct(self->ignored);
@@ -145,46 +148,38 @@ CcLexical_CharClassSet(CcLexical_t * self, int index)
     return ((CcCharClass_t *)CcArrayList_Get(&self->classes, index))->set;
 }
 
-static CcState_t *
-CcLexical_NewState(CcLexical_t * self)
-{
-    CcState_t * s = CcState(++self->lastStateNr);
-    if (self->firstState == NULL) self->firstState = s;
-    else self->lastState->next = s;
-    self->lastState = s;
-    return s;
-}
-
 static void
 CcLexical_NewTransition(CcLexical_t * self, CcState_t * from, CcState_t * to,
 			const CcTransition_t * trans)
 {
     CcTarget_t * t; CcAction_t * a;
 
-    if (to == self->firstState)
+    if (to == (CcState_t *)CcArrayList_Get(&self->states, 0))
 	CcsGlobals_SemErr(&self->globals->base, NULL,
 			  "token must not start with an iteration");
     t = CcTarget(to);
-    a = CcAction(trans, &self->classes); a->target = t;
+    a = CcAction(trans); a->target = t;
     CcState_AddAction(from, a);
 }
 
 static void
 CcLexical_CombineShifts(CcLexical_t * self)
 {
-    CcState_t * state;
+    CcState_t * state; CcArrayListIter_t iter;
     CcAction_t * a, * b, * c;
     CcCharSet_t * seta, * setb;
 
-    for (state = self->firstState; state != NULL; state = state->next) {
+    for (state = (CcState_t *)CcArrayList_First(&self->states, &iter);
+	 state; state = (CcState_t *)CcArrayList_Next(&self->states, &iter)) {
 	for (a = state->firstAction; a != NULL; a = a->next) {
 	    b = a->next;
 	    while (b != NULL)
-		if (a->target->state == b->target->state && a->tc == b->tc) {
-		    seta = CcLexical_ActionSymbols(self, a);
-		    setb = CcLexical_ActionSymbols(self, b);
+		if (a->target->state == b->target->state &&
+		    a->trans.code == b->trans.code) {
+		    seta = CcAction_GetShift(a);
+		    setb = CcAction_GetShift(b);
 		    CcCharSet_Or(seta, setb);
-		    CcLexical_ActionShiftWith(self, a, seta);
+		    CcAction_SetShift(a, seta);
 		    c = b; b = b->next; CcState_DetachAction(state, c);
 		} else {
 		    b = b->next;
@@ -199,47 +194,60 @@ CcLexical_FindUsedStates(CcLexical_t * self, CcState_t * state,
 {
     CcAction_t * a;
 
-    if (CcBitArray_Get(used, state->nr)) return;
-    CcBitArray_Set(used, state->nr, TRUE);
+    if (CcBitArray_Get(used, state->base.index)) return;
+    CcBitArray_Set(used, state->base.index, TRUE);
     for (a = state->firstAction; a != NULL; a = a->next)
 	CcLexical_FindUsedStates(self, a->target->state, used);
+}
+
+static CcObject_t *
+state_filter(CcObject_t * object, int curidx, int newidx, void * data)
+{
+    if (CcBitArray_Get((CcBitArray_t *)data, curidx)) return object;
+    CcState_Destruct((CcState_t *)object);
+    return NULL;
 }
 
 static void
 CcLexical_DeleteRedundantStates(CcLexical_t * self)
 {
+    CcArrayListIter_t iter, iter0;
     CcState_t * s1, * s2, * state;
     CcBitArray_t used;
     CcAction_t * a;
     CcState_t ** newState = (CcState_t **)
-	CcMalloc(sizeof(CcState_t *) * (self->lastStateNr + 1));
+	CcMalloc(sizeof(CcState_t *) * (self->states.Count));
 
-    CcBitArray(&used, self->lastStateNr + 1);
+    CcBitArray(&used, self->states.Count);
 
-    CcLexical_FindUsedStates(self, self->firstState, &used);
-    for (s1 = self->firstState->next; s1 != NULL; s1 = s1->next)
-	if (CcBitArray_Get(&used, s1->nr) && s1->endOf != NULL &&
-	    s1->firstAction == NULL && !(s1->ctx))
-	    for (s2 = s1->next; s2 != NULL; s2 = s2->next)
-		if (CcBitArray_Get(&used, s2->nr) && s1->endOf == s2->endOf &&
+    s1 = (CcState_t *)CcArrayList_First(&self->states, &iter);
+    CcLexical_FindUsedStates(self, s1, &used);
+    while (s1) {
+	if (CcBitArray_Get(&used, s1->base.index) && s1->endOf != NULL &&
+	    s1->firstAction == NULL && !(s1->ctx)) {
+	    CcArrayListIter_Copy(&iter0, &iter);
+	    for (s2 = (CcState_t *)CcArrayList_Next(&self->states, &iter0);
+		 s2; s2 = (CcState_t *)CcArrayList_Next(&self->states, &iter0)) {
+		if (CcBitArray_Get(&used, s2->base.index) &&
+		    s1->endOf == s2->endOf &&
 		    s2->firstAction == NULL && !(s2->ctx)) {
-		    CcBitArray_Set(&used, s2->nr, FALSE);
-		    newState[s2->nr] = s1;
+		    CcBitArray_Set(&used, s2->base.index, FALSE);
+		    newState[s2->base.index] = s1;
 		}
-
-    for (state = self->firstState; state != NULL; state = state->next)
-	if (CcBitArray_Get(&used, state->nr))
-	    for (a = state->firstAction; a != NULL; a = a->next)
-		if (!CcBitArray_Get(&used, a->target->state->nr))
-		    a->target->state = newState[a->target->state->nr];
-    /* delete unused states */
-    self->lastState = self->firstState; self->lastStateNr = 0;
-    for (state = self->firstState->next; state != NULL; state = state->next)
-	if (CcBitArray_Get(&used, state->nr)) {
-	    state->nr = ++self->lastStateNr; self->lastState = state;
-	} else {
-	    self->lastState->next = state->next;
+	    }
 	}
+	s1 = (CcState_t *)CcArrayList_Next(&self->states, &iter);
+    }
+
+    for (state = (CcState_t *)CcArrayList_First(&self->states, &iter);
+	 state; state = (CcState_t *)CcArrayList_Next(&self->states, &iter))
+	if (CcBitArray_Get(&used, state->base.index))
+	    for (a = state->firstAction; a != NULL; a = a->next)
+		if (!CcBitArray_Get(&used, a->target->state->base.index))
+		    a->target->state = newState[a->target->state->base.index];
+
+    /* delete unused states */
+    CcArrayList_Filter(&self->states, state_filter, &used);
     CcFree(newState);
     CcBitArray_Destruct(&used);
 }
@@ -249,12 +257,10 @@ CcLexical_TheState(CcLexical_t * self, CcNode_t * p)
 {
     CcState_t * state;
 
-    if (p == NULL) {
-	state = CcLexical_NewState(self);
-	state->endOf = self->curSy;
-	return state;
-    }
-    return p->state;
+    if (p != NULL)  return p->state;
+    state = (CcState_t *)CcArrayList_New(&self->states, stateType);
+    state->endOf = self->curSy;
+    return state;
 }
 
 static void
@@ -263,7 +269,7 @@ CcLexical_Step(CcLexical_t * self, CcState_t * from, CcNode_t * p, CcBitArray_t 
     CcBitArray_t newStepped;
 
     if (p == NULL) return;
-    CcBitArray_Set(stepped, p->n, TRUE);
+    CcBitArray_Set(stepped, p->base.index, TRUE);
     if (p->base.type == node_trans) {
 	CcLexical_NewTransition(self, from, CcLexical_TheState(self, p->next),
 				&((CcNodeTrans_t *)p)->trans);
@@ -271,11 +277,11 @@ CcLexical_Step(CcLexical_t * self, CcState_t * from, CcNode_t * p, CcBitArray_t 
 	CcLexical_Step(self, from, p->sub, stepped);
 	CcLexical_Step(self, from, p->down, stepped);
     } else if (p->base.type == node_iter || p->base.type == node_opt) {
-	if (p->next != NULL && CcBitArray_Get(stepped, p->next->n))
+	if (p->next != NULL && CcBitArray_Get(stepped, p->next->base.index))
 	    CcLexical_Step(self, from, p->next, stepped);
 	CcLexical_Step(self, from, p->sub, stepped);
 	if ((p->base.type == node_iter) && (p->state != from)) {
-	    CcBitArray(&newStepped, self->nodes.Count);
+	    CcBitArray(&newStepped, self->base.nodes.Count);
 	    CcLexical_Step(self, p->state, p, &newStepped);
 	    CcBitArray_Destruct(&newStepped);
 	}
@@ -286,13 +292,10 @@ static void
 CcLexical_NumberNodes(CcLexical_t * self, CcNode_t * p,
 		      CcState_t * state, CcsBool_t renumIter)
 {
-    const CcNodeType_t * p->base.type;
-
     if (p == NULL) return;
     if (p->state != NULL) return; /* already visited */
-    p->base.type = (const CcNodeType_t *)p->base.type;
     if ((state == NULL) || (p->base.type == node_iter && renumIter))
-	state = CcLexical_NewState(self);
+	state = (CcState_t *)CcArrayList_New(&self->states, stateType);
     p->state = state;
     if (CcNode_DelGraph(p))
 	state->endOf = self->curSy;
@@ -317,10 +320,10 @@ CcLexical_FindTrans(CcLexical_t * self, CcNode_t * p, CcsBool_t start, CcBitArra
 {
     CcBitArray_t stepped;
 
-    if (p == NULL || CcBitArray_Get(marked, p->n)) return;
-    CcBitArray_Set(marked, p->n, TRUE);
+    if (p == NULL || CcBitArray_Get(marked, p->base.index)) return;
+    CcBitArray_Set(marked, p->base.index, TRUE);
     if (start) {
-	CcBitArray(&stepped, self->nodes.Count);
+	CcBitArray(&stepped, self->base.nodes.Count);
 	/* start of group of equally numbered nodes */
 	CcLexical_Step(self, p->state, p, &stepped);
 	CcBitArray_Destruct(&stepped);
@@ -344,21 +347,21 @@ void
 CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbol_t * sym)
 {
     CcBitArray_t stepped, marked;
+    CcState_t * firstState = (CcState_t *)CcArrayList_Get(&self->states, 0);
 
-    CcsAssert((const CcSymbolType_t *)sym->base.type == symbol_t ||
-	      (const CcSymbolType_t *)sym->base.type == symbol_pr);
+    CcsAssert(sym->base.type == symbol_t || sym->base.type == symbol_pr);
     self->curGraph = p; self->curSy = sym;
     if (CcNode_DelGraph(self->curGraph))
 	CcsGlobals_SemErr(&self->globals->base, NULL, "token might be empty");
-    CcLexical_NumberNodes(self, self->curGraph, self->firstState, TRUE);
+    CcLexical_NumberNodes(self, self->curGraph, firstState, TRUE);
 
-    CcBitArray(&marked, self->nodes.Count);
+    CcBitArray(&marked, self->base.nodes.Count);
     CcLexical_FindTrans(self, self->curGraph, TRUE, &marked);
     CcBitArray_Destruct(&marked);
 
     if (p->base.type == node_iter) {
-	CcBitArray(&stepped, self->nodes.Count);
-	CcLexical_Step(self, self->firstState, p, &stepped);
+	CcBitArray(&stepped, self->base.nodes.Count);
+	CcLexical_Step(self, firstState, p, &stepped);
 	CcBitArray_Destruct(&stepped);
     }
 }
@@ -373,18 +376,19 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
     const char * scur, * slast;
     CcState_t * to, * state;
     CcAction_t * a;
+    CcTransition_t trans;
     CcSymbol_t * matchedSym;
+    CcState_t * firstState = (CcState_t *)CcArrayList_Get(&self->states, 0);
 
     if ((s0 = CcsUnescape(s)) == NULL)
 	CcsGlobals_Fatal(&self->globals->base, t,
 			 "Invalid character encountered or out of memory.");
-    state = self->firstState; a = NULL;
-    CcsAssert((const CcSymbolType_t *)sym->base.type == symbol_t ||
-	      (const CcSymbolType_t *)sym->base.type == symbol_pr);
+    state = firstState; a = NULL;
+    CcsAssert(sym->base.type == symbol_t || sym->base.type == symbol_pr);
     /* Try to match s against existing CcLexical. */
     scur = s0; slast = scur + strlen(s0);
     while (scur < slast) {
-	a = CcLexical_FindAction(self, state, CcsUTF8GetCh(&scur, slast));
+	a = CcState_FindAction(state, CcsUTF8GetCh(&scur, slast));
 	if (a == NULL) break;
 	state = a->target->state;
     }
@@ -392,11 +396,11 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
     /* if s was not totally consumed or leads to a non-final state => make
      * new CcLexical from it */
     if (*scur || state->endOf == NULL) {
-	state = self->firstState; scur = s0; a = NULL;
+	state = firstState; scur = s0; a = NULL;
 	self->dirtyLexical = TRUE;
     }
     while (scur < slast) { /* make new CcLexical for s0[i..len-1] */
-	to = CcLexical_NewState(self);
+	to = (CcState_t *)CcArrayList_New(&self->states, stateType);
 	CcTransition(&trans, CcsUTF8GetCh(&scur, slast),
 		     trans_normal, &self->classes);
 	CcLexical_NewTransition(self, state, to, &trans);
@@ -409,14 +413,14 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
     if (state->endOf == NULL) {
 	state->endOf = sym;
     } else if (CcSymbol_GetTokenKind(matchedSym) == symbol_fixedToken ||
-	       (a != NULL && a->tc == node_contextTrans)) {
+	       (a != NULL && a->trans.code == trans_context)) {
 	/* s matched a token with a fixed definition or a token with
 	 * an appendix that will be cut off */
 	CcsGlobals_SemErr(&self->globals->base, NULL,
 			  "tokens %ls and %ls cannot be distinguished",
 			  sym->name, matchedSym->name);
     } else { /* matchedSym == classToken || classLitToken */
-	CcSymbol_SetTokenKind(matchedSym, symbol_classLitToken);
+	CcSymbol_SetTokenKind(matchedSym, symbol_litToken);
 	CcSymbol_SetTokenKind(sym, symbol_litToken);
     }
 }
@@ -436,7 +440,8 @@ CcLexical_MeltStates(CcLexical_t * self, CcState_t * state) {
 	    CcLexical_GetTargetStates(self, action, &targets, &endOf, &ctx);
 	    melt = CcLexical_StateWithSet(self, targets);
 	    if (melt == NULL) {
-		s = CcLexical_NewState(self); s->endOf = endOf; s->ctx = ctx;
+		s = (CcState_t *)CcArrayList_New(&self->states, stateType);
+		s->endOf = endOf; s->ctx = ctx;
 		for (targ = action->target; targ != NULL; targ = targ->next)
 		    CcState_MeltWith(s, targ->state);
 		do { changed = CcLexical_MakeUnique(self, s); } while (changed);
@@ -450,26 +455,31 @@ CcLexical_MeltStates(CcLexical_t * self, CcState_t * state) {
 
 static void
 CcLexical_FindCtxStates(CcLexical_t * self) {
-    CcState_t * state;
-    CcAction_t * a;
+    CcState_t * state; CcArrayListIter_t iter;
+    CcAction_t * action;
 
-    for (state = self->firstState; state != NULL; state = state->next)
-	for (a = state->firstAction; a != NULL; a = a->next)
-	    if (a->tc == node_contextTrans) a->target->state->ctx = TRUE;
+    for (state = (CcState_t *)CcArrayList_First(&self->states, &iter);
+	 state; state = (CcState_t *)CcArrayList_Next(&self->states, &iter))
+	for (action = state->firstAction; action; action = action->next)
+	    if (action->trans.code == trans_context)
+		action->target->state->ctx = TRUE;
 }
 
 void
 CcLexical_MakeDeterministic(CcLexical_t * self) {
-    CcState_t * state;
+    CcState_t * state; CcArrayListIter_t iter;
     CcsBool_t  changed;
 
-    self->lastSimState = self->lastState->nr;
+    self->lastSimState = self->states.Count;
     /* heuristic for set size in CcMelted.set */
-    self->maxStates = 2 * self->lastSimState;
+    self->maxStates = self->lastSimState + self->lastSimState;
     CcLexical_FindCtxStates(self);
-    for (state = self->firstState; state != NULL; state = state->next)
+
+    for (state = (CcState_t *)CcArrayList_First(&self->states, &iter);
+	 state; state = (CcState_t *)CcArrayList_Next(&self->states, &iter))
 	do { changed = CcLexical_MakeUnique(self, state); } while (changed);
-    for (state = self->firstState; state != NULL; state = state->next)
+    for (state = (CcState_t *)CcArrayList_First(&self->states, &iter);
+	 state; state = (CcState_t *)CcArrayList_Next(&self->states, &iter))
 	CcLexical_MeltStates(self, state);
     CcLexical_DeleteRedundantStates(self);
     CcLexical_CombineShifts(self);
@@ -489,7 +499,7 @@ CcLexical_MeltedSet(CcLexical_t * self, int nr)
 {
     CcMelted_t * m = self->firstMelted;
     while (m != NULL) {
-	if (m->state->nr == nr) return m->set;
+	if (m->state->base.index == nr) return m->set;
 	else m = m->next;
     }
     /*Errors::Exception("-- compiler error in CcMelted::Set");*/
@@ -507,15 +517,6 @@ CcLexical_StateWithSet(CcLexical_t * self, CcBitArray_t * s)
 }
 
 /* ---------------------------- actions -------------------------------- */
-static CcAction_t *
-CcLexical_FindAction(CcLexical_t * self, CcState_t *state, int ch) {
-    CcAction_t * a; CcCharSet_t * s;
-
-    for (a = state->firstAction; a != NULL; a = a->next)
-	if (CcTransition_Check(&a->trans, ch)) return a;
-    return NULL;
-}
-
 void
 CcLexical_GetTargetStates(CcLexical_t * self, CcAction_t * a,
 			  CcBitArray_t ** targets, CcSymbol_t ** endOf,
@@ -526,7 +527,7 @@ CcLexical_GetTargetStates(CcLexical_t * self, CcAction_t * a,
     *targets = CcBitArray(CcMalloc(sizeof(CcBitArray_t)), self->maxStates);
     *endOf = NULL; *ctx = FALSE;
     for (t = a->target; t != NULL; t = t->next) {
-	stateNr = t->state->nr;
+	stateNr = t->state->base.index;
 	if (stateNr <= self->lastSimState) {
 	    CcBitArray_Set(*targets, stateNr, TRUE);
 	} else {
@@ -562,12 +563,11 @@ static void
 CcLexical_CommentStr(CcLexical_t * self, const CcsToken_t * token,
 		     int * output, CcNode_t * p) {
     CcCharSet_t * set;
-    const CcNodeType_t * p->base.type;
     int * cur = output;
+    CcTransition_t * trans;
 
     *cur = 0;
     while (p != NULL) {
-	p->base.type = (const CcNodeType_t *)p->base.type;
 	if (p->base.type == node_trans) {
 	    trans = &((CcNodeTrans_t *)p)->trans;
 	    if (CcTransition_Size(trans) != 1)
