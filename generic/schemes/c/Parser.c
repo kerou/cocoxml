@@ -888,7 +888,7 @@ CcsParser_TokenTerm(CcsParser_t * self, CcGraph_t ** g) {
 static void /* OK */
 CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g) {
     char * name = NULL; int kind;
-    CcNode_t * p; CcTransition_t trans;
+    CcTransition_t trans;
     *g = NULL;
     if (self->la->kind == 1 || self->la->kind == 3 || self->la->kind == 5) {
 	CcsParser_Sym(self, &name, &kind);
@@ -899,10 +899,11 @@ CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g) {
 				  "undefined name");
 		c = CcLexical_NewCharClass(self->lexical, name, CcCharSet());
 	    }
-	    CcTransition_FromCharSet(&trans, c->set, trans_normal, &self->lexical->classes);
-	    p = CcEBNF_NewNode(&self->lexical->base, node_trans, 0, &trans);
+	    CcTransition_FromCharSet(&trans, c->set, trans_normal,
+				     &self->lexical->classes);
+	    *g = CcGraphP(CcEBNF_NewNode(&self->lexical->base, node_trans,
+					 0, &trans));
 	    CcTransition_Destruct(&trans);
-	    *g = CcGraphP(p);
 	    self->tokenString = CcStrdup(self->noString);
 	} else { /* CcsParser_str */
 	    *g = CcLexical_StrToGraph(self->lexical, name, self->t);

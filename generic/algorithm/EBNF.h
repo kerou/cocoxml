@@ -85,7 +85,8 @@ void CcEBNF_Clear(CcEBNF_t * self);
 CcNode_t * CcEBNF_NewNode(CcEBNF_t * self, const CcObjectType_t * type, ...);
 
 CcNode_t * CcEBNF_MakeFirstAlt(CcEBNF_t * self, CcGraph_t * g);
-CcNode_t * CcEBNF_MakeAlternative(CcEBNF_t * self, CcGraph_t * g1, CcGraph_t * g2);
+CcNode_t *
+CcEBNF_MakeAlternative(CcEBNF_t * self, CcGraph_t * g1, CcGraph_t * g2);
 void CcEBNF_MakeSequence(CcEBNF_t * self, CcGraph_t * g1, CcGraph_t * g2);
 CcNode_t * CcEBNF_MakeIteration(CcEBNF_t * self, CcGraph_t * g);
 CcNode_t * CcEBNF_MakeOption(CcEBNF_t * self, CcGraph_t * g);

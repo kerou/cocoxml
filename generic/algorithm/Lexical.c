@@ -101,7 +101,7 @@ CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
     cur = s; slast = s + strlen(s);
     while (cur < slast) {
 	CcTransition(&trans, CcsUTF8GetCh(&cur, slast), trans_normal, &self->classes);
-	CcGraph_Append(g, CcEBNF_NewNode(&self->base, node_trans, &trans));
+	CcGraph_Append(g, CcEBNF_NewNode(&self->base, node_trans, 0, &trans));
 	CcTransition_Destruct(&trans);
     }
     CcFree(s);
