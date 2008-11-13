@@ -38,9 +38,6 @@
 
 EXTC_BEGIN
 
-#define  CcNormalTrans   0
-#define  CcContextTrans  1
-
 struct CcLexical_s {
     CcEBNF_t        base;
     CcGlobals_t   * globals;
