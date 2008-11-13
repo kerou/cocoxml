@@ -47,6 +47,24 @@ CcSyntax_Destruct(CcSyntax_t * self)
     CcEBNF_Destruct(&self->base);
 }
 
+CcNode_t *
+CcSyntax_NodeFromSymbol(CcSyntax_t * self, const CcSymbol_t * sym, int line,
+			CcsBool_t weak)
+{
+    if (sym->base.type == symbol_t && weak)
+	return (CcNode_t *)CcEBNF_NewNode(&self->base, node_wt, line, sym);
+    else if (sym->base.type == symbol_t)
+	return (CcNode_t *)CcEBNF_NewNode(&self->base, node_t, line, sym);
+    else if (sym->base.type == symbol_pr)
+	return (CcNode_t *)CcEBNF_NewNode(&self->base, node_pr, line, sym);
+    else if (sym->base.type == symbol_nt)
+	return (CcNode_t *)CcEBNF_NewNode(&self->base, node_nt, line, sym);
+    else if (sym->base.type == symbol_rslv)
+	return (CcNode_t *)CcEBNF_NewNode(&self->base, node_rslv, line);
+    else
+	CcsAssert(0);
+}
+
 static void
 CcSyntax_First0(CcSyntax_t * self, CcBitArray_t * ret,
 		CcNode_t * p, CcBitArray_t * mark)

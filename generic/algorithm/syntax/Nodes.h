@@ -84,4 +84,6 @@ typedef struct {
 } CcNodeRSLV_t;
 extern const CcObjectType_t * node_rslv;
 
+void CcNode_SetPosition(CcNode_t * self, CcsPosition_t * pos);
+
 #endif  /* COCO_SYNTAX_NODES_H */
