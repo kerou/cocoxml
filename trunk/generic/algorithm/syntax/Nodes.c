@@ -29,7 +29,6 @@ CcNodeT_Construct(CcObject_t * self, va_list ap)
 {
     CcNodeT_t * ccself = (CcNodeT_t *)self;
     ccself->sym = va_arg(ap, CcSymbol_t *);
-    ccself->pos = va_arg(ap, CcsPosition_t *);
 }
 static void
 CcNodeT_Destruct(CcObject_t * self)
@@ -55,7 +54,6 @@ CcNodeNT_Construct(CcObject_t * self, va_list ap)
 {
     CcNodeNT_t * ccself = (CcNodeNT_t *)self;
     ccself->sym = va_arg(ap, CcSymbol_t *);
-    ccself->pos = va_arg(ap, CcsPosition_t *);
 }
 static void
 CcNodeNT_Destruct(CcObject_t * self)
@@ -82,7 +80,6 @@ CcNodeWT_Construct(CcObject_t * self, va_list ap)
 {
     CcNodeWT_t * ccself = (CcNodeWT_t *)self;
     ccself->sym = va_arg(ap, CcSymbol_t *);
-    ccself->pos = va_arg(ap, CcsPosition_t *);
 }
 static void
 CcNodeWT_Destruct(CcObject_t * self)
@@ -139,7 +136,6 @@ static void
 CcNodeSEM_Construct(CcObject_t * self, va_list ap)
 {
     CcNodeSEM_t * ccself = (CcNodeSEM_t *)self;
-    ccself->pos = va_arg(ap, CcsPosition_t *);
 }
 static void
 CcNodeSEM_Destruct(CcObject_t * self)
@@ -158,7 +154,6 @@ static void
 CcNodeRSLV_Construct(CcObject_t * self, va_list ap)
 {
     CcNodeRSLV_t * ccself = (CcNodeRSLV_t *)self;
-    ccself->pos = va_arg(ap, CcsPosition_t *);
 }
 static void
 CcNodeRSLV_Destruct(CcObject_t * self)
@@ -172,3 +167,21 @@ static const CcNodeType_t NodeRSLV = {
     CcNode_Deletable
 };
 const CcObjectType_t * node_rslv = (const CcObjectType_t *)&NodeRSLV;
+
+void
+CcNode_SetPosition(CcNode_t * self, CcsPosition_t * pos)
+{
+    if (self->base.type == node_nt) {
+	((CcNodeNT_t *)self)->pos = pos;
+    } else if (self->base.type == node_t) {
+	((CcNodeT_t *)self)->pos = pos;
+    } else if (self->base.type == node_wt) {
+	((CcNodeWT_t *)self)->pos = pos;
+    } else if (self->base.type == node_sem) {
+	((CcNodeSEM_t *)self)->pos;
+    } else if (self->base.type == node_rslv) {
+	((CcNodeRSLV_t *)self)->pos = pos;
+    } else {
+	CcsAssert(0);
+    }
+}

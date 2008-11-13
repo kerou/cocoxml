@@ -55,6 +55,9 @@ struct CcSyntax_s {
 CcSyntax_t * CcSyntax(CcSyntax_t * self, CcGlobals_t * globals);
 void CcSyntax_Destruct(CcSyntax_t * self);
 
+CcNode_t *
+CcSyntax_NodeFromSymbol(CcSyntax_t * self, const CcSymbol_t * sym, int line,
+			CcsBool_t weak);
 void CcSyntax_SetupAnys(CcSyntax_t * self);
 void CcSyntax_CompSymbolSets(CcSyntax_t * self);
 CcsBool_t CcSyntax_GrammarOk(CcSyntax_t * self);
