@@ -24,28 +24,20 @@
 #ifndef  COCO_LEXICAL_ACTION_H
 #define  COCO_LEXICAL_ACTION_H
 
-#ifndef  COCO_LEXICAL_NODES_H
-#include "lexical/Nodes.h"
+#ifndef  COCO_LEXICAL_TRANSITION_H
+#include "lexical/Transition.h"
 #endif
 
 EXTC_BEGIN
 
 struct CcAction_s {
-    CcArrayList_t         * classes;
-    CcNode_Transition_t     tc;
-    CcTarget_t            * target;
-    CcAction_t            * next;
-    CcsBool_t               single;
-    union {
-	int                 chr; /* single is TRUE. */
-	const CcCharSet_t * set; /* single is FALSE.
-				    Point into CharClass in classes. */
-    } u;
+    CcAction_t     * next;
+    CcTarget_t     * target;
+    CcTransition_t   trans;
 };
 
 CcAction_t *
-CcAction(const CcCharSet_t * s, CcNode_Transition_t tc,
-	 CcArrayList_t * classes);
+CcAction(const CcTransition_t * trans, CcArrayList_t * classes);
 
 CcAction_t * CcAction_Clone(const CcAction_t * action);
 

@@ -28,15 +28,12 @@
 #include  "lexical/State.h"
 
 CcAction_t *
-CcAction(const CcCharSet_t * s, CcNode_Transition_t tc,
-	 CcArrayList_t * classes)
+CcAction(const CcTransition_t * trans, CcArrayList_t * classes)
 {
     CcAction_t * self = CcMalloc(sizeof(CcAction_t));
-    self->classes = classes;
-    self->tc = tc;
-    self->target = NULL;
     self->next = NULL;
-    CcAction_SetShift(self, s);
+    self->target = NULL;
+    CcTransition_Clone(&self->trans, trans);
     return self;
 }
 
@@ -44,13 +41,9 @@ CcAction_t *
 CcAction_Clone(const CcAction_t * action)
 {
     CcAction_t * self = CcMalloc(sizeof(CcAction_t));
-    self->classes = action->classes;
-    self->tc = action->tc;
-    self->target = NULL;
     self->next = NULL;
-    self->single = action->single;
-    if (self->single) self->u.chr = action->u.chr;
-    else self->u.set = action->u.set;
+    self->target = NULL;
+    CcTransition_Clone(&self->trans, &action->trans);
     CcAction_AddTargets(self, action);
     return self;
 }
@@ -64,50 +57,26 @@ CcAction_Destruct(CcAction_t * self)
 	next = cur->next;
 	CcTarget_Destruct(cur);
     }
+    CcTransition_Destruct(&self->trans);
     CcFree(self);
 }
 
 int
 CcAction_ShiftSize(CcAction_t * self)
 {
-    if (self->single) return 1;
-    return CcCharSet_Elements(self->u.set);
+    return CcTransition_Size(&self->trans);
 }
 
 CcCharSet_t *
 CcAction_GetShift(CcAction_t * self)
 {
-    CcCharSet_t * s;
-    if (self->single) {
-	s = CcCharSet();
-	CcCharSet_Set(s, self->u.chr);
-    } else {
-	s = CcCharSet_Clone(self->u.set);
-    }
-    return s;
+    return CcTransition_GetCharSet(&self->trans);
 }
 
 void
 CcAction_SetShift(CcAction_t * self, const CcCharSet_t * s)
 {
-    CcCharClass_t * c; CcArrayListIter_t iter;
-
-    if (CcCharSet_Elements(s) == 1) {
-	self->single = TRUE;
-	self->u.chr = CcCharSet_First(s);
-	return;
-    }
-    self->single = FALSE;
-
-    for (c = (CcCharClass_t *)CcArrayList_First(self->classes, &iter);
-	 c; c = (CcCharClass_t *)CcArrayList_Next(self->classes, &iter))
-	if (CcCharSet_Equals(s, c->set)) {
-	    self->u.set = c->set;
-	    return;
-	}
-    c = (CcCharClass_t *)
-	CcArrayList_New(self->classes, char_class, "#", CcCharSet_Clone(s));
-    self->u.set = c->set;
+    CcTransition_SetCharSet(&self->trans, s);
 }
 
 static void
@@ -130,5 +99,5 @@ CcAction_AddTargets(CcAction_t * self, const CcAction_t * action)
     CcTarget_t * p;
     for (p = action->target; p != NULL; p = p->next)
 	CcAction_AddTarget(self, CcTarget(p->state));
-    if (action->tc == node_contextTrans) self->tc = node_contextTrans;
+    /*if (action->tc == node_contextTrans) self->tc = node_contextTrans;*/
 }

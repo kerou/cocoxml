@@ -24,29 +24,22 @@
 #include  "lexical/Nodes.h"
 
 static void
-CcNodeChr_Construct(CcObject_t * self, va_list ap)
+CcNodeTrans_Construct(CcObject_t * self, va_list ap)
 {
-    CcNodeChr_t * ccself = (CcNodeChr_t *)self;
+    CcNodeTrans_t * ccself = (CcNodeTrans_t *)self;
     CcNode_Construct(self, ap);
-    ccself->code = node_normalTrans;
-    ccself->chr = va_arg(ap, int);
+    CcTransition_Clone(&ccself->trans, va_arg(ap, CcTransition_t *));
 }
-static const CcNodeType_t NodeChr = {
-    { sizeof(CcNodeChr_t), "node_chr", CcNodeChr_Construct, CcNode_Destruct },
-    CcNode_NoDeletable
-};
-const CcObjectType_t * node_chr = (CcObjectType_t *)&NodeChr;
-
 static void
-CcNodeClas_Construct(CcObject_t * self, va_list ap)
+CcNodeTrans_Destruct(CcObject_t * self)
 {
-    CcNodeClas_t * ccself = (CcNodeClas_t *)self;
-    CcNode_Construct(self, ap);
-    ccself->code = node_normalTrans;
-    ccself->clas = va_arg(ap, int);
+    CcNodeTrans_t * ccself = (CcNodeTrans_t *)self;
+    CcTransition_Destruct(&ccself->trans);
+    CcNode_Destruct(self);
 }
-static const CcNodeType_t NodeClas = {
-    { sizeof(CcNodeClas_t), "node_clas", CcNodeClas_Construct, CcNode_Destruct },
+static const CcNodeType_t NodeTrans = {
+    { sizeof(CcNodeTrans_t), "node_trans",
+      CcNodeTrans_Construct, CcNodeTrans_Destruct },
     CcNode_NoDeletable
 };
-const CcObjectType_t * node_clas = (CcObjectType_t *)&NodeClas;
+const CcObjectType_t * node_trans = (CcObjectType_t *)&NodeTrans;
