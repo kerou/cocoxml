@@ -99,6 +99,24 @@ CcTransition_SetCharSet(CcTransition_t * self, const CcCharSet_t * s)
 }
 
 void
+CcTransition_SetCode(CcTransition_t * self, CcTransitionCode_t code)
+{
+    self->code = code;
+}
+
+CcsBool_t
+CcTransition_Overlap(const CcTransition_t * a,const CcTransition_t * b)
+{
+    if (a->single) {
+	if (b->single) return a->u.chr == b->u.chr;
+	return CcCharSet_Get(b->u.set, a->u.chr);
+    } else {
+	if (b->single) return CcCharSet_Get(a->u.set, b->u.chr);
+	return CcCharSet_Intersects(a->u.set, b->u.set);
+    }
+}
+
+void
 CcTransition_Destruct(CcTransition_t * self)
 {
     /* NOTHING IS OK */

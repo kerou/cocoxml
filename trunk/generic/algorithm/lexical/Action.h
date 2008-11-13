@@ -52,6 +52,8 @@ void CcAction_SetShift(CcAction_t * self, const CcCharSet_t * s);
 
 void CcAction_AddTargets(CcAction_t * self, const CcAction_t * action);
 
+CcsBool_t CcAction_Overlap(CcAction_t * a, CcAction_t * b);
+
 EXTC_END
 
 #endif /* COCO_LEXICAL_ACTION_H */

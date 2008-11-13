@@ -101,3 +101,9 @@ CcAction_AddTargets(CcAction_t * self, const CcAction_t * action)
 	CcAction_AddTarget(self, CcTarget(p->state));
     /*if (action->tc == node_contextTrans) self->tc = node_contextTrans;*/
 }
+
+CcsBool_t
+CcAction_Overlap(const CcAction_t * a, const CcAction_t * b)
+{
+    return CcTransition_Overlap(&a->trans, &b->trans);
+}

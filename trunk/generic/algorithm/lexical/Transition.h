@@ -61,6 +61,11 @@ int CcTransition_Size(const CcTransition_t * self);
 CcCharSet_t * CcTransition_GetCharSet(const CcTransition_t * self);
 void CcTransition_SetCharSet(CcTransition_t * self, const CcCharSet_t * trans);
 
+void CcTransition_SetCode(CcTransition_t * self, CcTransitionCode_t code);
+
+CcsBool_t
+CcTransition_Overlap(const CcTransition_t * a,const CcTransition_t * b);
+
 void CcTransition_Destruct(CcTransition_t * self);
 
 EXTC_END
