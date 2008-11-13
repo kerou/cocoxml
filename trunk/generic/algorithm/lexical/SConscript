@@ -7,4 +7,5 @@ Import('libobjs')
 
 libobjs.extend(map(lambda src: env.Object(src),
                    ['Action', 'CharClass.c', 'CharSet.c', 'Comment.c',
-                    'Melted.c', 'Nodes.c', 'State.c', 'Target.c']))
+                    'Melted.c', 'Nodes.c', 'State.c', 'Target.c',
+                    'Transition.c']))
