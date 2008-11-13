@@ -36,13 +36,14 @@ struct CcState_s {
     CcSymbol_t * endOf;
     int          ctx;
 };
-extern const CcObjectType_t * state;
+extern const CcObjectType_t * stateType;
 
 void CcState_AddAction(CcState_t * self, CcAction_t * act);
 void CcState_DetachAction(CcState_t * self, CcAction_t * act);
 int CcState_MeltWith(CcState_t * self, CcState_t * s);
 
 CcsBool_t CcState_MakeUnique(CcState_t * self);
+CcAction_t * CcState_FindAction(CcState_t * self, int ch);
 
 EXTC_END
 
