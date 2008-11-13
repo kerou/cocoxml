@@ -520,7 +520,7 @@ CcLexical_StateWithSet(CcLexical_t * self, CcBitArray_t * s)
 }
 
 /* ---------------------------- actions -------------------------------- */
-void
+static void
 CcLexical_GetTargetStates(CcLexical_t * self, CcAction_t * a,
 			  CcBitArray_t ** targets, CcSymbol_t ** endOf,
 			  CcsBool_t * ctx)
