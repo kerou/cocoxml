@@ -49,7 +49,7 @@ CcState_Destruct(CcObject_t * self)
 static CcObjectType_t StateType = {
     sizeof(CcState_t), "State", CcState_Construct, CcState_Destruct
 };
-const CcObjectType_t * state = &StateType;
+const CcObjectType_t * stateType = &StateType;
 
 void
 CcState_AddAction(CcState_t * self, CcAction_t * act)
@@ -141,4 +141,14 @@ CcState_MakeUnique(CcState_t * self)
 		changed = TRUE;
 	    }
     return changed;
+}
+
+CcAction_t *
+CcState_FindAction(CcState_t * self, int chr)
+{
+    CcAction_t * action;
+
+    for (action = self->firstAction; action != NULL; action = action->next)
+	if (CcTransition_Check(&action->trans, chr)) return action;
+    return NULL;
 }
