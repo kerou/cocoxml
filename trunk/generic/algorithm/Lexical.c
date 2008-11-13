@@ -204,7 +204,7 @@ static CcObject_t *
 state_filter(CcObject_t * object, int curidx, int newidx, void * data)
 {
     if (CcBitArray_Get((CcBitArray_t *)data, curidx)) return object;
-    CcState_Destruct((CcState_t *)object);
+    CcObject_VDestruct(object);
     return NULL;
 }
 
@@ -426,7 +426,8 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
 }
 
 static void
-CcLexical_MeltStates(CcLexical_t * self, CcState_t * state) {
+CcLexical_MeltStates(CcLexical_t * self, CcState_t * state)
+{
     CcsBool_t changed, ctx;
     CcBitArray_t * targets;
     CcSymbol_t * endOf;
@@ -444,7 +445,7 @@ CcLexical_MeltStates(CcLexical_t * self, CcState_t * state) {
 		s->endOf = endOf; s->ctx = ctx;
 		for (targ = action->target; targ != NULL; targ = targ->next)
 		    CcState_MeltWith(s, targ->state);
-		do { changed = CcLexical_MakeUnique(self, s); } while (changed);
+		do { changed = CcState_MakeUnique(s); } while (changed);
 		melt = CcLexical_NewMelted(self, targets, s);
 	    }
 	    action->target->next = NULL;
@@ -454,7 +455,8 @@ CcLexical_MeltStates(CcLexical_t * self, CcState_t * state) {
 }
 
 static void
-CcLexical_FindCtxStates(CcLexical_t * self) {
+CcLexical_FindCtxStates(CcLexical_t * self)
+{
     CcState_t * state; CcArrayListIter_t iter;
     CcAction_t * action;
 
@@ -466,7 +468,8 @@ CcLexical_FindCtxStates(CcLexical_t * self) {
 }
 
 void
-CcLexical_MakeDeterministic(CcLexical_t * self) {
+CcLexical_MakeDeterministic(CcLexical_t * self)
+{
     CcState_t * state; CcArrayListIter_t iter;
     CcsBool_t  changed;
 
@@ -477,7 +480,7 @@ CcLexical_MakeDeterministic(CcLexical_t * self) {
 
     for (state = (CcState_t *)CcArrayList_First(&self->states, &iter);
 	 state; state = (CcState_t *)CcArrayList_Next(&self->states, &iter))
-	do { changed = CcLexical_MakeUnique(self, state); } while (changed);
+	do { changed = CcState_MakeUnique(state); } while (changed);
     for (state = (CcState_t *)CcArrayList_First(&self->states, &iter);
 	 state; state = (CcState_t *)CcArrayList_Next(&self->states, &iter))
 	CcLexical_MeltStates(self, state);
@@ -561,8 +564,8 @@ CcLexical_GetTargetStates(CcLexical_t * self, CcAction_t * a,
 /* ------------------------ comments -------------------------------- */
 static void
 CcLexical_CommentStr(CcLexical_t * self, const CcsToken_t * token,
-		     int * output, CcNode_t * p) {
-    CcCharSet_t * set;
+		     int * output, CcNode_t * p)
+{
     int * cur = output;
     CcTransition_t * trans;
 
