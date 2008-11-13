@@ -61,8 +61,8 @@ CcSyntax_NodeFromSymbol(CcSyntax_t * self, const CcSymbol_t * sym, int line,
 	return (CcNode_t *)CcEBNF_NewNode(&self->base, node_nt, line, sym);
     else if (sym->base.type == symbol_rslv)
 	return (CcNode_t *)CcEBNF_NewNode(&self->base, node_rslv, line);
-    else
-	CcsAssert(0);
+    CcsAssert(0);
+    return NULL;
 }
 
 static void
