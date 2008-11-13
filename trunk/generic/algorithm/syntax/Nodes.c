@@ -135,7 +135,7 @@ const CcObjectType_t * node_sync = (const CcObjectType_t *)&NodeSYNC;
 static void
 CcNodeSEM_Construct(CcObject_t * self, va_list ap)
 {
-    CcNodeSEM_t * ccself = (CcNodeSEM_t *)self;
+    /*CcNodeSEM_t * ccself = (CcNodeSEM_t *)self;*/
 }
 static void
 CcNodeSEM_Destruct(CcObject_t * self)
@@ -153,7 +153,7 @@ const CcObjectType_t * node_sem = (const CcObjectType_t *)&NodeSEM;
 static void
 CcNodeRSLV_Construct(CcObject_t * self, va_list ap)
 {
-    CcNodeRSLV_t * ccself = (CcNodeRSLV_t *)self;
+    /*CcNodeRSLV_t * ccself = (CcNodeRSLV_t *)self;*/
 }
 static void
 CcNodeRSLV_Destruct(CcObject_t * self)
@@ -178,7 +178,7 @@ CcNode_SetPosition(CcNode_t * self, CcsPosition_t * pos)
     } else if (self->base.type == node_wt) {
 	((CcNodeWT_t *)self)->pos = pos;
     } else if (self->base.type == node_sem) {
-	((CcNodeSEM_t *)self)->pos;
+	((CcNodeSEM_t *)self)->pos = pos;
     } else if (self->base.type == node_rslv) {
 	((CcNodeRSLV_t *)self)->pos = pos;
     } else {
