@@ -108,6 +108,12 @@ CcCharSet_Clone(const CcCharSet_t * s)
 }
 
 CcsBool_t
+CcCharSet_IsEmpty(const CcCharSet_t * self)
+{
+    return self->head == NULL;
+}
+
+CcsBool_t
 CcCharSet_Equals(const CcCharSet_t * self, const CcCharSet_t * s)
 {
     const CcRange_t * cur0, * cur1;
