@@ -94,15 +94,23 @@ CcArrayList_Next(CcArrayList_t * self, CcArrayListIter_t * iter)
     return iter->index < self->Count ? self->Objects[iter->index++] : NULL;
 }
 
+CcArrayListIter_t *
+CcArrayListIter_Copy(CcArrayListIter_t * self, const CcArrayListIter_t * orig)
+{
+    self->index = orig->index;
+    return self;
+}
+
 void
-CcArrayList_Filter(CcArrayList_t * self, CcArrayList_FilterFunc_t func)
+CcArrayList_Filter(CcArrayList_t * self, CcArrayList_FilterFunc_t func,
+		   void * data)
 {
     int curidx, newidx;
     CcObject_t * object;
 
     newidx = 0;
     for (curidx = 0; curidx < self->Count; ++curidx) {
-	if ((object = func(self->Objects[curidx], curidx, newidx))) {
+	if ((object = func(self->Objects[curidx], curidx, newidx, data))) {
 	    object->index = newidx;
 	    self->Objects[newidx++] = object;
 	}

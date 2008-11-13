@@ -55,10 +55,15 @@ typedef struct {
 CcObject_t * CcArrayList_First(CcArrayList_t * self, CcArrayListIter_t * iter);
 CcObject_t * CcArrayList_Next(CcArrayList_t * self, CcArrayListIter_t * iter);
 
+CcArrayListIter_t *
+CcArrayListIter_Copy(CcArrayListIter_t * self, const CcArrayListIter_t * orig);
+
 /* If return NULL, the object has to be destructed. */
 typedef CcObject_t *
-(* CcArrayList_FilterFunc_t)(CcObject_t * object, int curidx, int newidx);
-void CcArrayList_Filter(CcArrayList_t * self, CcArrayList_FilterFunc_t func);
+(* CcArrayList_FilterFunc_t)(CcObject_t * object, int curidx, int newidx,
+			     void * data);
+void CcArrayList_Filter(CcArrayList_t * self, CcArrayList_FilterFunc_t func,
+			void * data);
 
 EXTC_END
 
