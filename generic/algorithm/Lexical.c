@@ -428,7 +428,7 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
 static void
 CcLexical_MeltStates(CcLexical_t * self, CcState_t * state)
 {
-    CcsBool_t changed, ctx;
+    CcsBool_t ctx;
     CcBitArray_t * targets;
     CcSymbol_t * endOf;
     CcAction_t * action;
@@ -445,7 +445,7 @@ CcLexical_MeltStates(CcLexical_t * self, CcState_t * state)
 		s->endOf = endOf; s->ctx = ctx;
 		for (targ = action->target; targ != NULL; targ = targ->next)
 		    CcState_MeltWith(s, targ->state);
-		do { changed = CcState_MakeUnique(s); } while (changed);
+		CcState_MakeUnique(s);
 		melt = CcLexical_NewMelted(self, targets, s);
 	    }
 	    action->target->next = NULL;
@@ -471,7 +471,6 @@ void
 CcLexical_MakeDeterministic(CcLexical_t * self)
 {
     CcState_t * state; CcArrayListIter_t iter;
-    CcsBool_t  changed;
 
     self->lastSimState = self->states.Count;
     /* heuristic for set size in CcMelted.set */
@@ -480,7 +479,7 @@ CcLexical_MakeDeterministic(CcLexical_t * self)
 
     for (state = (CcState_t *)CcArrayList_First(&self->states, &iter);
 	 state; state = (CcState_t *)CcArrayList_Next(&self->states, &iter))
-	do { changed = CcState_MakeUnique(state); } while (changed);
+	CcState_MakeUnique(state);
     for (state = (CcState_t *)CcArrayList_First(&self->states, &iter);
 	 state; state = (CcState_t *)CcArrayList_Next(&self->states, &iter))
 	CcLexical_MeltStates(self, state);

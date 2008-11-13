@@ -110,37 +110,39 @@ CcState_SplitActions(CcState_t * self, CcAction_t * a, CcAction_t * b)
 	CcCharSet_Destruct(setc);
     } else {
 	setc = CcCharSet_Clone(seta); CcCharSet_And(setc, setb);
-	CcCharSet_Subtract(seta, setc);
-	CcCharSet_Subtract(setb, setc);
-	CcAction_SetShift(a, seta);
-	CcAction_SetShift(b, setb);
+	if (!CcCharSet_IsEmpty(setc)) {
+	    CcCharSet_Subtract(seta, setc);
+	    CcCharSet_Subtract(setb, setc);
+	    CcAction_SetShift(a, seta);
+	    CcAction_SetShift(b, setb);
 
-	CcTransition_Clone(&trans, &a->trans);
-	CcTransition_SetCharSet(&trans, setc);
-	CcTransition_SetCode(&trans, trans_normal);
-	c = CcAction(&trans);
-	CcTransition_Destruct(&trans);
-	CcAction_AddTargets(c, a);
-	CcAction_AddTargets(c, b);
-
-	CcState_AddAction(self, c);
+	    CcTransition_Clone(&trans, &a->trans);
+	    CcTransition_SetCharSet(&trans, setc);
+	    CcTransition_SetCode(&trans, trans_normal);
+	    c = CcAction(&trans);
+	    CcTransition_Destruct(&trans);
+	    CcAction_AddTargets(c, a);
+	    CcAction_AddTargets(c, b);
+	    CcState_AddAction(self, c);
+	}
 	CcCharSet_Destruct(setc);
     }
 }
 
-CcsBool_t
+void
 CcState_MakeUnique(CcState_t * self)
 {
     CcAction_t * a, * b;
     CcsBool_t changed = FALSE;
 
-    for (a = self->firstAction; a != NULL; a = a->next)
-	for (b = a->next; b != NULL; b = b->next)
-	    if (CcAction_Overlap(a, b)) {
-		CcState_SplitActions(self, a, b);
-		changed = TRUE;
-	    }
-    return changed;
+    do {
+	for (a = self->firstAction; a != NULL; a = a->next)
+	    for (b = a->next; b != NULL; b = b->next)
+		if (CcAction_Overlap(a, b)) {
+		    CcState_SplitActions(self, a, b);
+		    changed = TRUE;
+		}
+    } while (changed);
 }
 
 CcAction_t *
