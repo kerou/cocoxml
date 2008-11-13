@@ -54,6 +54,7 @@ struct CcNode_s {
     CcNode_t   * sub;
     CcsBool_t    up;
     int          line;
+    CcState_t  * state; /* Used by Lexical only. */
 };
 
 /* Deletablity checks */
