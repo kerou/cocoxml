@@ -37,7 +37,7 @@ struct CcAction_s {
 };
 
 CcAction_t *
-CcAction(const CcTransition_t * trans, CcArrayList_t * classes);
+CcAction(const CcTransition_t * trans);
 
 CcAction_t * CcAction_Clone(const CcAction_t * action);
 
@@ -52,7 +52,7 @@ void CcAction_SetShift(CcAction_t * self, const CcCharSet_t * s);
 
 void CcAction_AddTargets(CcAction_t * self, const CcAction_t * action);
 
-CcsBool_t CcAction_Overlap(CcAction_t * a, CcAction_t * b);
+CcsBool_t CcAction_Overlap(const CcAction_t * a, const CcAction_t * b);
 
 EXTC_END
 

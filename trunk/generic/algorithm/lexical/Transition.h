@@ -56,12 +56,15 @@ CcTransition_t *
 CcTransition_Clone(CcTransition_t * self, const CcTransition_t * t);
 
 int CcTransition_Size(const CcTransition_t * self);
+int CcTransition_First(const CcTransition_t * self);
 
 /* The returned CcCharSet_t must be destructed. */
 CcCharSet_t * CcTransition_GetCharSet(const CcTransition_t * self);
 void CcTransition_SetCharSet(CcTransition_t * self, const CcCharSet_t * trans);
 
 void CcTransition_SetCode(CcTransition_t * self, CcTransitionCode_t code);
+
+CcsBool_t CcTransition_Check(const CcTransition_t * self, int chr);
 
 CcsBool_t
 CcTransition_Overlap(const CcTransition_t * a,const CcTransition_t * b);

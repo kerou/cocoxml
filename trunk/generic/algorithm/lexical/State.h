@@ -42,6 +42,8 @@ void CcState_AddAction(CcState_t * self, CcAction_t * act);
 void CcState_DetachAction(CcState_t * self, CcAction_t * act);
 int CcState_MeltWith(CcState_t * self, CcState_t * s);
 
+CcsBool_t CcState_MakeUnique(CcState_t * self);
+
 EXTC_END
 
 #endif /* COCO_LEXICAL_STATE_H */
