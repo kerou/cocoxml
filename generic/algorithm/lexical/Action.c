@@ -28,7 +28,7 @@
 #include  "lexical/State.h"
 
 CcAction_t *
-CcAction(const CcTransition_t * trans, CcArrayList_t * classes)
+CcAction(const CcTransition_t * trans)
 {
     CcAction_t * self = CcMalloc(sizeof(CcAction_t));
     self->next = NULL;

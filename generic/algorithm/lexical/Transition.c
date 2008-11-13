@@ -66,6 +66,13 @@ CcTransition_Size(const CcTransition_t * self)
     return CcCharSet_Elements(self->u.set);
 }
 
+int
+CcTransition_First(const CcTransition_t * self)
+{
+    if (self->single) return self->u.chr;
+    return CcCharSet_First(self->u.set);
+}
+
 CcCharSet_t *
 CcTransition_GetCharSet(const CcTransition_t * self)
 {
@@ -102,6 +109,13 @@ void
 CcTransition_SetCode(CcTransition_t * self, CcTransitionCode_t code)
 {
     self->code = code;
+}
+
+CcsBool_t
+CcTransition_Check(const CcTransition_t * self, int chr)
+{
+    if (self->single) return chr == self->u.chr;
+    return CcCharSet_Get(self->u.set, chr);
 }
 
 CcsBool_t
