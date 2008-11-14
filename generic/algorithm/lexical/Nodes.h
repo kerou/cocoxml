@@ -40,6 +40,8 @@ typedef struct {
 } CcNodeTrans_t;
 extern const CcObjectType_t * node_trans;
 
+CcNode_t * CcNodeTrans(int line, const CcTransition_t * trans);
+
 EXTC_END
 
 #endif  /* COCO_LEXICAL_NODES_H */

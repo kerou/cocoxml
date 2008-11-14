@@ -44,20 +44,23 @@ CcSymbolTable_Destruct(CcSymbolTable_t * self)
 CcSymbol_t *
 CcSymbolTable_NewTerminal(CcSymbolTable_t * self, const char * name, int line)
 {
-    return (CcSymbol_t *)CcArrayList_New(&self->terminals, symbol_t, name, line);
+    return (CcSymbol_t *)CcArrayList_New(&self->terminals,
+					 (CcObject_t *)CcSymbolT(name, line));
 }
 
 CcSymbol_t *
 CcSymbolTable_NewNonTerminal(CcSymbolTable_t * self,
 			     const char * name, int line)
 {
-    return (CcSymbol_t *)CcArrayList_New(&self->nonterminals, symbol_nt, name, line);
+    return (CcSymbol_t *)CcArrayList_New(&self->nonterminals,
+					 (CcObject_t *)CcSymbolNT(name, line));
 }
 
 CcSymbol_t *
 CcSymbolTable_NewPragma(CcSymbolTable_t * self, const char * name, int line)
 {
-    return (CcSymbol_t *)CcArrayList_New(&self->pragmas, symbol_pr, name, line);
+    return (CcSymbol_t *)CcArrayList_New(&self->pragmas,
+					 (CcObject_t *)CcSymbolPR(name, line));
 }
 
 CcSymbol_t *

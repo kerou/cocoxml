@@ -24,13 +24,6 @@
 #include  "Symbols.h"
 
 static void
-CcSymbol_Construct(CcObject_t * self, va_list ap)
-{
-    CcSymbol_t * ccself = (CcSymbol_t *)self;
-    ccself->name = CcStrdup(va_arg(ap, const char *));
-    ccself->line = va_arg(ap, int);
-}
-static void
 CcSymbol_Destruct(CcObject_t * self)
 {
     CcSymbol_t * ccself = (CcSymbol_t *)self;
@@ -38,11 +31,6 @@ CcSymbol_Destruct(CcObject_t * self)
     CcObject_Destruct(self);
 }
 
-static void
-CcSymbolNT_Construct(CcObject_t * self, va_list ap)
-{
-    CcSymbol_Construct(self, ap);
-}
 static void
 CcSymbolNT_Destruct(CcObject_t * self)
 {
@@ -55,34 +43,38 @@ CcSymbolNT_Destruct(CcObject_t * self)
 }
 
 static const CcObjectType_t SymbolT = {
-    sizeof(CcSymbolT_t), "symbol_t",
-    CcSymbol_Construct, CcSymbol_Destruct
+    sizeof(CcSymbolT_t), "symbol_t", CcSymbol_Destruct
 };
 const CcObjectType_t * symbol_t = &SymbolT;
 
 static const CcObjectType_t SymbolPR = {
-    sizeof(CcSymbolPR_t), "symbol_pr",
-    CcSymbol_Construct, CcSymbol_Destruct
+    sizeof(CcSymbolPR_t), "symbol_pr", CcSymbol_Destruct
 };
 const CcObjectType_t * symbol_pr = &SymbolPR;
 
 static const CcObjectType_t SymbolNT = {
-    sizeof(CcSymbolNT_t), "symbol_nt",
-    CcSymbolNT_Construct, CcSymbolNT_Destruct
+    sizeof(CcSymbolNT_t), "symbol_nt", CcSymbolNT_Destruct
 };
 const CcObjectType_t * symbol_nt = &SymbolNT;
 
 static const CcObjectType_t SymbolUnknown = {
-    sizeof(CcSymbolUnknown_t), "symbol_unknown",
-    CcSymbol_Construct, CcSymbol_Destruct
+    sizeof(CcSymbolUnknown_t), "symbol_unknown", CcSymbol_Destruct
 };
 const CcObjectType_t * symbol_unknown = &SymbolUnknown;
 
 static const CcObjectType_t SymbolRSLV = {
-    sizeof(CcSymbolRSLV_t), "symbol_rslv",
-    CcSymbol_Construct, CcSymbol_Destruct
+    sizeof(CcSymbolRSLV_t), "symbol_rslv", CcSymbol_Destruct
 };
 const CcObjectType_t * symbol_rslv = &SymbolRSLV;
+
+CcSymbol_t *
+CcSymbol(const CcObjectType_t * type, const char * name, int line)
+{
+    CcSymbol_t * self = (CcSymbol_t *)CcObject(type);
+    self->name = CcStrdup(name);
+    self->line = line;
+    return self;
+}
 
 CcSymbol_TokenKind_t
 CcSymbol_GetTokenKind(CcSymbol_t * self)

@@ -67,7 +67,7 @@ CcLexical(CcLexical_t * self, CcGlobals_t * globals)
     self->dirtyLexical = FALSE;
     self->hasCtxMoves = FALSE;
 
-    CcArrayList_New(&self->states, stateType);
+    CcArrayList_New(&self->states, (CcObject_t *)CcState());
     return self;
 }
 
@@ -100,8 +100,9 @@ CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
     g = CcGraph();
     cur = s; slast = s + strlen(s);
     while (cur < slast) {
-	CcTransition(&trans, CcsUTF8GetCh(&cur, slast), trans_normal, &self->classes);
-	CcGraph_Append(g, CcEBNF_NewNode(&self->base, node_trans, 0, &trans));
+	CcTransition(&trans, CcsUTF8GetCh(&cur, slast),
+		     trans_normal, &self->classes);
+	CcGraph_Append(g, CcEBNF_NewNode(&self->base, CcNodeTrans(0, &trans)));
 	CcTransition_Destruct(&trans);
     }
     CcFree(s);
@@ -129,7 +130,7 @@ CcCharClass_t *
 CcLexical_NewCharClass(CcLexical_t * self, const char * name, CcCharSet_t * s)
 {
     return (CcCharClass_t *)
-	CcArrayList_New(&self->classes, char_class, name, s);
+	CcArrayList_New(&self->classes, (CcObject_t *)CcCharClass(name, s));
 }
 
 CcCharClass_t *
@@ -258,7 +259,8 @@ CcLexical_TheState(CcLexical_t * self, CcNode_t * p)
     CcState_t * state;
 
     if (p != NULL)  return p->state;
-    state = (CcState_t *)CcArrayList_New(&self->states, stateType);
+    state = (CcState_t *)CcArrayList_New(&self->states,
+					 (CcObject_t *)CcState());
     state->endOf = self->curSy;
     return state;
 }
@@ -295,7 +297,8 @@ CcLexical_NumberNodes(CcLexical_t * self, CcNode_t * p,
     if (p == NULL) return;
     if (p->state != NULL) return; /* already visited */
     if ((state == NULL) || (p->base.type == node_iter && renumIter))
-	state = (CcState_t *)CcArrayList_New(&self->states, stateType);
+	state = (CcState_t *)CcArrayList_New(&self->states,
+					     (CcObject_t *)CcState());
     p->state = state;
     if (CcNode_DelGraph(p))
 	state->endOf = self->curSy;
@@ -400,7 +403,8 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
 	self->dirtyLexical = TRUE;
     }
     while (scur < slast) { /* make new CcLexical for s0[i..len-1] */
-	to = (CcState_t *)CcArrayList_New(&self->states, stateType);
+	to = (CcState_t *)CcArrayList_New(&self->states,
+					  (CcObject_t *)CcState());
 	CcTransition(&trans, CcsUTF8GetCh(&scur, slast),
 		     trans_normal, &self->classes);
 	CcLexical_NewTransition(self, state, to, &trans);
@@ -441,7 +445,8 @@ CcLexical_MeltStates(CcLexical_t * self, CcState_t * state)
 	    CcLexical_GetTargetStates(self, action, &targets, &endOf, &ctx);
 	    melt = CcLexical_StateWithSet(self, targets);
 	    if (melt == NULL) {
-		s = (CcState_t *)CcArrayList_New(&self->states, stateType);
+		s = (CcState_t *)CcArrayList_New(&self->states,
+						 (CcObject_t *)CcState());
 		s->endOf = endOf; s->ctx = ctx;
 		for (targ = action->target; targ != NULL; targ = targ->next)
 		    CcState_MeltWith(s, targ->state);

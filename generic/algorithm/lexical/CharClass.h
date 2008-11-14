@@ -36,7 +36,7 @@ struct CcCharClass_s {
     CcCharSet_t * set;
 };
 
-extern const CcObjectType_t * char_class;
+CcCharClass_t * CcCharClass(const char * name, CcCharSet_t * set);
 
 EXTC_END
 
