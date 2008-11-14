@@ -99,7 +99,7 @@ CcAction_AddTargets(CcAction_t * self, const CcAction_t * action)
     CcTarget_t * p;
     for (p = action->target; p != NULL; p = p->next)
 	CcAction_AddTarget(self, CcTarget(p->state));
-    /*if (action->tc == node_contextTrans) self->tc = node_contextTrans;*/
+    if (action->trans.code == trans_context) self->trans.code = trans_context;
 }
 
 CcsBool_t
