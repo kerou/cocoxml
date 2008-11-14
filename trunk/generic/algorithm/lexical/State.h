@@ -36,7 +36,7 @@ struct CcState_s {
     CcSymbol_t * endOf;
     int          ctx;
 };
-extern const CcObjectType_t * stateType;
+CcState_t * CcState(void);
 
 void CcState_AddAction(CcState_t * self, CcAction_t * act);
 void CcState_DetachAction(CcState_t * self, CcAction_t * act);

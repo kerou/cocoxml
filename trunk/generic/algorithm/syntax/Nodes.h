@@ -34,29 +34,33 @@
 
 typedef struct {
     CcNode_t base;
-    CcSymbol_t * sym;
+    const CcSymbol_t * sym;
     CcsPosition_t * pos;
 } CcNodeT_t;
 extern const CcObjectType_t * node_t;
+CcNode_t * CcNodeT(int line, const CcSymbol_t * sym);
 
 typedef struct {
     CcNode_t base;
 } CcNodePR_t;
 extern const CcObjectType_t * node_pr;
+#define CcNodePR(line)  CcNode((const CcNodeType_t *)node_pr, line)
 
 typedef struct {
     CcNode_t base;
-    CcSymbol_t * sym;
+    const CcSymbol_t * sym;
     CcsPosition_t * pos;
 } CcNodeNT_t;
 extern const CcObjectType_t * node_nt;
+CcNode_t * CcNodeNT(int line, const CcSymbol_t * sym);
 
 typedef struct {
     CcNode_t base;
-    CcSymbol_t * sym;
+    const CcSymbol_t * sym;
     CcsPosition_t * pos;
 } CcNodeWT_t;
 extern const CcObjectType_t * node_wt;
+CcNode_t * CcNodeWT(int line, const CcSymbol_t * sym);
 
 typedef struct {
     CcNode_t base;
@@ -64,6 +68,7 @@ typedef struct {
     CcBitArray_t setSpace;
 } CcNodeANY_t;
 extern const CcObjectType_t * node_any;
+#define CcNodeAny(line)  CcNode((const CcNodeType_t *)node_any, line)
 
 typedef struct {
     CcNode_t base;
@@ -71,18 +76,22 @@ typedef struct {
     CcBitArray_t setSpace;
 } CcNodeSYNC_t;
 extern const CcObjectType_t * node_sync;
+#define CcNodeSync(line)  CcNode((const CcNodeType_t *)node_sync, line)
 
 typedef struct {
     CcNode_t base;
     CcsPosition_t * pos;
 } CcNodeSEM_t;
 extern const CcObjectType_t * node_sem;
+#define CcNodeSem(line)  CcNode((const CcNodeType_t *)node_sem, line)
 
 typedef struct {
     CcNode_t base;
     CcsPosition_t * pos;
 } CcNodeRSLV_t;
 extern const CcObjectType_t * node_rslv;
+#define CcNodeRslv(line)  CcNode((const CcNodeType_t *)node_rslv, line)
+CcNode_t * CcNodeRslvP(int line, CcsPosition_t * pos);
 
 void CcNode_SetPosition(CcNode_t * self, CcsPosition_t * pos);
 

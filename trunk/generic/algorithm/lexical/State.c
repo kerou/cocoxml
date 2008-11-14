@@ -26,14 +26,6 @@
 #include  "lexical/CharSet.h"
 
 static void
-CcState_Construct(CcObject_t * self, va_list ap)
-{
-    CcState_t * ccself = (CcState_t *)self;
-    ccself->firstAction = NULL;
-    ccself->endOf = NULL;
-    ccself->ctx = 0;
-}
-static void
 CcState_Destruct(CcObject_t * self)
 {
     CcAction_t * cur, * next;
@@ -47,9 +39,14 @@ CcState_Destruct(CcObject_t * self)
 }
 
 static CcObjectType_t StateType = {
-    sizeof(CcState_t), "State", CcState_Construct, CcState_Destruct
+    sizeof(CcState_t), "State", CcState_Destruct
 };
-const CcObjectType_t * stateType = &StateType;
+
+CcState_t *
+CcState(void)
+{
+    return (CcState_t *)CcObject(&StateType);
+}
 
 void
 CcState_AddAction(CcState_t * self, CcAction_t * act)

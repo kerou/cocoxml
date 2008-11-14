@@ -23,10 +23,12 @@
 -------------------------------------------------------------------------*/
 #include  "EBNF.h"
 
-void CcNode_Construct(CcObject_t * self, va_list ap)
+CcNode_t *
+CcNode(const CcNodeType_t * type, int line)
 {
-    CcNode_t * ccself = (CcNode_t *)self;
-    ccself->line = va_arg(ap, int);
+    CcNode_t * self = (CcNode_t *)CcObject(&type->base);
+    self->line = line;
+    return self;
 }
 void CcNode_Destruct(CcObject_t * self)
 {
@@ -51,26 +53,22 @@ CcNodeAlt_Deletable(CcNode_t * self)
 }
 
 static const CcNodeType_t NodeAlt = {
-    { sizeof(CcNode_t), "node_alt", CcNode_Construct, CcNode_Destruct },
-    CcNodeAlt_Deletable
+    { sizeof(CcNode_t), "node_alt", CcNode_Destruct }, CcNodeAlt_Deletable
 };
 const CcObjectType_t * node_alt = (const CcObjectType_t *)&NodeAlt;
 
 static const CcNodeType_t NodeIter = {
-    { sizeof(CcNode_t), "node_iter", CcNode_Construct, CcNode_Destruct },
-    CcNode_Deletable
+    { sizeof(CcNode_t), "node_iter", CcNode_Destruct }, CcNode_Deletable
 };
 const CcObjectType_t * node_iter = (const CcObjectType_t *)&NodeIter;
 
 static const CcNodeType_t NodeOpt = {
-    { sizeof(CcNode_t), "node_opt", CcNode_Construct, CcNode_Destruct },
-    CcNode_Deletable
+    { sizeof(CcNode_t), "node_opt", CcNode_Destruct }, CcNode_Deletable
 };
 const CcObjectType_t * node_opt = (const CcObjectType_t *)&NodeOpt;
 
 static const CcNodeType_t NodeEps = {
-    { sizeof(CcNode_t), "node_eps", CcNode_Construct, CcNode_Destruct },
-    CcNode_Deletable
+    { sizeof(CcNode_t), "node_eps", CcNode_Destruct }, CcNode_Deletable
 };
 const CcObjectType_t * node_eps = (const CcObjectType_t *)&NodeEps;
 
@@ -155,21 +153,15 @@ CcEBNF_Clear(CcEBNF_t * self)
 }
 
 CcNode_t *
-CcEBNF_NewNode(CcEBNF_t * self, const CcObjectType_t * type, ...)
+CcEBNF_NewNode(CcEBNF_t * self, CcNode_t * node)
 {
-    va_list ap;
-    CcNode_t * node;
-    va_start(ap, type);
-    node = (CcNode_t *)CcArrayList_VNew(&self->nodes, type, ap);
-    va_end(ap);
-    return node;
+    return (CcNode_t *)CcArrayList_New(&self->nodes, &node->base);
 }
 
 static CcNode_t *
-CcEBNF_NewNodeWithSub(CcEBNF_t * self, const CcObjectType_t * type,
-		      CcNode_t * sub)
+CcEBNF_NewNodeWithSub(CcEBNF_t * self, CcNode_t * node, CcNode_t * sub)
 {
-    CcNode_t * node = CcEBNF_NewNode(self, type, 0);
+    node = CcEBNF_NewNode(self, node);
     node->sub = sub;
     node->line = sub->line;
     return node;
@@ -178,7 +170,7 @@ CcEBNF_NewNodeWithSub(CcEBNF_t * self, const CcObjectType_t * type,
 CcNode_t *
 CcEBNF_MakeFirstAlt(CcEBNF_t * self, CcGraph_t * g)
 {
-    g->head = CcEBNF_NewNodeWithSub(self, node_alt, g->head);
+    g->head = CcEBNF_NewNodeWithSub(self, CcNodeAlt(0), g->head);
     g->head->next = g->r;
     g->r = g->head;
     return g->head;
@@ -189,7 +181,7 @@ CcEBNF_MakeAlternative(CcEBNF_t * self, CcGraph_t * g1, CcGraph_t * g2)
 {
     CcNode_t * p;
 
-    g2->head = CcEBNF_NewNodeWithSub(self, node_alt, g2->head);
+    g2->head = CcEBNF_NewNodeWithSub(self, CcNodeAlt(0), g2->head);
     p = g1->head; while (p->down != NULL) p = p->down;
     p->down = g2->head;
     p = g1->r; while (p->next != NULL) p = p->next;
@@ -216,7 +208,7 @@ CcNode_t *
 CcEBNF_MakeIteration(CcEBNF_t * self, CcGraph_t * g)
 {
     CcNode_t * p , * q;
-    g->head = CcEBNF_NewNodeWithSub(self, node_iter, g->head);
+    g->head = CcEBNF_NewNodeWithSub(self, CcNodeIter(0), g->head);
     p = g->r;
     g->r = g->head;
     while (p != NULL) {
@@ -229,7 +221,7 @@ CcEBNF_MakeIteration(CcEBNF_t * self, CcGraph_t * g)
 CcNode_t *
 CcEBNF_MakeOption(CcEBNF_t * self, CcGraph_t * g)
 {
-    g->head = CcEBNF_NewNodeWithSub(self, node_opt, g->head);
+    g->head = CcEBNF_NewNodeWithSub(self, CcNodeOpt(0), g->head);
     g->head->next = g->r;
     g->r = g->head;
     return g->head;

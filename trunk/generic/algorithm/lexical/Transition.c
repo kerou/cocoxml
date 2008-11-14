@@ -101,7 +101,8 @@ CcTransition_SetCharSet(CcTransition_t * self, const CcCharSet_t * s)
 	if (CcCharSet_Equals(s, c->set)) break;
     if (!c)
 	c = (CcCharClass_t *)
-	    CcArrayList_New(self->classes, char_class, "#", CcCharSet_Clone(s));
+	    CcArrayList_New(self->classes, (CcObject_t *)
+			    CcCharClass("#", CcCharSet_Clone(s)));
     self->u.set = c->set;
 }
 

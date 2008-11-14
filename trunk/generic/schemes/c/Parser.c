@@ -681,8 +681,8 @@ CcsParser_Term(CcsParser_t * self, CcGraph_t ** g) {
     if (CcsParser_StartOf(self, 17)) {
 	if (self->la->kind == 37) {
 	    CcsParser_Resolver(self, &pos);
-	    rslv = CcEBNF_NewNode(&self->syntax->base, node_rslv,
-				  self->la->line, pos);
+	    rslv = CcEBNF_NewNode(&self->syntax->base,
+				  CcNodeRslvP(self->la->line, pos));
 	    *g = CcGraphP(rslv);
 	}
 	CcsParser_Factor(self, &g2);
@@ -693,10 +693,10 @@ CcsParser_Term(CcsParser_t * self, CcGraph_t ** g) {
 	    CcEBNF_MakeSequence(&self->syntax->base, *g, g2);
 	}
     } else if (CcsParser_StartOf(self, 19)) {
-	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, node_eps, 0)); 
+	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, CcNodeEps(0)));
     } else CcsParser_SynErr(self, 48);
     if (*g == NULL) /* invalid start of Term */
-	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, node_eps, 0)); 
+	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, CcNodeEps(0)));
 }
 
 static void /* OK */
@@ -790,7 +790,7 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g) {
     }
     case 39: {
 	CcsParser_SemText(self, &pos);
-	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, node_sem, 0);
+	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeSem(0));
 	((CcNodeSEM_t *)p)->pos = pos;
 	*g = CcGraphP(p);
 	break;
@@ -798,20 +798,20 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g) {
     case 23: {
 	CcsParser_Get(self);
 	/* p.set is set in Tab_SetupAnys */
-	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, node_any, 0);
+	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeAny(0));
 	*g = CcGraphP(p);
 	break;
     }
     case 36: {
 	CcsParser_Get(self);
-	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, node_sync, 0);
+	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeSync(0));
 	*g = CcGraphP(p);
 	break;
     }
     default: CcsParser_SynErr(self, 49); break;
     }
     if (*g == NULL) /* invalid start of Factor */
-	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, node_eps, 0));
+	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, CcNodeEps(0)));
 }
 
 static void /* OK */
@@ -901,8 +901,8 @@ CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g) {
 	    }
 	    CcTransition_FromCharSet(&trans, c->set, trans_normal,
 				     &self->lexical->classes);
-	    *g = CcGraphP(CcEBNF_NewNode(&self->lexical->base, node_trans,
-					 0, &trans));
+	    *g = CcGraphP(CcEBNF_NewNode(&self->lexical->base,
+					 CcNodeTrans(0, &trans)));
 	    CcTransition_Destruct(&trans);
 	    self->tokenString = CcStrdup(self->noString);
 	} else { /* CcsParser_str */
@@ -929,6 +929,6 @@ CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g) {
 	CcEBNF_MakeIteration(&self->lexical->base, *g); 
     } else CcsParser_SynErr(self, 51);
     if (g == NULL) /* invalid start of TokenFactor */
-	*g = CcGraphP(CcEBNF_NewNode(&self->lexical->base, node_eps, 0));
+	*g = CcGraphP(CcEBNF_NewNode(&self->lexical->base, CcNodeEps(0)));
 }
 /*---- enable ----*/

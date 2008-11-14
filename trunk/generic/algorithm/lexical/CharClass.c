@@ -25,14 +25,6 @@
 #include  "lexical/CharSet.h"
 
 static void
-CcCharClass_Construct(CcObject_t * self, va_list ap)
-{
-    CcCharClass_t * ccself = (CcCharClass_t *)self;
-    ccself->name = CcStrdup(va_arg(ap, const char *));
-    ccself->set = va_arg(ap, CcCharSet_t *);
-}
-
-static void
 CcCharClass_Destruct(CcObject_t * self)
 {
     CcCharClass_t * ccself = (CcCharClass_t *)self;
@@ -42,7 +34,15 @@ CcCharClass_Destruct(CcObject_t * self)
 }
 
 static const CcObjectType_t CharClass = {
-    sizeof(CcCharClass_t), "char_class",
-    CcCharClass_Construct, CcCharClass_Destruct
+    sizeof(CcCharClass_t), "char_class", CcCharClass_Destruct
 };
 const CcObjectType_t * char_class = &CharClass;
+
+CcCharClass_t *
+CcCharClass(const char * name, CcCharSet_t * set)
+{
+    CcCharClass_t * self = (CcCharClass_t *)CcObject(&CharClass);
+    self->name = CcStrdup(name);
+    self->set = set;
+    return self;
+}

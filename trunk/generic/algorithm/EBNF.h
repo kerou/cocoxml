@@ -42,11 +42,6 @@ struct CcNodeType_s {
     CcsBool_t (* deletable)(CcNode_t * self);
 };
 
-void CcNode_Construct(CcObject_t * self, va_list ap);
-void CcNode_Destruct(CcObject_t * self);
-CcsBool_t CcNode_Deletable(CcNode_t * self);
-CcsBool_t CcNode_NoDeletable(CcNode_t * self);
-
 struct CcNode_s {
     CcObject_t   base;
     CcNode_t   * next;
@@ -56,6 +51,16 @@ struct CcNode_s {
     int          line;
     CcState_t  * state; /* Used by Lexical only. */
 };
+
+CcNode_t * CcNode(const CcNodeType_t * type, int line);
+void CcNode_Destruct(CcObject_t * self);
+CcsBool_t CcNode_Deletable(CcNode_t * self);
+CcsBool_t CcNode_NoDeletable(CcNode_t * self);
+
+#define CcNodeAlt(line)   CcNode((const CcNodeType_t *)node_alt, (line))
+#define CcNodeIter(line)  CcNode((const CcNodeType_t *)node_iter, (line))
+#define CcNodeOpt(line)   CcNode((const CcNodeType_t *)node_opt, (line))
+#define CcNodeEps(line)   CcNode((const CcNodeType_t *)node_eps, (line))
 
 /* Deletablity checks */
 CcsBool_t CcNode_DelGraph(CcNode_t * self);
@@ -82,7 +87,7 @@ void CcEBNF_Destruct(CcEBNF_t * self);
 
 void CcEBNF_Clear(CcEBNF_t * self);
 
-CcNode_t * CcEBNF_NewNode(CcEBNF_t * self, const CcObjectType_t * type, ...);
+CcNode_t * CcEBNF_NewNode(CcEBNF_t * self, CcNode_t * node);
 
 CcNode_t * CcEBNF_MakeFirstAlt(CcEBNF_t * self, CcGraph_t * g);
 CcNode_t *

@@ -52,15 +52,15 @@ CcSyntax_NodeFromSymbol(CcSyntax_t * self, const CcSymbol_t * sym, int line,
 			CcsBool_t weak)
 {
     if (sym->base.type == symbol_t && weak)
-	return (CcNode_t *)CcEBNF_NewNode(&self->base, node_wt, line, sym);
+	return (CcNode_t *)CcEBNF_NewNode(&self->base, CcNodeWT(line, sym));
     else if (sym->base.type == symbol_t)
-	return (CcNode_t *)CcEBNF_NewNode(&self->base, node_t, line, sym);
+	return (CcNode_t *)CcEBNF_NewNode(&self->base, CcNodeT(line, sym));
     else if (sym->base.type == symbol_pr)
-	return (CcNode_t *)CcEBNF_NewNode(&self->base, node_pr, line, sym);
+	return (CcNode_t *)CcEBNF_NewNode(&self->base, CcNodePR(line));
     else if (sym->base.type == symbol_nt)
-	return (CcNode_t *)CcEBNF_NewNode(&self->base, node_nt, line, sym);
+	return (CcNode_t *)CcEBNF_NewNode(&self->base, CcNodeNT(line, sym));
     else if (sym->base.type == symbol_rslv)
-	return (CcNode_t *)CcEBNF_NewNode(&self->base, node_rslv, line);
+	return (CcNode_t *)CcEBNF_NewNode(&self->base, CcNodeRslv(line));
     CcsAssert(0);
     return NULL;
 }
