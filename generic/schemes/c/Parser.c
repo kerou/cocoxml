@@ -225,7 +225,7 @@ CcsParser(CcsParser_t * self, CcsGlobals_t * globals)
     self->maxT = 41;
     /*---- enable ----*/
     /*---- init ----*/
-    self->tokenString = self->noString = NULL;
+    self->tokenString = NULL;
     self->genScanner = FALSE;
     self->usingPos = NULL;
 
@@ -241,7 +241,6 @@ CcsParser_Destruct(CcsParser_t * self)
 {
     /*---- destruct ----*/
     if (self->usingPos) CcsPosition_Destruct(self->usingPos);
-    if (self->noString) CcsFree(self->noString);
     if (self->tokenString) CcsFree(self->tokenString);
     /*---- enable ----*/
 }
@@ -255,7 +254,6 @@ CcsParser_Coco(CcsParser_t * self) {
     CcCharSet_t * s;
 
     self->tokenString = NULL;
-    self->noString = CcStrdup("-none-");
     CcsToken_t * beg;
     CcsScanner_IncRef(self->scanner, beg = self->la);
     while (CcsParser_StartOf(self, 1)) {
@@ -455,10 +453,9 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ) {
 	    CcsGlobals_SemErr(self->globals, self->t,
 			      "a literal must not be declared with a structure");
 	CcGraph_Finish(g);
-	if (self->tokenString == NULL ||
-	    !strcmp(self->tokenString, self->noString))
+	if (self->tokenString == NULL) {
 	    CcLexical_ConvertToStates(self->lexical, g->head, sym);
-	else { /* CcsParser_TokenExpr is a single string */
+	} else { /* CcsParser_TokenExpr is a single string */
 	    if (CcHashTable_Get(&self->lexical->literals,
 				self->tokenString) != NULL)
 		CcsGlobals_SemErr(self->globals, self->t,
@@ -903,7 +900,7 @@ CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g) {
 					 CcNodeTrans(0, &trans)));
 	    CcTransition_Destruct(&trans);
 	    if (self->tokenString) CcFree(self->tokenString);
-	    self->tokenString = CcStrdup(self->noString);
+	    self->tokenString = NULL;
 	} else { /* CcsParser_str */
 	    *g = CcLexical_StrToGraph(self->lexical, name, self->t);
 	    if (self->tokenString) CcFree(self->tokenString);
