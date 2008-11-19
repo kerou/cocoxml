@@ -75,6 +75,8 @@ char * _CcStrdup_(const char * str, const char * fname, int line);
 
 typedef struct CcGlobals_s CcGlobals_t;
 
+char * CcUnescape(const char * str);
+
 EXTC_END
 
 #endif /* COCO_DEFS_H */
