@@ -376,7 +376,7 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
 		       const char * s, CcSymbol_t * sym)
 {
     char * s0;
-    const char * scur, * slast;
+    const char * scur, * snext, * slast;
     CcState_t * to, * state;
     CcAction_t * a;
     CcTransition_t trans;
@@ -390,8 +390,9 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
     CcsAssert(sym->base.type == symbol_t || sym->base.type == symbol_pr);
     /* Try to match s against existing CcLexical. */
     scur = s0; slast = scur + strlen(s0);
-    while (scur < slast) {
-	a = CcState_FindAction(state, CcsUTF8GetCh(&scur, slast));
+    for (scur = s0; scur < slast; scur = snext) {
+	snext = scur;
+	a = CcState_FindAction(state, CcsUTF8GetCh(&snext, slast));
 	if (a == NULL) break;
 	state = a->target->state;
     }
