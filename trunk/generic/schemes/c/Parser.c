@@ -439,6 +439,7 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ) {
 	((CcSymbolPR_t *)sym)->tokenKind = symbol_fixedToken;
 	((CcSymbolPR_t *)sym)->semPos = NULL;
     }
+    if (self->tokenString) CcFree(self->tokenString);
     self->tokenString = NULL;
     CcFree(name);
 
@@ -735,6 +736,7 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g) {
 		sym = self->syntax->eofSy;  /* dummy */
 	    }
 	}
+	CcFree(name);
 	if (sym->base.type != symbol_t && sym->base.type != symbol_nt)
 	    CcsGlobals_SemErr(self->globals, self->t,
 			      "this symbol kind is not allowed in a production");
