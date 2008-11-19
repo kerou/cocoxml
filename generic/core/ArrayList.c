@@ -67,6 +67,7 @@ CcArrayList_Clear(CcArrayList_t * self)
     int idx;
     for (idx = 0; idx < self->Count; ++idx)
 	CcObject_VDestruct(self->Objects[idx]);
+    self->Count = 0;
 }
 
 CcObject_t *
