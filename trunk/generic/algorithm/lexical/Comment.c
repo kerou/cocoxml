@@ -42,4 +42,5 @@ CcComment(const int * start, const int * stop, CcsBool_t nested)
 void
 CcComment_Destruct(CcComment_t * self)
 {
+    CcFree(self);
 }
