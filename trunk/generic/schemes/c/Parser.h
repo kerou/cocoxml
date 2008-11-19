@@ -51,7 +51,6 @@ struct CcsParser_s {
 
     /*---- declarations ----*/
     char            * tokenString;
-    char            * noString;
 
     CcsBool_t         genScanner;
     CcsPosition_t   * usingPos;
