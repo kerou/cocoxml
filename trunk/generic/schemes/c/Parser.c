@@ -740,12 +740,11 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g) {
 		sym = self->syntax->eofSy;  /* dummy */
 	    }
 	}
-	const CcObjectType_t * typ = sym->base.type;
-	if (typ != symbol_t && typ != symbol_nt)
+	if (sym->base.type != symbol_t && sym->base.type != symbol_nt)
 	    CcsGlobals_SemErr(self->globals, self->t,
 			      "this symbol kind is not allowed in a production");
 	if (weak) {
-	    if (typ != symbol_t)
+	    if (sym->base.type != symbol_t)
 		CcsGlobals_SemErr(self->globals, self->t,
 				  "only terminals may be weak");
 	}
@@ -759,9 +758,10 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g) {
 		CcsGlobals_SemErr(self->globals, self->t,
 				  "a literal must not have attributes");
 	}
-	if (undef)
-	    ((CcSymbolNT_t *)sym)->attrPos = ((CcNodeNT_t *)p)->pos;  /* dummy */
-	else if (sym->base.type == symbol_nt &&
+	if (undef) {
+	    if (sym->base.type == symbol_nt)
+		((CcSymbolNT_t *)sym)->attrPos = ((CcNodeNT_t *)p)->pos;  /* dummy */
+	} else if (sym->base.type == symbol_nt &&
 		 (((CcNodeNT_t *)p)->pos == NULL) !=
 		 (((CcSymbolNT_t *)sym)->attrPos == NULL))
 	    CcsGlobals_SemErr(self->globals, self->t,
