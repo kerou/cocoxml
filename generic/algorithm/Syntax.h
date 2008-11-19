@@ -44,7 +44,7 @@ struct CcSyntax_s {
 
     CcSymbol_t   * gramSy;
     CcSymbol_t   * eofSy;
-    CcSymbol_t   * noSym;
+    CcSymbol_t   * noSy;
     CcSymbol_t   * curSy;
     CcBitArray_t * visited;
     CcBitArray_t   visitedSpace;
