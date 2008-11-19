@@ -124,6 +124,8 @@ CcState_SplitActions(CcState_t * self, CcAction_t * a, CcAction_t * b)
 	}
 	CcCharSet_Destruct(setc);
     }
+    CcCharSet_Destruct(seta);
+    CcCharSet_Destruct(setb);
 }
 
 void
