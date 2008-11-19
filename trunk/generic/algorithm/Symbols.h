@@ -52,7 +52,9 @@ typedef struct CcSymbolRSLV_s CcSymbolRSLV_t;
 
 typedef enum {
     symbol_fixedToken = 0,
-    symbol_litToken = 1,
+    symbol_classToken = 1,
+    symbol_litToken = 2,
+    symbol_classLitToken = 3
 } CcSymbol_TokenKind_t;
 
 struct CcSymbol_s {
