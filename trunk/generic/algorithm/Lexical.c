@@ -422,7 +422,7 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
 	/* s matched a token with a fixed definition or a token with
 	 * an appendix that will be cut off */
 	CcsGlobals_SemErr(&self->globals->base, NULL,
-			  "tokens %ls and %ls cannot be distinguished",
+			  "tokens %s and %s cannot be distinguished",
 			  sym->name, matchedSym->name);
     } else { /* matchedSym == classToken || classLitToken */
 	CcSymbol_SetTokenKind(matchedSym, symbol_litToken);
