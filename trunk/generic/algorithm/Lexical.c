@@ -182,6 +182,7 @@ CcLexical_CombineShifts(CcLexical_t * self)
 		    CcCharSet_Or(seta, setb);
 		    CcAction_SetShift(a, seta);
 		    c = b; b = b->next; CcState_DetachAction(state, c);
+		    CcAction_Destruct(c);
 		} else {
 		    b = b->next;
 		}
@@ -266,7 +267,8 @@ CcLexical_TheState(CcLexical_t * self, CcNode_t * p)
 }
 
 static void
-CcLexical_Step(CcLexical_t * self, CcState_t * from, CcNode_t * p, CcBitArray_t * stepped)
+CcLexical_Step(CcLexical_t * self, CcState_t * from, CcNode_t * p,
+	       CcBitArray_t * stepped)
 {
     CcBitArray_t newStepped;
 
