@@ -47,8 +47,8 @@ typedef int CcsBool_t;
 #define CcsAssert(e)  ((void)0)
 #else /* NDEBUG */
 #define CcsAssert(e)  ((e) ? (void)0 : _CcsAssertFailed_(#e, __FILE__, __LINE__))
-void _CcsAssertFailed_(const char * vstr, const char * fname, int line);
 #endif /* NDEBUG */
+void _CcsAssertFailed_(const char * vstr, const char * fname, int line);
 
 /* C Scheme types */
 typedef struct CcsErrorPool_s CcsErrorPool_t;
