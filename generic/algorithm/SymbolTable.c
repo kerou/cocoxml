@@ -44,34 +44,48 @@ CcSymbolTable_Destruct(CcSymbolTable_t * self)
 CcSymbol_t *
 CcSymbolTable_NewTerminal(CcSymbolTable_t * self, const char * name, int line)
 {
-    return (CcSymbol_t *)CcArrayList_New(&self->terminals,
-					 (CcObject_t *)CcSymbolT(name, line));
+    char * name0 = CcUnescape(name);
+    CcObject_t * sym = CcArrayList_New(&self->terminals,
+				       (CcObject_t *)CcSymbolT(name0, line));
+    CcFree(name0);
+    return (CcSymbol_t *)sym;
+}
+
+CcSymbol_t *
+CcSymbolTable_NewPragma(CcSymbolTable_t * self, const char * name, int line)
+{
+    char * name0 = CcUnescape(name);
+    CcObject_t * sym = CcArrayList_New(&self->pragmas,
+				       (CcObject_t *)CcSymbolPR(name, line));
+    CcFree(name0);
+    return (CcSymbol_t *)sym;
 }
 
 CcSymbol_t *
 CcSymbolTable_NewNonTerminal(CcSymbolTable_t * self,
 			     const char * name, int line)
 {
-    return (CcSymbol_t *)CcArrayList_New(&self->nonterminals,
-					 (CcObject_t *)CcSymbolNT(name, line));
-}
-
-CcSymbol_t *
-CcSymbolTable_NewPragma(CcSymbolTable_t * self, const char * name, int line)
-{
-    return (CcSymbol_t *)CcArrayList_New(&self->pragmas,
-					 (CcObject_t *)CcSymbolPR(name, line));
+    char * name0 = CcUnescape(name);
+    CcObject_t * sym = CcArrayList_New(&self->nonterminals,
+				       (CcObject_t *)CcSymbolNT(name, line));
+    CcFree(name0);
+    return (CcSymbol_t *)sym;
 }
 
 CcSymbol_t *
 CcSymbolTable_FindSym(CcSymbolTable_t * self, const char * name)
 {
     CcArrayListIter_t iter; CcSymbol_t * sym;
+    char * name0 = CcUnescape(name);
     for (sym = (CcSymbol_t *)CcArrayList_First(&self->terminals, &iter);
 	 sym; sym = (CcSymbol_t *)CcArrayList_Next(&self->terminals, &iter))
-	if (!strcmp(sym->name, name)) return sym;
+	if (!strcmp(sym->name, name0)) goto found;
     for (sym = (CcSymbol_t *)CcArrayList_First(&self->nonterminals, &iter);
 	 sym; sym = (CcSymbol_t *)CcArrayList_Next(&self->nonterminals, &iter))
-	if (!strcmp(sym->name, name)) return sym;
+	if (!strcmp(sym->name, name0)) goto found;
+    CcFree(name0);
     return NULL;
+ found:
+    CcFree(name0);
+    return sym;
 }

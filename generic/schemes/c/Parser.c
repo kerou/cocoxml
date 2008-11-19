@@ -317,6 +317,7 @@ CcsParser_Coco(CcsParser_t * self) {
 	CcsParser_Get(self);
 	CcsParser_Set(self, &s);
 	CcCharSet_Or(self->lexical->ignored, s);
+	CcCharSet_Destruct(s);
     }
     while (!(self->la->kind == 0 || self->la->kind == 16)) {CcsParser_SynErr(self, 42); CcsParser_Get(self);}
     CcsParser_Expect(self, 16);
@@ -441,6 +442,7 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ) {
 	((CcSymbolPR_t *)sym)->semPos = NULL;
     }
     self->tokenString = NULL;
+    CcFree(name);
 
     while (!(CcsParser_StartOf(self, 5))) {
 	CcsParser_SynErr(self, 43); CcsParser_Get(self);
@@ -501,10 +503,12 @@ CcsParser_Set(CcsParser_t * self, CcCharSet_t ** s) {
 	    CcsParser_Get(self);
 	    CcsParser_SimSet(self, &s2);
 	    CcCharSet_Or(*s, s2);
+	    CcCharSet_Destruct(s2);
 	} else {
 	    CcsParser_Get(self);
 	    CcsParser_SimSet(self, &s2);
 	    CcCharSet_Subtract(*s, s2);
+	    CcCharSet_Destruct(s2);
 	}
     }
 }
@@ -598,10 +602,7 @@ CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s) {
     } else if (self->la->kind == 3) {
 	CcsParser_Get(self);
 	const char * cur0; int ch;
-	char * cur, * name = CcsUnescape(self->t->val);
-	if (name == NULL)
-	    CcsGlobals_Fatal(self->globals, self->t,
-			     "Invalid character encountered or out of memory.");
+	char * cur, * name = CcUnescape(self->t->val);
 	if (self->lexical->ignoreCase) {
 	    for (cur = name; *cur; ++cur) *cur = tolower(*cur);
 	}
@@ -634,10 +635,7 @@ CcsParser_Char(CcsParser_t * self, int * n) {
     CcsParser_Expect(self, 5);
     *n = 0;
     char * name; const char * cur;
-    cur = name = CcsUnescape(self->t->val);
-    if (cur == NULL)
-	CcsGlobals_Fatal(self->globals, self->t,
-			 "Invalid character is encountered or out of memory.");
+    cur = name = CcUnescape(self->t->val);
     *n = CcsUTF8GetCh(&cur, name + strlen(name));
     if (*cur != 0)
 	CcsGlobals_SemErr(self->globals, self->t, "unacceptable character value");
@@ -904,15 +902,14 @@ CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g) {
 	    *g = CcGraphP(CcEBNF_NewNode(&self->lexical->base,
 					 CcNodeTrans(0, &trans)));
 	    CcTransition_Destruct(&trans);
+	    if (self->tokenString) CcFree(self->tokenString);
 	    self->tokenString = CcStrdup(self->noString);
 	} else { /* CcsParser_str */
 	    *g = CcLexical_StrToGraph(self->lexical, name, self->t);
-	    if (self->tokenString == NULL) self->tokenString = strdup(name);
-	    else {
-		CcFree(self->tokenString);
-		self->tokenString = CcStrdup(self->noString);
-	    }
+	    if (self->tokenString) CcFree(self->tokenString);
+	    self->tokenString = CcStrdup(name);
 	}
+	CcFree(name);
     } else if (self->la->kind == 30) {
 	CcsParser_Get(self);
 	CcsParser_TokenExpr(self, g);

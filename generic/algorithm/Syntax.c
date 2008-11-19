@@ -480,7 +480,7 @@ CcSyntax_NoCircularProductions(CcSyntax_t * self)
 	ok = FALSE;
 	leftsym = (CcSymbol_t *)CcArrayList_Get(ntarr, curPair->left);
 	rightsym = (CcSymbol_t *)CcArrayList_Get(ntarr, curPair->right);
-	CcsGlobals_SemErr(&self->globals->base, NULL, " %s --> %s",
+	CcsGlobals_SemErr(&self->globals->base, NULL, " '%s' --> '%s'",
 			  leftsym->name, rightsym->name);
 	curPair0 = curPair->next;
 	CcFree(curPair);
@@ -491,18 +491,19 @@ CcSyntax_NoCircularProductions(CcSyntax_t * self)
 static void
 CcSyntax_LL1Error(CcSyntax_t * self, int cond, CcSymbol_t * sym)
 {
-    const char * s0, * s1, * s2;
-    if (sym) { s0 = sym->name; s1 = " is "; }
-    else { s0 = s1 = ""; }
+    const char * s0, * s1, * s2, * s3;
+    if (sym) { s0 = "'"; s1 = sym->name; s2 = "' is "; }
+    else { s0 = s1 = s2 = ""; }
     switch (cond) {
-    case 1: s2 = "start of several alternatives"; break;
-    case 2: s2 = "start & successor of deletable structure"; break;
-    case 3: s2 = "an ANY node that matches no symbol"; break;
-    case 4: s2 = "contents of [...] or {...} must not be deletable"; break;
-    default: s2 = ""; break;
+    case 1: s3 = "start of several alternatives"; break;
+    case 2: s3 = "start & successor of deletable structure"; break;
+    case 3: s3 = "an ANY node that matches no symbol"; break;
+    case 4: s3 = "contents of [...] or {...} must not be deletable"; break;
+    default: s3 = ""; break;
     }
     CcsGlobals_Warning(&self->globals->base, NULL,
-		       "  LL1 warning in %s: %s%s%s", self->curSy->name, s0, s1, s2);
+		       "  LL1 warning in '%s': %s%s%s%s",
+		       self->curSy->name, s0, s1, s2, s3);
 }
 
 static void
@@ -700,7 +701,7 @@ CcSyntax_AllNtReached(CcSyntax_t * self)
 	if (!CcBitArray_Get(self->visited, sym->base.index)) {
 	    ok = FALSE;
 	    CcsGlobals_SemErr(&self->globals->base, NULL,
-			      " %s cannot be reached", sym->name);
+			      " '%s' cannot be reached", sym->name);
 	}
     }
     return ok;

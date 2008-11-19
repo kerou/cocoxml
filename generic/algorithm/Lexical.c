@@ -82,6 +82,7 @@ CcLexical_Destruct(CcLexical_t * self)
     }
     CcHashTable_Destruct(&self->literals);
     CcArrayList_Destruct(&self->classes);
+    CcArrayList_Destruct(&self->states);
     CcCharSet_Destruct(self->ignored);
     CcEBNF_Destruct(&self->base);
 }
@@ -91,10 +92,7 @@ CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
 {
     CcGraph_t * g; CcTransition_t trans;
     const char * cur, * slast;
-    char * s;
-    if ((s = CcsUnescape(str)) == NULL)
-	CcsGlobals_Fatal(&self->globals->base, t,
-			 "Invalid character encountered or out of memory.");
+    char * s = CcUnescape(str);
     if (strlen(s) == 0)
 	CcsGlobals_SemErr(&self->globals->base, t, "empty token not allowed");
     g = CcGraph();
@@ -161,6 +159,8 @@ CcLexical_NewTransition(CcLexical_t * self, CcState_t * from, CcState_t * to,
     t = CcTarget(to);
     a = CcAction(trans); a->target = t;
     CcState_AddAction(from, a);
+    if (CcTransition_Size(trans) > 1)
+	CcSymbol_SetTokenKind(self->curSy, symbol_classToken);
 }
 
 static void
@@ -375,7 +375,6 @@ void
 CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
 		       const char * s, CcSymbol_t * sym)
 {
-    char * s0;
     const char * scur, * snext, * slast;
     CcState_t * to, * state;
     CcAction_t * a;
@@ -383,14 +382,11 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
     CcSymbol_t * matchedSym;
     CcState_t * firstState = (CcState_t *)CcArrayList_Get(&self->states, 0);
 
-    if ((s0 = CcsUnescape(s)) == NULL)
-	CcsGlobals_Fatal(&self->globals->base, t,
-			 "Invalid character encountered or out of memory.");
     state = firstState; a = NULL;
     CcsAssert(sym->base.type == symbol_t || sym->base.type == symbol_pr);
     /* Try to match s against existing CcLexical. */
-    scur = s0; slast = scur + strlen(s0);
-    for (scur = s0; scur < slast; scur = snext) {
+    scur = s; slast = scur + strlen(s);
+    for (scur = s; scur < slast; scur = snext) {
 	snext = scur;
 	a = CcState_FindAction(state, CcsUTF8GetCh(&snext, slast));
 	if (a == NULL) break;
@@ -400,7 +396,7 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
     /* if s was not totally consumed or leads to a non-final state => make
      * new CcLexical from it */
     if (*scur || state->endOf == NULL) {
-	state = firstState; scur = s0; a = NULL;
+	state = firstState; scur = s; a = NULL;
 	self->dirtyLexical = TRUE;
     }
     while (scur < slast) { /* make new CcLexical for s0[i..len-1] */
@@ -412,7 +408,6 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
 	CcTransition_Destruct(&trans);
 	state = to;
     }
-    CcFree(s0);
 
     matchedSym = state->endOf;
     if (state->endOf == NULL) {
@@ -422,10 +417,10 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
 	/* s matched a token with a fixed definition or a token with
 	 * an appendix that will be cut off */
 	CcsGlobals_SemErr(&self->globals->base, NULL,
-			  "tokens %s and %s cannot be distinguished",
+			  "tokens '%s' and '%s' cannot be distinguished",
 			  sym->name, matchedSym->name);
     } else { /* matchedSym == classToken || classLitToken */
-	CcSymbol_SetTokenKind(matchedSym, symbol_litToken);
+	CcSymbol_SetTokenKind(matchedSym, symbol_classLitToken);
 	CcSymbol_SetTokenKind(sym, symbol_litToken);
     }
 }
