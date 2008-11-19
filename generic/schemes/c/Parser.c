@@ -309,7 +309,9 @@ CcsParser_Coco(CcsParser_t * self) {
 	    CcsParser_Get(self);
 	    nested = TRUE;
 	}
-	CcLexical_NewComment(self->lexical, self->t, g1->head, g2->head, nested);
+	CcLexical_NewComment(self->lexical, self->t,
+			     g1->head, g2->head, nested);
+	CcGraph_Destruct(g1); CcGraph_Destruct(g2);
     }
     while (self->la->kind == 15) {
 	CcsParser_Get(self);
@@ -466,6 +468,7 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ) {
 	    CcLexical_MatchLiteral(self->lexical, self->t,
 				   self->tokenString, sym);
 	}
+	CcGraph_Destruct(g);
     } else if (CcsParser_StartOf(self, 6)) {
 	if (kind == CcsParser_id) self->genScanner = FALSE;
 	else CcLexical_MatchLiteral(self->lexical, self->t, sym->name, sym);
@@ -489,6 +492,7 @@ CcsParser_TokenExpr(CcsParser_t * self, CcGraph_t ** g) {
 	    CcEBNF_MakeFirstAlt(&self->lexical->base, *g); first = FALSE;
 	}
 	CcEBNF_MakeAlternative(&self->lexical->base, *g, g2);
+	CcGraph_Destruct(g2);
     }
 }
 
@@ -593,10 +597,10 @@ CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s) {
     *s = CcCharSet();
     if (self->la->kind == 1) {
 	CcsParser_Get(self);
-	CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, self->t->val);
-	if (c == NULL) CcsGlobals_SemErr(self->globals, self->t,
-					 "undefined name");
-	else CcCharSet_Or(*s, c->set);
+	CcCharClass_t * c =
+	    CcLexical_FindCharClassN(self->lexical, self->t->val);
+	if (c != NULL) CcCharSet_Or(*s, c->set);
+	else CcsGlobals_SemErr(self->globals, self->t, "undefined name");
     } else if (self->la->kind == 3) {
 	CcsParser_Get(self);
 	const char * cur0; int ch;
@@ -622,7 +626,7 @@ CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s) {
 	}
     } else if (self->la->kind == 23) {
 	CcsParser_Get(self);
-	*s = CcCharSet(); CcCharSet_Fill(*s, COCO_WCHAR_MAX);
+	CcCharSet_Fill(*s, COCO_WCHAR_MAX);
     } else {
 	CcsParser_SynErr(self, 46);
     }
@@ -870,6 +874,7 @@ CcsParser_TokenTerm(CcsParser_t * self, CcGraph_t ** g) {
     while (CcsParser_StartOf(self, 8)) {
 	CcsParser_TokenFactor(self, &g2);
 	CcEBNF_MakeSequence(&self->lexical->base, *g, g2);
+	CcGraph_Destruct(g2);
     }
     if (self->la->kind == 38) {
 	CcsParser_Get(self);
