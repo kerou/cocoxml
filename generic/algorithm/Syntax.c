@@ -353,15 +353,16 @@ CcSyntax_CompSyncSets(CcSyntax_t * self)
 void
 CcSyntax_SetupAnys(CcSyntax_t * self)
 {
-    CcNode_t * p; CcArrayListIter_t iter;
+    CcNode_t * p; CcNodeANY_t * pany; CcArrayListIter_t iter;
     CcSymbolTable_t * symtab = &self->globals->symtab;
 
     for (p = (CcNode_t *)CcArrayList_First(&self->base.nodes, &iter);
 	 p; p = (CcNode_t *)CcArrayList_Next(&self->base.nodes, &iter)) {
 	if (p->base.type != node_any) continue;
-	CcBitArray1(((CcNodeANY_t *)p)->set, symtab->terminals.Count);
-	CcBitArray_Set(((CcNodeANY_t *)p)->set,
-		       self->eofSy->base.index, FALSE);
+	pany = (CcNodeANY_t *)p;
+	pany->set = &pany->setSpace;
+	CcBitArray1(pany->set, symtab->terminals.Count);
+	CcBitArray_Set(pany->set, self->eofSy->base.index, FALSE);
     }
 }
 
