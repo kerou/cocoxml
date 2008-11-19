@@ -55,3 +55,13 @@ _CcStrdup_(const char * str, const char * fname, int line)
     fprintf(stderr, "Strdup failed in %s#%d\n", fname, line);
     exit(-1);
 }
+
+char *
+CcUnescape(const char * str)
+{
+    char * s = CcsUnescape(str);
+    if (s) return s;
+    _CcsAssertFailed_("Invalid character encountered or out of memory",
+		      __FILE__, __LINE__);
+    return NULL;
+}
