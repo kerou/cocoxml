@@ -32,6 +32,14 @@ CcSymbol_Destruct(CcObject_t * self)
 }
 
 static void
+CcSymbolPR_Destruct(CcObject_t * self)
+{
+    CcSymbolPR_t * ccself = (CcSymbolPR_t *)self;
+    if (ccself->semPos) CcsPosition_Destruct(ccself->semPos);
+    CcSymbol_Destruct(self);
+}
+
+static void
 CcSymbolNT_Destruct(CcObject_t * self)
 {
     CcSymbolNT_t * ccself = (CcSymbolNT_t *)self;
@@ -48,7 +56,7 @@ static const CcObjectType_t SymbolT = {
 const CcObjectType_t * symbol_t = &SymbolT;
 
 static const CcObjectType_t SymbolPR = {
-    sizeof(CcSymbolPR_t), "symbol_pr", CcSymbol_Destruct
+    sizeof(CcSymbolPR_t), "symbol_pr", CcSymbolPR_Destruct
 };
 const CcObjectType_t * symbol_pr = &SymbolPR;
 

@@ -162,7 +162,7 @@ CcsScanner_GetPosition(CcsScanner_t * self,
 {
     int len = end->pos - begin->pos;
     return CcsPosition(begin->pos, len, begin->col,
-		    CcsBuffer_GetString(&self->buffer, begin->pos, len));
+		       CcsBuffer_GetString(&self->buffer, begin->pos, len));
 }
 
 CcsPosition_t *
