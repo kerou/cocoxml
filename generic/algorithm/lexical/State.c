@@ -83,6 +83,7 @@ CcState_MeltWith(CcState_t * self, CcState_t * s)
     return 0;
 }
 
+/* CcAction_t * b might be destructed */
 static void
 CcState_SplitActions(CcState_t * self, CcAction_t * a, CcAction_t * b)
 {
@@ -95,16 +96,20 @@ CcState_SplitActions(CcState_t * self, CcAction_t * a, CcAction_t * b)
     if (CcCharSet_Equals(seta, setb)) {
 	CcAction_AddTargets(a, b);
 	CcState_DetachAction(self, b);
+	CcAction_Destruct(b);
+	CcCharSet_Destruct(seta);
     } else if (CcCharSet_Includes(seta, setb)) {
-	setc = CcCharSet_Clone(seta); CcCharSet_Subtract(setc, setb);
+	CcCharSet_Subtract(seta, setb);
 	CcAction_AddTargets(b, a);
-	CcAction_SetShift(a, setc);
-	CcCharSet_Destruct(setc);
+	CcAction_SetShift(a, seta);
+	CcCharSet_Destruct(seta);
+	CcCharSet_Destruct(setb);
     } else if (CcCharSet_Includes(setb, seta)) {
-	setc = CcCharSet_Clone(setb); CcCharSet_Subtract(setc, seta);
+	CcCharSet_Subtract(setb, seta);
 	CcAction_AddTargets(a, b);
-	CcAction_SetShift(b, setc);
-	CcCharSet_Destruct(setc);
+	CcAction_SetShift(b, setb);
+	CcCharSet_Destruct(seta);
+	CcCharSet_Destruct(setb);
     } else {
 	setc = CcCharSet_Clone(seta); CcCharSet_And(setc, setb);
 	if (!CcCharSet_IsEmpty(setc)) {
@@ -123,25 +128,26 @@ CcState_SplitActions(CcState_t * self, CcAction_t * a, CcAction_t * b)
 	    CcState_AddAction(self, c);
 	}
 	CcCharSet_Destruct(setc);
+	CcCharSet_Destruct(seta);
+	CcCharSet_Destruct(setb);
     }
-    CcCharSet_Destruct(seta);
-    CcCharSet_Destruct(setb);
 }
 
 void
 CcState_MakeUnique(CcState_t * self)
 {
-    CcAction_t * a, * b;
+    CcAction_t * a, * b, * bnext;
     CcsBool_t changed;
 
     do {
 	changed = FALSE;
 	for (a = self->firstAction; a != NULL; a = a->next)
-	    for (b = a->next; b != NULL; b = b->next)
-		if (CcAction_Overlap(a, b)) {
-		    CcState_SplitActions(self, a, b);
-		    changed = TRUE;
-		}
+	    for (b = a->next; b != NULL; b = bnext) {
+		bnext = b->next;
+		if (!CcAction_Overlap(a, b)) continue;
+		CcState_SplitActions(self, a, b);
+		changed = TRUE;
+	    }
     } while (changed);
 }
 
