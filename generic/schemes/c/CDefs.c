@@ -188,8 +188,9 @@ CcsUnescape(const char * str)
     if (!retval) return NULL;
     cursrc = str; curtgt = retval; stop = str + strlen(str);
     if (*cursrc == '\'' || *cursrc == '"') stripCh = *cursrc++;
+    else stripCh = 0;
     while (*cursrc) {
-	if (cursrc[0] == stripCh && cursrc[1] == 0) break;
+	if (stripCh && cursrc[0] == stripCh && cursrc[1] == 0) break;
 	if ((ch = CcsUnescapeCh(&cursrc, stop)) == ErrorChr) goto errquit;
 	*curtgt++ = (char)ch;
     }
