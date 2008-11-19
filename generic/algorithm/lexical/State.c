@@ -97,19 +97,14 @@ CcState_SplitActions(CcState_t * self, CcAction_t * a, CcAction_t * b)
 	CcAction_AddTargets(a, b);
 	CcState_DetachAction(self, b);
 	CcAction_Destruct(b);
-	CcCharSet_Destruct(seta);
     } else if (CcCharSet_Includes(seta, setb)) {
 	CcCharSet_Subtract(seta, setb);
 	CcAction_AddTargets(b, a);
 	CcAction_SetShift(a, seta);
-	CcCharSet_Destruct(seta);
-	CcCharSet_Destruct(setb);
     } else if (CcCharSet_Includes(setb, seta)) {
 	CcCharSet_Subtract(setb, seta);
 	CcAction_AddTargets(a, b);
 	CcAction_SetShift(b, setb);
-	CcCharSet_Destruct(seta);
-	CcCharSet_Destruct(setb);
     } else {
 	setc = CcCharSet_Clone(seta); CcCharSet_And(setc, setb);
 	if (!CcCharSet_IsEmpty(setc)) {
@@ -128,9 +123,9 @@ CcState_SplitActions(CcState_t * self, CcAction_t * a, CcAction_t * b)
 	    CcState_AddAction(self, c);
 	}
 	CcCharSet_Destruct(setc);
-	CcCharSet_Destruct(seta);
-	CcCharSet_Destruct(setb);
     }
+    CcCharSet_Destruct(seta);
+    CcCharSet_Destruct(setb);
 }
 
 void
