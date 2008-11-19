@@ -379,7 +379,7 @@ CcsParser_Coco(CcsParser_t * self) {
 			      "grammar symbol must not have attributes");
     }
     /* noSym gets highest number */
-    self->syntax->noSym = CcSymbolTable_NewTerminal(self->symtab, "???", 0);
+    self->syntax->noSy = CcSymbolTable_NewTerminal(self->symtab, "???", 0);
     CcSyntax_SetupAnys(self->syntax);
     /*
     if (self->tab->ddt[2]) Tab_PrintNodes(self->tab);

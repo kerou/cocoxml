@@ -55,8 +55,8 @@ CcsScanner(CcsScanner_t * self, CcsGlobals_t * globals, const char * filename)
 static void
 CcsScanner_Init(CcsScanner_t * self)
 {
-    self->eofSym = 0;
     /*---- declarations ----*/
+    self->eofSym = 0;
     self->maxT = 41;
     self->noSym = 41;
     /*---- enable ----*/

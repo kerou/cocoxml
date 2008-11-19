@@ -31,8 +31,8 @@ CcSyntax(CcSyntax_t * self, CcGlobals_t * globals)
     CcEBNF(&self->base);
     self->globals = globals;
     self->gramSy = NULL;
-    self->eofSy = NULL;
-    self->noSym = NULL;
+    self->eofSy = CcSymbolTable_NewTerminal(&self->globals->symtab, "EOF", 0);
+    self->noSy = NULL;
     self->curSy = NULL;
     self->visited = NULL;
     self->allSyncSets = NULL;
