@@ -130,9 +130,10 @@ void
 CcState_MakeUnique(CcState_t * self)
 {
     CcAction_t * a, * b;
-    CcsBool_t changed = FALSE;
+    CcsBool_t changed;
 
     do {
+	changed = FALSE;
 	for (a = self->firstAction; a != NULL; a = a->next)
 	    for (b = a->next; b != NULL; b = b->next)
 		if (CcAction_Overlap(a, b)) {
