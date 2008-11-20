@@ -62,5 +62,6 @@ main(int argc, char * argv[])
     }
     CcGlobals_Parse(&globals);
     CcGlobals_Destruct(&globals);
+    CcArguments_Destruct(&arguments);
     return 0;
 }
