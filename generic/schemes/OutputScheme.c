@@ -34,17 +34,9 @@ CcOutputScheme(const CcOutputSchemeType_t * type, CcGlobals_t * globals,
 }
 
 void
-CcOutputScheme_Destruct(CcOutputScheme_t * self)
+CcOutputScheme_Destruct(CcObject_t * self)
 {
-    CcObject_Destruct(&self->base);
-}
-
-const CcOutputFile_t *
-CcOutputScheme_List(const CcOutputScheme_t * self)
-{
-    const CcOutputSchemeType_t * type =
-	(const CcOutputSchemeType_t *)self->base.type;
-    return type->list(self);
+    CcObject_Destruct(self);
 }
 
 CcsBool_t

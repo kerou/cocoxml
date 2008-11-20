@@ -42,7 +42,7 @@ typedef struct {
 struct CcOutputSchemeType_s {
     CcObjectType_t base;
 
-    const CcOutputFile_t * (* list)(const CcOutputScheme_t * self);
+    const CcOutputFile_t * OutFileArray;
     CcsBool_t (* write)(CcOutputScheme_t * self, FILE * outfp,
 			const char * func, const char * params);
 };
@@ -56,9 +56,8 @@ struct CcOutputScheme_s {
 CcOutputScheme_t *
 CcOutputScheme(const CcOutputSchemeType_t * type, CcGlobals_t * globals,
 	       CcArguments_t * arguments);
-void CcOutputScheme_Destruct(CcOutputScheme_t * self);
+void CcOutputScheme_Destruct(CcObject_t * self);
 
-const CcOutputFile_t * CcOutputScheme_List(const CcOutputScheme_t * self);
 CcsBool_t CcOutputScheme_Write(CcOutputScheme_t * self, FILE * outfp,
 			       const char * func, const char * params);
 
