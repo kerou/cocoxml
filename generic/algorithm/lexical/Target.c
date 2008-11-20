@@ -37,3 +37,13 @@ CcTarget_Destruct(CcTarget_t * self)
 {
     CcFree(self);
 }
+
+void
+CcTarget_ListDestruct(CcTarget_t * head)
+{
+    CcTarget_t * cur, * next;
+    for (cur = head; cur; cur = next) {
+	next = cur->next;
+	CcTarget_Destruct(cur);
+    }
+}

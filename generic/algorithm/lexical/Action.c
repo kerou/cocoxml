@@ -85,7 +85,7 @@ CcAction_AddTarget(CcAction_t * self, CcTarget_t * t)
     CcTarget_t * last = NULL;
     CcTarget_t * p = self->target;
     while (p != NULL && t->state->base.index >= p->state->base.index) {
-	if (t->state == p->state) return;
+	if (t->state == p->state) { CcTarget_Destruct(t); return; }
 	last = p; p = p->next;
     }
     t->next = p;
