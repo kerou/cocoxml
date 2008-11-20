@@ -43,6 +43,7 @@ static void
 CcSymbolNT_Destruct(CcObject_t * self)
 {
     CcSymbolNT_t * ccself = (CcSymbolNT_t *)self;
+    if (ccself->semPos)  CcsPosition_Destruct(ccself->semPos);
     if (ccself->attrPos)  CcsPosition_Destruct(ccself->attrPos);
     if (ccself->first)  CcBitArray_Destruct(ccself->first);
     if (ccself->follow)  CcBitArray_Destruct(ccself->follow);

@@ -319,7 +319,9 @@ CcsParser_Coco(CcsParser_t * self) {
 	CcCharSet_Or(self->lexical->ignored, s);
 	CcCharSet_Destruct(s);
     }
-    while (!(self->la->kind == 0 || self->la->kind == 16)) {CcsParser_SynErr(self, 42); CcsParser_Get(self);}
+    while (!(self->la->kind == 0 || self->la->kind == 16)) {
+	CcsParser_SynErr(self, 42); CcsParser_Get(self);
+    }
     CcsParser_Expect(self, 16);
     if (self->genScanner) CcLexical_MakeDeterministic(self->lexical);
     CcEBNF_Clear(&self->lexical->base);
@@ -354,7 +356,12 @@ CcsParser_Coco(CcsParser_t * self) {
 				  "attribute mismatch between declaration and use of this symbol");
 
 	if (self->la->kind == 39) {
-	    CcsParser_SemText(self, &((CcSymbolPR_t *)sym)->semPos);
+	    if (sym->base.type == symbol_nt) {
+		CcsParser_SemText(self, &((CcSymbolNT_t *)sym)->semPos);
+	    } else {
+		CcsAssert(sym->base.type == symbol_pr);
+		CcsParser_SemText(self, &((CcSymbolPR_t *)sym)->semPos);
+	    }
 	}
 	CcsParser_ExpectWeak(self, 17, 3);
 	CcsParser_Expression(self, &g);
