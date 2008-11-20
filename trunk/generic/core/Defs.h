@@ -74,6 +74,7 @@ void _CcFree_(void * ptr, const char * fname, int line);
 char * _CcStrdup_(const char * str, const char * fname, int line);
 
 typedef struct CcGlobals_s CcGlobals_t;
+typedef struct CcArguments_s CcArguments_t;
 
 char * CcUnescape(const char * str);
 

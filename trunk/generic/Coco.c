@@ -22,6 +22,7 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "Globals.h"
+#include  "Arguments.h"
 
 static const char * usage_format =
     "Usage: %s Grammar.atg {{Option}}\n"
@@ -45,25 +46,21 @@ static const char * usage_format =
 int
 main(int argc, char * argv[])
 {
-    int          idx, retVal = 0;
-    const char * nsName = NULL;
-    const char * frameDir = NULL;
-    const char * ddtString = NULL;
-    const char * outDir = NULL;
-    const char * srcName = NULL;
-    const char * traceFileName = NULL;
+    CcArguments_t arguments;
+    CcArgumentsIter_t iter;
+    CcGlobals_t   globals;
+    const char * atgName;
 
     printf("Coco/R (Oct22, 2008)\n");
-    for (idx = 1; idx < argc; ++idx) {
-	if (!strcmp(argv[idx], "-namespace") && idx + 1 < argc) nsName = argv[++idx];
-	else if (!strcmp(argv[idx], "-frames") && idx + 1 < argc) frameDir = argv[++idx];
-	else if (!strcmp(argv[idx], "-trace") && idx + 1 < argc) ddtString = argv[++idx];
-	else if (!strcmp(argv[idx], "-o") && idx + 1 < argc) outDir = argv[++idx];
-	else srcName = argv[idx];
-    }
-    if (argc > 1 && srcName != NULL) {
-    } else {
+    CcArguments(&arguments, argc, argv);
+    atgName = CcArguments_First(&arguments, "", &iter);
+    if (atgName == NULL) {
 	printf(usage_format, argv[0]);
+	return 0;
+    } else if (!CcGlobals(&globals, atgName, stderr)) {
+	return -1;
     }
-    return retVal;
+    CcGlobals_Parse(&globals);
+    CcGlobals_Destruct(&globals);
+    return 0;
 }
