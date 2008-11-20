@@ -183,6 +183,8 @@ CcLexical_CombineShifts(CcLexical_t * self)
 		    CcAction_SetShift(a, seta);
 		    c = b; b = b->next; CcState_DetachAction(state, c);
 		    CcAction_Destruct(c);
+		    CcCharSet_Destruct(seta);
+		    CcCharSet_Destruct(setb);
 		} else {
 		    b = b->next;
 		}
@@ -454,6 +456,7 @@ CcLexical_MeltStates(CcLexical_t * self, CcState_t * state)
 	    CcTarget_ListDestruct(action->target->next);
 	    action->target->next = NULL;
 	    action->target->state = melt->state;
+	    CcMelted_Destruct(melt);
 	}
     }
 }

@@ -90,6 +90,7 @@ struct CcSymbolNT_s {
     CcBitArray_t  * nts;
     CcBitArray_t    ntsSpace;
     CcsPosition_t * attrPos;
+    CcsPosition_t * semPos;
 };
 #define CcSymbolNT(name, line) CcSymbol(symbol_nt, (name), (line))
 
