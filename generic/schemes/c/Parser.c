@@ -367,6 +367,7 @@ CcsParser_Coco(CcsParser_t * self) {
 	CcsParser_Expression(self, &g);
 	((CcSymbolNT_t *)sym)->graph = g->head;
 	CcGraph_Finish(g);
+	CcGraph_Destruct(g);
 	
 	CcsParser_ExpectWeak(self, 18, 4);
     }
@@ -595,6 +596,7 @@ CcsParser_Expression(CcsParser_t * self, CcGraph_t ** g) {
 	    CcEBNF_MakeFirstAlt(&self->syntax->base, *g); first = FALSE;
 	}
 	CcEBNF_MakeAlternative(&self->syntax->base, *g, g2);
+	CcGraph_Destruct(g2);
     }
 }
 
@@ -693,11 +695,15 @@ CcsParser_Term(CcsParser_t * self, CcGraph_t ** g) {
 	    *g = CcGraphP(rslv);
 	}
 	CcsParser_Factor(self, &g2);
-	if (rslv != NULL) CcEBNF_MakeSequence(&self->syntax->base, *g, g2);
-	else *g = g2;
+	if (rslv == NULL) *g = g2;
+	else {
+	    CcEBNF_MakeSequence(&self->syntax->base, *g, g2);
+	    CcGraph_Destruct(g2);
+	}
 	while (CcsParser_StartOf(self, 18)) {
 	    CcsParser_Factor(self, &g2);
 	    CcEBNF_MakeSequence(&self->syntax->base, *g, g2);
+	    CcGraph_Destruct(g2);
 	}
     } else if (CcsParser_StartOf(self, 19)) {
 	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, CcNodeEps(0)));
