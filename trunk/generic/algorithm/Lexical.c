@@ -451,6 +451,7 @@ CcLexical_MeltStates(CcLexical_t * self, CcState_t * state)
 		CcState_MakeUnique(s);
 		melt = CcLexical_NewMelted(self, targets, s);
 	    }
+	    CcTarget_ListDestruct(action->target->next);
 	    action->target->next = NULL;
 	    action->target->state = melt->state;
 	}

@@ -36,4 +36,6 @@ struct CcTarget_s {
 CcTarget_t * CcTarget(CcState_t * s);
 void CcTarget_Destruct(CcTarget_t * self);
 
+void CcTarget_ListDestruct(CcTarget_t * head);
+
 #endif /* COCO_LEXICAL_TARGET_H */
