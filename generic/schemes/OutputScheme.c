@@ -24,9 +24,13 @@
 #include  "OutputScheme.h"
 
 CcOutputScheme_t *
-CcOutputScheme(const CcOutputSchemeType_t * type)
+CcOutputScheme(const CcOutputSchemeType_t * type, CcGlobals_t * globals,
+	       CcArguments_t * arguments)
 {
-    return (CcOutputScheme_t *)CcObject(&type->base);
+    CcOutputScheme_t * self = (CcOutputScheme_t *)CcObject(&type->base);
+    self->globals = globals;
+    self->arguments = arguments;
+    return (CcOutputScheme_t *)self;
 }
 
 void
@@ -35,16 +39,19 @@ CcOutputScheme_Destruct(CcOutputScheme_t * self)
     CcObject_Destruct(&self->base);
 }
 
-const char **
-CcOutputScheme_List(CcOutputScheme_t * self)
+const CcOutputFile_t *
+CcOutputScheme_List(const CcOutputScheme_t * self)
 {
-    return (((CcOutputSchemeType_t *)self->base.type))->list(self);
+    const CcOutputSchemeType_t * type =
+	(const CcOutputSchemeType_t *)self->base.type;
+    return type->list(self);
 }
 
 CcsBool_t
-CcOutputScheme_Gen(CcOutputScheme_t * self,
-		   const char * dirname, const char * filename)
+CcOutputScheme_Write(CcOutputScheme_t * self, FILE * outfp,
+		     const char * func, const char * param)
 {
-    return (((CcOutputSchemeType_t *)self->base.type))->gen(self,
-							    dirname, filename);
+    const CcOutputSchemeType_t * type =
+	(const CcOutputSchemeType_t *)self->base.type;
+    return type->write(self, outfp, func, param);
 }

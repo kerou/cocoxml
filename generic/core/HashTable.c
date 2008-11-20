@@ -25,7 +25,7 @@
 
 struct CcHTEntry_s {
     char * key;
-    void * value;
+    CcObject_t * value;
 };
 
 static int

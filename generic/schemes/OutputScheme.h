@@ -34,24 +34,33 @@
 
 EXTC_BEGIN
 
+typedef struct {
+    const char * fname;
+    const char * frame;
+}  CcOutputFile_t;
+
 struct CcOutputSchemeType_s {
     CcObjectType_t base;
 
-    const char ** (* list)(CcOutputScheme_t * self);
-    CcsBool_t (* gen)(CcOutputScheme_t * self,
-		      const char * dirname, const char * filename);
+    const CcOutputFile_t * (* list)(const CcOutputScheme_t * self);
+    CcsBool_t (* write)(CcOutputScheme_t * self, FILE * outfp,
+			const char * func, const char * params);
 };
 
 struct CcOutputScheme_s {
     CcObject_t base;
+    CcGlobals_t * globals;
+    CcArguments_t * arguments;
 };
 
-CcOutputScheme_t * CcOutputScheme(const CcOutputSchemeType_t * type);
+CcOutputScheme_t *
+CcOutputScheme(const CcOutputSchemeType_t * type, CcGlobals_t * globals,
+	       CcArguments_t * arguments);
 void CcOutputScheme_Destruct(CcOutputScheme_t * self);
 
-const char ** CcOutputScheme_List(CcOutputScheme_t * self);
-CcsBool_t CcOutputScheme_Gen(CcOutputScheme_t * self,
-			     const char * dirname, const char * filename);
+const CcOutputFile_t * CcOutputScheme_List(const CcOutputScheme_t * self);
+CcsBool_t CcOutputScheme_Write(CcOutputScheme_t * self, FILE * outfp,
+			       const char * func, const char * params);
 
 EXTC_END
 
