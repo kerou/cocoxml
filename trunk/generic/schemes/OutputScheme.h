@@ -34,15 +34,16 @@
 
 EXTC_BEGIN
 
+#define MAX_TEMPLATE_OUTPUT 8
 typedef struct {
-    const char * fname;
-    const char * frame;
-}  CcOutputFile_t;
+    const char * template;
+    const char * outputs[MAX_TEMPLATE_OUTPUT];
+}  CcOutputInfo_t;
 
 struct CcOutputSchemeType_s {
     CcObjectType_t base;
 
-    const CcOutputFile_t * OutFileArray;
+    const CcOutputInfo_t * OutInfoArray;
     CcsBool_t (* write)(CcOutputScheme_t * self, FILE * outfp,
 			const char * func, const char * params);
 };
@@ -58,8 +59,10 @@ CcOutputScheme(const CcOutputSchemeType_t * type, CcGlobals_t * globals,
 	       CcArguments_t * arguments);
 void CcOutputScheme_Destruct(CcObject_t * self);
 
+CcsBool_t CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self);
+
 CcsBool_t CcOutputScheme_Write(CcOutputScheme_t * self, FILE * outfp,
-			       const char * func, const char * params);
+			       const char * func, const char * param);
 
 EXTC_END
 
