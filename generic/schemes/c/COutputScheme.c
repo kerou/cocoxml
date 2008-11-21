@@ -23,13 +23,32 @@
 -------------------------------------------------------------------------*/
 #include  "c/COutputScheme.h"
 
-static const CcOutputFile_t CcCOutputScheme_OutputFiles[] = {
+static const CcOutputInfo_t CcCOutputScheme_OutputInfos[] = {
+    { "Scanner.template", { "Scanner.h", "Scanner.c" }},
+    { "Parser.template", { "Parser.h", "Parser.c"}},
+    { NULL }
 };
+
+static CcsBool_t
+COS_Chars2States(CcOutputScheme_t * self, FILE * outfp)
+{
+}
+
+static CcsBool_t
+COS_Identifiers2KeywordKinds(CcOutputScheme_t * self, FILE * outfp)
+{
+}
 
 static CcsBool_t
 CcCOutputScheme_write(CcOutputScheme_t * self, FILE * outfp,
 		      const char * func, const char * param)
 {
+    if (!strcmp(func, "chars2states")) {
+	return COS_Chars2States(self, outfp);
+    } else if (!strcmp(func, "identifiers2keywordkinds")) {
+	return COS_Identifiers2KeywordKinds(self, outfp);
+    }
+    return FALSE;
 }
 
 static void
@@ -41,7 +60,7 @@ CcCOutputScheme_Destruct(CcObject_t * self)
 
 static const CcOutputSchemeType_t COutputSchemeType = {
     { sizeof(CcCOutputScheme_t), "COutputScheme", CcCOutputScheme_Destruct },
-    CcCOutputScheme_OutputFiles, CcCOutputScheme_write
+    CcCOutputScheme_OutputInfos, CcCOutputScheme_write
 };
 
 CcCOutputScheme_t *
