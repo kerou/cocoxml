@@ -22,8 +22,10 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  <ctype.h>
+#include  <errno.h>
 #include  <libgen.h>
 #include  <limits.h>
+#include  <unistd.h>
 #include  "OutputScheme.h"
 #include  "Arguments.h"
 
@@ -108,28 +110,64 @@ CheckMark(const char * lnbuf,
     return TRUE;
 }
 
+static void
+TextWritter(FILE * outfp, char * lnbuf,
+	    const char * replacedPrefix, const char * prefix)
+{
+    char * start, * cur; int len;
+    if (prefix == NULL || !*replacedPrefix) { fputs(lnbuf, outfp); return; }
+    len = strlen(replacedPrefix);
+    start = cur = lnbuf;
+    while (*cur) {
+	if (*cur != *replacedPrefix) ++cur;
+	else if (strncmp(cur, replacedPrefix, len)) ++cur;
+	else { /* An instance of replacedPrefix is found. */
+	    *cur = 0;
+	    fprintf(outfp, "%s%s", start, prefix);
+	    start = (cur += len);
+	}
+    }
+    fputs(start, outfp);
+}
+
 static CcsBool_t
 CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
-			     const char * outPath)
+			     const char * outPath, const char * prefix)
 {
     CcArgumentsIter_t iter;
     const char * license;
+    char tempOutPath[PATH_MAX];
     FILE * tempfp, * outfp, * licensefp;
     char lnbuf[4096]; CcsBool_t enabled;
     char indentStr[128], Command[128], ParamStr[128], replacedPrefix[128];
     const CcOutputSchemeType_t * type =
 	(const CcOutputSchemeType_t *)self->base.type;
 
-    if (!(tempfp = fopen(tempPath, "r"))) goto errquit0;
-    if (!(outfp = fopen(outPath, "w"))) goto errquit1;
-    enabled = TRUE;
+    if (!(tempfp = fopen(tempPath, "r"))) {
+	fprintf(stderr, "open %s for read failed.\n", tempPath);
+	goto errquit0;
+    }
+    if (!strcmp(tempPath, outPath)) {
+	snprintf(tempOutPath, sizeof(tempOutPath), "%s.out", outPath);
+	if (!(outfp = fopen(tempOutPath, "w"))) {
+	    fprintf(stderr, "open %s for write failed.\n", tempOutPath);
+	    goto errquit1;
+	}
+    } else {
+	tempOutPath[0] = 0;
+	if (!(outfp = fopen(outPath, "w"))) {
+	    fprintf(stderr, "open %s for write failed.\n", outPath);
+	    goto errquit1;
+	}
+    }
+
+    enabled = TRUE; indentStr[0] = 0; replacedPrefix[0] = 0;
     while (fgets(lnbuf, sizeof(lnbuf), tempfp)) {
 	if (!CheckMark(lnbuf, indentStr, sizeof(indentStr),
 		       Command, sizeof(Command),
 		       ParamStr, sizeof(ParamStr))) {
 	    /* Common line */
-	    if (!enabled) continue;
-	    /* Not implemented Yet. */
+	    if (enabled) TextWritter(outfp, lnbuf, replacedPrefix, prefix);
 	    continue;
 	}
 	fputs(lnbuf, outfp);
@@ -138,11 +176,19 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
 	} else if (!strcmp(Command, "enable")) {
 	    enabled = TRUE;
 	} else if (!strcmp(Command, "license")) {
-	    if (!(license = CcArguments_First(self->arguments, "license", &iter)))
-		goto errquit2;
-	    if (!(licensefp = fopen(license, "r"))) goto errquit2;
-	    while (fgets(lnbuf, sizeof(lnbuf), licensefp))
-		if (fputs(lnbuf, outfp) < 0) { fclose(licensefp); goto errquit2; }
+	    if ((license =
+		 CcArguments_First(self->arguments, "license", &iter))) {
+		if (!(licensefp = fopen(license, "r"))) {
+		    fprintf(stderr, "open %s for read failed.\n", license);
+		    goto errquit2;
+		}
+		while (fgets(lnbuf, sizeof(lnbuf), licensefp))
+		    if (fputs(lnbuf, outfp) < 0) {
+			fprintf(stderr, "write %s failed.\n", outPath);
+			fclose(licensefp);
+			goto errquit2;
+		    }
+	    }
 	    fclose(licensefp);
 	    enabled = FALSE;
 	} else {
@@ -150,11 +196,20 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
 	    enabled = FALSE;
 	}
     }
+
     fclose(outfp);
     fclose(tempfp);
+
+    if (tempOutPath[0]) {
+	if (rename(tempOutPath, outPath) < 0) {
+	    fprintf(stderr, "Rename failed: %s\n", strerror(errno));
+	    return FALSE;
+	}
+    }
     return TRUE;
  errquit2:
     fclose(outfp);
+    if (tempOutPath[0]) remove(tempOutPath);
  errquit1:
     fclose(tempfp);
  errquit0:
@@ -165,20 +220,22 @@ CcsBool_t
 CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self)
 {
 
-    const char * tempDir, * outDir; CcArgumentsIter_t iter;
+    const char * tempDir, * outDir, * prefix; CcArgumentsIter_t iter;
     const CcOutputInfo_t * outinfo;
     char tempPath[PATH_MAX], outPath[PATH_MAX];
     const char * outFile; char * outFileBase, * BoutFileBase;
 
     tempDir = CcArguments_First(self->arguments, "tempdir", &iter);
     outDir = CcArguments_First(self->arguments, "outdir", &iter);
+    prefix = CcArguments_First(self->arguments, "prefix", &iter);
     for (outinfo = ((CcOutputSchemeType_t *)self->base.type)->OutInfoArray;
 	 outinfo->template; ++outinfo) {
 	MakePath(tempPath, sizeof(tempPath), tempDir, outinfo->template);
 	outFile = CcArguments_First(self->arguments, "o", &iter);
 	if (!outFile) {
 	    MakePath(outPath, sizeof(outPath), outDir, outinfo->template);
-	    return CcOutputScheme_ApplyTemplate(self, tempPath, outPath);
+	    if (!CcOutputScheme_ApplyTemplate(self, tempPath, outPath, prefix))
+		return FALSE;
 	}
 	for (;outFile; outFile = CcArguments_Next(self->arguments, &iter)) {
 	    outFileBase = CcStrdup(outFile);
@@ -186,9 +243,11 @@ CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self)
 	    if (!strcmp(BoutFileBase, outinfo->template)) {
 		MakePath(outPath, sizeof(outPath), outDir, outFileBase);
 		CcFree(outFileBase);
-		return CcOutputScheme_ApplyTemplate(self, tempPath, outPath);
+		if (!CcOutputScheme_ApplyTemplate(self, tempPath, outPath, prefix))
+		    return FALSE;
+	    } else {
+		CcFree(outFileBase);
 	    }
-	    CcFree(outFileBase);
 	}
     }
     return TRUE;
