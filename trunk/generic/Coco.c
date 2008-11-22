@@ -66,14 +66,21 @@ main(int argc, char * argv[])
 
     schemeName = CcArguments_First(&arguments, "scheme", &iter);
     if (schemeName == NULL || !strcmp(schemeName, "c")) {
-	scheme = (CcOutputScheme_t *)CcCOutputScheme(&globals, &arguments);
+	if (!(scheme = (CcOutputScheme_t *)
+	      CcCOutputScheme(&globals, &arguments)))
+	    goto errquit1;
     } else {
 	scheme = NULL;
     }
-    if (scheme && !CcOutputScheme_GenerateOutputs(scheme)) goto errquit1;
+    if (scheme) {
+	if (!CcOutputScheme_GenerateOutputs(scheme)) goto errquit2;
+	CcObject_VDestruct((CcObject_t *)scheme);
+    }
     CcGlobals_Destruct(&globals);
     CcArguments_Destruct(&arguments);
     return 0;
+ errquit2:
+    CcObject_VDestruct((CcObject_t *)scheme);
  errquit1:
     CcGlobals_Destruct(&globals);
  errquit0:

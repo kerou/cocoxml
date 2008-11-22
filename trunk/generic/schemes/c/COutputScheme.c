@@ -45,6 +45,7 @@ COS_Chars2States(CcOutputScheme_t * self, FILE * outfp, const char * indent)
     for (cur = table; cur - table < numEle; ++cur)
 	fprintf(outfp, "%s{ %d, %d, %d },\n", indent,
 		cur->keyFrom, cur->keyTo, cur->state);
+    CcFree(table);
     return TRUE;
 }
 
