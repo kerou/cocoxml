@@ -192,7 +192,8 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
 	    fclose(licensefp);
 	    enabled = FALSE;
 	} else {
-	    if (!type->write(self, outfp, Command, ParamStr)) goto errquit2;
+	    if (!type->write(self, outfp, Command, ParamStr, indentStr))
+		goto errquit2;
 	    enabled = FALSE;
 	}
     }
