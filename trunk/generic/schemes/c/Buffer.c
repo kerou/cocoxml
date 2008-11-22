@@ -22,7 +22,6 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "Buffer.h"
-#include  <assert.h>
 
 /* CcsBuffer_t private members. */
 /*#define BUFSTEP  8*/
@@ -121,9 +120,9 @@ CcsBuffer_GetString(CcsBuffer_t * self, long start, size_t size)
 void
 CcsBuffer_SetBusy(CcsBuffer_t * self, long startBusy)
 {
-    assert(startBusy >= self->start);
+    CcsAssert(startBusy >= self->start);
     self->busyFirst = self->buf + (startBusy - self->start);
-    assert(self->busyFirst <= self->cur);
+    CcsAssert(self->busyFirst <= self->cur);
 }
 
 void
@@ -135,7 +134,7 @@ CcsBuffer_ClearBusy(CcsBuffer_t * self)
 void
 CcsBuffer_Lock(CcsBuffer_t * self)
 {
-    assert(self->lockCur == NULL);
+    CcsAssert(self->lockCur == NULL);
     self->lockCur = self->cur;
     self->lockNext = self->next;
 }
@@ -143,7 +142,7 @@ CcsBuffer_Lock(CcsBuffer_t * self)
 void
 CcsBuffer_LockReset(CcsBuffer_t * self)
 {
-    assert(self->lockCur != NULL);
+    CcsAssert(self->lockCur != NULL);
     self->cur = self->lockCur;
     self->next = self->lockNext;
     self->lockCur = NULL;
@@ -152,7 +151,7 @@ CcsBuffer_LockReset(CcsBuffer_t * self)
 void
 CcsBuffer_Unlock(CcsBuffer_t * self)
 {
-    assert(self->lockCur != NULL);
+    CcsAssert(self->lockCur != NULL);
     self->lockCur = NULL;
 }
 
