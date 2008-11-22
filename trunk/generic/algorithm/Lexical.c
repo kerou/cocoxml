@@ -627,22 +627,22 @@ stCmp(const void * st0, const void * st1)
 }
 
 CcLexical_StartTab_t *
-CcLexical_GetStartTab(const CcLexical_t * self)
+CcLexical_GetStartTab(const CcLexical_t * self, int * retNumEle)
 {
-    CcLexical_StartTab_t * table, * cur; int szTable;
+    CcLexical_StartTab_t * table, * cur;
     const CcAction_t * action;
     CcCharSet_t * s; CcRange_t * curRange;
     int targetStateIndex;
     const CcState_t * firstState =
 	(const CcState_t *)CcArrayList_GetC(&self->states, 0);
 
-    szTable = 0;
+    *retNumEle = 0;
     for (action = firstState->firstAction; action; action = action->next) {
 	s = CcTransition_GetCharSet(&action->trans);
-	szTable += CcCharSet_NumRange(s);
+	*retNumEle += CcCharSet_NumRange(s);
 	CcCharSet_Destruct(s);
     }
-    table = cur = CcMalloc(sizeof(CcLexical_StartTab_t) * szTable);
+    table = cur = CcMalloc(sizeof(CcLexical_StartTab_t) * (*retNumEle));
     for (action = firstState->firstAction; action; action = action->next) {
 	s = CcTransition_GetCharSet(&action->trans);
 	targetStateIndex = action->target->state->base.index;
@@ -654,6 +654,6 @@ CcLexical_GetStartTab(const CcLexical_t * self)
 	}
 	CcCharSet_Destruct(s);
     }
-    qsort(table, szTable, sizeof(CcLexical_StartTab_t), stCmp);
+    qsort(table, *retNumEle, sizeof(CcLexical_StartTab_t), stCmp);
     return table;
 }

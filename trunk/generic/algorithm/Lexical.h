@@ -94,7 +94,8 @@ typedef struct {
     int state;
 }  CcLexical_StartTab_t;
 
-CcLexical_StartTab_t * CcLexical_GetStartTab(const CcLexical_t * self);
+CcLexical_StartTab_t *
+CcLexical_GetStartTab(const CcLexical_t * self, int * retNumEle);
 
 EXTC_END
 
