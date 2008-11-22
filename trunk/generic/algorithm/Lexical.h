@@ -98,12 +98,14 @@ CcLexical_StartTab_t *
 CcLexical_GetStartTab(const CcLexical_t * self, int * retNumEle);
 
 typedef struct {
-    const char * name;
+    char * name;
     int index;
 }  CcLexical_Identifier_t;
 
 CcLexical_Identifier_t *
 CcLexical_GetIdentifiers(const CcLexical_t * self, int * retNumEle);
+
+void CcLexical_Identifier_Destruct(CcLexical_Identifier_t * self, int numEle);
 
 EXTC_END
 
