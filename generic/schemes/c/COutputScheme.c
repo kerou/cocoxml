@@ -31,6 +31,11 @@ static const CcOutputInfo_t CcCOutputScheme_OutputInfos[] = {
 };
 
 static CcsBool_t
+COS_Declarations(CcOutputScheme_t * self, FILE * outfp)
+{
+}
+
+static CcsBool_t
 COS_Chars2States(CcOutputScheme_t * self, FILE * outfp)
 {
 }
@@ -41,14 +46,45 @@ COS_Identifiers2KeywordKinds(CcOutputScheme_t * self, FILE * outfp)
 }
 
 static CcsBool_t
+COS_Comments(CcOutputScheme_t * self, FILE * outfp)
+{
+}
+
+static CcsBool_t
+COS_Scan1(CcOutputScheme_t * self, FILE * outfp)
+{
+}
+
+static CcsBool_t
+COS_Scan2(CcOutputScheme_t * self, FILE * outfp)
+{
+}
+
+static CcsBool_t
+COS_Scan3(CcOutputScheme_t * self, FILE * outfp)
+{
+}
+
+static CcsBool_t
 CcCOutputScheme_write(CcOutputScheme_t * self, FILE * outfp,
 		      const char * func, const char * param)
 {
-    if (!strcmp(func, "chars2states")) {
+    if (!strcmp(func, "declarations")) {
+	return COS_Declarations(self, outfp);
+    } else if (!strcmp(func, "chars2states")) {
 	return COS_Chars2States(self, outfp);
     } else if (!strcmp(func, "identifiers2keywordkinds")) {
 	return COS_Identifiers2KeywordKinds(self, outfp);
+    } else if (!strcmp(func, "comments")) {
+	return COS_Comments(self, outfp);
+    } else if (!strcmp(func, "scan1")) {
+	return COS_Scan1(self, outfp);
+    } else if (!strcmp(func, "scan2")) {
+	return COS_Scan2(self, outfp);
+    } else if (!strcmp(func, "scan3")) {
+	return COS_Scan3(self, outfp);
     }
+    fprintf(stderr, "Unknown section '%s' encountered.\n", func);
     return FALSE;
 }
 

@@ -23,6 +23,8 @@
 -------------------------------------------------------------------------*/
 #include  "Globals.h"
 #include  "Arguments.h"
+#include  "OutputScheme.h"
+#include  "c/COutputScheme.h"
 
 static const char * usage_format =
     "Usage: %s Grammar.atg {{Option}}\n"
@@ -49,7 +51,8 @@ main(int argc, char * argv[])
     CcArguments_t arguments;
     CcArgumentsIter_t iter;
     CcGlobals_t   globals;
-    const char * atgName;
+    const char * atgName, * schemeName;
+    CcOutputScheme_t * scheme;
 
     printf("Coco/R (Oct22, 2008)\n");
     CcArguments(&arguments, argc, argv);
@@ -57,11 +60,23 @@ main(int argc, char * argv[])
     if (atgName == NULL) {
 	printf(usage_format, argv[0]);
 	return 0;
-    } else if (!CcGlobals(&globals, atgName, stderr)) {
-	return -1;
     }
+    if (!CcGlobals(&globals, atgName, stderr)) goto errquit0;
     CcGlobals_Parse(&globals);
+
+    schemeName = CcArguments_First(&arguments, "scheme", &iter);
+    if (schemeName == NULL || !strcmp(schemeName, "c")) {
+	scheme = (CcOutputScheme_t *)CcCOutputScheme(&globals, &arguments);
+    } else {
+	scheme = NULL;
+    }
+    if (scheme && !CcOutputScheme_GenerateOutputs(scheme)) goto errquit1;
     CcGlobals_Destruct(&globals);
     CcArguments_Destruct(&arguments);
     return 0;
+ errquit1:
+    CcGlobals_Destruct(&globals);
+ errquit0:
+    CcArguments_Destruct(&arguments);
+    return -1;
 }
