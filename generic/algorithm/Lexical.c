@@ -46,6 +46,7 @@ CcLexical_NewMelted(CcLexical_t * self, CcBitArray_t * set, CcState_t * state);
 static CcBitArray_t * CcLexical_MeltedSet(CcLexical_t * self, int nr);
 static CcMelted_t *
 CcLexical_StateWithSet(CcLexical_t * self, CcBitArray_t * s);
+static void CcLexical_ClearMelted(CcLexical_t * self);
 
 CcLexical_t *
 CcLexical(CcLexical_t * self, CcGlobals_t * globals)
@@ -456,7 +457,6 @@ CcLexical_MeltStates(CcLexical_t * self, CcState_t * state)
 	    CcTarget_ListDestruct(action->target->next);
 	    action->target->next = NULL;
 	    action->target->state = melt->state;
-	    CcMelted_Destruct(melt);
 	}
     }
 }
@@ -492,6 +492,7 @@ CcLexical_MakeDeterministic(CcLexical_t * self)
 	CcLexical_MeltStates(self, state);
     CcLexical_DeleteRedundantStates(self);
     CcLexical_CombineShifts(self);
+    CcLexical_ClearMelted(self);
 }
 
 /* ------------------------- melted states ------------------------------ */
@@ -523,6 +524,17 @@ CcLexical_StateWithSet(CcLexical_t * self, CcBitArray_t * s)
     for (m = self->firstMelted; m != NULL; m = m->next)
 	if (CcBitArray_Equal(s, m->set)) return m;
     return NULL;
+}
+
+static void
+CcLexical_ClearMelted(CcLexical_t * self)
+{
+    CcMelted_t * cur, * next;
+    for (cur = self->firstMelted; cur; cur = next) {
+	next = cur->next;
+	CcMelted_Destruct(cur);
+    }
+    self->firstMelted = NULL;
 }
 
 /* ---------------------------- actions -------------------------------- */
