@@ -86,6 +86,16 @@ void
 CcLexical_NewComment(CcLexical_t * self, const CcsToken_t * token,
 		     CcNode_t * from, CcNode_t * to, CcsBool_t nested);
 
+void CcLexical_Finish(CcLexical_t * self);
+
+typedef struct {
+    int keyFrom;
+    int keyTo;
+    int state;
+}  CcLexical_StartTab_t;
+
+CcLexical_StartTab_t * CcLexical_GetStartTab(const CcLexical_t * self);
+
 EXTC_END
 
 #endif  /* COCO_LEXICAL_H */
