@@ -33,6 +33,14 @@ static const CcOutputInfo_t CcCOutputScheme_OutputInfos[] = {
 };
 
 static CcsBool_t
+COS_Defines(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+{
+    if (!self->globals->lexical.ignoreCase)
+	fprintf(outfp, "%s#define CASE_SENSITIVE\n", indent);
+    return TRUE;
+}
+
+static CcsBool_t
 COS_Declarations(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 {
     fprintf(outfp, "%sself->eofSym = %d;\n", indent,
@@ -63,16 +71,12 @@ COS_Identifiers2KeywordKinds(CcOutputScheme_t * self, FILE * outfp,
 			     const char * indent)
 {
     int numEle;
-    char * ename;
     CcLexical_Identifier_t * list, * cur;
 
     list = CcLexical_GetIdentifiers(&self->globals->lexical, &numEle);
-    for (cur = list; cur - list < numEle; ++cur) {
-	ename = CcEscape(cur->name);
-	fprintf(outfp, "%s{ %s, %d },\n", indent, ename, cur->index);
-	CcFree(ename);
-    }
-    CcFree(list);
+    for (cur = list; cur - list < numEle; ++cur)
+	fprintf(outfp, "%s{ %s, %d },\n", indent, cur->name, cur->index);
+    CcLexical_Identifiers_Destruct(list, numEle);
     return TRUE;
 }
 
@@ -112,7 +116,9 @@ CcCOutputScheme_write(CcOutputScheme_t * self, FILE * outfp,
 		      const char * func, const char * param,
 		      const char * indent)
 {
-    if (!strcmp(func, "declarations")) {
+    if (!strcmp(func, "defines")) {
+	return COS_Defines(self, outfp, indent);
+    } else if (!strcmp(func, "declarations")) {
 	return COS_Declarations(self, outfp, indent);
     } else if (!strcmp(func, "chars2states")) {
 	return COS_Chars2States(self, outfp, indent);
