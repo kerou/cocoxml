@@ -177,91 +177,34 @@ CcsScanner_GetPositionWithTail(CcsScanner_t * self,
 
 /* All the following things are used by CcsScanner_NextCcsToken. */
 typedef struct {
-    int key, val;
+    int keyFrom;
+    int keyTo;
+    int val;
 }  Char2State_t;
 
 static const Char2State_t c2sArr[] = {
     /*---- chars2states ----*/
-    { EoF, -1 },
-    { 34, 11 },
-    { 36, 10 },
-    { 39, 5 },
-    { 40, 30 },
-    { 41, 21 },
-    { 43, 14 },
-    { 45, 15 },
-    { 46, 28 },
-    { 48, 2 },
-    { 49, 2 },
-    { 50, 2 },
-    { 51, 2 },
-    { 52, 2 },
-    { 53, 2 },
-    { 54, 2 },
-    { 55, 2 },
-    { 56, 2 },
-    { 57, 2 },
-    { 60, 29 },
-    { 61, 13 },
-    { 62, 17 },
-    { 65, 1 },
-    { 66, 1 },
-    { 67, 1 },
-    { 68, 1 },
-    { 69, 1 },
-    { 70, 1 },
-    { 71, 1 },
-    { 72, 1 },
-    { 73, 1 },
-    { 74, 1 },
-    { 75, 1 },
-    { 76, 1 },
-    { 77, 1 },
-    { 78, 1 },
-    { 79, 1 },
-    { 80, 1 },
-    { 81, 1 },
-    { 82, 1 },
-    { 83, 1 },
-    { 84, 1 },
-    { 85, 1 },
-    { 86, 1 },
-    { 87, 1 },
-    { 88, 1 },
-    { 89, 1 },
-    { 90, 1 },
-    { 91, 22 },
-    { 93, 23 },
-    { 95, 1 },
-    { 97, 1 },
-    { 98, 1 },
-    { 99, 1 },
-    { 100, 1 },
-    { 101, 1 },
-    { 102, 1 },
-    { 103, 1 },
-    { 104, 1 },
-    { 105, 1 },
-    { 106, 1 },
-    { 107, 1 },
-    { 108, 1 },
-    { 109, 1 },
-    { 110, 1 },
-    { 111, 1 },
-    { 112, 1 },
-    { 113, 1 },
-    { 114, 1 },
-    { 115, 1 },
-    { 116, 1 },
-    { 117, 1 },
-    { 118, 1 },
-    { 119, 1 },
-    { 120, 1 },
-    { 121, 1 },
-    { 122, 1 },
-    { 123, 24 },
-    { 124, 20 },
-    { 125, 25 },
+    { EoF, EoF, -1 },
+    { 34, 34, 11 },
+    { 36, 36, 10 },
+    { 39, 39, 5 },
+    { 40, 40, 30 },
+    { 41, 41, 21 },
+    { 43, 43, 14 },
+    { 45, 45, 15 },
+    { 46, 46, 28 },
+    { 48, 57, 2 },
+    { 60, 60, 29 },
+    { 61, 61, 13 },
+    { 62, 62, 17 },
+    { 65, 90, 1 },
+    { 91, 91, 22 },
+    { 93, 93, 23 },
+    { 95, 95, 1 },
+    { 97, 122, 1 },
+    { 123, 123, 24 },
+    { 124, 124, 20 },
+    { 125, 125, 25 },
     /*---- enable ----*/
 };
 static const int c2sNum = sizeof(c2sArr) / sizeof(c2sArr[0]);
@@ -269,7 +212,11 @@ static const int c2sNum = sizeof(c2sArr) / sizeof(c2sArr[0]);
 static int
 c2sCmp(const void * key, const void * c2s)
 {
-    return *((const int *)key) - ((const Char2State_t *)c2s)->key;
+    int keyval = *(const int *)key;
+    const Char2State_t * ccc2s = (const Char2State_t *)c2s;
+    if (keyval < ccc2s->keyFrom) return -1;
+    if (keyval > ccc2s->keyTo) return 1;
+    return 0;
 }
 static int
 Char2State(int chr)
