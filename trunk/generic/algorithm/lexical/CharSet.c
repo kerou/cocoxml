@@ -136,6 +136,15 @@ CcCharSet_Elements(const CcCharSet_t * self)
 }
 
 int
+CcCharSet_NumRange(const CcCharSet_t * self)
+{
+    int cnt = 0;
+    const CcRange_t * cur;
+    for (cur = self->head; cur; cur = cur->next) ++cnt;
+    return cnt;
+}
+
+int
 CcCharSet_First(const CcCharSet_t * self)
 {
     if (self->head) return self->head->from;
