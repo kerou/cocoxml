@@ -719,3 +719,19 @@ CcLexical_Identifiers_Destruct(CcLexical_Identifier_t * self, int numEle)
 	CcFree(cur->name);
     CcFree(self);
 }
+
+void
+CcLexical_TargetStates(const CcLexical_t * self, CcBitArray_t * mask)
+{
+    CcArrayListIter_t iter;
+    const CcState_t * state;
+    const CcAction_t * action;
+
+    CcBitArray(mask, self->states.Count);
+    state = (const CcState_t *)CcArrayList_FirstC(&self->states, &iter);
+    for (state = (const CcState_t *)CcArrayList_NextC(&self->states, &iter);
+	 state;
+	 state = (const CcState_t *)CcArrayList_NextC(&self->states, &iter))
+	for (action = state->firstAction; action != NULL; action = action->next)
+	    CcBitArray_Set(mask, action->target->state->base.index, TRUE);
+}
