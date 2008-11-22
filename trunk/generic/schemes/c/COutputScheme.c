@@ -22,8 +22,12 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "c/COutputScheme.h"
+#include  "lexical/Action.h"
 #include  "lexical/CharSet.h"
 #include  "lexical/Comment.h"
+#include  "lexical/State.h"
+#include  "lexical/Target.h"
+#include  "lexical/Transition.h"
 
 static const CcOutputInfo_t CcCOutputScheme_OutputInfos[] = {
     { "Scanner.c" },
@@ -106,9 +110,68 @@ COS_Scan1(CcOutputScheme_t * self, FILE * outfp, const char * indent)
     return TRUE;
 }
 
+static void
+COS_WriteState(CcOutputScheme_t * self, FILE * outfp, const char * indent,
+	       const CcState_t * state, const CcBitArray_t * mask)
+{
+    const CcAction_t * action;
+    CcCharSet_t * s; const CcRange_t * curRange;
+    int sIndex = state->base.index;
+
+    if (CcBitArray_Get(mask, sIndex))
+	fprintf(outfp, "%scase %d: case_%d:\n", indent, sIndex, sIndex);
+    else
+	fprintf(outfp, "%scase %d:\n", indent, sIndex);
+    for (action = state->firstAction; action != NULL; action = action->next) {
+	if (action == state->firstAction) fprintf(outfp, "%s    if (", indent);
+	else fprintf(outfp, "%s    } else if (", indent);
+	s = CcTransition_GetCharSet(&action->trans);
+	for (curRange = s->head; curRange; curRange = curRange->next) {
+	    if (curRange != s->head) fprintf(outfp, "%s        ", indent);
+	    if (curRange->from == curRange->to)
+		fprintf(outfp, "self->ch == %d", curRange->from);
+	    else
+		fprintf(outfp, "(self->ch >= %d && self->ch <= %d)",
+			curRange->from, curRange->to);
+	    if (curRange->next) fprintf(outfp, " ||\n");
+	}
+	fprintf(outfp, ") {\n");
+	fprintf(outfp, "%s        CcsScanner_GetCh(self); goto case_%d;\n",
+		indent, action->target->state->base.index);
+	CcCharSet_Destruct(s);
+    }
+    if (state->firstAction == NULL) fprintf(outfp, "%s    {\n", indent);
+    else fprintf(outfp, "%s    } else {\n", indent);
+    if (state->endOf == NULL) {
+	fprintf(outfp, "%s        kind = self->noSym; break;\n", indent);
+    } else {
+	fprintf(outfp, "%s        kind = %d;\n", indent,
+		state->endOf->base.index);
+	if (CcSymbol_GetTokenKind(state->endOf) == symbol_classLitToken)
+	    fprintf(outfp,
+		    "%s        kind = Identifier2KWKind(CcsBuffer_GetString(&self->buffer, pos, self->pos - pos),\n"
+		    "%s                                 self->pos - pos, kind);\n",
+		    indent, indent);
+	fprintf(outfp, "%s        break;\n", indent);
+    }
+    fprintf(outfp, "%s    }\n", indent);
+}
+
 static CcsBool_t
 COS_Scan3(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 {
+    CcArrayListIter_t iter;
+    CcBitArray_t mask;
+    const CcState_t * state;
+    CcArrayList_t * stateArr = &self->globals->lexical.states;
+
+    CcLexical_TargetStates(&self->globals->lexical, &mask);
+    state = (CcState_t *)CcArrayList_First(stateArr, &iter);
+    for (state = (const CcState_t *)CcArrayList_Next(stateArr, &iter);
+	 state; state = (const CcState_t *)CcArrayList_Next(stateArr, &iter))
+	COS_WriteState(self, outfp, indent, state, &mask);
+    CcBitArray_Destruct(&mask);
+    return TRUE;
 }
 
 static CcsBool_t
