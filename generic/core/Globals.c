@@ -55,4 +55,5 @@ void
 CcGlobals_Parse(CcGlobals_t * self)
 {
     CcsGlobals_Parse(&self->base);
+    CcLexical_Finish(&self->lexical);
 }

@@ -610,3 +610,50 @@ CcLexical_NewComment(CcLexical_t * self, const CcsToken_t * token,
     c = CcComment(start, stop, nested);
     c->next = self->firstComment; self->firstComment = c;
 }
+
+void
+CcLexical_Finish(CcLexical_t * self)
+{
+    if (self->dirtyLexical) CcLexical_MakeDeterministic(self);
+}
+
+static int
+stCmp(const void * st0, const void * st1)
+{
+    const CcLexical_StartTab_t * ccst0 = (const CcLexical_StartTab_t *)st0;
+    const CcLexical_StartTab_t * ccst1 = (const CcLexical_StartTab_t *)st1;
+    CcsAssert(ccst0->keyFrom > ccst1->keyTo || ccst0->keyTo < ccst1->keyFrom);
+    return ccst0->keyFrom - ccst1->keyFrom;
+}
+
+CcLexical_StartTab_t *
+CcLexical_GetStartTab(const CcLexical_t * self)
+{
+    CcLexical_StartTab_t * table, * cur; int szTable;
+    const CcAction_t * action;
+    CcCharSet_t * s; CcRange_t * curRange;
+    int targetStateIndex;
+    const CcState_t * firstState =
+	(const CcState_t *)CcArrayList_GetC(&self->states, 0);
+
+    szTable = 0;
+    for (action = firstState->firstAction; action; action = action->next) {
+	s = CcTransition_GetCharSet(&action->trans);
+	szTable += CcCharSet_NumRange(s);
+	CcCharSet_Destruct(s);
+    }
+    table = cur = CcMalloc(sizeof(CcLexical_StartTab_t) * szTable);
+    for (action = firstState->firstAction; action; action = action->next) {
+	s = CcTransition_GetCharSet(&action->trans);
+	targetStateIndex = action->target->state->base.index;
+	for (curRange = s->head; curRange; curRange = curRange->next) {
+	    cur->keyFrom = curRange->from;
+	    cur->keyTo = curRange->to;
+	    cur->state = targetStateIndex;
+	    ++cur;
+	}
+	CcCharSet_Destruct(s);
+    }
+    qsort(table, szTable, sizeof(CcLexical_StartTab_t), stCmp);
+    return table;
+}
