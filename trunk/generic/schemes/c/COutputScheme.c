@@ -40,9 +40,10 @@ COS_Chars2States(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 {
     int numEle;
     CcLexical_StartTab_t * table, * cur;
+    fprintf(outfp, "%s{ EoF, EoF, -1 },\n", indent);
     table = CcLexical_GetStartTab(&self->globals->lexical, &numEle);
     for (cur = table; cur - table < numEle; ++cur)
-	fprintf(stderr, "%s{ %d, %d, %d },\n", indent,
+	fprintf(outfp, "%s{ %d, %d, %d },\n", indent,
 		cur->keyFrom, cur->keyTo, cur->state);
     return TRUE;
 }
