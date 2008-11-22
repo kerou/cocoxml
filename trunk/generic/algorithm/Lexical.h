@@ -97,6 +97,14 @@ typedef struct {
 CcLexical_StartTab_t *
 CcLexical_GetStartTab(const CcLexical_t * self, int * retNumEle);
 
+typedef struct {
+    const char * name;
+    int index;
+}  CcLexical_Identifier_t;
+
+CcLexical_Identifier_t *
+CcLexical_GetIdentifiers(const CcLexical_t * self, int * retNumEle);
+
 EXTC_END
 
 #endif  /* COCO_LEXICAL_H */

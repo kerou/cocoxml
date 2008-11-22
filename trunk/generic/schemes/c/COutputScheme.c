@@ -53,6 +53,18 @@ static CcsBool_t
 COS_Identifiers2KeywordKinds(CcOutputScheme_t * self, FILE * outfp,
 			     const char * indent)
 {
+    int numEle;
+    char * ename;
+    CcLexical_Identifier_t * list, * cur;
+
+    list = CcLexical_GetIdentifiers(&self->globals->lexical, &numEle);
+    for (cur = list; cur - list < numEle; ++cur) {
+	ename = CcEscape(cur->name);
+	fprintf(outfp, "%s{ %s, %d },\n", indent, ename, cur->index);
+	CcFree(ename);
+    }
+    CcFree(list);
+    return TRUE;
 }
 
 static CcsBool_t
