@@ -425,7 +425,7 @@ CcsScanner_NextCcsToken(CcsScanner_t * self)
     switch (state) {
     case -1: kind = self->eofSym; break;
     case 0: kind = self->noSym; break;
-	/*---- scan3 ----*/
+    /*---- scan3 ----*/
     case 1: case_1:
 	if ((self->ch >= '0' && self->ch <= '9') ||
 	    (self->ch >= 'A' && self->ch <= 'Z') ||
@@ -445,8 +445,10 @@ CcsScanner_NextCcsToken(CcsScanner_t * self)
 	    kind = 2;
 	    break;
 	}
-    case 3: case_3: {kind = 3; break;}
-    case 4: case_4: {kind = 4; break;}
+    case 3: case_3:
+	{kind = 3; break;}
+    case 4: case_4:
+	{kind = 4; break;}
     case 5:
 	if (self->ch <= 9 ||
 	    (self->ch >= 11 && self->ch <= 12) ||
@@ -480,7 +482,8 @@ CcsScanner_NextCcsToken(CcsScanner_t * self)
 	} else {
 	    kind = self->noSym; break;
 	}
-    case 9: case_9: {kind = 5; break;}
+    case 9: case_9:
+	{kind = 5; break;}
     case 10: case_10:
 	if ((self->ch >= '0' && self->ch <= '9') ||
 	    (self->ch >= 'A' && self->ch <= 'Z') ||
@@ -512,21 +515,36 @@ CcsScanner_NextCcsToken(CcsScanner_t * self)
 	} else {
 	    kind = self->noSym; break;
 	}
-    case 13: {kind = 17; break;}
-    case 14: {kind = 20; break;}
-    case 15: {kind = 21; break;}
-    case 16: case_16: {kind = 22; break;}
-    case 17: {kind = 25; break;}
-    case 18: case_18: {kind = 26; break;}
-    case 19: case_19: {kind = 27; break;}
-    case 20: {kind = 28; break;}
-    case 21: {kind = 31; break;}
-    case 22: {kind = 32; break;}
-    case 23: {kind = 33; break;}
-    case 24: {kind = 34; break;}
-    case 25: {kind = 35; break;}
-    case 26: case_26: {kind = 39; break;}
-    case 27: case_27: {kind = 40; break;}
+    case 13:
+	{kind = 17; break;}
+    case 14:
+	{kind = 20; break;}
+    case 15:
+	{kind = 21; break;}
+    case 16: case_16:
+	{kind = 22; break;}
+    case 17:
+	{kind = 25; break;}
+    case 18: case_18:
+	{kind = 26; break;}
+    case 19: case_19:
+	{kind = 27; break;}
+    case 20:
+	{kind = 28; break;}
+    case 21:
+	{kind = 31; break;}
+    case 22:
+	{kind = 32; break;}
+    case 23:
+	{kind = 33; break;}
+    case 24:
+	{kind = 34; break;}
+    case 25:
+	{kind = 35; break;}
+    case 26: case_26:
+	{kind = 39; break;}
+    case 27: case_27:
+	{kind = 40; break;}
     case 28:
 	if (self->ch == '.') {CcsScanner_GetCh(self); goto case_16;}
 	else if (self->ch == '>') {CcsScanner_GetCh(self); goto case_19;}
@@ -538,7 +556,7 @@ CcsScanner_NextCcsToken(CcsScanner_t * self)
     case 30:
 	if (self->ch == '.') {CcsScanner_GetCh(self); goto case_26;}
 	else {kind = 30; break;}
-	/*---- enable ----*/
+    /*---- enable ----*/
     }
     t = CcsToken(kind, pos, col, line,
 		 CcsBuffer_GetString(&self->buffer, pos, self->pos - pos),
@@ -546,4 +564,3 @@ CcsScanner_NextCcsToken(CcsScanner_t * self)
     CcsBuffer_Unlock(&self->buffer);
     return t;
 }
-
