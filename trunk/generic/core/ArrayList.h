@@ -51,6 +51,10 @@ typedef struct {
 }  CcArrayListIter_t;
 CcObject_t * CcArrayList_First(CcArrayList_t * self, CcArrayListIter_t * iter);
 CcObject_t * CcArrayList_Next(CcArrayList_t * self, CcArrayListIter_t * iter);
+const CcObject_t *
+CcArrayList_FirstC(const CcArrayList_t * self, CcArrayListIter_t * iter);
+const CcObject_t *
+CcArrayList_NextC(const CcArrayList_t * self, CcArrayListIter_t * iter);
 
 CcArrayListIter_t *
 CcArrayListIter_Copy(CcArrayListIter_t * self, const CcArrayListIter_t * orig);

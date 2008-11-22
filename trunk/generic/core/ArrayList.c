@@ -89,6 +89,19 @@ CcArrayList_Next(CcArrayList_t * self, CcArrayListIter_t * iter)
     return iter->index < self->Count ? self->Objects[iter->index++] : NULL;
 }
 
+const CcObject_t *
+CcArrayList_FirstC(const CcArrayList_t * self, CcArrayListIter_t * iter)
+{
+    iter->index = 0;
+    return CcArrayList_NextC(self, iter);
+}
+
+const CcObject_t *
+CcArrayList_NextC(const CcArrayList_t * self, CcArrayListIter_t * iter)
+{
+    return iter->index < self->Count ? self->Objects[iter->index++] : NULL;
+}
+
 CcArrayListIter_t *
 CcArrayListIter_Copy(CcArrayListIter_t * self, const CcArrayListIter_t * orig)
 {
