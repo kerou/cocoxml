@@ -310,34 +310,3 @@ CcCharSet_Fill(CcCharSet_t * self, int maxchar)
     CcCharSet_Clear(self);
     self->head = new_Range(0, maxchar);
 }
-/*
-void
-CcCharSet_Dump(const CcCharSet_t * self, DumpBuffer_t * buf)
-{
-    const CcRange_t * cur;
-    for (cur = self->head; cur && !DumpBuffer_Full(buf); cur = cur->next) {
-	if (cur->from == cur->to) {
-	    DumpBuffer_Print(buf, "'"); EscapeCh(buf, cur->from); DumpBuffer_Print(buf, "'");
-	} else {
-	    DumpBuffer_Print(buf, "'"); EscapeCh(buf, cur->from); DumpBuffer_Print(buf, "'");
-	    DumpBuffer_Print(buf, "..");
-	    DumpBuffer_Print(buf, "'"); EscapeCh(buf, cur->to); DumpBuffer_Print(buf, "'");
-	}
-	if (cur->next) DumpBuffer_Print(buf, ", ");
-    }
-}
-
-void
-CcCharSet_DumpInt(const CcCharSet_t * self, DumpBuffer_t * buf)
-{
-    const CcRange_t * cur;
-    for (cur = self->head; cur && !DumpBuffer_Full(buf); cur = cur->next) {
-	if (cur->from == cur->to) {
-	    DumpBuffer_Print(buf, "%d", cur->from);
-	} else {
-	    DumpBuffer_Print(buf, "%d..%d", cur->from, cur->to);
-	}
-	if (cur->next) DumpBuffer_Print(buf, ", ");
-    }
-}
-*/
