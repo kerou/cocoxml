@@ -78,6 +78,7 @@ int CcsUTF8GetCh(const char ** str, const char * stop);
 int CcsUTF8GetWidth(const char * str, size_t len);
 int CcsUnescapeCh(const char ** str, const char * stop);
 char * CcsUnescape(const char * str);
+char * CcsEscape(const char * str);
 
 EXTC_END
 

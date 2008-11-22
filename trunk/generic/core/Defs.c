@@ -65,3 +65,12 @@ CcUnescape(const char * str)
 		      __FILE__, __LINE__);
     return NULL;
 }
+
+char *
+CcEscape(const char * str)
+{
+    char * s = CcsEscape(str);
+    if (s) return s;
+    _CcsAssertFailed_("Out of memory", __FILE__, __LINE__);
+    return NULL;
+}

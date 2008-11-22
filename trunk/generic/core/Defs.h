@@ -77,6 +77,7 @@ typedef struct CcGlobals_s CcGlobals_t;
 typedef struct CcArguments_s CcArguments_t;
 
 char * CcUnescape(const char * str);
+char * CcEscape(const char * str);
 
 EXTC_END
 
