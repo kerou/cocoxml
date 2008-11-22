@@ -22,6 +22,8 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "c/COutputScheme.h"
+#include  "lexical/CharSet.h"
+#include  "lexical/Comment.h"
 
 static const CcOutputInfo_t CcCOutputScheme_OutputInfos[] = {
     { "Scanner.c" },
@@ -33,6 +35,13 @@ static const CcOutputInfo_t CcCOutputScheme_OutputInfos[] = {
 static CcsBool_t
 COS_Declarations(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 {
+    fprintf(outfp, "%sself->eofSym = %d;\n", indent,
+	    self->globals->syntax.eofSy->base.index);
+    fprintf(outfp, "%sself->maxT = %d;\n", indent,
+	    self->globals->symtab.terminals.Count - 1);
+    fprintf(outfp, "%sself->noSym = %d;\n", indent,
+	    self->globals->syntax.noSy->base.index);
+    return TRUE;
 }
 
 static CcsBool_t
@@ -70,16 +79,27 @@ COS_Identifiers2KeywordKinds(CcOutputScheme_t * self, FILE * outfp,
 static CcsBool_t
 COS_Comments(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 {
+    const CcComment_t * cur;
+    for (cur = self->globals->lexical.firstComment; cur; cur = cur->next)
+	fprintf(outfp, "%s    { { %d, %d }, { %d, %d }, %s },\n", indent,
+		cur->start[0], cur->start[1], cur->stop[0], cur->stop[1],
+		cur->nested ? "TRUE" : "FALSE");
+    return TRUE;
 }
 
 static CcsBool_t
 COS_Scan1(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 {
-}
-
-static CcsBool_t
-COS_Scan2(CcOutputScheme_t * self, FILE * outfp, const char * indent)
-{
+    const CcRange_t * curRange;
+    for (curRange = self->globals->lexical.ignored->head;
+	 curRange; curRange = curRange->next) {
+	if (curRange->from == curRange->to)
+	    fprintf(outfp, "%s|| self->ch == %d\n", indent, curRange->from);
+	else
+	    fprintf(outfp, "%s|| (self->ch >= %d && self->ch <= %d)\n", indent,
+		    curRange->from, curRange->to);
+    }
+    return TRUE;
 }
 
 static CcsBool_t
@@ -102,8 +122,6 @@ CcCOutputScheme_write(CcOutputScheme_t * self, FILE * outfp,
 	return COS_Comments(self, outfp, indent);
     } else if (!strcmp(func, "scan1")) {
 	return COS_Scan1(self, outfp, indent);
-    } else if (!strcmp(func, "scan2")) {
-	return COS_Scan2(self, outfp, indent);
     } else if (!strcmp(func, "scan3")) {
 	return COS_Scan3(self, outfp, indent);
     }

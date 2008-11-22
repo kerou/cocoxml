@@ -614,17 +614,15 @@ void
 CcLexical_NewComment(CcLexical_t * self, const CcsToken_t * token,
 		     CcNode_t * from, CcNode_t * to, CcsBool_t nested)
 {
-    int start[3], stop[3], * c0, * c1;
+    int start[3], stop[3];
     CcComment_t * c;
 
     CcLexical_CommentStr(self, token, start, from);
     CcLexical_CommentStr(self, token, stop, to);
-    if (nested) {
-	c0 = start; c1 = stop;
-	while (*c0) if (*c0++ != *c1++) break;
-	if (*c0 == *c1)
-	    CcsGlobals_SemErr(&self->globals->base, token,
-			      "The start and stop of nested comment is same.");
+    if (nested && start[0] == stop[0]) {
+	CcsGlobals_SemErr(&self->globals->base, token,
+			  "The first char of start and stop of nested comment is same.");
+	return;
     }
     c = CcComment(start, stop, nested);
     c->next = self->firstComment; self->firstComment = c;

@@ -324,92 +324,87 @@ CcsScanner_ResetCh(CcsScanner_t * self, SLock_t * slock)
     CcsBuffer_LockReset(&self->buffer);
 }
 
+typedef struct {
+    int start[2];
+    int end[2];
+    CcsBool_t nested;
+}  CcsComment_t;
+
 /*---- comments ----*/
-static int
-CcsScanner_Comment0(CcsScanner_t * self)
-{
-    SLock_t slock;
-    int level = 1, line0 = self->line;
-
-    CcsScanner_LockCh(self, &slock); CcsScanner_GetCh(self);
-    if (self->ch == '/') {
-	CcsScanner_UnlockCh(self, &slock);
-	CcsScanner_GetCh(self);
-	for (;;) {
-	    if (self->ch == 10) {
-		--level;
-		if (level == 0) {
-		    self->oldEols = self->line - line0;
-		    CcsScanner_GetCh(self);
-		    return 1;
-		}
-		CcsScanner_GetCh(self);
-	    } else if (self->ch == EoF) {
-		return 0;
-	    } else {
-		CcsScanner_GetCh(self);
-	    }
-	}
-    } else {
-	CcsScanner_ResetCh(self, &slock);
-    }
-    return 0;
-}
-
-static int
-CcsScanner_Comment1(CcsScanner_t * self)
-{
-    SLock_t slock;
-    int level = 1, line0 = self->line;
-
-    CcsScanner_LockCh(self, &slock); CcsScanner_GetCh(self);
-    if (self->ch == '*') {
-	CcsScanner_UnlockCh(self, &slock);
-	CcsScanner_GetCh(self);
-	for (;;) {
-	    if (self->ch == '*') {
-		CcsScanner_GetCh(self);
-		if (self->ch == '/') {
-		    --level;
-		    if (level == 0) {
-			self->oldEols = self->line - line0;
-			CcsScanner_GetCh(self);
-			return 1;
-		    }
-		    CcsScanner_GetCh(self);
-		}
-	    } else if (self->ch == '/') {
-		CcsScanner_GetCh(self);
-		if (self->ch == '*') {
-		    ++level; CcsScanner_GetCh(self);
-		}
-	    } else if (self->ch == EoF) {
-		return 0;
-	    } else {
-		CcsScanner_GetCh(self);
-	    }
-	}
-    } else {
-	CcsScanner_ResetCh(self, &slock);
-    }
-    return 0;
-}
+static const CcsComment_t comments[] = {
+    { { '/', '/' }, { 10, 0 }, FALSE },
+    { { '/', '*' }, { '*', '/' }, TRUE },
+};
 /*---- enable ----*/
+static const CcsComment_t * commentsLast =
+    comments + sizeof(comments) / sizeof(comments[0]);
+
+static CcsBool_t
+CcsScanner_Comment(CcsScanner_t * self, const CcsComment_t * c)
+{
+    SLock_t slock;
+    int level = 1, line0 = self->line;
+
+    if (c->start[1]) {
+	CcsScanner_LockCh(self, &slock); CcsScanner_GetCh(self);
+	if (self->ch != c->start[1]) {
+	    CcsScanner_ResetCh(self, &slock);
+	    return FALSE;
+	}
+	CcsScanner_UnlockCh(self, &slock);
+    }
+    CcsScanner_GetCh(self);
+    for (;;) {
+	if (self->ch == c->end[0]) {
+	    if (c->end[1] == 0) {
+		if (--level == 0) break;
+	    } else {
+		CcsScanner_LockCh(self, &slock); CcsScanner_GetCh(self);
+		if (self->ch == c->end[1]) {
+		    CcsScanner_UnlockCh(self, &slock);
+		    if (--level == 0) break;
+		} else {
+		    CcsScanner_ResetCh(self, &slock);
+		}
+	    }
+	} else if (c->nested && self->ch == c->start[0]) {
+	    if (c->start[1] == 0) {
+		++level;
+	    } else {
+		CcsScanner_LockCh(self, &slock); CcsScanner_GetCh(self);
+		if (self->ch == c->start[1]) {
+		    CcsScanner_UnlockCh(self, &slock);
+		    ++level;
+		} else {
+		    CcsScanner_ResetCh(self, &slock);
+		}
+	    }
+	} else if (self->ch == EoF) {
+	    return TRUE;
+	}
+	CcsScanner_GetCh(self);
+    }
+    self->oldEols = self->line - line0;
+    CcsScanner_GetCh(self);
+    return TRUE;
+}
 
 CcsToken_t *
 CcsScanner_NextCcsToken(CcsScanner_t * self)
 {
     int pos, line, col, state, kind; CcsToken_t * t;
+    const CcsComment_t * curComment;
     for (;;) {
-	while (self->ch == ' ' ||
+	while (self->ch == ' '
 	       /*---- scan1 ----*/
-	       (self->ch >= 9 && self->ch <= 10) || self->ch == 13
+	       || (self->ch >= 9 && self->ch <= 10)
+	       || self->ch == 13
 	       /*---- enable ----*/
 	       ) CcsScanner_GetCh(self);
-	/*---- scan2 ----*/
-	if (self->ch == '/' && CcsScanner_Comment0(self)) continue;
-	if (self->ch == '/' && CcsScanner_Comment1(self)) continue;
-	/*---- enable ----*/
+	for (curComment = comments; curComment < commentsLast; ++curComment)
+	    if (self->ch == curComment->start[0] &&
+		CcsScanner_Comment(self, curComment)) break;
+	if (curComment < commentsLast) continue;
 	break;
     }
     pos = self->pos; line = self->line; col = self->col;
