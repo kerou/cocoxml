@@ -24,8 +24,9 @@
 #include  "c/COutputScheme.h"
 
 static const CcOutputInfo_t CcCOutputScheme_OutputInfos[] = {
-    { "Scanner.template", { "Scanner.h", "Scanner.c" }},
-    { "Parser.template", { "Parser.h", "Parser.c"}},
+    { "Scanner.c" },
+    { "Parser.c" },
+    { "Parser.h" },
     { NULL }
 };
 
