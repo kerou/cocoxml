@@ -105,7 +105,9 @@ typedef struct {
 CcLexical_Identifier_t *
 CcLexical_GetIdentifiers(const CcLexical_t * self, int * retNumEle);
 
-void CcLexical_Identifier_Destruct(CcLexical_Identifier_t * self, int numEle);
+void CcLexical_Identifiers_Destruct(CcLexical_Identifier_t * self, int numEle);
+
+void CcLexical_TargetStates(const CcLexical_t * self, CcBitArray_t * mask);
 
 EXTC_END
 
