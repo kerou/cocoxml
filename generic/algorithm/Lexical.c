@@ -669,3 +669,35 @@ CcLexical_GetStartTab(const CcLexical_t * self, int * retNumEle)
     qsort(table, *retNumEle, sizeof(CcLexical_StartTab_t), stCmp);
     return table;
 }
+
+static int
+idCmp(const void * i0, const void * i1)
+{
+    const CcLexical_Identifier_t * cci0 = (const CcLexical_Identifier_t *)i0;
+    const CcLexical_Identifier_t * cci1 = (const CcLexical_Identifier_t *)i1;
+    return strcmp(cci0->name, cci1->name);
+}
+
+CcLexical_Identifier_t *
+CcLexical_GetIdentifiers(const CcLexical_t * self, int * retNumEle)
+{
+    CcSymbolT_t * sym;
+    CcArrayListIter_t iter;
+    CcLexical_Identifier_t * list, * cur;
+    CcArrayList_t * terminals = &self->globals->symtab.terminals;
+
+    *retNumEle = 0;
+    for (sym = (CcSymbolT_t *)CcArrayList_First(terminals, &iter);
+	 sym; sym = (CcSymbolT_t *)CcArrayList_Next(terminals, &iter))
+	if (sym->tokenKind == symbol_litToken) ++*retNumEle;
+    list = cur = CcMalloc(sizeof(CcLexical_Identifier_t) * (*retNumEle));
+    for (sym = (CcSymbolT_t *)CcArrayList_First(terminals, &iter);
+	 sym; sym = (CcSymbolT_t *)CcArrayList_Next(terminals, &iter)) {
+	if (sym->tokenKind != symbol_litToken) continue;
+	cur->name = sym->base.name;
+	cur->index = sym->base.base.index;
+	++cur;
+    }
+    qsort(list, *retNumEle, sizeof(CcLexical_Identifier_t), idCmp);
+    return list;
+}
