@@ -42,6 +42,7 @@ void CcArrayList_Destruct(CcArrayList_t * self);
 CcObject_t * CcArrayList_New(CcArrayList_t * self, CcObject_t * object);
 
 CcObject_t * CcArrayList_Get(CcArrayList_t * self, int index);
+const CcObject_t * CcArrayList_GetC(const CcArrayList_t * self, int index);
 
 void CcArrayList_Clear(CcArrayList_t * self);
 
