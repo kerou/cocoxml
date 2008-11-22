@@ -341,12 +341,12 @@ typedef struct {
     CcsBool_t nested;
 }  CcsComment_t;
 
-/*---- comments ----*/
 static const CcsComment_t comments[] = {
+/*---- comments ----*/
     { { '/', '/' }, { 10, 0 }, FALSE },
     { { '/', '*' }, { '*', '/' }, TRUE },
-};
 /*---- enable ----*/
+};
 static const CcsComment_t * commentsLast =
     comments + sizeof(comments) / sizeof(comments[0]);
 
