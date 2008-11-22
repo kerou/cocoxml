@@ -43,7 +43,8 @@ struct CcOutputSchemeType_s {
 
     const CcOutputInfo_t * OutInfoArray;
     CcsBool_t (* write)(CcOutputScheme_t * self, FILE * outfp,
-			const char * func, const char * params);
+			const char * func, const char * params,
+			const char * indent);
 };
 
 struct CcOutputScheme_s {
