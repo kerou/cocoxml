@@ -61,6 +61,12 @@ CcArrayList_Get(CcArrayList_t * self, int index)
     return (index >= 0 && index < self->Count) ? self->Objects[index] : NULL;
 }
 
+const CcObject_t *
+CcArrayList_GetC(const CcArrayList_t * self, int index)
+{
+    return (index >= 0 && index < self->Count) ? self->Objects[index] : NULL;
+}
+
 void
 CcArrayList_Clear(CcArrayList_t * self)
 {
