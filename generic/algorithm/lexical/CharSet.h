@@ -48,6 +48,7 @@ CcsBool_t CcCharSet_IsEmpty(const CcCharSet_t * self);
 CcsBool_t CcCharSet_Equals(const CcCharSet_t * self, const CcCharSet_t * s);
 int CcCharSet_Elements(const CcCharSet_t * self);
 int CcCharSet_First(const CcCharSet_t * self);
+int CcCharSet_NumRange(const CcCharSet_t * self);
 void CcCharSet_Or(CcCharSet_t * self, const CcCharSet_t * s);
 void CcCharSet_And(CcCharSet_t * self, const CcCharSet_t * s);
 void CcCharSet_Subtract(CcCharSet_t * self, const CcCharSet_t * s);
