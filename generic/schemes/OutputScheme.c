@@ -43,6 +43,15 @@ CcOutputScheme_Destruct(CcObject_t * self)
     CcObject_Destruct(self);
 }
 
+static void
+MakePath(char * path, size_t szpath, const char * dir, const char * bn)
+{
+    if (dir)
+	snprintf(path, szpath, "%s/%s", dir, bn);
+    else
+	snprintf(path, szpath, "%s", bn);
+}
+
 static CcsBool_t
 LocateMark(const char ** b, const char ** e,
 	   const char * lmark, const char * rmark)
@@ -100,42 +109,20 @@ CheckMark(const char * lnbuf,
 }
 
 static CcsBool_t
-CheckOutput(char * outPath, size_t szOutPath, const char * outDir,
-	    const char * bn, const char * const * outputs)
-{
-    const char * const * curout; char * outbn;
-    for (curout = outputs; curout - outputs < MAX_TEMPLATE_OUTPUT; ++curout) {
-	if (!*curout) continue;
-	outbn = CcStrdup(*curout);
-	if (!strcmp(outbn, bn)) {
-	    if (strcmp(outbn, bn)) {
-		snprintf(outPath, sizeof(szOutPath), "%s", *curout);
-	    } else {
-		snprintf(outPath, sizeof(szOutPath), "%s/%s", outDir, bn);
-	    }
-	    CcFree(outbn);
-	    return TRUE;
-	}
-	CcFree(outbn);
-    }
-    return FALSE;
-}
-
-static CcsBool_t
-CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * template,
-			     const char * const * outputs)
+CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
+			     const char * outPath)
 {
     CcArgumentsIter_t iter;
-    char tempPath[PATH_MAX]; FILE * tempfp;
-    const char * outDir; char outPath[PATH_MAX]; FILE * outfp;
+    const char * license;
+    FILE * tempfp, * outfp, * licensefp;
     char lnbuf[4096]; CcsBool_t enabled;
     char indentStr[128], Command[128], ParamStr[128], replacedPrefix[128];
+    const CcOutputSchemeType_t * type =
+	(const CcOutputSchemeType_t *)self->base.type;
 
-    outDir = CcArguments_First(self->arguments, "d", &iter);
-    snprintf(tempPath, sizeof(tempPath), "%s/%s",
-	     CcArguments_First(self->arguments, "tempdir", &iter), template);
     if (!(tempfp = fopen(tempPath, "r"))) goto errquit0;
-    outfp = NULL; enabled = TRUE;
+    if (!(outfp = fopen(outPath, "w"))) goto errquit1;
+    enabled = TRUE;
     while (fgets(lnbuf, sizeof(lnbuf), tempfp)) {
 	if (!CheckMark(lnbuf, indentStr, sizeof(indentStr),
 		       Command, sizeof(Command),
@@ -145,32 +132,30 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * template,
 	    /* Not implemented Yet. */
 	    continue;
 	}
-	if (!strcmp(Command, "output")) {
-	    if (outfp) { fclose(outfp); outfp = NULL; }
-	    if (CheckOutput(outPath, sizeof(outPath),
-			    outDir, ParamStr, outputs)) {
-		if (!(outfp = fopen(outPath, "w"))) goto errquit1;
-	    }
-	}
 	fputs(lnbuf, outfp);
-	if (!strcmp(Command, "output")) {
-	} else if (!strcmp(Command, "prefix")) {
+	if (!strcmp(Command, "prefix")) {
 	    snprintf(replacedPrefix, sizeof(replacedPrefix), "%s", ParamStr);
 	} else if (!strcmp(Command, "enable")) {
 	    enabled = TRUE;
+	} else if (!strcmp(Command, "license")) {
+	    if (!(license = CcArguments_First(self->arguments, "license", &iter)))
+		goto errquit2;
+	    if (!(licensefp = fopen(license, "r"))) goto errquit2;
+	    while (fgets(lnbuf, sizeof(lnbuf), licensefp))
+		if (fputs(lnbuf, outfp) < 0) { fclose(licensefp); goto errquit2; }
+	    fclose(licensefp);
+	    enabled = FALSE;
 	} else {
-	    if (outfp) {
-		if (!CcOutputScheme_Write(self, outfp, Command, ParamStr))
-		    goto errquit1;
-	    }
+	    if (!type->write(self, outfp, Command, ParamStr)) goto errquit2;
 	    enabled = FALSE;
 	}
     }
-    if (outfp) fclose(outfp);
+    fclose(outfp);
     fclose(tempfp);
     return TRUE;
+ errquit2:
+    fclose(outfp);
  errquit1:
-    if (outfp) fclose(outfp);
     fclose(tempfp);
  errquit0:
     return FALSE;
@@ -180,55 +165,31 @@ CcsBool_t
 CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self)
 {
 
+    const char * tempDir, * outDir; CcArgumentsIter_t iter;
     const CcOutputInfo_t * outinfo;
-    CcArgumentsIter_t iter;
+    char tempPath[PATH_MAX], outPath[PATH_MAX];
     const char * outFile; char * outFileBase, * BoutFileBase;
-    const char * const * curout;
-    const char * outputs[MAX_TEMPLATE_OUTPUT];
 
+    tempDir = CcArguments_First(self->arguments, "tempdir", &iter);
+    outDir = CcArguments_First(self->arguments, "outdir", &iter);
     for (outinfo = ((CcOutputSchemeType_t *)self->base.type)->OutInfoArray;
 	 outinfo->template; ++outinfo) {
+	MakePath(tempPath, sizeof(tempPath), tempDir, outinfo->template);
 	outFile = CcArguments_First(self->arguments, "o", &iter);
 	if (!outFile) {
-	    if (!CcOutputScheme_ApplyTemplate(self, outinfo->template,
-					      outinfo->outputs))
-		return FALSE;
-	} else {
-	    memset(outputs, 0, sizeof(outputs));
-	    for (;outFile; outFile = CcArguments_Next(self->arguments, &iter)) {
-		outFileBase = CcStrdup(outFile);
-		BoutFileBase = basename(outFileBase);
-		for (curout = outinfo->outputs;
-		     curout - outinfo->outputs < MAX_TEMPLATE_OUTPUT; ++curout)
-		    if (!strcmp(BoutFileBase, *curout)) {
-			outputs[curout - outinfo->outputs] = outFile;
-			break;
-		    }
+	    MakePath(outPath, sizeof(outPath), outDir, outinfo->template);
+	    return CcOutputScheme_ApplyTemplate(self, tempPath, outPath);
+	}
+	for (;outFile; outFile = CcArguments_Next(self->arguments, &iter)) {
+	    outFileBase = CcStrdup(outFile);
+	    BoutFileBase = basename(outFileBase);
+	    if (!strcmp(BoutFileBase, outinfo->template)) {
+		MakePath(outPath, sizeof(outPath), outDir, outFileBase);
 		CcFree(outFileBase);
+		return CcOutputScheme_ApplyTemplate(self, tempPath, outPath);
 	    }
-	    if (!CcOutputScheme_ApplyTemplate(self, outinfo->template, outputs))
-		return FALSE;
+	    CcFree(outFileBase);
 	}
     }
     return TRUE;
-}
-
-CcsBool_t
-CcOutputScheme_Write(CcOutputScheme_t * self, FILE * outfp,
-		     const char * func, const char * param)
-{
-    CcArgumentsIter_t iter;
-    const char * license; FILE * licensefp; char lnbuf[4096];
-    const CcOutputSchemeType_t * type =
-	(const CcOutputSchemeType_t *)self->base.type;
-    if (!strcmp(func, "license") &&
-	(license = CcArguments_First(self->arguments, "license", &iter))) {
-	if (!(licensefp = fopen(license, "r"))) return FALSE;
-	while (fgets(lnbuf, sizeof(lnbuf), licensefp))
-	    if (fputs(lnbuf, outfp) < 0) { fclose(licensefp); return FALSE; }
-	fclose(licensefp);
-	return TRUE;
-    } else {
-	return type->write(self, outfp, func, param);
-    }
 }
