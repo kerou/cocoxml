@@ -188,8 +188,8 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
 			fclose(licensefp);
 			goto errquit2;
 		    }
+		fclose(licensefp);
 	    }
-	    fclose(licensefp);
 	    enabled = FALSE;
 	} else {
 	    if (!type->write(self, outfp, Command, ParamStr, indentStr))
