@@ -770,3 +770,38 @@ CcSyntax_GrammarOk(CcSyntax_t * self)
     }
     return ok;
 }
+
+#define SZ_SYMSET  64
+
+void
+CcSyntaxSymSet(CcSyntaxSymSet_t * self)
+{
+    self->start = self->used = CcMalloc(sizeof(CcBitArray_t) * SZ_SYMSET);
+    self->last = self->start + SZ_SYMSET;
+}
+
+int
+CcSyntaxSymSet_New(CcSyntaxSymSet_t * self, const CcBitArray_t * s)
+{
+    CcBitArray_t * cur;
+    for (cur = self->start; cur < self->used; ++cur)
+	if (CcBitArray_Equal(cur, s)) return cur - self->start;
+    if (self->used >= self->last) {
+	cur = CcRealloc(self->start,
+			sizeof(CcBitArray_t) * (self->last - self->start) * 2);
+	self->used = cur + (self->used - self->start);
+	self->last = cur + (self->last - self->start) * 2;
+	self->start = cur;
+    }
+    cur = self->used++;
+    CcBitArray_Clone(cur, s);
+    return cur - self->start;
+}
+
+void
+CcSyntaxSymSet_Destruct(CcSyntaxSymSet_t * self)
+{
+    CcBitArray_t * cur;
+    for (cur = self->start; cur < self->used; ++cur)
+	CcBitArray_Destruct(cur);
+}

@@ -28,10 +28,15 @@
 #include "OutputScheme.h"
 #endif
 
+#ifndef  COCO_SYNTAX_H
+#incldue "Syntax.h"
+#endif
+
 EXTC_BEGIN
 
 typedef struct {
     CcOutputScheme_t base;
+    CcSyntaxSymSet_t symSet;
 } CcCOutputScheme_t;
 
 CcCOutputScheme_t *

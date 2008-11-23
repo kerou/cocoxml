@@ -175,6 +175,25 @@ COS_Scan3(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 }
 
 static CcsBool_t
+COS_Initialization(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+{
+    char * setstr; int setlen, index;
+    const CcBitArray_t * cur;
+    CcCOutputScheme_t * ccself = (CcCOutputScheme_t *)self;
+
+    setlen = self->globals->symtab.terminals.Count;
+    setstr = CcMalloc(setlen + 1); setstr[setlen] = 0;
+    for (cur = ccself->symSet.start; cur < ccself->symSet.used; ++cur) {
+	CcsAssert(setlen == CcBitArray_getCount(cur));
+	for (index = 0; index < setlen; ++index)
+	    setstr[index] = CcBitArray_Get(cur, index) ? '*' : '.';
+	fprintf(outfp, "%s\"%s\",\n", indent, setstr);
+    }
+    CcFree(setstr);
+    return TRUE;
+}
+
+static CcsBool_t
 CcCOutputScheme_write(CcOutputScheme_t * self, FILE * outfp,
 		      const char * func, const char * param,
 		      const char * indent)
@@ -193,6 +212,8 @@ CcCOutputScheme_write(CcOutputScheme_t * self, FILE * outfp,
 	return COS_Scan1(self, outfp, indent);
     } else if (!strcmp(func, "scan3")) {
 	return COS_Scan3(self, outfp, indent);
+    } else if (!strcmp(func, "initialization")) {
+	return COS_Initialization(self, outfp, indent);
     }
     fprintf(stderr, "Unknown section '%s' encountered.\n", func);
     return FALSE;
@@ -201,7 +222,8 @@ CcCOutputScheme_write(CcOutputScheme_t * self, FILE * outfp,
 static void
 CcCOutputScheme_Destruct(CcObject_t * self)
 {
-    /*CcCOutputScheme_t * ccself = (CcCOutputScheme_t *)self;*/
+    CcCOutputScheme_t * ccself = (CcCOutputScheme_t *)self;
+    CcSyntaxSymSet_Destruct(&ccself->symSet);
     CcOutputScheme_Destruct(self);
 }
 
@@ -215,5 +237,6 @@ CcCOutputScheme(CcGlobals_t * globals, CcArguments_t * arguments)
 {
     CcCOutputScheme_t * self = (CcCOutputScheme_t *)
 	CcOutputScheme(&COutputSchemeType, globals, arguments);
+    CcSyntaxSymSet(&self->symSet);
     return self;
 }

@@ -62,6 +62,16 @@ void CcSyntax_SetupAnys(CcSyntax_t * self);
 void CcSyntax_CompSymbolSets(CcSyntax_t * self);
 CcsBool_t CcSyntax_GrammarOk(CcSyntax_t * self);
 
+typedef struct {
+    CcBitArray_t * start;
+    CcBitArray_t * used;
+    CcBitArray_t * last;
+}  CcSyntaxSymSet_t;
+
+void CcSyntaxSymSet(CcSyntaxSymSet_t * self);
+int CcSyntaxSymSet_New(CcSyntaxSymSet_t * self, const CcBitArray_t * s);
+void CcSyntaxSymSet_Destruct(CcSyntaxSymSet_t * self);
+
 EXTC_END
 
 #endif  /* COCO_SYNTAX_H */
