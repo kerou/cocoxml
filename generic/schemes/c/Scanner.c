@@ -288,6 +288,15 @@ Identifier2KWKind(const char * key, size_t keylen, int defaultVal)
     return i2k ? i2k->val : defaultVal;
 }
 
+static int
+CcsScanner_Buffer2KWKind(CcsScanner_t * self, int start, int end,
+			 int defaultVal)
+{
+    return Identifier2KWKind(CcsBuffer_GetString(&self->buffer,
+						 start, end - start),
+			     end - start, defaultVal);
+}
+
 static void
 CcsScanner_GetCh(CcsScanner_t * self)
 {
