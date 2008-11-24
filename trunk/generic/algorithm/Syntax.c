@@ -804,4 +804,5 @@ CcSyntaxSymSet_Destruct(CcSyntaxSymSet_t * self)
     CcBitArray_t * cur;
     for (cur = self->start; cur < self->used; ++cur)
 	CcBitArray_Destruct(cur);
+    CcFree(self->start);
 }
