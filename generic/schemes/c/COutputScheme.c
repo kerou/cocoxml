@@ -36,6 +36,35 @@ static const CcOutputInfo_t CcCOutputScheme_OutputInfos[] = {
     { NULL }
 };
 
+static const char *
+CharRepr(char * buf, size_t szbuf, int ch)
+{
+    if (ch == '\\') {
+	snprintf(buf, szbuf, "'\\\\'");
+    } else if (ch == '\'') {
+	snprintf(buf, szbuf, "'\\\''");
+    } else if (ch >= 32 && ch <= 127) {
+	snprintf(buf, szbuf, "'%c'", (char)ch);
+    } else if (ch == '\a') {
+	snprintf(buf, szbuf, "'\\a'");
+    } else if (ch == '\b') {
+	snprintf(buf, szbuf, "'\\b'");
+    } else if (ch == '\f') {
+	snprintf(buf, szbuf, "'\\f'");
+    } else if (ch == '\n') {
+	snprintf(buf, szbuf, "'\\n'");
+    } else if (ch == '\r') {
+	snprintf(buf, szbuf, "'\\r'");
+    } else if (ch == '\t') {
+	snprintf(buf, szbuf, "'\\t'");
+    } else if (ch == '\v') {
+	snprintf(buf, szbuf, "'\\v'");
+    } else {
+	snprintf(buf, szbuf, "%d", ch);
+    }
+    return buf;
+}
+
 static CcsBool_t
 COS_Defines(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 {
@@ -61,11 +90,14 @@ COS_Chars2States(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 {
     int numEle;
     CcLexical_StartTab_t * table, * cur;
+    char buf0[8], buf1[8];
     fprintf(outfp, "%s{ EoF, EoF, -1 },\n", indent);
     table = CcLexical_GetStartTab(&self->globals->lexical, &numEle);
     for (cur = table; cur - table < numEle; ++cur)
-	fprintf(outfp, "%s{ %d, %d, %d },\n", indent,
-		cur->keyFrom, cur->keyTo, cur->state);
+	fprintf(outfp, "%s{ %d, %d, %d },\t/* %s %s */\n", indent,
+		cur->keyFrom, cur->keyTo, cur->state,
+		CharRepr(buf0, sizeof(buf0), cur->keyFrom),
+		CharRepr(buf1, sizeof(buf1), cur->keyTo));
     CcFree(table);
     return TRUE;
 }
@@ -88,9 +120,13 @@ static CcsBool_t
 COS_Comments(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 {
     const CcComment_t * cur;
+    char buf0[8], buf1[8], buf2[8], buf3[8];
     for (cur = self->globals->lexical.firstComment; cur; cur = cur->next)
-	fprintf(outfp, "%s    { { %d, %d }, { %d, %d }, %s },\n", indent,
-		cur->start[0], cur->start[1], cur->stop[0], cur->stop[1],
+	fprintf(outfp, "%s    { { %s, %s }, { %s, %s }, %s },\n", indent,
+		CharRepr(buf0, sizeof(buf0), cur->start[0]),
+		CharRepr(buf1, sizeof(buf1), cur->start[1]),
+		CharRepr(buf2, sizeof(buf2), cur->stop[0]),
+		CharRepr(buf3, sizeof(buf3), cur->stop[1]),
 		cur->nested ? "TRUE" : "FALSE");
     return TRUE;
 }
@@ -99,13 +135,16 @@ static CcsBool_t
 COS_Scan1(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 {
     const CcRange_t * curRange;
+    char buf0[8], buf1[8];
     for (curRange = self->globals->lexical.ignored->head;
 	 curRange; curRange = curRange->next) {
 	if (curRange->from == curRange->to)
-	    fprintf(outfp, "%s|| self->ch == %d\n", indent, curRange->from);
+	    fprintf(outfp, "%s|| self->ch == %s\n", indent,
+		    CharRepr(buf0 ,sizeof(buf0), curRange->from));
 	else
-	    fprintf(outfp, "%s|| (self->ch >= %d && self->ch <= %d)\n", indent,
-		    curRange->from, curRange->to);
+	    fprintf(outfp, "%s|| (self->ch >= %s && self->ch <= %s)\n", indent,
+		    CharRepr(buf0 ,sizeof(buf0), curRange->from),
+		    CharRepr(buf1 ,sizeof(buf1), curRange->to));
     }
     return TRUE;
 }
@@ -116,6 +155,7 @@ COS_WriteState(CcOutputScheme_t * self, FILE * outfp, const char * indent,
 {
     const CcAction_t * action;
     CcCharSet_t * s; const CcRange_t * curRange;
+    char buf0[8], buf1[8];
     int sIndex = state->base.index;
 
     if (CcBitArray_Get(mask, sIndex))
@@ -129,10 +169,12 @@ COS_WriteState(CcOutputScheme_t * self, FILE * outfp, const char * indent,
 	for (curRange = s->head; curRange; curRange = curRange->next) {
 	    if (curRange != s->head) fprintf(outfp, "%s        ", indent);
 	    if (curRange->from == curRange->to)
-		fprintf(outfp, "self->ch == %d", curRange->from);
+		fprintf(outfp, "self->ch == %s",
+			CharRepr(buf0, sizeof(buf0), curRange->from));
 	    else
-		fprintf(outfp, "(self->ch >= %d && self->ch <= %d)",
-			curRange->from, curRange->to);
+		fprintf(outfp, "(self->ch >= %s && self->ch <= %s)",
+			CharRepr(buf0, sizeof(buf0), curRange->from),
+			CharRepr(buf1, sizeof(buf1), curRange->to));
 	    if (curRange->next) fprintf(outfp, " ||\n");
 	}
 	fprintf(outfp, ") {\n");
@@ -148,7 +190,7 @@ COS_WriteState(CcOutputScheme_t * self, FILE * outfp, const char * indent,
 	fprintf(outfp, "kind = %d;", state->endOf->base.index);
     } else {
 	fprintf(outfp,
-		"kind = CcsScanner_Buffer2KWKind(self, pos, self->pos, %d);",
+		"kind = CcsScanner_GetKWKind(self, pos, self->pos, %d);",
 		state->endOf->base.index);
     }
     fprintf(outfp, " break; }\n");
