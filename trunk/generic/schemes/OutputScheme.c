@@ -54,6 +54,29 @@ MakePath(char * path, size_t szpath, const char * dir, const char * bn)
 	snprintf(path, szpath, "%s", bn);
 }
 
+typedef struct {
+    const char * extension;
+    const char * start;
+    const char * end;
+}  CommentMark_t;
+
+static const CommentMark_t cmarr[] = {
+    { ".html", "<!----", "---->" },
+    { NULL, "/*----", "----*/" }
+};
+
+static const CommentMark_t *
+Path2CommentMark(const char * tempPath)
+{
+    int l0 = strlen(tempPath), l1; const CommentMark_t * curcm;
+    for (curcm = cmarr; curcm->extension; ++curcm) {
+	l1 = strlen(curcm->extension);
+	if (l0 > l1 && !strcmp(tempPath + (l0 - l1), curcm->extension))
+	    return curcm;
+    }
+    return curcm;
+}
+
 static CcsBool_t
 LocateMark(const char ** b, const char ** e,
 	   const char * lmark, const char * rmark)
@@ -83,6 +106,7 @@ GetResult(char * dest, size_t destlen, const char * src, size_t srclen)
 
 static CcsBool_t
 CheckMark(const char * lnbuf,
+	  const char * startMark, const char * endMark,
 	  char * retIndent, size_t szRetIndent,
 	  char * retCommand, size_t szRetCommand,
 	  char * retParamStr, size_t szRetParamStr)
@@ -94,7 +118,7 @@ CheckMark(const char * lnbuf,
     for (b = lnbuf; isspace(*b); ++b);
     GetResult(retIndent, szRetIndent, lnbuf, b - lnbuf);
 
-    if (!LocateMark(&b, &e, "/*---- ", " ----*/")) return FALSE;
+    if (!LocateMark(&b, &e, startMark, endMark)) return FALSE;
     start = b;
     while (b < e && isalnum(*b)) ++b;
     GetResult(retCommand, szRetCommand, start, b - start);
@@ -140,6 +164,7 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
     FILE * tempfp, * outfp, * licensefp;
     char lnbuf[4096]; CcsBool_t enabled;
     char indentStr[128], Command[128], ParamStr[128], replacedPrefix[128];
+    const CommentMark_t * tempCM = Path2CommentMark(tempPath);
     const CcOutputSchemeType_t * type =
 	(const CcOutputSchemeType_t *)self->base.type;
 
@@ -163,7 +188,8 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
 
     enabled = TRUE; indentStr[0] = 0; replacedPrefix[0] = 0;
     while (fgets(lnbuf, sizeof(lnbuf), tempfp)) {
-	if (!CheckMark(lnbuf, indentStr, sizeof(indentStr),
+	if (!CheckMark(lnbuf, tempCM->start, tempCM->end,
+		       indentStr, sizeof(indentStr),
 		       Command, sizeof(Command),
 		       ParamStr, sizeof(ParamStr))) {
 	    /* Common line */
