@@ -25,6 +25,7 @@
 #include  "Arguments.h"
 #include  "OutputScheme.h"
 #include  "c/COutputScheme.h"
+#include  "dump/DumpOutputScheme.h"
 
 static const char * usage_format =
     "Usage: %s Grammar.atg {{Option}}\n"
@@ -68,6 +69,10 @@ main(int argc, char * argv[])
     if (schemeName == NULL || !strcmp(schemeName, "c")) {
 	if (!(scheme = (CcOutputScheme_t *)
 	      CcCOutputScheme(&globals, &arguments)))
+	    goto errquit1;
+    } else if (!strcmp(schemeName, "dump")) {
+	if (!(scheme = (CcOutputScheme_t *)
+	      CcDumpOutputScheme(&globals, &arguments)))
 	    goto errquit1;
     } else {
 	scheme = NULL;
