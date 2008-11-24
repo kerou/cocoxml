@@ -43,7 +43,7 @@ CharRepr(char * buf, size_t szbuf, int ch)
 	snprintf(buf, szbuf, "'\\\\'");
     } else if (ch == '\'') {
 	snprintf(buf, szbuf, "'\\\''");
-    } else if (ch >= 32 && ch <= 127) {
+    } else if (ch >= 32 && ch <= 126) {
 	snprintf(buf, szbuf, "'%c'", (char)ch);
     } else if (ch == '\a') {
 	snprintf(buf, szbuf, "'\\a'");
