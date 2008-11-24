@@ -140,21 +140,18 @@ COS_WriteState(CcOutputScheme_t * self, FILE * outfp, const char * indent,
 		indent, action->target->state->base.index);
 	CcCharSet_Destruct(s);
     }
-    if (state->firstAction == NULL) fprintf(outfp, "%s    {\n", indent);
-    else fprintf(outfp, "%s    } else {\n", indent);
+    if (state->firstAction == NULL) fprintf(outfp, "%s    { ", indent);
+    else fprintf(outfp, "%s    } else { ", indent);
     if (state->endOf == NULL) {
-	fprintf(outfp, "%s        kind = self->noSym; break;\n", indent);
+	fprintf(outfp, "kind = self->noSym;");
+    } else if (CcSymbol_GetTokenKind(state->endOf) != symbol_classLitToken) {
+	fprintf(outfp, "kind = %d;", state->endOf->base.index);
     } else {
-	fprintf(outfp, "%s        kind = %d;\n", indent,
+	fprintf(outfp,
+		"kind = CcsScanner_Buffer2KWKind(self, pos, self->pos, %d);",
 		state->endOf->base.index);
-	if (CcSymbol_GetTokenKind(state->endOf) == symbol_classLitToken)
-	    fprintf(outfp,
-		    "%s        kind = Identifier2KWKind(CcsBuffer_GetString(&self->buffer, pos, self->pos - pos),\n"
-		    "%s                                 self->pos - pos, kind);\n",
-		    indent, indent);
-	fprintf(outfp, "%s        break;\n", indent);
     }
-    fprintf(outfp, "%s    }\n", indent);
+    fprintf(outfp, " break; }\n");
 }
 
 static CcsBool_t
