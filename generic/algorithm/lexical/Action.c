@@ -68,7 +68,7 @@ CcAction_ShiftSize(CcAction_t * self)
 }
 
 CcCharSet_t *
-CcAction_GetShift(CcAction_t * self)
+CcAction_GetShift(const CcAction_t * self)
 {
     return CcTransition_GetCharSet(&self->trans);
 }

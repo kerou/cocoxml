@@ -46,7 +46,7 @@ void CcAction_Destruct(CcAction_t * self);
 int CcAction_ShiftSize(CcAction_t * self);
 
 /* The returned CcCharSet_t must be destructed */
-CcCharSet_t * CcAction_GetShift(CcAction_t * self);
+CcCharSet_t * CcAction_GetShift(const CcAction_t * self);
 
 void CcAction_SetShift(CcAction_t * self, const CcCharSet_t * s);
 
