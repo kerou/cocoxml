@@ -279,3 +279,42 @@ CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self)
     }
     return TRUE;
 }
+
+static const char *
+GetEOL(const char * start, char * eol)
+{
+    const char * end = start + strcspn(start, "\r\n");
+    if (*end == 0) return end;
+    *eol++ = end[0]; *eol = 0;
+    if (end[0] == end[1] || (end[1] != '\r' || end[1] != '\n')) return end + 1;
+    *eol++ = end[1]; *eol = 0;
+    return end + 2;
+}
+
+static const char * spaces = "        ";
+CcsBool_t
+CcCopySourcePart(FILE * outfp, const char * indent,
+		 int col, const char * source)
+{
+    char eol[3]; int curcol;
+    const char * start, * cur, * end;
+
+    eol[0] = 0;
+    start = source; end = GetEOL(start, eol);
+    fwrite(start, end - start, 1, outfp);
+    while (*end) {
+	start = end + 1; end = GetEOL(start, eol);
+	fwrite(indent, strlen(indent), 1, outfp);
+	curcol = 0; cur = start;
+	while (curcol < col) {
+	    if (*cur == ' ') ++curcol;
+	    else if (*cur == '\t') curcol += 8;
+	    else break;
+	}
+	if (col < curcol) fwrite(spaces, curcol - col, 1, outfp);
+	fwrite(cur, end - cur, 1, outfp);
+    }
+    if (eol[0]) fwrite(eol, strlen(eol), 1, outfp);
+    else fputc('\n', outfp);
+    return TRUE;
+}
