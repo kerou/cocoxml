@@ -49,7 +49,7 @@ CcsParser_Get(CcsParser_t * self)
 	self->t = self->la;
 	self->la = CcsScanner_Scan(self->scanner);
 	if (self->la->kind <= self->maxT) { /*++self->errDist;*/ break; }
-	/*---- pragmas ----*/
+	/*---- Pragmas ----*/
 	if (self->la->kind == 42) {
 	    /*Tab_SetDDT(self->tab, self->la->val);*/
 	}
@@ -94,7 +94,7 @@ CcsParser_WeakSeparator(CcsParser_t * self, int n, int syFol, int repFol)
     return CcsParser_StartOf(self, syFol);
 }
 
-/*---- productionsheader ----*/
+/*---- ProductionsHeader ----*/
 static void CcsParser_Coco(CcsParser_t * self);
 static void CcsParser_SetDecl(CcsParser_t * self);
 static void CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ);
@@ -121,7 +121,7 @@ CcsParser_Parse(CcsParser_t * self)
     self->t = NULL;
     self->la = CcsScanner_GetDummy(self->scanner);
     CcsParser_Get(self);
-    /*---- parseRoot ----*/
+    /*---- ParseRoot ----*/
     CcsParser_Coco(self);
     /*---- enable ----*/
     CcsParser_Expect(self, 0);
@@ -158,7 +158,7 @@ CcsParser_Destruct(CcsParser_t * self)
     /*---- enable ----*/
 }
 
-/*---- productionsheader ----*/
+/*---- ProductionsBody ----*/
 static void /* OK */
 CcsParser_Coco(CcsParser_t * self) {
     CcSymbol_t * sym;
@@ -873,7 +873,7 @@ CcsParser_SynErr(CcsParser_t * self, int n)
 {
     const char * s; char format[20];
     switch (n) {
-	/*---- errors ----*/
+    /*---- SynErrors ----*/
     case 0: s = "EOF expected"; break;
     case 1: s = "ident expected"; break;
     case 2: s = "number expected"; break;
@@ -926,7 +926,7 @@ CcsParser_SynErr(CcsParser_t * self, int n)
     case 49: s = "invalid Factor"; break;
     case 50: s = "invalid Attribs"; break;
     case 51: s = "invalid TokenFactor"; break;
-	/*---- enable ----*/
+    /*---- enable ----*/
     default:
 	snprintf(format, sizeof(format), "error %d", n);
 	s = format;
@@ -936,7 +936,7 @@ CcsParser_SynErr(CcsParser_t * self, int n)
 }
 
 static const char * set[] = {
-    /*---- initialization ----*/
+    /*---- InitSet ----*/
     "**.*.*....**...***.....................*...",
     ".*****.***********************************.",
     ".******.....***..*************************.",

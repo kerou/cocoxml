@@ -214,7 +214,76 @@ COS_Scan3(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 }
 
 static CcsBool_t
-COS_Initialization(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+COS_Pragmas(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+{
+    CcArrayListIter_t iter;
+    const CcSymbolPR_t * sym, * sym1;
+    const CcArrayList_t * pragmas = &self->globals->symtab.pragmas;
+
+    for (sym = sym1 = (const CcSymbolPR_t *)CcArrayList_FirstC(pragmas, &iter);
+	 sym; sym = (const CcSymbolPR_t *)CcArrayList_NextC(pragmas, &iter)) {
+	fprintf(outfp, "%s%sif (self->la->kind == %d) {\n",
+		indent, (sym == sym1) ? "" : "} else ", sym->base.kind);
+	CcCopySourcePart(outfp, indent,
+			 sym->semPos->col + 4, sym->semPos->text);
+    }
+    if (sym1) fprintf(outfp, "%s}\n", indent);
+    return TRUE;
+}
+
+static CcsBool_t
+COS_ProductionsHeader(CcOutputScheme_t * self,
+		      FILE * outfp, const char * indent)
+{
+    CcArrayListIter_t iter;
+    const CcSymbol_t * sym;
+    const CcArrayList_t * nonterminals = &self->globals->symtab.nonterminals;
+
+    for (sym = (const CcSymbol_t *)CcArrayList_FirstC(nonterminals, &iter);
+	 sym; sym = (const CcSymbol_t *)CcArrayList_NextC(nonterminals, &iter))
+	fprintf(outfp, "%sstatic void CcsParser_%s(CcsParser_t * self);\n",
+		indent, sym->name);
+    return TRUE;
+}
+
+static CcsBool_t
+COS_ParseRoot(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+{
+    fprintf(outfp, "%sCcsParser_%s(self);\n",
+	    indent, self->globals->syntax.gramSy->name);
+    return TRUE;
+}
+
+static CcsBool_t
+COS_SynErrors(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+{
+    CcArrayListIter_t iter; char * str;
+    const CcSyntaxError_t * synerr;
+    const CcArrayList_t * errors = &self->globals->syntax.errors;
+    for (synerr = (const CcSyntaxError_t *)CcArrayList_FirstC(errors, &iter);
+	 synerr;
+	 synerr = (const CcSyntaxError_t *)CcArrayList_NextC(errors, &iter)) {
+	fprintf(outfp, "%scase %d: s = \"", indent, synerr->base.index);
+	str = CcEscape(synerr->sym->name);
+	switch (synerr->type) {
+	case cet_t:
+	    fprintf(outfp, "\\\"\" %s \"\\\" expected", str);
+	    break;
+	case cet_alt:
+	    fprintf(outfp, "this symbol not expected in \\\"\" %s \"\\\"", str);
+	    break;
+	case cet_sync:
+	    fprintf(outfp, "invalid \"\\\"\" %s \"\\\"", str);
+	    break;
+	}
+	CcFree(str);
+	fprintf(outfp, "\"; break;\n");
+    }
+    return TRUE;
+}
+
+static CcsBool_t
+COS_InitSet(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 {
     char * setstr; int setlen, index;
     const CcBitArray_t * cur;
@@ -251,11 +320,19 @@ CcCOutputScheme_write(CcOutputScheme_t * self, FILE * outfp,
 	return COS_Scan1(self, outfp, indent);
     } else if (!strcmp(func, "scan3")) {
 	return COS_Scan3(self, outfp, indent);
-    } else if (!strcmp(func, "initialization")) {
-	return COS_Initialization(self, outfp, indent);
+    } else if (!strcmp(func, "Pragmas")) {
+	return COS_Pragmas(self, outfp, indent);
+    } else if (!strcmp(func, "ProductionsHeader")) {
+	return COS_ProductionsHeader(self, outfp, indent);
+    } else if (!strcmp(func, "ParseRoot")) {
+	return COS_ParseRoot(self, outfp, indent);
+    } else if (!strcmp(func, "SynErrors")) {
+	return COS_SynErrors(self, outfp, indent);
+    } else if (!strcmp(func, "InitSet")) {
+	return COS_InitSet(self, outfp, indent);
     }
     fprintf(stderr, "Unknown section '%s' encountered.\n", func);
-    return FALSE;
+    return TRUE;
 }
 
 static void
@@ -277,5 +354,6 @@ CcCOutputScheme(CcGlobals_t * globals, CcArguments_t * arguments)
     CcCOutputScheme_t * self = (CcCOutputScheme_t *)
 	CcOutputScheme(&COutputSchemeType, globals, arguments);
     CcSyntaxSymSet(&self->symSet);
+    CcSyntaxSymSet_New(&self->symSet, self->base.globals->syntax.allSyncSets);
     return self;
 }
