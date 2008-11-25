@@ -40,7 +40,7 @@ CcState_t * CcState(void);
 
 void CcState_AddAction(CcState_t * self, CcAction_t * act);
 void CcState_DetachAction(CcState_t * self, CcAction_t * act);
-int CcState_MeltWith(CcState_t * self, CcState_t * s);
+void CcState_MeltWith(CcState_t * self, const CcState_t * s);
 
 void CcState_MakeUnique(CcState_t * self);
 CcAction_t * CcState_FindAction(CcState_t * self, int ch);
