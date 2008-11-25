@@ -59,6 +59,8 @@ CcOutputScheme(const CcOutputSchemeType_t * type, CcGlobals_t * globals,
 void CcOutputScheme_Destruct(CcObject_t * self);
 
 CcsBool_t CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self);
+CcsBool_t CcCopySourcePart(FILE * outfp, const char * indent,
+			   int col, const char * source);
 
 EXTC_END
 
