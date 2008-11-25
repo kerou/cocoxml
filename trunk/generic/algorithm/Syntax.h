@@ -46,6 +46,8 @@ struct CcSyntax_s {
     CcSymbol_t   * eofSy;
     CcSymbol_t   * noSy;
     CcSymbol_t   * curSy;
+    /* Sometimes the length of visited is nodes.Count.
+     * And sometimes the length of visited is nonterminals.Count...... */
     CcBitArray_t * visited;
     CcBitArray_t   visitedSpace;
     CcBitArray_t * allSyncSets;
