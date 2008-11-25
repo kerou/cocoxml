@@ -789,26 +789,26 @@ CcSyntax_Errors(CcSyntax_t * self)
 	error = (CcSyntaxError_t *)
 	    CcArrayList_New(&self->errors, CcObject(&CcSyntaxErrorType));
 	error->type = cet_t;
-	error->name = sym->name;
+	error->sym = sym;
     }
 }
 
 void
-CcSyntax_AltError(CcSyntax_t * self, CcSymbol_t * sym)
+CcSyntax_AltError(CcSyntax_t * self, const CcSymbol_t * sym)
 {
     CcSyntaxError_t * error = (CcSyntaxError_t *)
 	CcArrayList_New(&self->errors, CcObject(&CcSyntaxErrorType));
     error->type = cet_alt;
-    error->name = sym->name;
+    error->sym = sym;
 }
 
 void
-CcSyntax_SyncError(CcSyntax_t * self, CcSymbol_t * sym)
+CcSyntax_SyncError(CcSyntax_t * self, const CcSymbol_t * sym)
 {
     CcSyntaxError_t * error = (CcSyntaxError_t *)
 	CcArrayList_New(&self->errors, CcObject(&CcSyntaxErrorType));
     error->type = cet_sync;
-    error->name = sym->name;
+    error->sym = sym;
 }
 
 #define SZ_SYMSET  64
