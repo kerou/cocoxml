@@ -469,7 +469,6 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ) {
 			      "a literal must not be declared with a structure");
 	CcGraph_Finish(g);
 	if (self->tokenString == NULL || self->tokenString == noString) {
-	    CcEBNF_DumpNodes(&self->lexical->base);
 	    CcLexical_ConvertToStates(self->lexical, g->head, sym);
 	} else { /* CcsParser_TokenExpr is a single string */
 	    if (CcHashTable_Get(&self->lexical->literals,
