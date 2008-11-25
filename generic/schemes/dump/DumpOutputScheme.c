@@ -126,10 +126,10 @@ DOS_States(CcOutputScheme_t * self, FILE * outfp, const char * indent)
     CcCharSet_t * s;
     const CcRange_t * curRange;
     char buf0[8], buf1[8];
-    CcArrayList_t * states = &self->globals->lexical.states;
+    const CcArrayList_t * states = &self->globals->lexical.states;
 
-    for (state = (const CcState_t *)CcArrayList_First(states, &iter);
-	 state; state = (const CcState_t *)CcArrayList_Next(states, &iter)) {
+    for (state = (const CcState_t *)CcArrayList_FirstC(states, &iter);
+	 state; state = (const CcState_t *)CcArrayList_NextC(states, &iter)) {
 	fprintf(outfp, "%s<tr><td>%d</td><td>%s</td><td>%s</td></tr>\n",
 		indent, state->base.index,
 		state->endOf ? state->endOf->name : "(null)",
