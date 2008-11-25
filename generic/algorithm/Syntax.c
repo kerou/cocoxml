@@ -315,15 +315,17 @@ CcSyntax_Expected0(CcSyntax_t * self, CcBitArray_t * ret,
 static void
 CcSyntax_CompSync(CcSyntax_t * self, CcNode_t * p)
 {
-    CcBitArray_t s;
+    CcNodeSYNC_t * syncp;
 
     while (p != NULL && !CcBitArray_Get(self->visited, p->base.index)) {
 	CcBitArray_Set(self->visited, p->base.index, TRUE);
 	if (p->base.type == node_sync) {
-	    CcSyntax_Expected(self, &s, p->next, self->curSy);
-	    CcBitArray_Set(&s, self->eofSy->kind, TRUE);
-	    CcBitArray_Or(self->allSyncSets, &s);
-	    memcpy(&((CcNodeSYNC_t *)p)->set, &s, sizeof(s));
+	    syncp = (CcNodeSYNC_t *)p;
+	    CcsAssert(syncp->set == NULL);
+	    CcSyntax_Expected(self, &syncp->setSpace, p->next, self->curSy);
+	    syncp->set = &syncp->setSpace;
+	    CcBitArray_Set(syncp->set, self->eofSy->kind, TRUE);
+	    CcBitArray_Or(self->allSyncSets, syncp->set);
 	} else if (p->base.type == node_alt) {
 	    CcSyntax_CompSync(self, p->sub);
 	    CcSyntax_CompSync(self, p->down);
@@ -346,7 +348,7 @@ CcSyntax_CompSyncSets(CcSyntax_t * self)
     CcBitArray_Set(self->allSyncSets, self->eofSy->kind, TRUE);
     self->visited = CcBitArray(&self->visitedSpace, self->base.nodes.Count);
     for (sym = (CcSymbolNT_t *)CcArrayList_First(ntarr, &iter);
-	 sym; sym = (CcSymbolNT_t *)CcArrayList_First(ntarr, &iter)) {
+	 sym; sym = (CcSymbolNT_t *)CcArrayList_Next(ntarr, &iter)) {
 	self->curSy = (CcSymbol_t *)sym;
 	CcSyntax_CompSync(self, sym->graph);
     }
@@ -615,7 +617,7 @@ CcSyntax_CheckRes(CcSyntax_t * self, CcNode_t * p, CcsBool_t rslvAllowed)
 		CcSyntax_CheckRes(self, q->sub, TRUE);
 	    }
 	} else if (p->base.type == node_iter || p->base.type == node_opt) {
-	    if (q->sub->base.type == node_rslv) {
+	    if (p->sub->base.type == node_rslv) {
 		CcSyntax_First(self, &fs, p->sub->next);
 		CcSyntax_Expected(self, &fsNext, p->next, self->curSy);
 		if (!CcBitArray_Intersect(&fs, &fsNext))

@@ -224,6 +224,7 @@ COS_Pragmas(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 	 sym; sym = (const CcSymbolPR_t *)CcArrayList_NextC(pragmas, &iter)) {
 	fprintf(outfp, "%s%sif (self->la->kind == %d) {\n",
 		indent, (sym == sym1) ? "" : "} else ", sym->base.kind);
+	fprintf(outfp, "%s    ", indent);
 	CcCopySourcePart(outfp, indent,
 			 sym->semPos->col + 4, sym->semPos->text);
     }
