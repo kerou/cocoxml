@@ -96,6 +96,12 @@ void CcEBNF_MakeSequence(CcEBNF_t * self, CcGraph_t * g1, CcGraph_t * g2);
 CcNode_t * CcEBNF_MakeIteration(CcEBNF_t * self, CcGraph_t * g);
 CcNode_t * CcEBNF_MakeOption(CcEBNF_t * self, CcGraph_t * g);
 
+#ifdef  NDEBUG
+#define CcEBNF_DumpNodes(self)  ((void)0)
+#else
+void CcEBNF_DumpNodes(const CcEBNF_t * self);
+#endif
+
 EXTC_END
 
 #endif /* COCO_EBNF_H */
