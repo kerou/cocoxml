@@ -109,6 +109,12 @@ void CcLexical_Identifiers_Destruct(CcLexical_Identifier_t * self, int numEle);
 
 void CcLexical_TargetStates(const CcLexical_t * self, CcBitArray_t * mask);
 
+#ifdef  NDEBUG
+#define  CcLexical_DumpStates(self)   ((void)0)
+#else
+void CcLexical_DumpStates(const CcLexical_t * self);
+#endif
+
 EXTC_END
 
 #endif  /* COCO_LEXICAL_H */
