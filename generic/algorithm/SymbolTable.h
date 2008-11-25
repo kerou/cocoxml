@@ -56,6 +56,8 @@ CcSymbolTable_NewNonTerminal(CcSymbolTable_t * self,
 CcSymbol_t *
 CcSymbolTable_FindSym(CcSymbolTable_t * self, const char * name);
 
+void CcSymbolTable_SetupKinds(CcSymbolTable_t * self);
+
 EXTC_END
 
 #endif  /* COCO_SYMBOLTABLE_H */

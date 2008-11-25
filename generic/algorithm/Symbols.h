@@ -59,6 +59,7 @@ typedef enum {
 
 struct CcSymbol_s {
     CcObject_t   base;
+    int          kind;
     char       * name;
     int          line;
 };
