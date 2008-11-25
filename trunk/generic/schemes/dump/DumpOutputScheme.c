@@ -22,11 +22,51 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "dump/DumpOutputScheme.h"
+#include  "lexical/State.h"
+#include  "lexical/Action.h"
+#include  "lexical/Target.h"
+#include  "lexical/CharSet.h"
 
 static const CcOutputInfo_t CcDumpOutputScheme_OutputInfos[] = {
+    { "StateTable.html" },
     { "SymbolTable.html" },
     { NULL }
 };
+
+static const char *
+CharRepr(char * buf, size_t szbuf, int ch)
+{
+    if (ch == '\\') {
+	snprintf(buf, szbuf, "'\\\\'");
+    } else if (ch == '\'') {
+	snprintf(buf, szbuf, "'\\\''");
+    } else if (ch == '&') {
+	snprintf(buf, szbuf, "'&amp;'");
+    } else if (ch == '<') {
+	snprintf(buf, szbuf, "'&lt;'");
+    } else if (ch == '>') {
+	snprintf(buf, szbuf, "'&gt;'");
+    } else if (ch >= 32 && ch <= 126) {
+	snprintf(buf, szbuf, "'%c'", (char)ch);
+    } else if (ch == '\a') {
+	snprintf(buf, szbuf, "'\\a'");
+    } else if (ch == '\b') {
+	snprintf(buf, szbuf, "'\\b'");
+    } else if (ch == '\f') {
+	snprintf(buf, szbuf, "'\\f'");
+    } else if (ch == '\n') {
+	snprintf(buf, szbuf, "'\\n'");
+    } else if (ch == '\r') {
+	snprintf(buf, szbuf, "'\\r'");
+    } else if (ch == '\t') {
+	snprintf(buf, szbuf, "'\\t'");
+    } else if (ch == '\v') {
+	snprintf(buf, szbuf, "'\\v'");
+    } else {
+	snprintf(buf, szbuf, "%d", ch);
+    }
+    return buf;
+}
 
 static CcsBool_t
 DOS_Terminals(CcOutputScheme_t * self, FILE * outfp, const char * indent)
@@ -77,6 +117,50 @@ DOS_NonTerminals(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 }
 
 static CcsBool_t
+DOS_States(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+{
+    CcArrayListIter_t iter;
+    const CcState_t * state;
+    const CcAction_t * action;
+    const CcTarget_t * target;
+    CcCharSet_t * s;
+    const CcRange_t * curRange;
+    char buf0[8], buf1[8];
+    CcArrayList_t * states = &self->globals->lexical.states;
+
+    for (state = (const CcState_t *)CcArrayList_First(states, &iter);
+	 state; state = (const CcState_t *)CcArrayList_Next(states, &iter)) {
+	fprintf(outfp, "%s<tr><td>%d</td><td>%s</td><td>%s</td></tr>\n",
+		indent, state->base.index,
+		state->endOf ? state->endOf->name : "(null)",
+		state->ctx ? "TRUE" : "FALSE");
+	for (action = state->firstAction; action; action = action->next) {
+	    fprintf(outfp, "%s<tr><td></td><td>", indent);
+	    s = CcAction_GetShift(action);
+	    for (curRange = s->head; curRange; curRange = curRange->next) {
+		if (curRange->from == curRange->to) {
+		    fprintf(outfp, "%s",
+			    CharRepr(buf0, sizeof(buf0), curRange->from));
+		} else {
+		    fprintf(outfp, "[%s, %s]",
+			    CharRepr(buf0, sizeof(buf0), curRange->from),
+			    CharRepr(buf1, sizeof(buf1), curRange->to));
+		}
+		if (curRange->next) fprintf(outfp, "&nbsp");
+	    }
+	    CcCharSet_Destruct(s);
+	    fprintf(outfp, "</td><td>");
+	    for (target = action->target; target; target = target->next) {
+		fprintf(outfp, "%d", target->state->base.index);
+		if (target->next) fprintf(outfp, ",");
+	    }
+	    fprintf(outfp, "</td></tr>\n");
+	}
+    }
+    return TRUE;
+}
+
+static CcsBool_t
 CcDumpOutputScheme_write(CcOutputScheme_t * self, FILE * outfp,
 			 const char * func, const char * param,
 			 const char * indent)
@@ -87,6 +171,8 @@ CcDumpOutputScheme_write(CcOutputScheme_t * self, FILE * outfp,
 	return DOS_Pragmas(self, outfp, indent);
     } else if (!strcmp(func, "nonterminals")) {
 	return DOS_NonTerminals(self, outfp, indent);
+    } else if (!strcmp(func, "states")) {
+	return DOS_States(self, outfp, indent);
     }
     fprintf(stderr, "Unknown section '%s' encountered.\n", func);
     return FALSE;
