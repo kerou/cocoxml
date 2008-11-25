@@ -24,19 +24,19 @@
 #ifndef  COCO_LEXICAL_MELTED_H
 #define  COCO_LEXICAL_MELTED_H
 
-#ifndef  COCO_DEFS_H
-#include  "Defs.h"
+#ifndef  COCO_BITARRAY_H
+#include  "BitArray.h"
 #endif
 
 EXTC_BEGIN
 
 struct CcMelted_s {
-    CcBitArray_t * set;
+    CcBitArray_t set;
     CcState_t    * state;
     CcMelted_t   * next;
 };
 
-CcMelted_t * CcMelted(CcBitArray_t * set, CcState_t * state);
+CcMelted_t * CcMelted(const CcBitArray_t * set, CcState_t * state);
 void CcMelted_Destruct(CcMelted_t * self);
 
 EXTC_END

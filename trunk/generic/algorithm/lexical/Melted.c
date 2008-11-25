@@ -27,10 +27,10 @@
 #include  "State.h"
 
 CcMelted_t *
-CcMelted(CcBitArray_t * set, CcState_t * state)
+CcMelted(const CcBitArray_t * set, CcState_t * state)
 {
     CcMelted_t * self = CcMalloc(sizeof(CcMelted_t));
-    self->set = set;
+    CcBitArray_Clone(&self->set, set);
     self->state = state;
     self->next = NULL;
     return self;
@@ -39,7 +39,6 @@ CcMelted(CcBitArray_t * set, CcState_t * state)
 void
 CcMelted_Destruct(CcMelted_t * self)
 {
-    CcBitArray_Destruct(self->set);
-    CcFree(self->set);
+    CcBitArray_Destruct(&self->set);
     CcFree(self);
 }
