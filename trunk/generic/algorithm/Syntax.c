@@ -87,10 +87,10 @@ CcSyntax_First0(CcSyntax_t * self, CcBitArray_t * ret,
 	    }
 	} else if (p->base.type == node_t) {
 	    CcNodeT_t * p0 = (CcNodeT_t *)p;
-	    CcBitArray_Set(ret, p0->sym->base.index, TRUE);
+	    CcBitArray_Set(ret, p0->sym->kind, TRUE);
 	} else if (p->base.type == node_wt) {
 	    CcNodeWT_t * p0 = (CcNodeWT_t *)p;
-	    CcBitArray_Set(ret, p0->sym->base.index, TRUE);
+	    CcBitArray_Set(ret, p0->sym->kind, TRUE);
 	} else if (p->base.type == node_any) {
 	    CcNodeANY_t * p0 = (CcNodeANY_t *)p;
 	    CcBitArray_Or(ret, p0->set);
@@ -157,7 +157,7 @@ CcSyntax_CompFollow(CcSyntax_t * self, CcNode_t * p)
 	    CcBitArray_Or(sym->follow, &s);
 	    CcBitArray_Destruct(&s);
 	    if (CcNode_DelGraph(p->next))
-		CcBitArray_Set(sym->nts, self->curSy->base.index, TRUE);
+		CcBitArray_Set(sym->nts, self->curSy->kind, TRUE);
 	} else if (p->base.type == node_opt || p->base.type == node_iter) {
 	    CcSyntax_CompFollow(self, p->sub);
 	} else if (p->base.type == node_alt) {
@@ -175,15 +175,15 @@ CcSyntax_Complete(CcSyntax_t * self, CcSymbolNT_t * sym)
     CcSymbolTable_t * symtab = &self->globals->symtab;
     CcArrayList_t * ntarr = &symtab->nonterminals;
 
-    if (CcBitArray_Get(self->visited, sym->base.base.index)) return;
-    CcBitArray_Set(self->visited, sym->base.base.index, TRUE);
+    if (CcBitArray_Get(self->visited, sym->base.kind)) return;
+    CcBitArray_Set(self->visited, sym->base.kind, TRUE);
     for (s = (CcSymbolNT_t *)CcArrayList_First(ntarr, &iter);
 	 s; s = (CcSymbolNT_t *)CcArrayList_Next(ntarr, &iter)) {
-	if (CcBitArray_Get(sym->nts, s->base.base.index)) {
+	if (CcBitArray_Get(sym->nts, s->base.kind)) {
 	    CcSyntax_Complete(self, s);
 	    CcBitArray_Or(sym->follow, s->follow);
 	    if ((CcSymbol_t *)sym == self->curSy)
-		CcBitArray_Set(sym->nts, s->base.base.index, FALSE);
+		CcBitArray_Set(sym->nts, s->base.kind, FALSE);
 	}
     }
 }
@@ -202,7 +202,7 @@ CcSyntax_CompFollowSets(CcSyntax_t * self)
 	sym->nts = CcBitArray(&sym->ntsSpace, ntarr->Count);
     }
     CcBitArray_Set(((CcSymbolNT_t *)self->gramSy)->follow,
-		   self->eofSy->base.index, TRUE);
+		   self->eofSy->kind, TRUE);
 
     self->visited = CcBitArray(&self->visitedSpace, self->base.nodes.Count);
     for (sym =(CcSymbolNT_t *)CcArrayList_First(ntarr, &iter);
@@ -319,7 +319,7 @@ CcSyntax_CompSync(CcSyntax_t * self, CcNode_t * p)
 	CcBitArray_Set(self->visited, p->base.index, TRUE);
 	if (p->base.type == node_sync) {
 	    CcSyntax_Expected(self, &s, p->next, self->curSy);
-	    CcBitArray_Set(&s, self->eofSy->base.index, TRUE);
+	    CcBitArray_Set(&s, self->eofSy->kind, TRUE);
 	    CcBitArray_Or(self->allSyncSets, &s);
 	    memcpy(&((CcNodeSYNC_t *)p)->set, &s, sizeof(s));
 	} else if (p->base.type == node_alt) {
@@ -341,7 +341,7 @@ CcSyntax_CompSyncSets(CcSyntax_t * self)
 
     self->allSyncSets = CcBitArray(&self->allSyncSetsSpace,
 				   symtab->terminals.Count);
-    CcBitArray_Set(self->allSyncSets, self->eofSy->base.index, TRUE);
+    CcBitArray_Set(self->allSyncSets, self->eofSy->kind, TRUE);
     self->visited = CcBitArray(&self->visitedSpace, self->base.nodes.Count);
     for (sym = (CcSymbolNT_t *)CcArrayList_First(ntarr, &iter);
 	 sym; sym = (CcSymbolNT_t *)CcArrayList_First(ntarr, &iter)) {
@@ -362,7 +362,7 @@ CcSyntax_SetupAnys(CcSyntax_t * self)
 	pany = (CcNodeANY_t *)p;
 	pany->set = &pany->setSpace;
 	CcBitArray1(pany->set, symtab->terminals.Count);
-	CcBitArray_Set(pany->set, self->eofSy->base.index, FALSE);
+	CcBitArray_Set(pany->set, self->eofSy->kind, FALSE);
     }
 }
 
@@ -407,7 +407,7 @@ GetSingles(CcBitArray_t * singles, CcNode_t * p)
     if (p == NULL) return; /* end of graph */
     if (p->base.type == node_nt) {
 	if (p->up || CcNode_DelGraph(p->next))
-	    CcBitArray_Set(singles, ((CcNodeNT_t *)p)->sym->base.index, TRUE);
+	    CcBitArray_Set(singles, ((CcNodeNT_t *)p)->sym->kind, TRUE);
     } else if (p->base.type == node_alt || p->base.type == node_iter
 	       || p->base.type == node_opt) {
 	if (p->up || CcNode_DelGraph(p->next)) {
@@ -445,7 +445,7 @@ CcSyntax_NoCircularProductions(CcSyntax_t * self)
 	for (index = 0; index < ntarr->Count; ++index) {
 	    if (!CcBitArray_Get(&singles, index)) continue;
 	    curPair = CcMalloc(sizeof(SymbolPair_t));
-	    curPair->left = sym->base.base.index;
+	    curPair->left = sym->base.kind;
 	    curPair->right = index;
 	    curPair->next = firstPair;
 	    firstPair = curPair;
@@ -516,8 +516,8 @@ CcSyntax_CheckOverlap(CcSyntax_t * self, CcBitArray_t * s1, CcBitArray_t * s2,
 
     for (sym = (CcSymbolT_t *)CcArrayList_First(tarr, &iter);
 	 sym; sym = (CcSymbolT_t *)CcArrayList_Next(tarr, &iter)) {
-	if (CcBitArray_Get(s1, sym->base.base.index)
-	    && CcBitArray_Get(s2, sym->base.base.index))
+	if (CcBitArray_Get(s1, sym->base.kind)
+	    && CcBitArray_Get(s2, sym->base.kind))
 	    CcSyntax_LL1Error(self, cond, (CcSymbol_t *)sym);
     }
 }
@@ -669,9 +669,9 @@ CcSyntax_MarkReachedNts(CcSyntax_t * self, CcNode_t * p)
 	if (p->base.type == node_nt) {
 	    CcNodeNT_t * p0 = (CcNodeNT_t *)p;
 	    CcSymbolNT_t * sym = (CcSymbolNT_t *)p0->sym;
-	    if (!CcBitArray_Get(self->visited, sym->base.base.index)) {
+	    if (!CcBitArray_Get(self->visited, sym->base.kind)) {
 		/* new nt reached */
-		CcBitArray_Set(self->visited, sym->base.base.index, TRUE);
+		CcBitArray_Set(self->visited, sym->base.kind, TRUE);
 		CcSyntax_MarkReachedNts(self, sym->graph);
 	    }
 	} else if (p->base.type == node_alt || p->base.type == node_iter
@@ -694,11 +694,11 @@ CcSyntax_AllNtReached(CcSyntax_t * self)
 
     self->visited = CcBitArray(&self->visitedSpace,
 			       symtab->nonterminals.Count);
-    CcBitArray_Set(self->visited, self->gramSy->base.index, TRUE);
+    CcBitArray_Set(self->visited, self->gramSy->kind, TRUE);
     CcSyntax_MarkReachedNts(self, ((CcSymbolNT_t *)self->gramSy)->graph);
     for (idx = 0; idx < symtab->nonterminals.Count; ++idx) {
 	sym = (CcSymbol_t *)CcArrayList_Get(&symtab->nonterminals, idx);
-	if (!CcBitArray_Get(self->visited, sym->base.index)) {
+	if (!CcBitArray_Get(self->visited, sym->kind)) {
 	    ok = FALSE;
 	    CcsGlobals_SemErr(&self->globals->base, NULL,
 			      " '%s' cannot be reached", sym->name);
@@ -738,16 +738,16 @@ CcSyntax_AllNtToTerm(CcSyntax_t * self)
 	changed = FALSE;
 	for (sym = (CcSymbolNT_t *)CcArrayList_First(ntarr, &iter);
 	     sym; sym = (CcSymbolNT_t *)CcArrayList_Next(ntarr, &iter)) {
-	    if (!CcBitArray_Get(&mark, sym->base.base.index) &&
+	    if (!CcBitArray_Get(&mark, sym->base.kind) &&
 		CcSyntax_IsTerm(self, sym->graph, &mark)) {
-		CcBitArray_Set(&mark, sym->base.base.index, TRUE);
+		CcBitArray_Set(&mark, sym->base.kind, TRUE);
 		changed = TRUE;
 	    }
 	}
     } while (changed);
     for (sym = (CcSymbolNT_t *)CcArrayList_First(ntarr, &iter);
 	 sym; sym = (CcSymbolNT_t *)CcArrayList_Next(ntarr, &iter)) {
-	if (!CcBitArray_Get(&mark, sym->base.base.index)) {
+	if (!CcBitArray_Get(&mark, sym->base.kind)) {
 	    ok = FALSE;
 	    CcsGlobals_SemErr(&self->globals->base, NULL,
 			      " %s cannot be derived to terminals",

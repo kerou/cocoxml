@@ -704,7 +704,7 @@ CcLexical_GetIdentifiers(const CcLexical_t * self, int * retNumEle)
 	if (self->ignoreCase) {
 	    for (curn = cur->name; curn; ++curn) *curn = tolower(*curn);
 	}
-	cur->index = sym->base.base.index;
+	cur->index = sym->base.kind;
 	++cur;
     }
     qsort(list, *retNumEle, sizeof(CcLexical_Identifier_t), idCmp);

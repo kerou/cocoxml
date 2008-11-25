@@ -77,11 +77,11 @@ static CcsBool_t
 COS_Declarations(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 {
     fprintf(outfp, "%sself->eofSym = %d;\n", indent,
-	    self->globals->syntax.eofSy->base.index);
+	    self->globals->syntax.eofSy->kind);
     fprintf(outfp, "%sself->maxT = %d;\n", indent,
 	    self->globals->symtab.terminals.Count - 1);
     fprintf(outfp, "%sself->noSym = %d;\n", indent,
-	    self->globals->syntax.noSy->base.index);
+	    self->globals->syntax.noSy->kind);
     return TRUE;
 }
 
@@ -187,11 +187,11 @@ COS_WriteState(CcOutputScheme_t * self, FILE * outfp, const char * indent,
     if (state->endOf == NULL) {
 	fprintf(outfp, "kind = self->noSym;");
     } else if (CcSymbol_GetTokenKind(state->endOf) != symbol_classLitToken) {
-	fprintf(outfp, "kind = %d;", state->endOf->base.index);
+	fprintf(outfp, "kind = %d;", state->endOf->kind);
     } else {
 	fprintf(outfp,
 		"kind = CcsScanner_GetKWKind(self, pos, self->pos, %d);",
-		state->endOf->base.index);
+		state->endOf->kind);
     }
     fprintf(outfp, " break; }\n");
 }
