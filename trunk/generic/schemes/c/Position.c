@@ -33,7 +33,7 @@ CcsPosition(int beg, int len, int col, const char * text)
     self->col = col;
     self->text = (char *)(self + 1);
     memcpy(self->text, text, len);
-    self->text[0] = 0;
+    self->text[len] = 0;
     return self;
 }
 
