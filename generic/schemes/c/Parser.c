@@ -36,6 +36,7 @@
 #include  "syntax/Nodes.h"
 static const int CcsParser_id = 0;
 static const int CcsParser_str = 1;
+static const char * noString = "~none~";
 /*---- enable ----*/
 
 static void
@@ -241,7 +242,8 @@ CcsParser_Destruct(CcsParser_t * self)
 {
     /*---- destruct ----*/
     if (self->usingPos) CcsPosition_Destruct(self->usingPos);
-    if (self->tokenString) CcsFree(self->tokenString);
+    if (self->tokenString && self->tokenString != noString)
+	CcsFree(self->tokenString);
     /*---- enable ----*/
 }
 
@@ -452,7 +454,8 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ) {
 	((CcSymbolPR_t *)sym)->tokenKind = symbol_fixedToken;
 	((CcSymbolPR_t *)sym)->semPos = NULL;
     }
-    if (self->tokenString) CcFree(self->tokenString);
+    if (self->tokenString && self->tokenString != noString)
+	CcFree(self->tokenString);
     self->tokenString = NULL;
     CcFree(name);
 
@@ -467,7 +470,7 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ) {
 	    CcsGlobals_SemErr(self->globals, self->t,
 			      "a literal must not be declared with a structure");
 	CcGraph_Finish(g);
-	if (self->tokenString == NULL) {
+	if (self->tokenString == NULL || self->tokenString == noString) {
 	    CcLexical_ConvertToStates(self->lexical, g->head, sym);
 	} else { /* CcsParser_TokenExpr is a single string */
 	    if (CcHashTable_Get(&self->lexical->literals,
@@ -478,7 +481,9 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ) {
 			    self->tokenString, (CcObject_t *)sym);
 	    CcLexical_MatchLiteral(self->lexical, self->t,
 				   self->tokenString, sym);
+	    CcFree(self->tokenString);
 	}
+	self->tokenString = NULL;
 	CcGraph_Destruct(g);
     } else if (CcsParser_StartOf(self, 6)) {
 	if (kind == CcsParser_id) self->genScanner = FALSE;
@@ -922,12 +927,16 @@ CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g) {
 	    *g = CcGraphP(CcEBNF_NewNode(&self->lexical->base,
 					 CcNodeTrans(0, &trans)));
 	    CcTransition_Destruct(&trans);
-	    if (self->tokenString) CcFree(self->tokenString);
-	    self->tokenString = NULL;
+	    if (self->tokenString && self->tokenString != noString)
+		CcFree(self->tokenString);
+	    self->tokenString = (char *)noString;
 	} else { /* CcsParser_str */
 	    *g = CcLexical_StrToGraph(self->lexical, name, self->t);
-	    if (self->tokenString) CcFree(self->tokenString);
-	    self->tokenString = CcStrdup(name);
+	    if (self->tokenString == NULL) self->tokenString = CcStrdup(name);
+	    else {
+		if (self->tokenString != noString) CcFree(self->tokenString);
+		self->tokenString = (char *)noString;
+	    }
 	}
 	CcFree(name);
     } else if (self->la->kind == 30) {
