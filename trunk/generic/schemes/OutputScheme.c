@@ -61,8 +61,8 @@ typedef struct {
 }  CommentMark_t;
 
 static const CommentMark_t cmarr[] = {
-    { ".html", "<!----", "---->" },
-    { NULL, "/*----", "----*/" }
+    { ".html", "<!---- ", " ---->" },
+    { NULL, "/*---- ", " ----*/" }
 };
 
 static const CommentMark_t *
