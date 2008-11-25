@@ -74,13 +74,12 @@ CcState_DetachAction(CcState_t * self, CcAction_t * act)
     }
 }
 
-int
-CcState_MeltWith(CcState_t * self, CcState_t * s)
+void
+CcState_MeltWith(CcState_t * self, const CcState_t * s)
 {
-    CcAction_t * action;
+    const CcAction_t * action;
     for (action = s->firstAction; action != NULL; action = action->next)
 	CcState_AddAction(self, CcAction_Clone(action));
-    return 0;
 }
 
 /* CcAction_t * b might be destructed */
@@ -131,19 +130,15 @@ CcState_SplitActions(CcState_t * self, CcAction_t * a, CcAction_t * b)
 void
 CcState_MakeUnique(CcState_t * self)
 {
-    CcAction_t * a, * b, * bnext;
-    CcsBool_t changed;
+    CcAction_t * a, * b;
 
-    do {
-	changed = FALSE;
-	for (a = self->firstAction; a != NULL; a = a->next)
-	    for (b = a->next; b != NULL; b = bnext) {
-		bnext = b->next;
-		if (!CcAction_Overlap(a, b)) continue;
+ restart:
+    for (a = self->firstAction; a != NULL; a = a->next)
+	for (b = a->next; b != NULL; b = b->next)
+	    if (CcAction_Overlap(a, b)) {
 		CcState_SplitActions(self, a, b);
-		changed = TRUE;
+		goto restart;
 	    }
-    } while (changed);
 }
 
 CcAction_t *
