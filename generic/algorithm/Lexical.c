@@ -284,7 +284,7 @@ CcLexical_Step(CcLexical_t * self, CcState_t * from, CcNode_t * p,
 	CcLexical_Step(self, from, p->sub, stepped);
 	CcLexical_Step(self, from, p->down, stepped);
     } else if (p->base.type == node_iter || p->base.type == node_opt) {
-	if (p->next != NULL && CcBitArray_Get(stepped, p->next->base.index))
+	if (p->next != NULL && !CcBitArray_Get(stepped, p->next->base.index))
 	    CcLexical_Step(self, from, p->next, stepped);
 	CcLexical_Step(self, from, p->sub, stepped);
 	if ((p->base.type == node_iter) && (p->state != from)) {
@@ -357,7 +357,6 @@ CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbol_t * sym)
     CcBitArray_t marked;
     CcState_t * firstState;
 
-    fprintf(stderr, "%s: %s\n", __FUNCTION__, sym->name);
     CcsAssert(sym->base.type == symbol_t || sym->base.type == symbol_pr);
     self->curSy = sym;
     if (CcNode_DelGraph(p))
@@ -374,7 +373,6 @@ CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbol_t * sym)
 	CcLexical_Step(self, firstState, p, &marked);
     }
     CcBitArray_Destruct(&marked);
-    CcLexical_DumpStates(self);
 }
 
 /* match string against current automaton; store it either as a

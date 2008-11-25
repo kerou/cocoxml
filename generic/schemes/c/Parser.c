@@ -325,11 +325,9 @@ CcsParser_Coco(CcsParser_t * self) {
 	CcsParser_SynErr(self, 42); CcsParser_Get(self);
     }
     CcsParser_Expect(self, 16);
-    CcLexical_DumpStates(self->lexical);
     if (self->genScanner) CcLexical_MakeDeterministic(self->lexical);
     CcEBNF_Clear(&self->lexical->base);
     CcEBNF_Clear(&self->syntax->base);
-    CcLexical_DumpStates(self->lexical);
 
     while (self->la->kind == 1) {
 	CcsParser_Get(self);
