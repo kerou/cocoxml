@@ -458,11 +458,11 @@ CcsScanner_NextCcsToken(CcsScanner_t * self)
 	    (self->ch >= '(' && self->ch <= '[') ||
 	    (self->ch >= ']' && self->ch <= 65535)) {
 	    CcsScanner_GetCh(self); goto case_6;
-	} else if (self->ch == 92) {
+	} else if (self->ch == '\\') {
 	    CcsScanner_GetCh(self); goto case_7;
 	} else { kind = self->noSym; break; }
     case 6: case_6:
-	if (self->ch == 39) {
+	if (self->ch == '\'') {
 	    CcsScanner_GetCh(self); goto case_9;
 	} else { kind = self->noSym; break; }
     case 7: case_7:
@@ -473,7 +473,7 @@ CcsScanner_NextCcsToken(CcsScanner_t * self)
 	if ((self->ch >= '0' && self->ch <= '9') ||
 	    (self->ch >= 'a' && self->ch <= 'f')) {
 	    CcsScanner_GetCh(self); goto case_8;
-	} else if (self->ch == 39) {
+	} else if (self->ch == '\'') {
 	    CcsScanner_GetCh(self); goto case_9;
 	} else { kind = self->noSym; break; }
     case 9: case_9:
@@ -486,17 +486,17 @@ CcsScanner_NextCcsToken(CcsScanner_t * self)
 	    CcsScanner_GetCh(self); goto case_10;
 	} else { kind = 42; break; }
     case 11: case_11:
-	if (self->ch <= 9 ||
-	    (self->ch >= 11 && self->ch <= 12) ||
+	if ((self->ch >= 0 && self->ch <= '\t') ||
+	    (self->ch >= '\v' && self->ch <= '\f') ||
 	    (self->ch >= 14 && self->ch <= '!') ||
 	    (self->ch >= '#' && self->ch <= '[') ||
 	    (self->ch >= ']' && self->ch <= 65535)) {
 	    CcsScanner_GetCh(self); goto case_11;
-	} else if (self->ch == 10 || self->ch == 13) {
+	} else if (self->ch == '\n' || self->ch == '\r') {
 	    CcsScanner_GetCh(self); goto case_4;
 	} else if (self->ch == '"') {
 	    CcsScanner_GetCh(self); goto case_3;
-	} else if (self->ch == 92) {
+	} else if (self->ch == '\\') {
 	    CcsScanner_GetCh(self); goto case_12;
 	} else { kind = self->noSym; break; }
     case 12: case_12:
