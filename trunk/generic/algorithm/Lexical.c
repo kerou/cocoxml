@@ -355,7 +355,7 @@ CcLexical_FindTrans(CcLexical_t * self, CcNode_t * p, CcsBool_t start, CcBitArra
 void
 CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbol_t * sym)
 {
-    CcBitArray_t stepped, marked;
+    CcBitArray_t marked;
     CcState_t * firstState = (CcState_t *)CcArrayList_Get(&self->states, 0);
 
     fprintf(stderr, "%s: %s\n", __FUNCTION__, sym->name);
@@ -367,13 +367,12 @@ CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbol_t * sym)
 
     CcBitArray(&marked, self->base.nodes.Count);
     CcLexical_FindTrans(self, self->curGraph, TRUE, &marked);
-    CcBitArray_Destruct(&marked);
 
     if (p->base.type == node_iter) {
-	CcBitArray(&stepped, self->base.nodes.Count);
-	CcLexical_Step(self, firstState, p, &stepped);
-	CcBitArray_Destruct(&stepped);
+	CcBitArray_SetAll(&marked, FALSE);
+	CcLexical_Step(self, firstState, p, &marked);
     }
+    CcBitArray_Destruct(&marked);
     CcLexical_DumpStates(self);
 }
 
