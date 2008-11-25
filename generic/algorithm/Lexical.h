@@ -85,7 +85,7 @@ void
 CcLexical_NewComment(CcLexical_t * self, const CcsToken_t * token,
 		     CcNode_t * from, CcNode_t * to, CcsBool_t nested);
 
-void CcLexical_Finish(CcLexical_t * self);
+CcsBool_t CcLexical_Finish(CcLexical_t * self);
 
 typedef struct {
     int keyFrom;
