@@ -70,12 +70,12 @@ typedef enum {
 typedef struct {
     CcObject_t base;
     CcSyntaxErrorType_t type;
-    const char * name;
+    const CcSymbol_t * sym;
 }  CcSyntaxError_t;
 
 void CcSyntax_Errors(CcSyntax_t * self);
-void CcSyntax_AltError(CcSyntax_t * self, CcSymbol_t * sym);
-void CcSyntax_SyncError(CcSyntax_t * self, CcSymbol_t * sym);
+void CcSyntax_AltError(CcSyntax_t * self, const CcSymbol_t * sym);
+void CcSyntax_SyncError(CcSyntax_t * self, const CcSymbol_t * sym);
 
 typedef struct {
     CcBitArray_t * start;
