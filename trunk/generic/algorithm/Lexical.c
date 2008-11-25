@@ -40,13 +40,13 @@
 
 static void
 CcLexical_GetTargetStates(CcLexical_t * self, CcAction_t * a,
-			  CcBitArray_t ** targets, CcSymbol_t ** endOf,
+			  CcBitArray_t * targets, CcSymbol_t ** endOf,
 			  CcsBool_t * ctx);
 static CcMelted_t *
 CcLexical_NewMelted(CcLexical_t * self, CcBitArray_t * set, CcState_t * state);
 static CcBitArray_t * CcLexical_MeltedSet(CcLexical_t * self, int nr);
 static CcMelted_t *
-CcLexical_StateWithSet(CcLexical_t * self, CcBitArray_t * s);
+CcLexical_StateWithSet(CcLexical_t * self, const CcBitArray_t * s);
 static void CcLexical_ClearMelted(CcLexical_t * self);
 
 CcLexical_t *
@@ -65,7 +65,6 @@ CcLexical(CcLexical_t * self, CcGlobals_t * globals)
 
     self->lastSimState = 0;
     self->curSy = NULL;
-    self->curGraph = NULL;
     self->dirtyLexical = FALSE;
     self->hasCtxMoves = FALSE;
 
@@ -356,20 +355,22 @@ void
 CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbol_t * sym)
 {
     CcBitArray_t marked;
-    CcState_t * firstState = (CcState_t *)CcArrayList_Get(&self->states, 0);
+    CcState_t * firstState;
 
     fprintf(stderr, "%s: %s\n", __FUNCTION__, sym->name);
     CcsAssert(sym->base.type == symbol_t || sym->base.type == symbol_pr);
-    self->curGraph = p; self->curSy = sym;
-    if (CcNode_DelGraph(self->curGraph))
+    self->curSy = sym;
+    if (CcNode_DelGraph(p))
 	CcsGlobals_SemErr(&self->globals->base, NULL, "token might be empty");
-    CcLexical_NumberNodes(self, self->curGraph, firstState, TRUE);
+    firstState = (CcState_t *)CcArrayList_Get(&self->states, 0);
+    CcLexical_NumberNodes(self, p, firstState, TRUE);
 
     CcBitArray(&marked, self->base.nodes.Count);
-    CcLexical_FindTrans(self, self->curGraph, TRUE, &marked);
+    CcLexical_FindTrans(self, p, TRUE, &marked);
 
     if (p->base.type == node_iter) {
 	CcBitArray_SetAll(&marked, FALSE);
+	firstState = (CcState_t *)CcArrayList_Get(&self->states, 0);
 	CcLexical_Step(self, firstState, p, &marked);
     }
     CcBitArray_Destruct(&marked);
@@ -436,7 +437,7 @@ static void
 CcLexical_MeltStates(CcLexical_t * self, CcState_t * state)
 {
     CcsBool_t ctx;
-    CcBitArray_t * targets;
+    CcBitArray_t targets;
     CcSymbol_t * endOf;
     CcAction_t * action;
     CcMelted_t * melt;
@@ -446,7 +447,7 @@ CcLexical_MeltStates(CcLexical_t * self, CcState_t * state)
     for (action = state->firstAction; action != NULL; action = action->next) {
 	if (action->target->next != NULL) {
 	    CcLexical_GetTargetStates(self, action, &targets, &endOf, &ctx);
-	    melt = CcLexical_StateWithSet(self, targets);
+	    melt = CcLexical_StateWithSet(self, &targets);
 	    if (melt == NULL) {
 		s = (CcState_t *)CcArrayList_New(&self->states,
 						 (CcObject_t *)CcState());
@@ -454,11 +455,12 @@ CcLexical_MeltStates(CcLexical_t * self, CcState_t * state)
 		for (targ = action->target; targ != NULL; targ = targ->next)
 		    CcState_MeltWith(s, targ->state);
 		CcState_MakeUnique(s);
-		melt = CcLexical_NewMelted(self, targets, s);
+		melt = CcLexical_NewMelted(self, &targets, s);
 	    }
 	    CcTarget_ListDestruct(action->target->next);
 	    action->target->next = NULL;
 	    action->target->state = melt->state;
+	    CcBitArray_Destruct(&targets);
 	}
     }
 }
@@ -511,7 +513,7 @@ CcLexical_MeltedSet(CcLexical_t * self, int nr)
 {
     CcMelted_t * m = self->firstMelted;
     while (m != NULL) {
-	if (m->state->base.index == nr) return m->set;
+	if (m->state->base.index == nr) return &m->set;
 	else m = m->next;
     }
     /*Errors::Exception("-- compiler error in CcMelted::Set");*/
@@ -520,11 +522,11 @@ CcLexical_MeltedSet(CcLexical_t * self, int nr)
 }
 
 CcMelted_t *
-CcLexical_StateWithSet(CcLexical_t * self, CcBitArray_t * s)
+CcLexical_StateWithSet(CcLexical_t * self, const CcBitArray_t * s)
 {
     CcMelted_t * m;
     for (m = self->firstMelted; m != NULL; m = m->next)
-	if (CcBitArray_Equal(s, m->set)) return m;
+	if (CcBitArray_Equal(s, &m->set)) return m;
     return NULL;
 }
 
@@ -542,19 +544,19 @@ CcLexical_ClearMelted(CcLexical_t * self)
 /* ---------------------------- actions -------------------------------- */
 static void
 CcLexical_GetTargetStates(CcLexical_t * self, CcAction_t * a,
-			  CcBitArray_t ** targets, CcSymbol_t ** endOf,
+			  CcBitArray_t * targets, CcSymbol_t ** endOf,
 			  CcsBool_t * ctx)
 {
     CcTarget_t * t; int stateNr;
     /* compute the set of target states */
-    *targets = CcBitArray(CcMalloc(sizeof(CcBitArray_t)), self->maxStates);
+    CcBitArray(targets, self->maxStates);
     *endOf = NULL; *ctx = FALSE;
     for (t = a->target; t != NULL; t = t->next) {
 	stateNr = t->state->base.index;
 	if (stateNr <= self->lastSimState) {
-	    CcBitArray_Set(*targets, stateNr, TRUE);
+	    CcBitArray_Set(targets, stateNr, TRUE);
 	} else {
-	    CcBitArray_Or(*targets, CcLexical_MeltedSet(self, stateNr));
+	    CcBitArray_Or(targets, CcLexical_MeltedSet(self, stateNr));
 	}
 	if (t->state->endOf != NULL) {
 	    if (*endOf == NULL || *endOf == t->state->endOf)
