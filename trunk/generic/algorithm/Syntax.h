@@ -61,8 +61,8 @@ CcNode_t *
 CcSyntax_NodeFromSymbol(CcSyntax_t * self, const CcSymbol_t * sym, int line,
 			CcsBool_t weak);
 void CcSyntax_SetupAnys(CcSyntax_t * self);
-void CcSyntax_CompSymbolSets(CcSyntax_t * self);
-CcsBool_t CcSyntax_GrammarOk(CcSyntax_t * self);
+
+CcsBool_t CcSyntax_Finish(CcSyntax_t * self);
 
 typedef enum {
     cet_t, cet_alt, cet_sync
@@ -73,7 +73,6 @@ typedef struct {
     const CcSymbol_t * sym;
 }  CcSyntaxError_t;
 
-void CcSyntax_Errors(CcSyntax_t * self);
 void CcSyntax_AltError(CcSyntax_t * self, const CcSymbol_t * sym);
 void CcSyntax_SyncError(CcSyntax_t * self, const CcSymbol_t * sym);
 

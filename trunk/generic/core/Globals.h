@@ -54,7 +54,7 @@ CcGlobals_t *
 CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp);
 void CcGlobals_Destruct(CcGlobals_t * self);
 
-void CcGlobals_Parse(CcGlobals_t * self);
+CcsBool_t CcGlobals_Parse(CcGlobals_t * self);
 
 EXTC_END
 

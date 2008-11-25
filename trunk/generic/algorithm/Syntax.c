@@ -393,7 +393,7 @@ CcSyntax_CompDeletableSymbols(CcSyntax_t * self)
     }
 }
 
-void
+static void
 CcSyntax_CompSymbolSets(CcSyntax_t * self)
 {
     CcSyntax_CompDeletableSymbols(self);
@@ -759,7 +759,7 @@ CcSyntax_AllNtToTerm(CcSyntax_t * self)
     return ok;
 }
 
-CcsBool_t
+static CcsBool_t
 CcSyntax_GrammarOk(CcSyntax_t * self)
 {
     CcsBool_t ok = CcSyntax_NtsComplete(self) &&
@@ -773,11 +773,21 @@ CcSyntax_GrammarOk(CcSyntax_t * self)
     return ok;
 }
 
+static void CcSyntax_Errors(CcSyntax_t * self);
+CcsBool_t
+CcSyntax_Finish(CcSyntax_t * self)
+{
+    CcSyntax_CompSymbolSets(self);
+    if (!CcSyntax_GrammarOk(self)) return FALSE;
+    CcSyntax_Errors(self);
+    return TRUE;
+}
+
 static const CcObjectType_t CcSyntaxErrorType = {
     sizeof(CcSyntaxError_t), "CcSyntaxError_t", CcObject_Destruct
 };
 
-void
+static void
 CcSyntax_Errors(CcSyntax_t * self)
 {
     CcArrayListIter_t iter;

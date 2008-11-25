@@ -63,7 +63,7 @@ main(int argc, char * argv[])
 	return 0;
     }
     if (!CcGlobals(&globals, atgName, stderr)) goto errquit0;
-    CcGlobals_Parse(&globals);
+    if (!CcGlobals_Parse(&globals)) goto errquit1;
 
     schemeName = CcArguments_First(&arguments, "scheme", &iter);
     if (schemeName == NULL || !strcmp(schemeName, "c")) {

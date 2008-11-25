@@ -630,10 +630,11 @@ CcLexical_NewComment(CcLexical_t * self, const CcsToken_t * token,
     c->next = self->firstComment; self->firstComment = c;
 }
 
-void
+CcsBool_t
 CcLexical_Finish(CcLexical_t * self)
 {
     if (self->dirtyLexical) CcLexical_MakeDeterministic(self);
+    return TRUE;
 }
 
 static int

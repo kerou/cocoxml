@@ -51,9 +51,13 @@ CcGlobals_Destruct(CcGlobals_t * self)
     CcsGlobals_Destruct(&self->base);
 }
 
-void
+CcsBool_t
 CcGlobals_Parse(CcGlobals_t * self)
 {
     CcsGlobals_Parse(&self->base);
-    CcLexical_Finish(&self->lexical);
+    if (self->base.error.errorCount > 0) return FALSE;
+    if (!CcSymbolTable_Finish(&self->symtab)) return FALSE;
+    if (!CcLexical_Finish(&self->lexical)) return FALSE;
+    if (!CcSyntax_Finish(&self->syntax)) return FALSE;
+    return TRUE;
 }
