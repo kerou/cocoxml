@@ -735,3 +735,76 @@ CcLexical_TargetStates(const CcLexical_t * self, CcBitArray_t * mask)
 	for (action = state->firstAction; action != NULL; action = action->next)
 	    CcBitArray_Set(mask, action->target->state->base.index, TRUE);
 }
+
+#ifndef  NDEBUG
+static const char *
+CharRepr(char * buf, size_t szbuf, int ch)
+{
+    if (ch == '\\') {
+	snprintf(buf, szbuf, "'\\\\'");
+    } else if (ch == '\'') {
+	snprintf(buf, szbuf, "'\\\''");
+    } else if (ch >= 32 && ch <= 126) {
+	snprintf(buf, szbuf, "'%c'", (char)ch);
+    } else if (ch == '\a') {
+	snprintf(buf, szbuf, "'\\a'");
+    } else if (ch == '\b') {
+	snprintf(buf, szbuf, "'\\b'");
+    } else if (ch == '\f') {
+	snprintf(buf, szbuf, "'\\f'");
+    } else if (ch == '\n') {
+	snprintf(buf, szbuf, "'\\n'");
+    } else if (ch == '\r') {
+	snprintf(buf, szbuf, "'\\r'");
+    } else if (ch == '\t') {
+	snprintf(buf, szbuf, "'\\t'");
+    } else if (ch == '\v') {
+	snprintf(buf, szbuf, "'\\v'");
+    } else {
+	snprintf(buf, szbuf, "%d", ch);
+    }
+    return buf;
+}
+
+void
+CcLexical_DumpStates(const CcLexical_t * self)
+{
+    CcArrayListIter_t iter;
+    const CcState_t * state;
+    const CcAction_t * action;
+    const CcTarget_t * target;
+    CcCharSet_t * s;
+    const CcRange_t * curRange;
+    char buf0[8], buf1[8];
+    const CcArrayList_t * states = &self->states;
+
+    for (state = (const CcState_t *)CcArrayList_FirstC(states, &iter);
+	 state; state = (const CcState_t *)CcArrayList_NextC(states, &iter)) {
+	fprintf(stderr, "State %d: %s, ctx = %s\n", state->base.index,
+		state->endOf ? state->endOf->name : "(null)",
+		state->ctx ? "TRUE" : "FALSE");
+	for (action = state->firstAction; action; action = action->next) {
+	    fprintf(stderr, "\t");
+	    s = CcAction_GetShift(action);
+	    for (curRange = s->head; curRange; curRange = curRange->next) {
+		if (curRange->from == curRange->to) {
+		    fprintf(stderr, "%s",
+			    CharRepr(buf0, sizeof(buf0), curRange->from));
+		} else {
+		    fprintf(stderr, "[%s, %s]",
+			    CharRepr(buf0, sizeof(buf0), curRange->from),
+			    CharRepr(buf1, sizeof(buf1), curRange->to));
+		}
+		if (curRange->next) fprintf(stderr, ",");
+	    }
+	    CcCharSet_Destruct(s);
+	    fprintf(stderr, "\t");
+	    for (target = action->target; target; target = target->next) {
+		fprintf(stderr, "%d", target->state->base.index);
+		if (target->next) fprintf(stderr, ",");
+	    }
+	    fprintf(stderr, "\n");
+	}
+    }
+}
+#endif
