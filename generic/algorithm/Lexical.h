@@ -54,7 +54,6 @@ struct CcLexical_s {
     int             maxStates;
 
     CcSymbol_t    * curSy;
-    CcNode_t      * curGraph;
     CcsBool_t       dirtyLexical;
     CcsBool_t       hasCtxMoves;
 };
