@@ -226,3 +226,21 @@ CcEBNF_MakeOption(CcEBNF_t * self, CcGraph_t * g)
     g->r = g->head;
     return g->head;
 }
+
+#ifndef NDEBUG
+void
+CcEBNF_DumpNodes(const CcEBNF_t * self)
+{
+    CcArrayListIter_t iter;
+    const CcNode_t * node;
+    for (node = (const CcNode_t *)CcArrayList_FirstC(&self->nodes, &iter);
+	 node; node = (const CcNode_t *)CcArrayList_NextC(&self->nodes, &iter)) {
+	fprintf(stderr, "Node(%d):%16s %4d %4d %4d %5s\n",
+		node->base.index, node->base.type->name,
+		node->next ? node->next->base.index : -1,
+		node->down ? node->down->base.index : -1,
+		node->sub ? node->sub->base.index : -1,
+		node->up ? "TRUE" : "FALSE");
+    }
+}
+#endif
