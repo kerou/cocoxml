@@ -89,3 +89,15 @@ CcSymbolTable_FindSym(CcSymbolTable_t * self, const char * name)
     CcFree(name0);
     return sym;
 }
+
+void
+CcSymbolTable_SetupKinds(CcSymbolTable_t * self)
+{
+    CcArrayListIter_t iter; CcSymbol_t * sym;
+    for (sym = (CcSymbol_t *)CcArrayList_First(&self->terminals, &iter);
+	 sym; sym = (CcSymbol_t *)CcArrayList_First(&self->terminals, &iter))
+	sym->kind = sym->base.index;
+    for (sym = (CcSymbol_t *)CcArrayList_First(&self->pragmas, &iter);
+	 sym; sym = (CcSymbol_t *)CcArrayList_First(&self->pragmas, &iter))
+	sym->kind = sym->base.index + self->terminals.Count;
+}
