@@ -39,72 +39,8 @@ static const int CcsParser_str = 1;
 static const char * noString = "~none~";
 /*---- enable ----*/
 
-static void
-CcsParser_SynErr(CcsParser_t * self, int n)
-{
-    const char * s; char format[20];
-    switch (n) {
-	/*---- errors ----*/
-    case 0: s = "EOF expected"; break;
-    case 1: s = "ident expected"; break;
-    case 2: s = "number expected"; break;
-    case 3: s = "string expected"; break;
-    case 4: s = "badString expected"; break;
-    case 5: s = "char expected"; break;
-    case 6: s = "\"COMPILER\" expected"; break;
-    case 7: s = "\"IGNORECASE\" expected"; break;
-    case 8: s = "\"CHARACTERS\" expected"; break;
-    case 9: s = "\"TOKENS\" expected"; break;
-    case 10: s = "\"PRAGMAS\" expected"; break;
-    case 11: s = "\"COMMENTS\" expected"; break;
-    case 12: s = "\"FROM\" expected"; break;
-    case 13: s = "\"TO\" expected"; break;
-    case 14: s = "\"NESTED\" expected"; break;
-    case 15: s = "\"IGNORE\" expected"; break;
-    case 16: s = "\"PRODUCTIONS\" expected"; break;
-    case 17: s = "\"=\" expected"; break;
-    case 18: s = "\".\" expected"; break;
-    case 19: s = "\"END\" expected"; break;
-    case 20: s = "\"+\" expected"; break;
-    case 21: s = "\"-\" expected"; break;
-    case 22: s = "\"..\" expected"; break;
-    case 23: s = "\"ANY\" expected"; break;
-    case 24: s = "\"<\" expected"; break;
-    case 25: s = "\">\" expected"; break;
-    case 26: s = "\"<.\" expected"; break;
-    case 27: s = "\".>\" expected"; break;
-    case 28: s = "\"|\" expected"; break;
-    case 29: s = "\"WEAK\" expected"; break;
-    case 30: s = "\"(\" expected"; break;
-    case 31: s = "\")\" expected"; break;
-    case 32: s = "\"[\" expected"; break;
-    case 33: s = "\"]\" expected"; break;
-    case 34: s = "\"{\" expected"; break;
-    case 35: s = "\"}\" expected"; break;
-    case 36: s = "\"SYNC\" expected"; break;
-    case 37: s = "\"IF\" expected"; break;
-    case 38: s = "\"CONTEXT\" expected"; break;
-    case 39: s = "\"(.\" expected"; break;
-    case 40: s = "\".)\" expected"; break;
-    case 41: s = "??? expected"; break;
-    case 42: s = "this symbol not expected in Coco"; break;
-    case 43: s = "this symbol not expected in TokenDecl"; break;
-    case 44: s = "invalid TokenDecl"; break;
-    case 45: s = "invalid AttrDecl"; break;
-    case 46: s = "invalid SimSet"; break;
-    case 47: s = "invalid Sym"; break;
-    case 48: s = "invalid Term"; break;
-    case 49: s = "invalid Factor"; break;
-    case 50: s = "invalid Attribs"; break;
-    case 51: s = "invalid TokenFactor"; break;
-	/*---- enable ----*/
-    default:
-	snprintf(format, sizeof(format), "error %d", n);
-	s = format;
-	break;
-    }
-    CcsGlobals_SemErr(self->globals, self->la, "%s", s);
-}
+static void CcsParser_SynErr(CcsParser_t * self, int n);
+static const char * set[];
 
 static void
 CcsParser_Get(CcsParser_t * self)
@@ -122,31 +58,6 @@ CcsParser_Get(CcsParser_t * self)
     }
 }
 
-static const char * set[] = {
-    /*---- initialization ----*/
-    "**.*.*....**...***.....................*...",
-    ".*****.***********************************.",
-    ".******.....***..*************************.",
-    "**.*.*....**...****....*....***.*.*.**.*...",
-    "**.*.*....**...***.*...................*...",
-    "**.*.*....**...***.....................*...",
-    ".*.*.*....**...**......................*...",
-    "...........*.****.*............*.*.*.......",
-    ".*.*.*........................*.*.*........",
-    ".************************.****************.",
-    ".***.********************.****************.",
-    ".**************************.**************.",
-    ".***.**********************.**************.",
-    ".***************************************.*.",
-    ".***.**********************************..*.",
-    "..................*............*.*.*.......",
-    ".*.*.*............*....*....**********.*...",
-    ".*.*.*.................*.....**.*.*.**.*...",
-    ".*.*.*.................*.....**.*.*.*..*...",
-    "..................*.........*..*.*.*.......",
-    ".******************************.**********."
-    /*---- enable ----*/
-};
 static CcsBool_t
 CcsParser_StartOf(CcsParser_t * self, int s)
 {
@@ -956,3 +867,96 @@ CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g) {
 	*g = CcGraphP(CcEBNF_NewNode(&self->lexical->base, CcNodeEps(0)));
 }
 /*---- enable ----*/
+
+static void
+CcsParser_SynErr(CcsParser_t * self, int n)
+{
+    const char * s; char format[20];
+    switch (n) {
+	/*---- errors ----*/
+    case 0: s = "EOF expected"; break;
+    case 1: s = "ident expected"; break;
+    case 2: s = "number expected"; break;
+    case 3: s = "string expected"; break;
+    case 4: s = "badString expected"; break;
+    case 5: s = "char expected"; break;
+    case 6: s = "\"COMPILER\" expected"; break;
+    case 7: s = "\"IGNORECASE\" expected"; break;
+    case 8: s = "\"CHARACTERS\" expected"; break;
+    case 9: s = "\"TOKENS\" expected"; break;
+    case 10: s = "\"PRAGMAS\" expected"; break;
+    case 11: s = "\"COMMENTS\" expected"; break;
+    case 12: s = "\"FROM\" expected"; break;
+    case 13: s = "\"TO\" expected"; break;
+    case 14: s = "\"NESTED\" expected"; break;
+    case 15: s = "\"IGNORE\" expected"; break;
+    case 16: s = "\"PRODUCTIONS\" expected"; break;
+    case 17: s = "\"=\" expected"; break;
+    case 18: s = "\".\" expected"; break;
+    case 19: s = "\"END\" expected"; break;
+    case 20: s = "\"+\" expected"; break;
+    case 21: s = "\"-\" expected"; break;
+    case 22: s = "\"..\" expected"; break;
+    case 23: s = "\"ANY\" expected"; break;
+    case 24: s = "\"<\" expected"; break;
+    case 25: s = "\">\" expected"; break;
+    case 26: s = "\"<.\" expected"; break;
+    case 27: s = "\".>\" expected"; break;
+    case 28: s = "\"|\" expected"; break;
+    case 29: s = "\"WEAK\" expected"; break;
+    case 30: s = "\"(\" expected"; break;
+    case 31: s = "\")\" expected"; break;
+    case 32: s = "\"[\" expected"; break;
+    case 33: s = "\"]\" expected"; break;
+    case 34: s = "\"{\" expected"; break;
+    case 35: s = "\"}\" expected"; break;
+    case 36: s = "\"SYNC\" expected"; break;
+    case 37: s = "\"IF\" expected"; break;
+    case 38: s = "\"CONTEXT\" expected"; break;
+    case 39: s = "\"(.\" expected"; break;
+    case 40: s = "\".)\" expected"; break;
+    case 41: s = "??? expected"; break;
+    case 42: s = "this symbol not expected in Coco"; break;
+    case 43: s = "this symbol not expected in TokenDecl"; break;
+    case 44: s = "invalid TokenDecl"; break;
+    case 45: s = "invalid AttrDecl"; break;
+    case 46: s = "invalid SimSet"; break;
+    case 47: s = "invalid Sym"; break;
+    case 48: s = "invalid Term"; break;
+    case 49: s = "invalid Factor"; break;
+    case 50: s = "invalid Attribs"; break;
+    case 51: s = "invalid TokenFactor"; break;
+	/*---- enable ----*/
+    default:
+	snprintf(format, sizeof(format), "error %d", n);
+	s = format;
+	break;
+    }
+    CcsGlobals_SemErr(self->globals, self->la, "%s", s);
+}
+
+static const char * set[] = {
+    /*---- initialization ----*/
+    "**.*.*....**...***.....................*...",
+    ".*****.***********************************.",
+    ".******.....***..*************************.",
+    "**.*.*....**...****....*....***.*.*.**.*...",
+    "**.*.*....**...***.*...................*...",
+    "**.*.*....**...***.....................*...",
+    ".*.*.*....**...**......................*...",
+    "...........*.****.*............*.*.*.......",
+    ".*.*.*........................*.*.*........",
+    ".************************.****************.",
+    ".***.********************.****************.",
+    ".**************************.**************.",
+    ".***.**********************.**************.",
+    ".***************************************.*.",
+    ".***.**********************************..*.",
+    "..................*............*.*.*.......",
+    ".*.*.*............*....*....**********.*...",
+    ".*.*.*.................*.....**.*.*.**.*...",
+    ".*.*.*.................*.....**.*.*.*..*...",
+    "..................*.........*..*.*.*.......",
+    ".******************************.**********."
+    /*---- enable ----*/
+};
