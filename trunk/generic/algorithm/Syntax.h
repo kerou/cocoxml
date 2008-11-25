@@ -50,6 +50,8 @@ struct CcSyntax_s {
     CcBitArray_t   visitedSpace;
     CcBitArray_t * allSyncSets;
     CcBitArray_t   allSyncSetsSpace;
+
+    CcArrayList_t  errors;
 };
 
 CcSyntax_t * CcSyntax(CcSyntax_t * self, CcGlobals_t * globals);
@@ -61,6 +63,19 @@ CcSyntax_NodeFromSymbol(CcSyntax_t * self, const CcSymbol_t * sym, int line,
 void CcSyntax_SetupAnys(CcSyntax_t * self);
 void CcSyntax_CompSymbolSets(CcSyntax_t * self);
 CcsBool_t CcSyntax_GrammarOk(CcSyntax_t * self);
+
+typedef enum {
+    cet_t, cet_alt, cet_sync
+}  CcSyntaxErrorType_t;
+typedef struct {
+    CcObject_t base;
+    CcSyntaxErrorType_t type;
+    const char * name;
+}  CcSyntaxError_t;
+
+void CcSyntax_Errors(CcSyntax_t * self);
+void CcSyntax_AltError(CcSyntax_t * self, CcSymbol_t * sym);
+void CcSyntax_SyncError(CcSyntax_t * self, CcSymbol_t * sym);
 
 typedef struct {
     CcBitArray_t * start;

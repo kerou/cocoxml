@@ -36,12 +36,14 @@ CcSyntax(CcSyntax_t * self, CcGlobals_t * globals)
     self->curSy = NULL;
     self->visited = NULL;
     self->allSyncSets = NULL;
+    CcArrayList(&self->errors);
     return self;
 }
 
 void
 CcSyntax_Destruct(CcSyntax_t * self)
 {
+    CcArrayList_Destruct(&self->errors);
     if (self->allSyncSets) CcBitArray_Destruct(self->allSyncSets);
     if (self->visited) CcBitArray_Destruct(self->visited);
     CcEBNF_Destruct(&self->base);
@@ -769,6 +771,44 @@ CcSyntax_GrammarOk(CcSyntax_t * self)
 	CcSyntax_CheckLL1(self);
     }
     return ok;
+}
+
+static const CcObjectType_t CcSyntaxErrorType = {
+    sizeof(CcSyntaxError_t), "CcSyntaxError_t", CcObject_Destruct
+};
+
+void
+CcSyntax_Errors(CcSyntax_t * self)
+{
+    CcArrayListIter_t iter;
+    const CcSymbol_t * sym;
+    CcSyntaxError_t * error;
+    const CcArrayList_t * terminals = &self->globals->symtab.terminals;
+    for (sym = (const CcSymbol_t *)CcArrayList_FirstC(terminals, &iter);
+	 sym; sym = (const CcSymbol_t *)CcArrayList_NextC(terminals, &iter)) {
+	error = (CcSyntaxError_t *)
+	    CcArrayList_New(&self->errors, CcObject(&CcSyntaxErrorType));
+	error->type = cet_t;
+	error->name = sym->name;
+    }
+}
+
+void
+CcSyntax_AltError(CcSyntax_t * self, CcSymbol_t * sym)
+{
+    CcSyntaxError_t * error = (CcSyntaxError_t *)
+	CcArrayList_New(&self->errors, CcObject(&CcSyntaxErrorType));
+    error->type = cet_alt;
+    error->name = sym->name;
+}
+
+void
+CcSyntax_SyncError(CcSyntax_t * self, CcSymbol_t * sym)
+{
+    CcSyntaxError_t * error = (CcSyntaxError_t *)
+	CcArrayList_New(&self->errors, CcObject(&CcSyntaxErrorType));
+    error->type = cet_sync;
+    error->name = sym->name;
 }
 
 #define SZ_SYMSET  64
