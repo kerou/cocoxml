@@ -358,6 +358,7 @@ CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbol_t * sym)
     CcBitArray_t stepped, marked;
     CcState_t * firstState = (CcState_t *)CcArrayList_Get(&self->states, 0);
 
+    fprintf(stderr, "%s: %s\n", __FUNCTION__, sym->name);
     CcsAssert(sym->base.type == symbol_t || sym->base.type == symbol_pr);
     self->curGraph = p; self->curSy = sym;
     if (CcNode_DelGraph(self->curGraph))
@@ -373,6 +374,7 @@ CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbol_t * sym)
 	CcLexical_Step(self, firstState, p, &stepped);
 	CcBitArray_Destruct(&stepped);
     }
+    CcLexical_DumpStates(self);
 }
 
 /* match string against current automaton; store it either as a
@@ -778,6 +780,7 @@ CcLexical_DumpStates(const CcLexical_t * self)
     char buf0[8], buf1[8];
     const CcArrayList_t * states = &self->states;
 
+    fprintf(stderr, "Dump States: %d\n", states->Count);
     for (state = (const CcState_t *)CcArrayList_FirstC(states, &iter);
 	 state; state = (const CcState_t *)CcArrayList_NextC(states, &iter)) {
 	fprintf(stderr, "State %d: %s, ctx = %s\n", state->base.index,
@@ -806,5 +809,6 @@ CcLexical_DumpStates(const CcLexical_t * self)
 	    fprintf(stderr, "\n");
 	}
     }
+    fprintf(stderr, "\n");
 }
 #endif
