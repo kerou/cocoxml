@@ -294,18 +294,18 @@ CcSyntax_CompAnySets(CcSyntax_t * self)
     }
 }
 
-static void
+void
 CcSyntax_Expected(CcSyntax_t * self, CcBitArray_t * ret,
-		  CcNode_t * p, CcSymbol_t * curSy)
+		  CcNode_t * p, const CcSymbol_t * curSy)
 {
     CcSyntax_First(self, ret, p);
     if (CcNode_DelGraph(p))
-	CcBitArray_Or(ret, ((CcSymbolNT_t *)curSy)->follow);
+	CcBitArray_Or(ret, ((const CcSymbolNT_t *)curSy)->follow);
 }
 
 static void
 CcSyntax_Expected0(CcSyntax_t * self, CcBitArray_t * ret,
-		   CcNode_t * p, CcSymbol_t * curSy)
+		   CcNode_t * p, const CcSymbol_t * curSy)
 {
     CcSymbolTable_t * symtab = &self->globals->symtab;
     if (p->base.type == node_rslv) CcBitArray(ret, symtab->terminals.Count);

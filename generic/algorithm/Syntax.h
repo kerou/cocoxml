@@ -59,6 +59,10 @@ struct CcSyntax_s {
 CcSyntax_t * CcSyntax(CcSyntax_t * self, CcGlobals_t * globals);
 void CcSyntax_Destruct(CcSyntax_t * self);
 
+void
+CcSyntax_Expected(CcSyntax_t * self, CcBitArray_t * ret,
+		  CcNode_t * p, const CcSymbol_t * curSy);
+
 CcNode_t *
 CcSyntax_NodeFromSymbol(CcSyntax_t * self, const CcSymbol_t * sym, int line,
 			CcsBool_t weak);
