@@ -37,6 +37,7 @@ EXTC_BEGIN
 typedef struct {
     CcOutputScheme_t base;
     CcSyntaxSymSet_t symSet;
+    const CcSymbol_t * curSy;
 } CcCOutputScheme_t;
 
 CcCOutputScheme_t *
