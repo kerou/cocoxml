@@ -28,6 +28,7 @@
 #include  "lexical/State.h"
 #include  "lexical/Target.h"
 #include  "lexical/Transition.h"
+#include  "syntax/Nodes.h"
 
 static const CcOutputInfo_t CcCOutputScheme_OutputInfos[] = {
     { "Scanner.c" },
@@ -255,6 +256,90 @@ COS_ParseRoot(CcOutputScheme_t * self, FILE * outfp, const char * indent)
     return TRUE;
 }
 
+static void
+SCOS_GenCode(CcOutputScheme_t * self, FILE * outfp, CcNode_t * p,
+	     const char * indent, const CcBitArray_t * IsChecked)
+{
+    CcNode_t * p2; CcBitArray_t s1, s2;
+    CcNodeNT_t * pnt; CcNodeT_t * pt; CcNodeWT_t * pwt;
+    CcNodeSEM_t * psem; CcNodeSYNC_t * psync;
+    CcSyntax_t * syntax = &self->globals->syntax;
+    CcCOutputScheme_t * ccself = (CcCOutputScheme_t *)self;
+
+    while (p != NULL) {
+	if (p->base.type == node_nt) {
+	    pnt = (CcNodeNT_t *)p;
+	    fprintf(outfp, "%s%s(", indent, pnt->sym->name);
+	    CcCopySourcePart(outfp, indent, pnt->pos->col, pnt->pos->text);
+	    fprintf(outfp, ");");
+	} else if (p->base.type == node_t) {
+	    pt = (CcNodeT_t *)p;
+	    if (CcBitArray_Get(IsChecked, pt->sym->kind))
+		fprintf(outfp, "%sCcsParser_Get(self);\n", indent);
+	    else
+		fprintf(outfp, "%sCcsParser_Expect(self, %d);\n",
+			indent, pt->sym->kind);
+	} else if (p->base.type == node_wt) {
+	    pwt = (CcNodeWT_t *)p;
+	    CcSyntax_Expected(syntax, &s1, p->next, ccself->curSy);
+	    CcBitArray_Or(&s1, syntax->allSyncSets);
+	    fprintf(outfp, "%sCcsParser_ExpecteWeak(self, %d, %d);\n",
+		    indent, pwt->sym->kind,
+		    CcSyntaxSymSet_New(&ccself->symSet, &s1));
+	    CcBitArray_Destruct(&s1);
+	} else if (p->base.type == node_any) {
+	    fprintf(outfp, "%sCcsParser_Get(self);\n", indent);
+	} else if (p->base.type == node_eps) {
+	} else if (p->base.type == node_rslv) {
+	} else if (p->base.type == node_sem) {
+	    psem = (CcNodeSEM_t *)p;
+	    CcCopySourcePart(outfp, indent, psem->pos->col, psem->pos->text);
+	} else if (p->base.type == node_sync) {
+	    psync = (CcNodeSYNC_t *)p;
+	    CcSyntax_SyncError(syntax, ccself->curSy);
+	    CcBitArray_Clone(&s1, psync->set);
+	    /* NOT FINISHED YET. */
+	    CcBitArray_Destruct(&s1);
+	} else if (p->base.type == node_alt) {
+	} else if (p->base.type == node_iter) {
+	} else if (p->base.type == node_opt) {
+	}
+    }
+}
+
+static CcsBool_t
+COS_ProductionsBody(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+{
+    CcBitArray_t IsChecked;
+    CcArrayListIter_t iter;
+    const CcSymbolNT_t * sym;
+    const CcArrayList_t * nonterminals = &self->globals->symtab.nonterminals;
+    CcCOutputScheme_t * ccself = (CcCOutputScheme_t *)self;
+
+    CcBitArray(&IsChecked, self->globals->symtab.terminals.Count);
+    for (sym = (const CcSymbolNT_t *)CcArrayList_FirstC(nonterminals, &iter);
+	 sym;
+	 sym = (const CcSymbolNT_t *)CcArrayList_NextC(nonterminals, &iter)) {
+	ccself->curSy = (const CcSymbol_t *)sym;
+	if (sym->attrPos == NULL) {
+	    fprintf(outfp, "%sstatic void CcsParser_%s(CcsParser_t * self)\n",
+		    indent, sym->base.name);
+	} else {
+	    fprintf(outfp, "%sstatic void CcsParser_%s(CcsParser_t * self, ",
+		    indent, sym->base.name);
+	    CcCopySourcePart(outfp, indent,
+			     sym->attrPos->col, sym->attrPos->text);
+	    fprintf(outfp, ")\n");
+	}
+	fprintf(outfp, "%s{\n", indent);
+	CcCopySourcePart(outfp, indent, sym->semPos->col, sym->semPos->text);
+	SCOS_GenCode(self, outfp, sym->graph, indent, &IsChecked);
+	fprintf(outfp, "%s}\n\n", indent);
+    }
+    CcBitArray_Destruct(&IsChecked);
+    return TRUE;
+}
+
 static CcsBool_t
 COS_SynErrors(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 {
@@ -327,6 +412,8 @@ CcCOutputScheme_write(CcOutputScheme_t * self, FILE * outfp,
 	return COS_ProductionsHeader(self, outfp, indent);
     } else if (!strcmp(func, "ParseRoot")) {
 	return COS_ParseRoot(self, outfp, indent);
+    } else if (!strcmp(func, "ProductionsBody")) {
+	return COS_ProductionsBody(self, outfp, indent);
     } else if (!strcmp(func, "SynErrors")) {
 	return COS_SynErrors(self, outfp, indent);
     } else if (!strcmp(func, "InitSet")) {
