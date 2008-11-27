@@ -113,7 +113,7 @@ CcSyntax_First0(CcSyntax_t * self, CcBitArray_t * ret,
     }
 }
 
-static void
+void
 CcSyntax_First(CcSyntax_t * self, CcBitArray_t * ret, CcNode_t * p)
 {
     CcBitArray_t fs0;
@@ -303,7 +303,7 @@ CcSyntax_Expected(CcSyntax_t * self, CcBitArray_t * ret,
 	CcBitArray_Or(ret, ((const CcSymbolNT_t *)curSy)->follow);
 }
 
-static void
+void
 CcSyntax_Expected0(CcSyntax_t * self, CcBitArray_t * ret,
 		   CcNode_t * p, const CcSymbol_t * curSy)
 {
