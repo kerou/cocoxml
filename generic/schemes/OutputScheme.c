@@ -29,6 +29,78 @@
 #include  "OutputScheme.h"
 #include  "Arguments.h"
 
+static const char * _8tab_ = "\t\t\t\t\t\t\t\t";
+static const char * _7space_ = "       ";
+
+static void
+WriteSpaces(FILE * outfp, int spaces)
+{
+    while (spaces >= 64) {
+	fprintf(outfp, "%s", _8tab_);
+	spaces -= 64;
+    }
+    if (spaces >= 8) {
+	fprintf(outfp, "%s", _8tab_ + (8 - spaces / 8));
+	spaces %= 8;
+    }
+    if (spaces > 0)
+	fprintf(outfp, "%s", _7space_ + (7 - spaces));
+}
+
+void
+CcPrintf(CcOutput_t * self, const char * format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    vfprintf(self->outfp, format, ap); 
+    va_end(ap);
+}
+void
+CcPrintfI(CcOutput_t * self, const char * format, ...)
+{
+    va_list ap;
+    WriteSpaces(self->outfp, self->indent);
+    va_start(ap, format);
+    vfprintf(self->outfp, format, ap); 
+    va_end(ap);
+}
+
+static const char *
+GetEOL(const char * start, char * eol)
+{
+    const char * end = start + strcspn(start, "\r\n");
+    if (*end == 0) return end;
+    *eol++ = end[0]; *eol = 0;
+    if (end[0] == end[1] || (end[1] != '\r' && end[1] != '\n')) return end + 1;
+    *eol++ = end[1]; *eol = 0;
+    return end + 2;
+}
+
+void
+CcSource(CcOutput_t * self, const CcsPosition_t * pos)
+{
+    char eol[3]; int curcol;
+    const char * start, * cur, * end;
+
+    eol[0] = 0;
+    start = pos->text; end = GetEOL(start, eol);
+    WriteSpaces(self->outfp, self->indent);
+    fwrite(start, end - start, 1, self->outfp);
+
+    while (*end) {
+	start = end + 1; end = GetEOL(start, eol);
+	curcol = 0;
+	for (cur = start; *cur == ' ' || *cur == '\t'; ++cur)
+	    curcol += (*cur == ' ' ? 1 : 8);
+	if (curcol <= pos->col) WriteSpaces(self->outfp, self->indent);
+	else WriteSpaces(self->outfp, self->indent + (curcol - pos->col));
+	fwrite(cur, end - cur, 1, self->outfp);
+    }
+
+    if (eol[0]) fwrite(eol, strlen(eol), 1, self->outfp);
+    else fputc('\n', self->outfp);
+}
+
 CcOutputScheme_t *
 CcOutputScheme(const CcOutputSchemeType_t * type, CcGlobals_t * globals,
 	       CcArguments_t * arguments)
@@ -105,18 +177,17 @@ GetResult(char * dest, size_t destlen, const char * src, size_t srclen)
 }
 
 static CcsBool_t
-CheckMark(const char * lnbuf,
-	  const char * startMark, const char * endMark,
-	  char * retIndent, size_t szRetIndent,
-	  char * retCommand, size_t szRetCommand,
+CheckMark(const char * lnbuf, const char * startMark, const char * endMark,
+	  int * retIndent, char * retCommand, size_t szRetCommand,
 	  char * retParamStr, size_t szRetParamStr)
 {
     const char * b, * e, * start;
     if (!*lnbuf) return FALSE;
     b = lnbuf; e = lnbuf + strlen(lnbuf);
 
-    for (b = lnbuf; isspace(*b); ++b);
-    GetResult(retIndent, szRetIndent, lnbuf, b - lnbuf);
+    *retIndent = 0;
+    for (b = lnbuf; *b == ' ' || *b == '\t'; ++b)
+	*retIndent += (*b == ' ' ? 1 : 8);
 
     if (!LocateMark(&b, &e, startMark, endMark)) return FALSE;
     start = b;
@@ -163,7 +234,8 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
     char tempOutPath[PATH_MAX];
     FILE * tempfp, * outfp, * licensefp;
     char lnbuf[4096]; CcsBool_t enabled;
-    char indentStr[128], Command[128], ParamStr[128], replacedPrefix[128];
+    char Command[128], ParamStr[128], replacedPrefix[128];
+    CcOutput_t output;
     const CommentMark_t * tempCM = Path2CommentMark(tempPath);
     const CcOutputSchemeType_t * type =
 	(const CcOutputSchemeType_t *)self->base.type;
@@ -186,12 +258,11 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
 	}
     }
 
-    enabled = TRUE; indentStr[0] = 0; replacedPrefix[0] = 0;
+    output.outfp = outfp;
+    enabled = TRUE; replacedPrefix[0] = 0;
     while (fgets(lnbuf, sizeof(lnbuf), tempfp)) {
-	if (!CheckMark(lnbuf, tempCM->start, tempCM->end,
-		       indentStr, sizeof(indentStr),
-		       Command, sizeof(Command),
-		       ParamStr, sizeof(ParamStr))) {
+	if (!CheckMark(lnbuf, tempCM->start, tempCM->end, &output.indent,
+		       Command, sizeof(Command), ParamStr, sizeof(ParamStr))) {
 	    /* Common line */
 	    if (enabled) TextWritter(outfp, lnbuf, replacedPrefix, prefix);
 	    continue;
@@ -218,7 +289,7 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
 	    }
 	    enabled = FALSE;
 	} else {
-	    if (!type->write(self, outfp, Command, ParamStr, indentStr))
+	    if (!type->write(self, &output, Command, ParamStr))
 		goto errquit2;
 	    enabled = FALSE;
 	}
@@ -277,44 +348,5 @@ CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self)
 	    }
 	}
     }
-    return TRUE;
-}
-
-static const char *
-GetEOL(const char * start, char * eol)
-{
-    const char * end = start + strcspn(start, "\r\n");
-    if (*end == 0) return end;
-    *eol++ = end[0]; *eol = 0;
-    if (end[0] == end[1] || (end[1] != '\r' && end[1] != '\n')) return end + 1;
-    *eol++ = end[1]; *eol = 0;
-    return end + 2;
-}
-
-static const char * spaces = "        ";
-CcsBool_t
-CcCopySourcePart(FILE * outfp, const char * indent,
-		 int col, const char * source)
-{
-    char eol[3]; int curcol;
-    const char * start, * cur, * end;
-
-    eol[0] = 0;
-    start = source; end = GetEOL(start, eol);
-    fwrite(start, end - start, 1, outfp);
-    while (*end) {
-	start = end + 1; end = GetEOL(start, eol);
-	fwrite(indent, strlen(indent), 1, outfp);
-	curcol = 0; cur = start;
-	while (curcol < col) {
-	    if (*cur == ' ') ++curcol;
-	    else if (*cur == '\t') curcol += 8;
-	    else break;
-	}
-	if (col < curcol) fwrite(spaces, curcol - col, 1, outfp);
-	fwrite(cur, end - cur, 1, outfp);
-    }
-    if (eol[0]) fwrite(eol, strlen(eol), 1, outfp);
-    else fputc('\n', outfp);
     return TRUE;
 }
