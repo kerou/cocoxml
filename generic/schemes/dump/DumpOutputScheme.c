@@ -69,55 +69,58 @@ CharRepr(char * buf, size_t szbuf, int ch)
 }
 
 static CcsBool_t
-DOS_Terminals(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+DOS_Terminals(CcOutputScheme_t * self, CcOutput_t * output)
 {
     CcArrayListIter_t iter; const CcSymbolT_t * sym;
     CcArrayList_t * terminals = &self->globals->symtab.terminals;
 
     for (sym = (const CcSymbolT_t *)CcArrayList_First(terminals, &iter);
 	 sym; sym = (const CcSymbolT_t *)CcArrayList_Next(terminals, &iter))
-	fprintf(outfp, "%s<tr><td>%d</td><td>%s</td><td>%s</td></tr>\n",
-		indent, sym->base.base.index, sym->base.name,
-		sym->tokenKind == symbol_fixedToken ? "fixed" :
-		sym->tokenKind == symbol_classToken ? "class" :
-		sym->tokenKind == symbol_litToken ? "lit" :
-		sym->tokenKind == symbol_classLitToken ? "classLit" : "???");
+	CcPrintfI(output, "<tr><td>%d</td><td>%s</td><td>%s</td></tr>\n",
+		  sym->base.base.index, sym->base.name,
+		  sym->tokenKind == symbol_fixedToken ? "fixed" :
+		  sym->tokenKind == symbol_classToken ? "class" :
+		  sym->tokenKind == symbol_litToken ? "lit" :
+		  sym->tokenKind == symbol_classLitToken ? "classLit" :
+		  "???");
     return TRUE;
 }
 
 static CcsBool_t
-DOS_Pragmas(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+DOS_Pragmas(CcOutputScheme_t * self, CcOutput_t * output)
 {
     CcArrayListIter_t iter; const CcSymbolPR_t * sym;
     CcArrayList_t * pragmas = &self->globals->symtab.pragmas;
 
     for (sym = (const CcSymbolPR_t *)CcArrayList_First(pragmas, &iter);
 	 sym; sym = (const CcSymbolPR_t *)CcArrayList_Next(pragmas, &iter))
-	fprintf(outfp, "%s<tr><td>%d</td><td>%s</td><td>%s</td></tr>\n",
-		indent, sym->base.base.index, sym->base.name,
-		sym->tokenKind == symbol_fixedToken ? "fixed" :
-		sym->tokenKind == symbol_classToken ? "class" :
-		sym->tokenKind == symbol_litToken ? "lit" :
-		sym->tokenKind == symbol_classLitToken ? "classLit" : "???");
+	CcPrintfI(output, "<tr><td>%d</td><td>%s</td><td>%s</td></tr>\n",
+		  sym->base.base.index, sym->base.name,
+		  sym->tokenKind == symbol_fixedToken ? "fixed" :
+		  sym->tokenKind == symbol_classToken ? "class" :
+		  sym->tokenKind == symbol_litToken ? "lit" :
+		  sym->tokenKind == symbol_classLitToken ? "classLit" :
+		  "???");
     return TRUE;
 }
 
 static CcsBool_t
-DOS_NonTerminals(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+DOS_NonTerminals(CcOutputScheme_t * self, CcOutput_t * output)
 {
     CcArrayListIter_t iter; const CcSymbolNT_t * sym;
     CcArrayList_t * nonterminals = &self->globals->symtab.nonterminals;
 
     for (sym = (const CcSymbolNT_t *)CcArrayList_First(nonterminals, &iter);
 	 sym; sym = (const CcSymbolNT_t *)CcArrayList_Next(nonterminals, &iter))
-	fprintf(outfp, "%s<tr><td>%d</td><td>%s</td><td>%s</td><td>%d</td></tr>\n",
-		indent, sym->base.base.index, sym->base.name,
-		sym->deletable ? "TRUE" : "FALSE", sym->graph->base.index);
+	CcPrintfI(output, "<tr><td>%d</td><td>%s</td><td>%s</td><td>%d</td></tr>\n",
+		  sym->base.base.index, sym->base.name,
+		  sym->deletable ? "TRUE" : "FALSE",
+		  sym->graph->base.index);
     return TRUE;
 }
 
 static CcsBool_t
-DOS_States(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+DOS_States(CcOutputScheme_t * self, CcOutput_t * output)
 {
     CcArrayListIter_t iter;
     const CcState_t * state;
@@ -130,49 +133,48 @@ DOS_States(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 
     for (state = (const CcState_t *)CcArrayList_FirstC(states, &iter);
 	 state; state = (const CcState_t *)CcArrayList_NextC(states, &iter)) {
-	fprintf(outfp, "%s<tr><td>%d</td><td>%s</td><td>%s</td></tr>\n",
-		indent, state->base.index,
-		state->endOf ? state->endOf->name : "(null)",
-		state->ctx ? "TRUE" : "FALSE");
+	CcPrintfI(output, "<tr><td>%d</td><td>%s</td><td>%s</td></tr>\n",
+		  state->base.index,
+		  state->endOf ? state->endOf->name : "(null)",
+		  state->ctx ? "TRUE" : "FALSE");
 	for (action = state->firstAction; action; action = action->next) {
-	    fprintf(outfp, "%s<tr><td></td><td>", indent);
+	    CcPrintfI(output, "<tr><td></td><td>");
 	    s = CcAction_GetShift(action);
 	    for (curRange = s->head; curRange; curRange = curRange->next) {
 		if (curRange->from == curRange->to) {
-		    fprintf(outfp, "%s",
-			    CharRepr(buf0, sizeof(buf0), curRange->from));
+		    CcPrintf(output, "%s",
+			     CharRepr(buf0, sizeof(buf0), curRange->from));
 		} else {
-		    fprintf(outfp, "[%s, %s]",
-			    CharRepr(buf0, sizeof(buf0), curRange->from),
-			    CharRepr(buf1, sizeof(buf1), curRange->to));
+		    CcPrintf(output, "[%s, %s]",
+			     CharRepr(buf0, sizeof(buf0), curRange->from),
+			     CharRepr(buf1, sizeof(buf1), curRange->to));
 		}
-		if (curRange->next) fprintf(outfp, "&nbsp");
+		if (curRange->next) CcPrintf(output, "&nbsp");
 	    }
 	    CcCharSet_Destruct(s);
-	    fprintf(outfp, "</td><td>");
+	    CcPrintf(output, "</td><td>");
 	    for (target = action->target; target; target = target->next) {
-		fprintf(outfp, "%d", target->state->base.index);
-		if (target->next) fprintf(outfp, ",");
+		CcPrintf(output, "%d", target->state->base.index);
+		if (target->next) CcPrintf(output, ",");
 	    }
-	    fprintf(outfp, "</td></tr>\n");
+	    CcPrintf(output, "</td></tr>\n");
 	}
     }
     return TRUE;
 }
 
 static CcsBool_t
-CcDumpOutputScheme_write(CcOutputScheme_t * self, FILE * outfp,
-			 const char * func, const char * param,
-			 const char * indent)
+CcDumpOutputScheme_write(CcOutputScheme_t * self, CcOutput_t * output,
+			 const char * func, const char * param)
 {
     if (!strcmp(func, "terminals")) {
-	return DOS_Terminals(self, outfp, indent);
+	return DOS_Terminals(self, output);
     } else if (!strcmp(func, "pragmas")) {
-	return DOS_Pragmas(self, outfp, indent);
+	return DOS_Pragmas(self, output);
     } else if (!strcmp(func, "nonterminals")) {
-	return DOS_NonTerminals(self, outfp, indent);
+	return DOS_NonTerminals(self, output);
     } else if (!strcmp(func, "states")) {
-	return DOS_States(self, outfp, indent);
+	return DOS_States(self, output);
     }
     fprintf(stderr, "Unknown section '%s' encountered.\n", func);
     return FALSE;
