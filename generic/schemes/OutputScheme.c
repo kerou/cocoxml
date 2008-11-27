@@ -88,7 +88,7 @@ CcSource(CcOutput_t * self, const CcsPosition_t * pos)
     fwrite(start, end - start, 1, self->outfp);
 
     while (*end) {
-	start = end + 1; end = GetEOL(start, eol);
+	start = end; end = GetEOL(start, eol);
 	curcol = 0;
 	for (cur = start; *cur == ' ' || *cur == '\t'; ++cur)
 	    curcol += (*cur == ' ' ? 1 : 8);
