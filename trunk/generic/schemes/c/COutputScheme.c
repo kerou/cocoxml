@@ -71,91 +71,92 @@ CharRepr(char * buf, size_t szbuf, int ch)
 }
 
 static CcsBool_t
-COS_Defines(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+COS_Defines(CcOutputScheme_t * self, CcOutput_t * output)
 {
     if (!self->globals->lexical.ignoreCase)
-	fprintf(outfp, "%s#define CASE_SENSITIVE\n", indent);
+	CcPrintfI(output, "#define CASE_SENSITIVE\n");
     return TRUE;
 }
 
 static CcsBool_t
-COS_Declarations(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+COS_Declarations(CcOutputScheme_t * self, CcOutput_t * output)
 {
-    fprintf(outfp, "%sself->eofSym = %d;\n", indent,
-	    self->globals->syntax.eofSy->kind);
-    fprintf(outfp, "%sself->maxT = %d;\n", indent,
-	    self->globals->symtab.terminals.Count - 1);
-    fprintf(outfp, "%sself->noSym = %d;\n", indent,
-	    self->globals->syntax.noSy->kind);
+    CcPrintfI(output, "self->eofSym = %d;\n",
+	      self->globals->syntax.eofSy->kind);
+    CcPrintfI(output, "self->maxT = %d;\n",
+	      self->globals->symtab.terminals.Count - 1);
+    CcPrintfI(output, "self->noSym = %d;\n",
+	      self->globals->syntax.noSy->kind);
     return TRUE;
 }
 
 static CcsBool_t
-COS_Chars2States(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+COS_Chars2States(CcOutputScheme_t * self, CcOutput_t * output)
 {
     int numEle;
     CcLexical_StartTab_t * table, * cur;
     char buf0[8], buf1[8];
-    fprintf(outfp, "%s{ EoF, EoF, -1 },\n", indent);
+    CcPrintfI(output, "{ EoF, EoF, -1 },\n");
     table = CcLexical_GetStartTab(&self->globals->lexical, &numEle);
     for (cur = table; cur - table < numEle; ++cur)
-	fprintf(outfp, "%s{ %d, %d, %d },\t/* %s %s */\n", indent,
-		cur->keyFrom, cur->keyTo, cur->state,
-		CharRepr(buf0, sizeof(buf0), cur->keyFrom),
-		CharRepr(buf1, sizeof(buf1), cur->keyTo));
+	CcPrintfI(output, "{ %d, %d, %d },\t/* %s %s */\n",
+		  cur->keyFrom, cur->keyTo, cur->state,
+		  CharRepr(buf0, sizeof(buf0), cur->keyFrom),
+		  CharRepr(buf1, sizeof(buf1), cur->keyTo));
     CcFree(table);
     return TRUE;
 }
 
 static CcsBool_t
-COS_Identifiers2KeywordKinds(CcOutputScheme_t * self, FILE * outfp,
-			     const char * indent)
+COS_Identifiers2KeywordKinds(CcOutputScheme_t * self, CcOutput_t * output)
 {
     int numEle;
     CcLexical_Identifier_t * list, * cur;
 
     list = CcLexical_GetIdentifiers(&self->globals->lexical, &numEle);
     for (cur = list; cur - list < numEle; ++cur)
-	fprintf(outfp, "%s{ %s, %d },\n", indent, cur->name, cur->index);
+	CcPrintfI(output, "{ %s, %d },\n", cur->name, cur->index);
     CcLexical_Identifiers_Destruct(list, numEle);
     return TRUE;
 }
 
 static CcsBool_t
-COS_Comments(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+COS_Comments(CcOutputScheme_t * self, CcOutput_t * output)
 {
     const CcComment_t * cur;
     char buf0[8], buf1[8], buf2[8], buf3[8];
+    output->indent += 4;
     for (cur = self->globals->lexical.firstComment; cur; cur = cur->next)
-	fprintf(outfp, "%s    { { %s, %s }, { %s, %s }, %s },\n", indent,
-		CharRepr(buf0, sizeof(buf0), cur->start[0]),
-		CharRepr(buf1, sizeof(buf1), cur->start[1]),
-		CharRepr(buf2, sizeof(buf2), cur->stop[0]),
-		CharRepr(buf3, sizeof(buf3), cur->stop[1]),
-		cur->nested ? "TRUE" : "FALSE");
+	CcPrintfI(output, "{ { %s, %s }, { %s, %s }, %s },\n",
+		  CharRepr(buf0, sizeof(buf0), cur->start[0]),
+		  CharRepr(buf1, sizeof(buf1), cur->start[1]),
+		  CharRepr(buf2, sizeof(buf2), cur->stop[0]),
+		  CharRepr(buf3, sizeof(buf3), cur->stop[1]),
+		  cur->nested ? "TRUE" : "FALSE");
+    output->indent -= 4;
     return TRUE;
 }
 
 static CcsBool_t
-COS_Scan1(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+COS_Scan1(CcOutputScheme_t * self, CcOutput_t * output)
 {
     const CcRange_t * curRange;
     char buf0[8], buf1[8];
     for (curRange = self->globals->lexical.ignored->head;
 	 curRange; curRange = curRange->next) {
 	if (curRange->from == curRange->to)
-	    fprintf(outfp, "%s|| self->ch == %s\n", indent,
-		    CharRepr(buf0 ,sizeof(buf0), curRange->from));
+	    CcPrintfI(output, "|| self->ch == %s\n",
+		      CharRepr(buf0 ,sizeof(buf0), curRange->from));
 	else
-	    fprintf(outfp, "%s|| (self->ch >= %s && self->ch <= %s)\n", indent,
-		    CharRepr(buf0 ,sizeof(buf0), curRange->from),
-		    CharRepr(buf1 ,sizeof(buf1), curRange->to));
+	    CcPrintfI(output, "|| (self->ch >= %s && self->ch <= %s)\n",
+		      CharRepr(buf0 ,sizeof(buf0), curRange->from),
+		      CharRepr(buf1 ,sizeof(buf1), curRange->to));
     }
     return TRUE;
 }
 
 static void
-COS_WriteState(CcOutputScheme_t * self, FILE * outfp, const char * indent,
+COS_WriteState(CcOutputScheme_t * self, CcOutput_t * output,
 	       const CcState_t * state, const CcBitArray_t * mask)
 {
     const CcAction_t * action;
@@ -164,45 +165,50 @@ COS_WriteState(CcOutputScheme_t * self, FILE * outfp, const char * indent,
     int sIndex = state->base.index;
 
     if (CcBitArray_Get(mask, sIndex))
-	fprintf(outfp, "%scase %d: case_%d:\n", indent, sIndex, sIndex);
+	CcPrintfI(output, "case %d: case_%d:\n", sIndex, sIndex);
     else
-	fprintf(outfp, "%scase %d:\n", indent, sIndex);
+	CcPrintfI(output, "case %d:\n", sIndex);
+    output->indent += 4;
     for (action = state->firstAction; action != NULL; action = action->next) {
-	if (action == state->firstAction) fprintf(outfp, "%s    if (", indent);
-	else fprintf(outfp, "%s    } else if (", indent);
+	if (action == state->firstAction) CcPrintfI(output, "if (");
+	else CcPrintfI(output, "} else if (");
 	s = CcTransition_GetCharSet(&action->trans);
 	for (curRange = s->head; curRange; curRange = curRange->next) {
-	    if (curRange != s->head) fprintf(outfp, "%s        ", indent);
+	    if (curRange != s->head) CcPrintfI(output, "    ");
 	    if (curRange->from == curRange->to)
-		fprintf(outfp, "self->ch == %s",
+		CcPrintf(output,"self->ch == %s",
 			CharRepr(buf0, sizeof(buf0), curRange->from));
 	    else
-		fprintf(outfp, "(self->ch >= %s && self->ch <= %s)",
-			CharRepr(buf0, sizeof(buf0), curRange->from),
-			CharRepr(buf1, sizeof(buf1), curRange->to));
-	    if (curRange->next) fprintf(outfp, " ||\n");
+		CcPrintf(output, "self->ch >= %s && self->ch <= %s",
+			 CharRepr(buf0, sizeof(buf0), curRange->from),
+			 CharRepr(buf1, sizeof(buf1), curRange->to));
+	    if (curRange->next) CcPrintf(output, " ||\n");
 	}
-	fprintf(outfp, ") {\n");
-	fprintf(outfp, "%s        CcsScanner_GetCh(self); goto case_%d;\n",
-		indent, action->target->state->base.index);
+	CcPrintf(output, ") {\n");
+	output->indent += 4;
+	CcPrintfI(output, "CcsScanner_GetCh(self); goto case_%d;\n",
+		  action->target->state->base.index);
+	output->indent -= 4;
 	CcCharSet_Destruct(s);
     }
-    if (state->firstAction == NULL) fprintf(outfp, "%s    { ", indent);
-    else fprintf(outfp, "%s    } else { ", indent);
+
+    if (state->firstAction == NULL) CcPrintfI(output, "{ ");
+    else CcPrintfI(output, "} else { ");
     if (state->endOf == NULL) {
-	fprintf(outfp, "kind = self->noSym;");
+	CcPrintf(output, "kind = self->noSym;");
     } else if (CcSymbol_GetTokenKind(state->endOf) != symbol_classLitToken) {
-	fprintf(outfp, "kind = %d;", state->endOf->kind);
+	CcPrintf(output, "kind = %d;", state->endOf->kind);
     } else {
-	fprintf(outfp,
-		"kind = CcsScanner_GetKWKind(self, pos, self->pos, %d);",
-		state->endOf->kind);
+	CcPrintf(output,
+		 "kind = CcsScanner_GetKWKind(self, pos, self->pos, %d);",
+		 state->endOf->kind);
     }
-    fprintf(outfp, " break; }\n");
+    CcPrintf(output, " break; }\n");
+    output->indent -= 4;
 }
 
 static CcsBool_t
-COS_Scan3(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+COS_Scan3(CcOutputScheme_t * self, CcOutput_t * output)
 {
     CcArrayListIter_t iter;
     CcBitArray_t mask;
@@ -213,13 +219,13 @@ COS_Scan3(CcOutputScheme_t * self, FILE * outfp, const char * indent)
     state = (CcState_t *)CcArrayList_First(stateArr, &iter);
     for (state = (const CcState_t *)CcArrayList_Next(stateArr, &iter);
 	 state; state = (const CcState_t *)CcArrayList_Next(stateArr, &iter))
-	COS_WriteState(self, outfp, indent, state, &mask);
+	COS_WriteState(self, output, state, &mask);
     CcBitArray_Destruct(&mask);
     return TRUE;
 }
 
 static CcsBool_t
-COS_Pragmas(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+COS_Pragmas(CcOutputScheme_t * self, CcOutput_t * output)
 {
     CcArrayListIter_t iter;
     const CcSymbolPR_t * sym, * sym1;
@@ -227,19 +233,21 @@ COS_Pragmas(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 
     for (sym = sym1 = (const CcSymbolPR_t *)CcArrayList_FirstC(pragmas, &iter);
 	 sym; sym = (const CcSymbolPR_t *)CcArrayList_NextC(pragmas, &iter)) {
-	fprintf(outfp, "%s%sif (self->la->kind == %d) {\n",
-		indent, (sym == sym1) ? "" : "} else ", sym->base.kind);
-	fprintf(outfp, "%s    ", indent);
-	CcCopySourcePart(outfp, indent,
-			 sym->semPos->col + 4, sym->semPos->text);
+	CcPrintfI(output, "%sif (self->la->kind == %d) {\n",
+		  (sym == sym1) ? "" : "} else ", sym->base.kind);
+	if (sym->semPos) {
+	    output->indent += 4;
+	    CcSource(output, sym->semPos);
+	    output->indent -= 4;
+	}
     }
-    if (sym1) fprintf(outfp, "%s}\n", indent);
+    if (sym1) CcPrintfI(output, "}\n");
     return TRUE;
 }
 
 static CcsBool_t
 COS_ProductionsHeader(CcOutputScheme_t * self,
-		      FILE * outfp, const char * indent)
+		      CcOutput_t * output)
 {
     CcArrayListIter_t iter;
     const CcSymbol_t * sym;
@@ -247,21 +255,22 @@ COS_ProductionsHeader(CcOutputScheme_t * self,
 
     for (sym = (const CcSymbol_t *)CcArrayList_FirstC(nonterminals, &iter);
 	 sym; sym = (const CcSymbol_t *)CcArrayList_NextC(nonterminals, &iter))
-	fprintf(outfp, "%sstatic void CcsParser_%s(CcsParser_t * self);\n",
-		indent, sym->name);
+	CcPrintfI(output, "static void CcsParser_%s(CcsParser_t * self);\n",
+		  sym->name);
     return TRUE;
 }
 
 static CcsBool_t
-COS_ParseRoot(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+COS_ParseRoot(CcOutputScheme_t * self, CcOutput_t * output)
 {
-    fprintf(outfp, "%sCcsParser_%s(self);\n",
-	    indent, self->globals->syntax.gramSy->name);
+    CcPrintfI(output, "CcsParser_%s(self);\n",
+	      self->globals->syntax.gramSy->name);
     return TRUE;
 }
 
 static void
-SCOS_GenCond(CcOutputScheme_t * self, FILE * outfp, const char * indent,
+SCOS_GenCond(CcOutputScheme_t * self, CcOutput_t * output,
+	     const char * prefix, const char * suffix,
 	     const CcBitArray_t * s, const CcNode_t * p)
 {
     const CcNodeRSLV_t * prslv; int n;
@@ -271,20 +280,22 @@ SCOS_GenCond(CcOutputScheme_t * self, FILE * outfp, const char * indent,
 
     if (p->base.type == node_rslv) {
 	prslv = (CcNodeRSLV_t *)p;
-	CcCopySourcePart(outfp, indent, prslv->pos->col, prslv->pos->text);
+	CcPrintfI(output, "%s%s%s\n", prefix, prslv->pos->text, suffix);
     } else if ((n = CcBitArray_Elements(s)) == 0) {
-	fprintf(outfp, "FALSE");
+	CcPrintfI(output, "%s%s%s\n", prefix, "FALSE", suffix);
     } else if (n <= maxTerm) {
+	CcPrintfI(output, "%s", prefix);
 	terminals = &self->globals->symtab.terminals;
 	for (sym = (const CcSymbol_t *)CcArrayList_FirstC(terminals, &iter);
 	     sym; sym = (const CcSymbol_t *)CcArrayList_NextC(terminals, &iter))
 	    if (CcBitArray_Get(s, sym->kind)) {
-		fprintf(outfp, "self->la->kind == %d", sym->kind);
-		if (--n > 0) fprintf(outfp, " || ");
+		CcPrintf(output, "self->la->kind == %d", sym->kind);
+		if (--n > 0) CcPrintf(output, " || ");
 	    }
+	CcPrintf(output, "%s\n", suffix);
     } else {
-	fprintf(outfp, "CcsParser_StartOf(%d)",
-		CcSyntaxSymSet_New(&ccself->symSet, s));
+	CcPrintfI(output, "%sCcsParser_StartOf(%d)%s\n",
+		  prefix, CcSyntaxSymSet_New(&ccself->symSet, s), suffix);
     }
 }
 
@@ -318,7 +329,7 @@ SCOS_UseSwitch(CcOutputScheme_t * self, CcNode_t * p)
 }
 
 static void
-SCOS_GenCode(CcOutputScheme_t * self, FILE * outfp, const char * indent,
+SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 	     CcNode_t * p, const CcBitArray_t * IsChecked)
 {
     int err; CcsBool_t equal, useSwitch; int index;
@@ -334,121 +345,120 @@ SCOS_GenCode(CcOutputScheme_t * self, FILE * outfp, const char * indent,
 	if (p->base.type == node_nt) {
 	    pnt = (CcNodeNT_t *)p;
 	    if (pnt->pos) {
-		fprintf(outfp, "%sCcsParser_%s(self, ", indent, pnt->sym->name);
-		CcCopySourcePart(outfp, indent, pnt->pos->col, pnt->pos->text);
-		fprintf(outfp, ");");
+		CcPrintfI(output, "CcsParser_%s(self, %s);",
+			  pnt->sym->name, pnt->pos->text);
 	    } else {
-		fprintf(outfp, "%sCcsParser_%s(self);", indent, pnt->sym->name);
+		CcPrintfI(output, "CcsParser_%s(self);", pnt->sym->name);
 	    }
 	} else if (p->base.type == node_t) {
 	    pt = (CcNodeT_t *)p;
 	    if (CcBitArray_Get(&isChecked, pt->sym->kind))
-		fprintf(outfp, "%sCcsParser_Get(self);\n", indent);
+		CcPrintfI(output, "CcsParser_Get(self);\n");
 	    else
-		fprintf(outfp, "%sCcsParser_Expect(self, %d);\n",
-			indent, pt->sym->kind);
+		CcPrintfI(output, "CcsParser_Expect(self, %d);\n",
+			  pt->sym->kind);
 	} else if (p->base.type == node_wt) {
 	    pwt = (CcNodeWT_t *)p;
 	    CcSyntax_Expected(syntax, &s1, p->next, ccself->curSy);
 	    CcBitArray_Or(&s1, syntax->allSyncSets);
-	    fprintf(outfp, "%sCcsParser_ExpecteWeak(self, %d, %d);\n",
-		    indent, pwt->sym->kind,
-		    CcSyntaxSymSet_New(&ccself->symSet, &s1));
+	    CcPrintfI(output, "CcsParser_ExpecteWeak(self, %d, %d);\n",
+		      pwt->sym->kind,
+		      CcSyntaxSymSet_New(&ccself->symSet, &s1));
 	    CcBitArray_Destruct(&s1);
 	} else if (p->base.type == node_any) {
-	    fprintf(outfp, "%sCcsParser_Get(self);\n", indent);
+	    CcPrintfI(output, "CcsParser_Get(self);\n");
 	} else if (p->base.type == node_eps) {
 	} else if (p->base.type == node_rslv) {
 	} else if (p->base.type == node_sem) {
 	    psem = (CcNodeSEM_t *)p;
-	    CcCopySourcePart(outfp, indent, psem->pos->col, psem->pos->text);
+	    CcSource(output, psem->pos);
 	} else if (p->base.type == node_sync) {
 	    psync = (CcNodeSYNC_t *)p;
 	    err = CcSyntax_SyncError(syntax, ccself->curSy);
 	    CcBitArray_Clone(&s1, psync->set);
-	    fprintf(outfp, "%swhile (!(", indent);
-	    SCOS_GenCond(self, outfp, indent, &s1, p);
-	    fprintf(outfp, ")) {\n");
-	    fprintf(outfp,
-		    "%s    CcsParser_SynErr(self, %d); CcsParser_Get(self);\n",
-		    indent, err);
-	    fprintf(outfp, "%s}\n", indent);
+	    SCOS_GenCond(self, output, "while (!(", ")) {\n", &s1, p);
+	    output->indent += 4;
+	    CcPrintfI(output,
+		      "CcsParser_SynErr(self, %d); CcsParser_Get(self);\n",
+		      err);
+	    output->indent -= 4;
+	    CcPrintfI(output, "}\n");
 	    CcBitArray_Destruct(&s1);
 	} else if (p->base.type == node_alt) {
 	    CcSyntax_First(syntax, &s1, p);
 	    equal = CcBitArray_Equal(&s1, &isChecked);
 	    useSwitch = SCOS_UseSwitch(self, p);
 	    if (useSwitch)
-		fprintf(outfp, "%sswitch (self->la->kind) {\n", indent);
+		CcPrintfI(output, "switch (self->la->kind) {\n");
 	    p2 = p;
 	    while (p2 != NULL) {
 		CcSyntax_Expected(syntax, &s1, p2->sub, ccself->curSy);
 		if (useSwitch) {
-		    fprintf(outfp, "%s", indent);
+		    CcPrintfI(output, "");
 		    for (index = 0; index < terminals->Count; ++index)
 			if (CcBitArray_Get(&s1, index))
-			    fprintf(outfp, "case %d: ", index);
-		    fprintf(outfp, "}\n");
+			    CcPrintf(output, "case %d: ", index);
+		    CcPrintf(output,"{\n");
 		} else if (p2 == p) {
-		    fprintf(outfp, "%sif (", indent);
-		    SCOS_GenCond(self, outfp, indent, &s1, p2->sub);
-		    fprintf(outfp, ") {\n");
+		    SCOS_GenCond(self, output, "if (", ") {", &s1, p2->sub);
 		} else if (p2->down == NULL && equal) {
-		    fprintf(outfp, "%s} else {\n", indent);
+		    CcPrintf(output, "} else {\n");
 		} else {
-		    fprintf(outfp, "%s} else if (", indent);
-		    SCOS_GenCond(self, outfp, indent, &s1, p2->sub);
-		    fprintf(outfp, ") {\n");
+		    SCOS_GenCond(self, output,
+				 "} else if (", ") {", &s1, p2->sub);
 		}
 		CcBitArray_Or(&s1, &isChecked);
-		SCOS_GenCode(self, outfp, indent, p2->sub, &s1);
+		output->indent += 4;
+		SCOS_GenCode(self, output, p2->sub, &s1);
+		output->indent -= 4;
 		if (useSwitch) {
-		    fprintf(outfp, "%s    break;\n", indent);
-		    fprintf(outfp, "%s}\n", indent);
+		    CcPrintfI(output, "}\n");
+		    CcPrintfI(output, "break;\n");
 		}
 		p2 = p2->down;
 	    }
 	    if (equal) {
-		fprintf(outfp, "%s}\n", indent);
+		CcPrintfI(output, "}\n");
 	    } else {
 		err = CcSyntax_AltError(syntax, ccself->curSy);
 		if (useSwitch) {
-		    fprintf(outfp,
-			    "%sdefault: CcsParser_SynErr(self, %d); break;",
-			    indent, err);
-		    fprintf(outfp, "%s}\n", indent);
+		    CcPrintfI(output,
+			      "default: CcsParser_SynErr(self, %d); break;",
+			      err);
+		    CcPrintfI(output, "}\n");
 		} else {
-		    fprintf(outfp, "%s} else CcsParser_SynErr(self, %d);",
-			    indent, err);
+		    CcPrintfI(output, "} else CcsParser_SynErr(self, %d);",
+			      err);
 		}
 	    }
 	} else if (p->base.type == node_iter) {
 	    p2 = p->sub;
-	    fprintf(outfp, "%swhile (", indent);
 	    if (p2->base.type == node_wt) {
 		CcSyntax_Expected(syntax, &s1, p2->next, ccself->curSy);
 		CcSyntax_Expected(syntax, &s2, p->next, ccself->curSy);
-		fprintf(outfp, "CcsParser_WeakSeparator(self, %d, %d, %d)",
-			((CcNodeWT_t *)p2)->sym->kind,
-			CcSyntaxSymSet_New(&ccself->symSet, &s1),
-			CcSyntaxSymSet_New(&ccself->symSet, &s2));
+		CcPrintfI(output,
+			  "while (CcsParser_WeakSeparator(self, %d, %d, %d)) {\n",
+			  ((CcNodeWT_t *)p2)->sym->kind,
+			  CcSyntaxSymSet_New(&ccself->symSet, &s1),
+			  CcSyntaxSymSet_New(&ccself->symSet, &s2));
 		CcBitArray_Destruct(&s1); CcBitArray_Destruct(&s2);
 		CcBitArray(&s1, terminals->Count);
 		if (p2->up || p2->next == NULL) p2 = NULL; else p2 = p2->next;
 	    } else {
 		CcSyntax_First(syntax, &s1, p2);
-		SCOS_GenCond(self, outfp, indent, &s1, p2);
+		SCOS_GenCond(self, output, "while (", ") {", &s1, p2);
 	    }
-	    fprintf(outfp, ") {\n");
-	    SCOS_GenCode(self, outfp, indent, p2, &s1);
-	    fprintf(outfp, "%s}\n", indent);
+	    output->indent += 4;
+	    SCOS_GenCode(self, output, p2, &s1);
+	    output->indent -= 4;
+	    CcPrintf(output, "}\n");
 	} else if (p->base.type == node_opt) {
 	    CcSyntax_First(syntax, &s1, p->sub);
-	    fprintf(outfp, "%sif (", indent);
-	    SCOS_GenCond(self, outfp, indent, &s1, p->sub);
-	    fprintf(outfp, ") {\n");
-	    SCOS_GenCode(self, outfp, indent, p->sub, &s1);
-	    fprintf(outfp, "}\n");
+	    SCOS_GenCond(self, output, "if (", ") {", &s1, p->sub);
+	    output->indent += 4;
+	    SCOS_GenCode(self, output, p->sub, &s1);
+	    output->indent -= 4;
+	    CcPrintf(output, "}\n");
 	}
 	if (p->base.type != node_eps && p->base.type != node_sem &&
 	    p->base.type != node_sync)
@@ -460,7 +470,7 @@ SCOS_GenCode(CcOutputScheme_t * self, FILE * outfp, const char * indent,
 }
 
 static CcsBool_t
-COS_ProductionsBody(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+COS_ProductionsBody(CcOutputScheme_t * self, CcOutput_t * output)
 {
     CcBitArray_t isChecked;
     CcArrayListIter_t iter;
@@ -474,28 +484,27 @@ COS_ProductionsBody(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 	 sym = (const CcSymbolNT_t *)CcArrayList_NextC(nonterminals, &iter)) {
 	ccself->curSy = (const CcSymbol_t *)sym;
 	if (sym->attrPos == NULL) {
-	    fprintf(outfp, "%sstatic void CcsParser_%s(CcsParser_t * self)\n",
-		    indent, sym->base.name);
+	    CcPrintfI(output,
+		      "static void CcsParser_%s(CcsParser_t * self)\n",
+		      sym->base.name);
 	} else {
-	    fprintf(outfp, "%sstatic void CcsParser_%s(CcsParser_t * self, ",
-		    indent, sym->base.name);
-	    CcCopySourcePart(outfp, indent,
-			     sym->attrPos->col, sym->attrPos->text);
-	    fprintf(outfp, ")\n");
+	    CcPrintfI(output,
+		      "static void CcsParser_%s(CcsParser_t * self, %s)\n",
+		      sym->base.name, sym->attrPos->text);
 	}
-	fprintf(outfp, "%s{\n", indent);
-	if (sym->semPos)
-	    CcCopySourcePart(outfp, indent,
-			     sym->semPos->col, sym->semPos->text);
-	SCOS_GenCode(self, outfp, indent, sym->graph, &isChecked);
-	fprintf(outfp, "%s}\n\n", indent);
+	CcPrintfI(output, "{\n");
+	output->indent += 4;
+	if (sym->semPos) CcSource(output, sym->semPos);
+	SCOS_GenCode(self, output, sym->graph, &isChecked);
+	output->indent -= 4;
+	CcPrintfI(output,"}\n\n");
     }
     CcBitArray_Destruct(&isChecked);
     return TRUE;
 }
 
 static CcsBool_t
-COS_SynErrors(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+COS_SynErrors(CcOutputScheme_t * self, CcOutput_t * output)
 {
     CcArrayListIter_t iter; char * str;
     const CcSyntaxError_t * synerr;
@@ -503,27 +512,28 @@ COS_SynErrors(CcOutputScheme_t * self, FILE * outfp, const char * indent)
     for (synerr = (const CcSyntaxError_t *)CcArrayList_FirstC(errors, &iter);
 	 synerr;
 	 synerr = (const CcSyntaxError_t *)CcArrayList_NextC(errors, &iter)) {
-	fprintf(outfp, "%scase %d: s = \"", indent, synerr->base.index);
+	CcPrintfI(output, "case %d: s = \"", synerr->base.index);
 	str = CcEscape(synerr->sym->name);
 	switch (synerr->type) {
 	case cet_t:
-	    fprintf(outfp, "\\\"\" %s \"\\\" expected", str);
+	    CcPrintf(output, "\\\"\" %s \"\\\" expected", str);
 	    break;
 	case cet_alt:
-	    fprintf(outfp, "this symbol not expected in \\\"\" %s \"\\\"", str);
+	    CcPrintf(output,
+		     "this symbol not expected in \\\"\" %s \"\\\"", str);
 	    break;
 	case cet_sync:
-	    fprintf(outfp, "invalid \"\\\"\" %s \"\\\"", str);
+	    CcPrintf(output, "invalid \"\\\"\" %s \"\\\"", str);
 	    break;
 	}
 	CcFree(str);
-	fprintf(outfp, "\"; break;\n");
+	CcPrintf(output, "\"; break;\n");
     }
     return TRUE;
 }
 
 static CcsBool_t
-COS_InitSet(CcOutputScheme_t * self, FILE * outfp, const char * indent)
+COS_InitSet(CcOutputScheme_t * self, CcOutput_t * output)
 {
     char * setstr; int setlen, index;
     const CcBitArray_t * cur;
@@ -535,43 +545,42 @@ COS_InitSet(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 	CcsAssert(setlen == CcBitArray_getCount(cur));
 	for (index = 0; index < setlen; ++index)
 	    setstr[index] = CcBitArray_Get(cur, index) ? '*' : '.';
-	fprintf(outfp, "%s\"%s\",\n", indent, setstr);
+	CcPrintfI(output, "\"%s\",\n", setstr);
     }
     CcFree(setstr);
     return TRUE;
 }
 
 static CcsBool_t
-CcCOutputScheme_write(CcOutputScheme_t * self, FILE * outfp,
-		      const char * func, const char * param,
-		      const char * indent)
+CcCOutputScheme_write(CcOutputScheme_t * self, CcOutput_t * output,
+		      const char * func, const char * param)
 {
     if (!strcmp(func, "defines")) {
-	return COS_Defines(self, outfp, indent);
+	return COS_Defines(self, output);
     } else if (!strcmp(func, "declarations")) {
-	return COS_Declarations(self, outfp, indent);
+	return COS_Declarations(self, output);
     } else if (!strcmp(func, "chars2states")) {
-	return COS_Chars2States(self, outfp, indent);
+	return COS_Chars2States(self, output);
     } else if (!strcmp(func, "identifiers2keywordkinds")) {
-	return COS_Identifiers2KeywordKinds(self, outfp, indent);
+	return COS_Identifiers2KeywordKinds(self, output);
     } else if (!strcmp(func, "comments")) {
-	return COS_Comments(self, outfp, indent);
+	return COS_Comments(self, output);
     } else if (!strcmp(func, "scan1")) {
-	return COS_Scan1(self, outfp, indent);
+	return COS_Scan1(self, output);
     } else if (!strcmp(func, "scan3")) {
-	return COS_Scan3(self, outfp, indent);
+	return COS_Scan3(self, output);
     } else if (!strcmp(func, "Pragmas")) {
-	return COS_Pragmas(self, outfp, indent);
+	return COS_Pragmas(self, output);
     } else if (!strcmp(func, "ProductionsHeader")) {
-	return COS_ProductionsHeader(self, outfp, indent);
+	return COS_ProductionsHeader(self, output);
     } else if (!strcmp(func, "ParseRoot")) {
-	return COS_ParseRoot(self, outfp, indent);
+	return COS_ParseRoot(self, output);
     } else if (!strcmp(func, "ProductionsBody")) {
-	return COS_ProductionsBody(self, outfp, indent);
+	return COS_ProductionsBody(self, output);
     } else if (!strcmp(func, "SynErrors")) {
-	return COS_SynErrors(self, outfp, indent);
+	return COS_SynErrors(self, output);
     } else if (!strcmp(func, "InitSet")) {
-	return COS_InitSet(self, outfp, indent);
+	return COS_InitSet(self, output);
     }
     fprintf(stderr, "Unknown section '%s' encountered.\n", func);
     return TRUE;
