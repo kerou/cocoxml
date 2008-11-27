@@ -179,7 +179,7 @@ COS_WriteState(CcOutputScheme_t * self, CcOutput_t * output,
 		CcPrintf(output,"self->ch == %s",
 			CharRepr(buf0, sizeof(buf0), curRange->from));
 	    else
-		CcPrintf(output, "self->ch >= %s && self->ch <= %s",
+		CcPrintf(output, "(self->ch >= %s && self->ch <= %s)",
 			 CharRepr(buf0, sizeof(buf0), curRange->from),
 			 CharRepr(buf1, sizeof(buf1), curRange->to));
 	    if (curRange->next) CcPrintf(output, " ||\n");
