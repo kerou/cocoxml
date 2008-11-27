@@ -81,24 +81,34 @@ CcSource(CcOutput_t * self, const CcsPosition_t * pos)
 {
     char eol[3]; int curcol;
     const char * start, * cur, * end;
+    CcsBool_t isBlank, hasEOL;
 
     eol[0] = 0;
     start = pos->text; end = GetEOL(start, eol);
     WriteSpaces(self->outfp, self->indent);
     fwrite(start, end - start, 1, self->outfp);
+    isBlank = FALSE;
+    hasEOL = pos->text < end && (end[-1] == '\r' || end[-1] == '\n');
 
     while (*end) {
 	start = end; end = GetEOL(start, eol);
 	curcol = 0;
 	for (cur = start; *cur == ' ' || *cur == '\t'; ++cur)
 	    curcol += (*cur == ' ' ? 1 : 8);
-	if (curcol <= pos->col) WriteSpaces(self->outfp, self->indent);
-	else WriteSpaces(self->outfp, self->indent + (curcol - pos->col));
-	fwrite(cur, end - cur, 1, self->outfp);
+	isBlank = *cur == 0 || *cur == '\r' || *cur == '\n';
+	if (!isBlank) {
+	    /* Only non-blank line is outputed */
+	    if (curcol <= pos->col) WriteSpaces(self->outfp, self->indent);
+	    else WriteSpaces(self->outfp, self->indent + (curcol - pos->col));
+	    fwrite(cur, end - cur, 1, self->outfp);
+	    hasEOL = start < end && (end[-1] == '\r' || end[-1] == '\n');
+	}
     }
-
-    if (eol[0]) fwrite(eol, strlen(eol), 1, self->outfp);
-    else fputc('\n', self->outfp);
+    if (!isBlank && !hasEOL) {
+	/* There is no EOL in the last line, add it */
+	if (eol[0]) fwrite(eol, strlen(eol), 1, self->outfp);
+	else fputc('\n', self->outfp);
+    }
 }
 
 CcOutputScheme_t *

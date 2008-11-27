@@ -345,10 +345,10 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 	if (p->base.type == node_nt) {
 	    pnt = (CcNodeNT_t *)p;
 	    if (pnt->pos) {
-		CcPrintfI(output, "CcsParser_%s(self, %s);",
+		CcPrintfI(output, "CcsParser_%s(self, %s);\n",
 			  pnt->sym->name, pnt->pos->text);
 	    } else {
-		CcPrintfI(output, "CcsParser_%s(self);", pnt->sym->name);
+		CcPrintfI(output, "CcsParser_%s(self);\n", pnt->sym->name);
 	    }
 	} else if (p->base.type == node_t) {
 	    pt = (CcNodeT_t *)p;
@@ -376,7 +376,7 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 	    psync = (CcNodeSYNC_t *)p;
 	    err = CcSyntax_SyncError(syntax, ccself->curSy);
 	    CcBitArray_Clone(&s1, psync->set);
-	    SCOS_GenCond(self, output, "while (!(", ")) {\n", &s1, p);
+	    SCOS_GenCond(self, output, "while (!(", ")) {", &s1, p);
 	    output->indent += 4;
 	    CcPrintfI(output,
 		      "CcsParser_SynErr(self, %d); CcsParser_Get(self);\n",
@@ -427,7 +427,7 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 			      err);
 		    CcPrintfI(output, "}\n");
 		} else {
-		    CcPrintfI(output, "} else CcsParser_SynErr(self, %d);",
+		    CcPrintfI(output, "} else CcsParser_SynErr(self, %d);\n",
 			      err);
 		}
 	    }
@@ -451,14 +451,14 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 	    output->indent += 4;
 	    SCOS_GenCode(self, output, p2, &s1);
 	    output->indent -= 4;
-	    CcPrintf(output, "}\n");
+	    CcPrintfI(output, "}\n");
 	} else if (p->base.type == node_opt) {
 	    CcSyntax_First(syntax, &s1, p->sub);
 	    SCOS_GenCond(self, output, "if (", ") {", &s1, p->sub);
 	    output->indent += 4;
 	    SCOS_GenCode(self, output, p->sub, &s1);
 	    output->indent -= 4;
-	    CcPrintf(output, "}\n");
+	    CcPrintfI(output, "}\n");
 	}
 	if (p->base.type != node_eps && p->base.type != node_sem &&
 	    p->base.type != node_sync)
