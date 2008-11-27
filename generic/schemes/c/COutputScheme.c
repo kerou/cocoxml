@@ -322,22 +322,27 @@ SCOS_GenCode(CcOutputScheme_t * self, FILE * outfp, const char * indent,
 	     CcNode_t * p, const CcBitArray_t * IsChecked)
 {
     int err; CcsBool_t equal, useSwitch; int index;
-    CcNode_t * p2; CcBitArray_t s1, s2;
+    CcNode_t * p2; CcBitArray_t s1, s2, isChecked;
     CcNodeNT_t * pnt; CcNodeT_t * pt; CcNodeWT_t * pwt;
     CcNodeSEM_t * psem; CcNodeSYNC_t * psync;
     CcSyntax_t * syntax = &self->globals->syntax;
     CcArrayList_t * terminals = &self->globals->symtab.terminals;
     CcCOutputScheme_t * ccself = (CcCOutputScheme_t *)self;
 
+    CcBitArray_Clone(&isChecked, IsChecked);
     while (p != NULL) {
 	if (p->base.type == node_nt) {
 	    pnt = (CcNodeNT_t *)p;
-	    fprintf(outfp, "%s%s(", indent, pnt->sym->name);
-	    CcCopySourcePart(outfp, indent, pnt->pos->col, pnt->pos->text);
-	    fprintf(outfp, ");");
+	    if (pnt->pos) {
+		fprintf(outfp, "%sCcsParser_%s(self, ", indent, pnt->sym->name);
+		CcCopySourcePart(outfp, indent, pnt->pos->col, pnt->pos->text);
+		fprintf(outfp, ");");
+	    } else {
+		fprintf(outfp, "%sCcsParser_%s(self);", indent, pnt->sym->name);
+	    }
 	} else if (p->base.type == node_t) {
 	    pt = (CcNodeT_t *)p;
-	    if (CcBitArray_Get(IsChecked, pt->sym->kind))
+	    if (CcBitArray_Get(&isChecked, pt->sym->kind))
 		fprintf(outfp, "%sCcsParser_Get(self);\n", indent);
 	    else
 		fprintf(outfp, "%sCcsParser_Expect(self, %d);\n",
@@ -371,7 +376,7 @@ SCOS_GenCode(CcOutputScheme_t * self, FILE * outfp, const char * indent,
 	    CcBitArray_Destruct(&s1);
 	} else if (p->base.type == node_alt) {
 	    CcSyntax_First(syntax, &s1, p);
-	    equal = CcBitArray_Equal(&s1, IsChecked);
+	    equal = CcBitArray_Equal(&s1, &isChecked);
 	    useSwitch = SCOS_UseSwitch(self, p);
 	    if (useSwitch)
 		fprintf(outfp, "%sswitch (self->la->kind) {\n", indent);
@@ -395,7 +400,7 @@ SCOS_GenCode(CcOutputScheme_t * self, FILE * outfp, const char * indent,
 		    SCOS_GenCond(self, outfp, indent, &s1, p2->sub);
 		    fprintf(outfp, ") {\n");
 		}
-		CcBitArray_Or(&s1, IsChecked);
+		CcBitArray_Or(&s1, &isChecked);
 		SCOS_GenCode(self, outfp, indent, p2->sub, &s1);
 		if (useSwitch) {
 		    fprintf(outfp, "%s    break;\n", indent);
@@ -445,19 +450,25 @@ SCOS_GenCode(CcOutputScheme_t * self, FILE * outfp, const char * indent,
 	    SCOS_GenCode(self, outfp, indent, p->sub, &s1);
 	    fprintf(outfp, "}\n");
 	}
+	if (p->base.type != node_eps && p->base.type != node_sem &&
+	    p->base.type != node_sync)
+	    CcBitArray_SetAll(&isChecked, FALSE);
+	if (p->up) break;
+	p = p->next;
     }
+    CcBitArray_Destruct(&isChecked);
 }
 
 static CcsBool_t
 COS_ProductionsBody(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 {
-    CcBitArray_t IsChecked;
+    CcBitArray_t isChecked;
     CcArrayListIter_t iter;
     const CcSymbolNT_t * sym;
     const CcArrayList_t * nonterminals = &self->globals->symtab.nonterminals;
     CcCOutputScheme_t * ccself = (CcCOutputScheme_t *)self;
 
-    CcBitArray(&IsChecked, self->globals->symtab.terminals.Count);
+    CcBitArray(&isChecked, self->globals->symtab.terminals.Count);
     for (sym = (const CcSymbolNT_t *)CcArrayList_FirstC(nonterminals, &iter);
 	 sym;
 	 sym = (const CcSymbolNT_t *)CcArrayList_NextC(nonterminals, &iter)) {
@@ -473,11 +484,13 @@ COS_ProductionsBody(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 	    fprintf(outfp, ")\n");
 	}
 	fprintf(outfp, "%s{\n", indent);
-	CcCopySourcePart(outfp, indent, sym->semPos->col, sym->semPos->text);
-	SCOS_GenCode(self, outfp, indent, sym->graph, &IsChecked);
+	if (sym->semPos)
+	    CcCopySourcePart(outfp, indent,
+			     sym->semPos->col, sym->semPos->text);
+	SCOS_GenCode(self, outfp, indent, sym->graph, &isChecked);
 	fprintf(outfp, "%s}\n\n", indent);
     }
-    CcBitArray_Destruct(&IsChecked);
+    CcBitArray_Destruct(&isChecked);
     return TRUE;
 }
 
