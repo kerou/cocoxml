@@ -288,15 +288,45 @@ SCOS_GenCond(CcOutputScheme_t * self, FILE * outfp, const char * indent,
     }
 }
 
+static CcsBool_t
+SCOS_UseSwitch(CcOutputScheme_t * self, CcNode_t * p)
+{
+    CcBitArray_t s1, s2; int nAlts;
+    CcSyntax_t * syntax = &self->globals->syntax;
+    CcArrayList_t * terminals = &self->globals->symtab.terminals;
+    CcCOutputScheme_t * ccself = (CcCOutputScheme_t *)self;
+
+    if (p->base.type == node_alt) return FALSE;
+    nAlts = 0;
+    CcBitArray(&s1, terminals->Count);
+    while (p != NULL) {
+	CcSyntax_Expected0(syntax, &s2, p->sub, ccself->curSy);
+	if (CcBitArray_Intersect(&s1, &s2)) goto falsequit2;
+	CcBitArray_Or(&s1, &s2);
+	CcBitArray_Destruct(&s2);
+	++nAlts;
+	if (p->sub->base.type == node_rslv) goto falsequit1;
+	p = p->down;
+    }
+    CcBitArray_Destruct(&s1);
+    return nAlts > 5;
+ falsequit2:
+    CcBitArray_Destruct(&s2);
+ falsequit1:
+    CcBitArray_Destruct(&s1);
+    return FALSE;
+}
+
 static void
 SCOS_GenCode(CcOutputScheme_t * self, FILE * outfp, const char * indent,
 	     CcNode_t * p, const CcBitArray_t * IsChecked)
 {
-    int err;
+    int err; CcsBool_t equal, useSwitch; int index;
     CcNode_t * p2; CcBitArray_t s1, s2;
     CcNodeNT_t * pnt; CcNodeT_t * pt; CcNodeWT_t * pwt;
     CcNodeSEM_t * psem; CcNodeSYNC_t * psync;
     CcSyntax_t * syntax = &self->globals->syntax;
+    CcArrayList_t * terminals = &self->globals->symtab.terminals;
     CcCOutputScheme_t * ccself = (CcCOutputScheme_t *)self;
 
     while (p != NULL) {
@@ -340,8 +370,80 @@ SCOS_GenCode(CcOutputScheme_t * self, FILE * outfp, const char * indent,
 	    fprintf(outfp, "%s}\n", indent);
 	    CcBitArray_Destruct(&s1);
 	} else if (p->base.type == node_alt) {
+	    CcSyntax_First(syntax, &s1, p);
+	    equal = CcBitArray_Equal(&s1, IsChecked);
+	    useSwitch = SCOS_UseSwitch(self, p);
+	    if (useSwitch)
+		fprintf(outfp, "%sswitch (self->la->kind) {\n", indent);
+	    p2 = p;
+	    while (p2 != NULL) {
+		CcSyntax_Expected(syntax, &s1, p2->sub, ccself->curSy);
+		if (useSwitch) {
+		    fprintf(outfp, "%s", indent);
+		    for (index = 0; index < terminals->Count; ++index)
+			if (CcBitArray_Get(&s1, index))
+			    fprintf(outfp, "case %d: ", index);
+		    fprintf(outfp, "}\n");
+		} else if (p2 == p) {
+		    fprintf(outfp, "%sif (", indent);
+		    SCOS_GenCond(self, outfp, indent, &s1, p2->sub);
+		    fprintf(outfp, ") {\n");
+		} else if (p2->down == NULL && equal) {
+		    fprintf(outfp, "%s} else {\n", indent);
+		} else {
+		    fprintf(outfp, "%s} else if (", indent);
+		    SCOS_GenCond(self, outfp, indent, &s1, p2->sub);
+		    fprintf(outfp, ") {\n");
+		}
+		CcBitArray_Or(&s1, IsChecked);
+		SCOS_GenCode(self, outfp, indent, p2->sub, &s1);
+		if (useSwitch) {
+		    fprintf(outfp, "%s    break;\n", indent);
+		    fprintf(outfp, "%s}\n", indent);
+		}
+		p2 = p2->down;
+	    }
+	    if (equal) {
+		fprintf(outfp, "%s}\n", indent);
+	    } else {
+		err = CcSyntax_AltError(syntax, ccself->curSy);
+		if (useSwitch) {
+		    fprintf(outfp,
+			    "%sdefault: CcsParser_SynErr(self, %d); break;",
+			    indent, err);
+		    fprintf(outfp, "%s}\n", indent);
+		} else {
+		    fprintf(outfp, "%s} else CcsParser_SynErr(self, %d);",
+			    indent, err);
+		}
+	    }
 	} else if (p->base.type == node_iter) {
+	    p2 = p->sub;
+	    fprintf(outfp, "%swhile (", indent);
+	    if (p2->base.type == node_wt) {
+		CcSyntax_Expected(syntax, &s1, p2->next, ccself->curSy);
+		CcSyntax_Expected(syntax, &s2, p->next, ccself->curSy);
+		fprintf(outfp, "CcsParser_WeakSeparator(self, %d, %d, %d)",
+			((CcNodeWT_t *)p2)->sym->kind,
+			CcSyntaxSymSet_New(&ccself->symSet, &s1),
+			CcSyntaxSymSet_New(&ccself->symSet, &s2));
+		CcBitArray_Destruct(&s1); CcBitArray_Destruct(&s2);
+		CcBitArray(&s1, terminals->Count);
+		if (p2->up || p2->next == NULL) p2 = NULL; else p2 = p2->next;
+	    } else {
+		CcSyntax_First(syntax, &s1, p2);
+		SCOS_GenCond(self, outfp, indent, &s1, p2);
+	    }
+	    fprintf(outfp, ") {\n");
+	    SCOS_GenCode(self, outfp, indent, p2, &s1);
+	    fprintf(outfp, "%s}\n", indent);
 	} else if (p->base.type == node_opt) {
+	    CcSyntax_First(syntax, &s1, p->sub);
+	    fprintf(outfp, "%sif (", indent);
+	    SCOS_GenCond(self, outfp, indent, &s1, p->sub);
+	    fprintf(outfp, ") {\n");
+	    SCOS_GenCode(self, outfp, indent, p->sub, &s1);
+	    fprintf(outfp, "}\n");
 	}
     }
 }
