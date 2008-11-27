@@ -805,22 +805,24 @@ CcSyntax_Errors(CcSyntax_t * self)
     }
 }
 
-void
+int
 CcSyntax_AltError(CcSyntax_t * self, const CcSymbol_t * sym)
 {
     CcSyntaxError_t * error = (CcSyntaxError_t *)
 	CcArrayList_New(&self->errors, CcObject(&CcSyntaxErrorType));
     error->type = cet_alt;
     error->sym = sym;
+    return error->base.index;
 }
 
-void
+int
 CcSyntax_SyncError(CcSyntax_t * self, const CcSymbol_t * sym)
 {
     CcSyntaxError_t * error = (CcSyntaxError_t *)
 	CcArrayList_New(&self->errors, CcObject(&CcSyntaxErrorType));
     error->type = cet_sync;
     error->sym = sym;
+    return error->base.index;
 }
 
 #define SZ_SYMSET  64

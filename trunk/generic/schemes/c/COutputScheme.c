@@ -30,6 +30,10 @@
 #include  "lexical/Transition.h"
 #include  "syntax/Nodes.h"
 
+/* When the number of possible terminals is greater than maxTerm,
+   symSet is used. */
+#define  maxTerm  3
+
 static const CcOutputInfo_t CcCOutputScheme_OutputInfos[] = {
     { "Scanner.c" },
     { "Parser.c" },
@@ -257,9 +261,38 @@ COS_ParseRoot(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 }
 
 static void
-SCOS_GenCode(CcOutputScheme_t * self, FILE * outfp, CcNode_t * p,
-	     const char * indent, const CcBitArray_t * IsChecked)
+SCOS_GenCond(CcOutputScheme_t * self, FILE * outfp, const char * indent,
+	     const CcBitArray_t * s, const CcNode_t * p)
 {
+    const CcNodeRSLV_t * prslv; int n;
+    CcArrayListIter_t iter; const CcSymbol_t * sym;
+    const CcArrayList_t * terminals;
+    CcCOutputScheme_t * ccself = (CcCOutputScheme_t *)self;
+
+    if (p->base.type == node_rslv) {
+	prslv = (CcNodeRSLV_t *)p;
+	CcCopySourcePart(outfp, indent, prslv->pos->col, prslv->pos->text);
+    } else if ((n = CcBitArray_Elements(s)) == 0) {
+	fprintf(outfp, "FALSE");
+    } else if (n <= maxTerm) {
+	terminals = &self->globals->symtab.terminals;
+	for (sym = (const CcSymbol_t *)CcArrayList_FirstC(terminals, &iter);
+	     sym; sym = (const CcSymbol_t *)CcArrayList_NextC(terminals, &iter))
+	    if (CcBitArray_Get(s, sym->kind)) {
+		fprintf(outfp, "self->la->kind == %d", sym->kind);
+		if (--n > 0) fprintf(outfp, " || ");
+	    }
+    } else {
+	fprintf(outfp, "CcsParser_StartOf(%d)",
+		CcSyntaxSymSet_New(&ccself->symSet, s));
+    }
+}
+
+static void
+SCOS_GenCode(CcOutputScheme_t * self, FILE * outfp, const char * indent,
+	     CcNode_t * p, const CcBitArray_t * IsChecked)
+{
+    int err;
     CcNode_t * p2; CcBitArray_t s1, s2;
     CcNodeNT_t * pnt; CcNodeT_t * pt; CcNodeWT_t * pwt;
     CcNodeSEM_t * psem; CcNodeSYNC_t * psync;
@@ -296,9 +329,15 @@ SCOS_GenCode(CcOutputScheme_t * self, FILE * outfp, CcNode_t * p,
 	    CcCopySourcePart(outfp, indent, psem->pos->col, psem->pos->text);
 	} else if (p->base.type == node_sync) {
 	    psync = (CcNodeSYNC_t *)p;
-	    CcSyntax_SyncError(syntax, ccself->curSy);
+	    err = CcSyntax_SyncError(syntax, ccself->curSy);
 	    CcBitArray_Clone(&s1, psync->set);
-	    /* NOT FINISHED YET. */
+	    fprintf(outfp, "%swhile (!(", indent);
+	    SCOS_GenCond(self, outfp, indent, &s1, p);
+	    fprintf(outfp, ")) {\n");
+	    fprintf(outfp,
+		    "%s    CcsParser_SynErr(self, %d); CcsParser_Get(self);\n",
+		    indent, err);
+	    fprintf(outfp, "%s}\n", indent);
 	    CcBitArray_Destruct(&s1);
 	} else if (p->base.type == node_alt) {
 	} else if (p->base.type == node_iter) {
@@ -333,7 +372,7 @@ COS_ProductionsBody(CcOutputScheme_t * self, FILE * outfp, const char * indent)
 	}
 	fprintf(outfp, "%s{\n", indent);
 	CcCopySourcePart(outfp, indent, sym->semPos->col, sym->semPos->text);
-	SCOS_GenCode(self, outfp, sym->graph, indent, &IsChecked);
+	SCOS_GenCode(self, outfp, indent, sym->graph, &IsChecked);
 	fprintf(outfp, "%s}\n\n", indent);
     }
     CcBitArray_Destruct(&IsChecked);
