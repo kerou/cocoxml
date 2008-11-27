@@ -79,8 +79,8 @@ typedef struct {
     const CcSymbol_t * sym;
 }  CcSyntaxError_t;
 
-void CcSyntax_AltError(CcSyntax_t * self, const CcSymbol_t * sym);
-void CcSyntax_SyncError(CcSyntax_t * self, const CcSymbol_t * sym);
+int CcSyntax_AltError(CcSyntax_t * self, const CcSymbol_t * sym);
+int CcSyntax_SyncError(CcSyntax_t * self, const CcSymbol_t * sym);
 
 typedef struct {
     CcBitArray_t * start;
