@@ -286,7 +286,7 @@ GetEOL(const char * start, char * eol)
     const char * end = start + strcspn(start, "\r\n");
     if (*end == 0) return end;
     *eol++ = end[0]; *eol = 0;
-    if (end[0] == end[1] || (end[1] != '\r' || end[1] != '\n')) return end + 1;
+    if (end[0] == end[1] || (end[1] != '\r' && end[1] != '\n')) return end + 1;
     *eol++ = end[1]; *eol = 0;
     return end + 2;
 }
