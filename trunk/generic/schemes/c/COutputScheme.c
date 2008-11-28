@@ -436,6 +436,7 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 	} else if (p->base.type == node_alt) {
 	    CcSyntax_First(syntax, &s1, p);
 	    equal = CcBitArray_Equal(&s1, &isChecked);
+	    CcBitArray_Destruct(&s1);
 	    useSwitch = SCOS_UseSwitch(self, p);
 	    if (useSwitch)
 		CcPrintfI(output, "switch (self->la->kind) {\n");
@@ -465,6 +466,7 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 		    CcPrintfI(output, "break;\n");
 		}
 		p2 = p2->down;
+		CcBitArray_Destruct(&s1);
 	    }
 	    if (equal) {
 		CcPrintfI(output, "}\n");
@@ -501,6 +503,7 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 	    SCOS_GenCode(self, output, p2, &s1);
 	    output->indent -= 4;
 	    CcPrintfI(output, "}\n");
+	    CcBitArray_Destruct(&s1);
 	} else if (p->base.type == node_opt) {
 	    CcSyntax_First(syntax, &s1, p->sub);
 	    SCOS_GenCond(self, output, "if (", ") {", &s1, p->sub);
@@ -508,6 +511,7 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 	    SCOS_GenCode(self, output, p->sub, &s1);
 	    output->indent -= 4;
 	    CcPrintfI(output, "}\n");
+	    CcBitArray_Destruct(&s1);
 	}
 	if (p->base.type != node_eps && p->base.type != node_sem &&
 	    p->base.type != node_sync)

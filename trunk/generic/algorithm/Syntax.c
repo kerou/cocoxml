@@ -273,9 +273,11 @@ CcSyntax_FindAS(CcSyntax_t * self, CcNode_t * p)
 		} else {
 		    CcSyntax_First(self, &s0, q->sub);
 		    CcBitArray_Or(&s1, &s0);
+		    CcBitArray_Destruct(&s0);
 		}
 		q = q->down;
 	    }
+	    CcBitArray_Destruct(&s1);
 	}
 	if (p->up) break;
 	p = p->next;
@@ -352,6 +354,7 @@ CcSyntax_CompSyncSets(CcSyntax_t * self)
 	self->curSy = (CcSymbol_t *)sym;
 	CcSyntax_CompSync(self, sym->graph);
     }
+    CcBitArray_Destruct(self->visited); self->visited = NULL;
 }
 
 void
@@ -613,9 +616,11 @@ CcSyntax_CheckRes(CcSyntax_t * self, CcNode_t * p, CcsBool_t rslvAllowed)
 		} else {
 		    CcSyntax_Expected(self, &fs, q->sub, self->curSy);
 		    CcBitArray_Or(&soFar, &fs);
+		    CcBitArray_Destruct(&fs);
 		}
 		CcSyntax_CheckRes(self, q->sub, TRUE);
 	    }
+	    CcBitArray_Destruct(&expected); CcBitArray_Destruct(&soFar);
 	} else if (p->base.type == node_iter || p->base.type == node_opt) {
 	    if (p->sub->base.type == node_rslv) {
 		CcSyntax_First(self, &fs, p->sub->next);
@@ -758,6 +763,7 @@ CcSyntax_AllNtToTerm(CcSyntax_t * self)
 			      sym->base.name);
 	}
     }
+    CcBitArray_Destruct(&mark);
     return ok;
 }
 
