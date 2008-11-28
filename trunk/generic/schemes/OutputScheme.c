@@ -94,7 +94,7 @@ CcSource(CcOutput_t * self, const CcsPosition_t * pos)
 	start = end; end = GetEOL(start, eol);
 	curcol = 0;
 	for (cur = start; *cur == ' ' || *cur == '\t'; ++cur)
-	    curcol += (*cur == ' ' ? 1 : 8);
+	    curcol += (*cur == ' ' ? 1 : 8 - curcol % 8);
 	isBlank = *cur == 0 || *cur == '\r' || *cur == '\n';
 	if (!isBlank) {
 	    /* Only non-blank line is outputed */
