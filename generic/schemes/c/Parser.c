@@ -51,7 +51,6 @@ CcsParser_Get(CcsParser_t * self)
 	if (self->la->kind <= self->maxT) { /*++self->errDist;*/ break; }
 	/*---- Pragmas ----*/
 	if (self->la->kind == 42) {
-	    /*Tab_SetDDT(self->tab, self->la->val);*/
 	}
 	/*---- enable ----*/
 	self->la = self->t;
@@ -176,7 +175,6 @@ CcsParser_Coco(CcsParser_t * self)
     if (self->la->pos != beg->pos) {
 	self->usingPos =
 	    CcsScanner_GetPositionWithTail(self->scanner, beg, self->t);
-	/*pgen->usingPos = new Position(beg, t->pos - beg + coco_string_length(t->val), 0);*/
     }
 
     CcsParser_Expect(self, 6);
@@ -189,7 +187,6 @@ CcsParser_Coco(CcsParser_t * self)
     while (CcsParser_StartOf(self, 2)) {
 	CcsParser_Get(self);
     }
-    /*self->tab->semDeclPos = CcsScanner_GetPosition(self->scanner, beg, self->la);*/
     if (self->la->kind == 7) {
 	CcsParser_Get(self);
 	self->lexical->ignoreCase = TRUE; 
@@ -251,11 +248,11 @@ CcsParser_Coco(CcsParser_t * self)
 	} else {
 	    if (sym->base.type == symbol_nt) {
 		if (((CcSymbolNT_t *)sym)->graph != NULL)
-		    CcsGlobals_SemErr(self->globals, self->t,
-				      "name declared twice");
-	    } else
+		    CcsGlobals_SemErr(self->globals, self->t, "name declared twice");
+	    } else {
 		CcsGlobals_SemErr(self->globals, self->t,
 				  "this symbol kind not allowed on left side of production");
+	    }
 	    sym->line = self->t->line;
 	}
 	CcsBool_t noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
@@ -291,10 +288,10 @@ CcsParser_Coco(CcsParser_t * self)
 			  "name does not match grammar name");
     self->syntax->gramSy = CcSymbolTable_FindSym(self->symtab, gramName);
     CcFree(gramName);
-    if (self->syntax->gramSy == NULL)
+    if (self->syntax->gramSy == NULL) {
 	CcsGlobals_SemErr(self->globals, self->t,
 			  "missing production for grammar name");
-    else {
+    } else {
 	sym = self->syntax->gramSy;
 	if (((CcSymbolNT_t *)sym)->attrPos != NULL)
 	    CcsGlobals_SemErr(self->globals, self->t,
@@ -303,26 +300,6 @@ CcsParser_Coco(CcsParser_t * self)
     /* noSym gets highest number */
     self->syntax->noSy = CcSymbolTable_NewTerminal(self->symtab, "???", 0);
     CcSyntax_SetupAnys(self->syntax);
-    /*
-    if (self->tab->ddt[2]) Tab_PrintNodes(self->tab);
-    if (self->errors.count == 0) {
-	fprintf(stderr, "checking\n");
-	Tab_CompSymbolSets(self->tab);
-	if (self->tab->ddt[7]) Tab_XRef(self->tab);
-	if (Tab_GrammarOk(self->tab)) {
-	    fprintf(stderr, "parser");
-	    CcsParserGen_WriteCcsParser(self->pgen);
-	    if (self->genScanner) {
-		fprintf(stderr, " + scanner");
-		DFA_WriteScanner(self->dfa);
-		if (self->tab->ddt[0]) DFA_PrintStates(self->dfa);
-	    }
-	    fprintf(stderr, " generated\n");
-	    if (self->tab->ddt[8]) CcsParserGen_WriteStatistics(self->pgen);
-	}
-    }
-    if (self->tab->ddt[6]) Tab_PrintSymbolTable(self->tab);
-    */
     CcsParser_Expect(self, 18);
 }
 
@@ -335,7 +312,8 @@ CcsParser_SetDecl(CcsParser_t * self)
     CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, name);
 
     if (c != NULL)
-	CcsGlobals_SemErr(self->globals, self->t, "name declared twice");
+	CcsGlobals_SemErr(self->globals, self->t,
+			  "name '%s' declared twice", name);
 
     CcsParser_Expect(self, 17);
     CcsParser_Set(self, &s);
@@ -355,7 +333,7 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ)
     CcsParser_Sym(self, &name, &kind);
     sym = CcSymbolTable_FindSym(self->symtab, name);
     if (sym != NULL) {
-	CcsGlobals_SemErr(self->globals, self->t, "name declared twice");
+	CcsGlobals_SemErr(self->globals, self->t, "name '%s' declared twice", name);
     } else if (typ == symbol_t) {
 	sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
 	((CcSymbolT_t *)sym)->tokenKind = symbol_fixedToken;
@@ -386,7 +364,7 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ)
 	    if (CcHashTable_Get(&self->lexical->literals,
 				self->tokenString) != NULL)
 		CcsGlobals_SemErr(self->globals, self->t,
-				  "token string declared twice");
+				  "token string '%s' declared twice", self->tokenString);
 	    CcHashTable_Set(&self->lexical->literals,
 			    self->tokenString, (CcObject_t *)sym);
 	    CcLexical_MatchLiteral(self->lexical, self->t,
@@ -413,11 +391,9 @@ CcsParser_TokenExpr(CcsParser_t * self, CcGraph_t ** g)
     CcGraph_t * g2;
     CcsParser_TokenTerm(self, g);
     CcsBool_t first = TRUE; 
-    while (CcsParser_WeakSeparator(self, 28,8,7) ) {
+    while (CcsParser_WeakSeparator(self, 28, 8, 7)) {
 	CcsParser_TokenTerm(self, &g2);
-	if (first) {
-	    CcEBNF_MakeFirstAlt(&self->lexical->base, *g); first = FALSE;
-	}
+	if (first) { CcEBNF_MakeFirstAlt(&self->lexical->base, *g); first = FALSE; }
 	CcEBNF_MakeAlternative(&self->lexical->base, *g, g2);
 	CcGraph_Destruct(g2);
     }
@@ -478,9 +454,7 @@ CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym)
 	CcsParser_Expect(self, 27);
 	sym->attrPos = CcsScanner_GetPosition(self->scanner, beg, self->t);
 	CcsScanner_DecRef(self->scanner, beg);
-    } else {
-	CcsParser_SynErr(self, 45);
-    }
+    } else CcsParser_SynErr(self, 45);
 }
 
 static void
@@ -513,11 +487,9 @@ CcsParser_Expression(CcsParser_t * self, CcGraph_t ** g)
     CcGraph_t * g2;
     CcsParser_Term(self, g);
     CcsBool_t first = TRUE; 
-    while (CcsParser_WeakSeparator(self, 28,16,15) ) {
+    while (CcsParser_WeakSeparator(self, 28, 16, 15)) {
 	CcsParser_Term(self, &g2);
-	if (first) {
-	    CcEBNF_MakeFirstAlt(&self->syntax->base, *g); first = FALSE;
-	}
+	if (first) { CcEBNF_MakeFirstAlt(&self->syntax->base, *g); first = FALSE; }
 	CcEBNF_MakeAlternative(&self->syntax->base, *g, g2);
 	CcGraph_Destruct(g2);
     }
@@ -530,8 +502,7 @@ CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s)
     *s = CcCharSet();
     if (self->la->kind == 1) {
 	CcsParser_Get(self);
-	CcCharClass_t * c =
-	    CcLexical_FindCharClassN(self->lexical, self->t->val);
+	CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, self->t->val);
 	if (c != NULL) CcCharSet_Or(*s, c->set);
 	else CcsGlobals_SemErr(self->globals, self->t, "undefined name");
     } else if (self->la->kind == 3) {
@@ -560,21 +531,20 @@ CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s)
     } else if (self->la->kind == 23) {
 	CcsParser_Get(self);
 	CcCharSet_Fill(*s, COCO_WCHAR_MAX);
-    } else {
-	CcsParser_SynErr(self, 46);
-    }
+    } else CcsParser_SynErr(self, 46);
 }
 
 static void
 CcsParser_Char(CcsParser_t * self, int * n)
 {
+    char * name; const char * cur;
     CcsParser_Expect(self, 5);
     *n = 0;
-    char * name; const char * cur;
     cur = name = CcUnescape(self->t->val);
     *n = CcsUTF8GetCh(&cur, name + strlen(name));
     if (*cur != 0)
-	CcsGlobals_SemErr(self->globals, self->t, "unacceptable character value");
+	CcsGlobals_SemErr(self->globals, self->t,
+			  "unacceptable character value: '%s'", self->t->val);
     CcFree(name);
     if (self->lexical->ignoreCase) *n = tolower(*n);
 }
@@ -604,16 +574,14 @@ CcsParser_Sym(CcsParser_t * self, char ** name, int * kind)
 	if (strchr(*name, ' '))
 	    CcsGlobals_SemErr(self->globals, self->t,
 			      "literal tokens \"%s\" can not contain blanks", *name);
-    } else {
-	CcsParser_SynErr(self, 47);
-    }
+    } else CcsParser_SynErr(self, 47);
 }
 
 static void
 CcsParser_Term(CcsParser_t * self, CcGraph_t ** g)
 {
-    CcGraph_t *g2; CcsPosition_t * pos;
-    CcNode_t * rslv = NULL; *g = NULL; 
+    CcGraph_t * g2; CcsPosition_t * pos; CcNode_t * rslv = NULL;
+    *g = NULL; 
     if (CcsParser_StartOf(self, 17)) {
 	if (self->la->kind == 37) {
 	    CcsParser_Resolver(self, &pos);
@@ -671,10 +639,9 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
 	if (undef) {
 	    if (kind == CcsParser_id) {
 		/* forward nt */
-		sym = CcSymbolTable_NewNonTerminal(self->symtab, name, 0);
+		sym = CcSymbolTable_NewNonTerminal(self->symtab, name, self->t->line);
 	    } else if (self->genScanner) { 
-		sym = CcSymbolTable_NewTerminal(self->symtab,
-						name, self->t->line);
+		sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
 		CcLexical_MatchLiteral(self->lexical, self->t, sym->name, sym);
 	    } else {  /* undefined string in production */
 		CcsGlobals_SemErr(self->globals, self->t,
@@ -740,7 +707,6 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
     }
     case 23: {
 	CcsParser_Get(self);
-	/* p.set is set in Tab_SetupAnys */
 	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeAny(0));
 	*g = CcGraphP(p);
 	break;
@@ -835,16 +801,14 @@ CcsParser_TokenTerm(CcsParser_t * self, CcGraph_t ** g)
 static void
 CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g)
 {
-    char * name = NULL; int kind;
-    CcTransition_t trans;
+    char * name = NULL; int kind; CcTransition_t trans;
     *g = NULL;
     if (self->la->kind == 1 || self->la->kind == 3 || self->la->kind == 5) {
 	CcsParser_Sym(self, &name, &kind);
 	if (kind == CcsParser_id) {
 	    CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, name);
 	    if (c == NULL) {
-		CcsGlobals_SemErr(self->globals, self->t,
-				  "undefined name");
+		CcsGlobals_SemErr(self->globals, self->t, "undefined name");
 		c = CcLexical_NewCharClass(self->lexical, name, CcCharSet());
 	    }
 	    CcTransition_FromCharSet(&trans, c->set, trans_normal,
@@ -879,7 +843,7 @@ CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g)
 	CcsParser_Expect(self, 35);
 	CcEBNF_MakeIteration(&self->lexical->base, *g); 
     } else CcsParser_SynErr(self, 51);
-    if (g == NULL) /* invalid start of TokenFactor */
+    if (*g == NULL) /* invalid start of TokenFactor */
 	*g = CcGraphP(CcEBNF_NewNode(&self->lexical->base, CcNodeEps(0)));
 }
 /*---- enable ----*/
@@ -890,58 +854,58 @@ CcsParser_SynErr(CcsParser_t * self, int n)
     const char * s; char format[20];
     switch (n) {
     /*---- SynErrors ----*/
-    case 0: s = "EOF expected"; break;
-    case 1: s = "ident expected"; break;
-    case 2: s = "number expected"; break;
-    case 3: s = "string expected"; break;
-    case 4: s = "badString expected"; break;
-    case 5: s = "char expected"; break;
-    case 6: s = "\"COMPILER\" expected"; break;
-    case 7: s = "\"IGNORECASE\" expected"; break;
-    case 8: s = "\"CHARACTERS\" expected"; break;
-    case 9: s = "\"TOKENS\" expected"; break;
-    case 10: s = "\"PRAGMAS\" expected"; break;
-    case 11: s = "\"COMMENTS\" expected"; break;
-    case 12: s = "\"FROM\" expected"; break;
-    case 13: s = "\"TO\" expected"; break;
-    case 14: s = "\"NESTED\" expected"; break;
-    case 15: s = "\"IGNORE\" expected"; break;
-    case 16: s = "\"PRODUCTIONS\" expected"; break;
-    case 17: s = "\"=\" expected"; break;
-    case 18: s = "\".\" expected"; break;
-    case 19: s = "\"END\" expected"; break;
-    case 20: s = "\"+\" expected"; break;
-    case 21: s = "\"-\" expected"; break;
-    case 22: s = "\"..\" expected"; break;
-    case 23: s = "\"ANY\" expected"; break;
-    case 24: s = "\"<\" expected"; break;
-    case 25: s = "\">\" expected"; break;
-    case 26: s = "\"<.\" expected"; break;
-    case 27: s = "\".>\" expected"; break;
-    case 28: s = "\"|\" expected"; break;
-    case 29: s = "\"WEAK\" expected"; break;
-    case 30: s = "\"(\" expected"; break;
-    case 31: s = "\")\" expected"; break;
-    case 32: s = "\"[\" expected"; break;
-    case 33: s = "\"]\" expected"; break;
-    case 34: s = "\"{\" expected"; break;
-    case 35: s = "\"}\" expected"; break;
-    case 36: s = "\"SYNC\" expected"; break;
-    case 37: s = "\"IF\" expected"; break;
-    case 38: s = "\"CONTEXT\" expected"; break;
-    case 39: s = "\"(.\" expected"; break;
-    case 40: s = "\".)\" expected"; break;
-    case 41: s = "??? expected"; break;
-    case 42: s = "this symbol not expected in Coco"; break;
-    case 43: s = "this symbol not expected in TokenDecl"; break;
-    case 44: s = "invalid TokenDecl"; break;
-    case 45: s = "invalid AttrDecl"; break;
-    case 46: s = "invalid SimSet"; break;
-    case 47: s = "invalid Sym"; break;
-    case 48: s = "invalid Term"; break;
-    case 49: s = "invalid Factor"; break;
-    case 50: s = "invalid Attribs"; break;
-    case 51: s = "invalid TokenFactor"; break;
+    case 0: s = "\"" "EOF" "\" expected"; break;
+    case 1: s = "\"" "ident" "\" expected"; break;
+    case 2: s = "\"" "number" "\" expected"; break;
+    case 3: s = "\"" "string" "\" expected"; break;
+    case 4: s = "\"" "badString" "\" expected"; break;
+    case 5: s = "\"" "char" "\" expected"; break;
+    case 6: s = "\"" "COMPILER" "\" expected"; break;
+    case 7: s = "\"" "IGNORECASE" "\" expected"; break;
+    case 8: s = "\"" "CHARACTERS" "\" expected"; break;
+    case 9: s = "\"" "TOKENS" "\" expected"; break;
+    case 10: s = "\"" "PRAGMAS" "\" expected"; break;
+    case 11: s = "\"" "COMMENTS" "\" expected"; break;
+    case 12: s = "\"" "FROM" "\" expected"; break;
+    case 13: s = "\"" "TO" "\" expected"; break;
+    case 14: s = "\"" "NESTED" "\" expected"; break;
+    case 15: s = "\"" "IGNORE" "\" expected"; break;
+    case 16: s = "\"" "PRODUCTIONS" "\" expected"; break;
+    case 17: s = "\"" "=" "\" expected"; break;
+    case 18: s = "\"" "." "\" expected"; break;
+    case 19: s = "\"" "END" "\" expected"; break;
+    case 20: s = "\"" "+" "\" expected"; break;
+    case 21: s = "\"" "-" "\" expected"; break;
+    case 22: s = "\"" ".." "\" expected"; break;
+    case 23: s = "\"" "ANY" "\" expected"; break;
+    case 24: s = "\"" "<" "\" expected"; break;
+    case 25: s = "\"" ">" "\" expected"; break;
+    case 26: s = "\"" "<." "\" expected"; break;
+    case 27: s = "\"" ".>" "\" expected"; break;
+    case 28: s = "\"" "|" "\" expected"; break;
+    case 29: s = "\"" "WEAK" "\" expected"; break;
+    case 30: s = "\"" "(" "\" expected"; break;
+    case 31: s = "\"" ")" "\" expected"; break;
+    case 32: s = "\"" "[" "\" expected"; break;
+    case 33: s = "\"" "]" "\" expected"; break;
+    case 34: s = "\"" "{" "\" expected"; break;
+    case 35: s = "\"" "}" "\" expected"; break;
+    case 36: s = "\"" "SYNC" "\" expected"; break;
+    case 37: s = "\"" "IF" "\" expected"; break;
+    case 38: s = "\"" "CONTEXT" "\" expected"; break;
+    case 39: s = "\"" "(." "\" expected"; break;
+    case 40: s = "\"" ".)" "\" expected"; break;
+    case 41: s = "\"" "???" "\" expected"; break;
+    case 42: s = "invalid \"" "Coco" "\""; break;
+    case 43: s = "invalid \"" "TokenDecl" "\""; break;
+    case 44: s = "this symbol not expected in \"" "TokenDecl" "\""; break;
+    case 45: s = "this symbol not expected in \"" "AttrDecl" "\""; break;
+    case 46: s = "this symbol not expected in \"" "SimSet" "\""; break;
+    case 47: s = "this symbol not expected in \"" "Sym" "\""; break;
+    case 48: s = "this symbol not expected in \"" "Term" "\""; break;
+    case 49: s = "this symbol not expected in \"" "Factor" "\""; break;
+    case 50: s = "this symbol not expected in \"" "Attribs" "\""; break;
+    case 51: s = "this symbol not expected in \"" "TokenFactor" "\""; break;
     /*---- enable ----*/
     default:
 	snprintf(format, sizeof(format), "error %d", n);
