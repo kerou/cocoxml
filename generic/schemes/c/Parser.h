@@ -30,8 +30,10 @@
 #include  "CDefs.h"
 #endif
 
-/*---- headerdef ----*/
+/*---- hIncludes ----*/
+#ifndef   COCO_DEFS_H
 #include  "Defs.h"
+#endif
 /*---- enable ----*/
 
 EXTC_BEGIN
@@ -42,24 +44,20 @@ struct CcsParser_s {
     CcsToken_t      * t;
     CcsToken_t      * la;
     int               maxT;
-    /*
-    int               errDist;
-    int               minErrDist;
-    FILE            * trace;
-    Tab_t           * tab;
-    CcsParserGen_t  * pgen;*/
-
-    /*---- declarations ----*/
+/*---- members ----*/
     char            * tokenString;
-
     CcsBool_t         genScanner;
-    CcsPosition_t   * usingPos;
+    CcsPosition_t   * hIncludes;
+    CcsPosition_t   * cIncludes;
+    CcsPosition_t   * members;
+    CcsPosition_t   * constructor;
+    CcsPosition_t   * destructor;
 
     /* Shortcut pointers */
     CcSymbolTable_t * symtab;
     CcLexical_t     * lexical;
     CcSyntax_t      * syntax;
-    /*---- enable ----*/
+/*---- enable ----*/
 };
 
 CcsParser_t * CcsParser(CcsParser_t * self, CcsGlobals_t * globals);

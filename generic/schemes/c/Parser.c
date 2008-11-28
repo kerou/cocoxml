@@ -28,7 +28,7 @@
 #include  "Token.h"
 #include  "CGlobals.h"
 
-/*---- constantsheader ----*/
+/*---- cIncludes ----*/
 #include  "Globals.h"
 #include  "lexical/CharSet.h"
 #include  "lexical/CharClass.h"
@@ -132,29 +132,35 @@ CcsParser(CcsParser_t * self, CcsGlobals_t * globals)
     self->globals = globals;
     self->scanner = &globals->scanner;
     self->t = self->la = NULL;
-    /*---- constants ----*/
+/*---- constructor ----*/
     self->maxT = 41;
-    /*---- enable ----*/
-    /*---- init ----*/
     self->tokenString = NULL;
     self->genScanner = FALSE;
-    self->usingPos = NULL;
+    self->hIncludes = NULL;
+    self->cIncludes = NULL;
+    self->members = NULL;
+    self->constructor = NULL;
+    self->destructor = NULL;
 
     self->symtab = &((CcGlobals_t *)globals)->symtab;
     self->lexical = &((CcGlobals_t *)globals)->lexical;
     self->syntax = &((CcGlobals_t *)globals)->syntax;
-    /*---- enable ----*/
+/*---- enable ----*/
     return self;
 }
 
 void
 CcsParser_Destruct(CcsParser_t * self)
 {
-    /*---- destruct ----*/
-    if (self->usingPos) CcsPosition_Destruct(self->usingPos);
+/*---- destructor ----*/
+    if (self->destructor) CcsPosition_Destruct(self->destructor);
+    if (self->constructor) CcsPosition_Destruct(self->constructor);
+    if (self->members) CcsPosition_Destruct(self->members);
+    if (self->cIncludes) CcsPosition_Destruct(self->cIncludes);
+    if (self->hIncludes) CcsPosition_Destruct(self->hIncludes);
     if (self->tokenString && self->tokenString != noString)
 	CcsFree(self->tokenString);
-    /*---- enable ----*/
+/*---- enable ----*/
 }
 
 /*---- ProductionsBody ----*/
@@ -173,8 +179,6 @@ CcsParser_Coco(CcsParser_t * self)
 	CcsParser_Get(self);
     }
     if (self->la->pos != beg->pos) {
-	self->usingPos =
-	    CcsScanner_GetPositionWithTail(self->scanner, beg, self->t);
     }
 
     CcsParser_Expect(self, 6);
