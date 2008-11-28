@@ -127,8 +127,6 @@ Coco                            (. CcSymbol_t  * sym;
     // for #include statements
     ANY
   }                             (. if (self->la->pos != beg->pos) {
-	                               self->usingPos =
-				           CcsScanner_GetPositionWithTail(self->scanner, beg, self->t);
                                    } .)
 
   "COMPILER"                    (. self->genScanner = TRUE; .)
@@ -227,7 +225,7 @@ Set<CcCharSet_t ** s>           (. CcCharSet_t * s2; .)
 =
   SimSet<s>
   { '+' SimSet<&s2>             (. CcCharSet_Or(*s, s2);
-    				   CcCharSet_Desturct(s2); .)
+    				   CcCharSet_Destruct(s2); .)
   | '-' SimSet<&s2>             (. CcCharSet_Subtract(*s, s2);
     				   CcCharSet_Destruct(s2); .)
   }

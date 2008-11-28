@@ -46,6 +46,57 @@ static const char * usage_format =
     "Scanner[.lang].frame and Parser[.lang].frame files needed in ATG directory\n"
     "or in a directory specified in the -frames option.\n";
 
+static const char * hIncludes =
+    "#ifndef   COCO_DEFS_H\n"
+    "#include  \"Defs.h\"\n"
+    "#endif\n";
+
+static const char * cIncludes =
+    "#include  \"Globals.h\"\n"
+    "#include  \"lexical/CharSet.h\"\n"
+    "#include  \"lexical/CharClass.h\"\n"
+    "#include  \"lexical/Nodes.h\"\n"
+    "#include  \"syntax/Nodes.h\"\n"
+    "static const int CcsParser_id = 0;\n"
+    "static const int CcsParser_str = 1;\n"
+    "static const char * noString = \"~none~\";\n";
+
+static const char * members =
+    "    char            * tokenString;\n"
+    "    CcsBool_t         genScanner;\n"
+    "    CcsPosition_t   * hIncludes;\n"
+    "    CcsPosition_t   * cIncludes;\n"
+    "    CcsPosition_t   * members;\n"
+    "    CcsPosition_t   * constructor;\n"
+    "    CcsPosition_t   * destructor;\n"
+    "\n"
+    "    /* Shortcut pointers */\n"
+    "    CcSymbolTable_t * symtab;\n"
+    "    CcLexical_t     * lexical;\n"
+    "    CcSyntax_t      * syntax;\n";
+
+static const char * constructor =
+    "    self->tokenString = NULL;\n"
+    "    self->genScanner = FALSE;\n"
+    "    self->hIncludes = NULL;\n"
+    "    self->cIncludes = NULL;\n"
+    "    self->members = NULL;\n"
+    "    self->constructor = NULL;\n"
+    "    self->destructor = NULL;\n"
+    "\n"
+    "    self->symtab = &((CcGlobals_t *)globals)->symtab;\n"
+    "    self->lexical = &((CcGlobals_t *)globals)->lexical;\n"
+    "    self->syntax = &((CcGlobals_t *)globals)->syntax;\n";
+
+static const char * destructor =
+    "    if (self->destructor) CcsPosition_Destruct(self->destructor);\n"
+    "    if (self->constructor) CcsPosition_Destruct(self->constructor);\n"
+    "    if (self->members) CcsPosition_Destruct(self->members);\n"
+    "    if (self->cIncludes) CcsPosition_Destruct(self->cIncludes);\n"
+    "    if (self->hIncludes) CcsPosition_Destruct(self->hIncludes);\n"
+    "    if (self->tokenString && self->tokenString != noString)\n"
+    "	CcsFree(self->tokenString);\n";
+
 int
 main(int argc, char * argv[])
 {
@@ -64,6 +115,12 @@ main(int argc, char * argv[])
     }
     if (!CcGlobals(&globals, atgName, stderr)) goto errquit0;
     if (!CcGlobals_Parse(&globals)) goto errquit1;
+
+    globals.base.parser.hIncludes = CcsPosition(0, strlen(hIncludes), 0, hIncludes);
+    globals.base.parser.cIncludes = CcsPosition(0, strlen(cIncludes), 0, cIncludes);
+    globals.base.parser.members = CcsPosition(0, strlen(members), 0, members);
+    globals.base.parser.constructor = CcsPosition(0, strlen(constructor), 0, constructor);
+    globals.base.parser.destructor = CcsPosition(0, strlen(destructor), 0, destructor);
 
     schemeName = CcArguments_First(&arguments, "scheme", &iter);
     if (schemeName == NULL || !strcmp(schemeName, "c")) {
