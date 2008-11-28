@@ -175,8 +175,8 @@ Coco                            (. CcSymbol_t  * sym;
                                    CcsBool_t noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
 				   ((CcSymbolNT_t *)sym)->attrPos = NULL; .)
     [ AttrDecl<(CcSymbolNT_t *)sym> ]  (. if (!undef && noAttrs != (((CcSymbolNT_t *)sym)->attrPos == NULL))
-                                              CcsParser_SemErr(self->globals, self->t,
-					   	               "attribute mismatch between declaration and use of this symbol"); .)
+                                              CcsGlobals_SemErr(self->globals, self->t,
+					   	                "attribute mismatch between declaration and use of this symbol"); .)
     [ SemText<.&((CcSymbolNT_t *)sym)->semPos.> ] WEAK
     '='
     Expression<&g>              (. ((CcSymbolNT_t *)sym)->graph = g->head;
@@ -185,7 +185,7 @@ Coco                            (. CcSymbol_t  * sym;
                                 WEAK
     '.'
   }
-  "END" ident                   (. if (!strcmp(gramName, self->t->val))
+  "END" ident                   (. if (strcmp(gramName, self->t->val))
 				       CcsGlobals_SemErr(self->globals, self->t,
 				       			 "name does not match grammar name");
 				   self->syntax->gramSy = CcSymbolTable_FindSym(self->symtab, gramName);
@@ -235,7 +235,7 @@ Set<CcCharSet_t ** s>           (. CcCharSet_t * s2; .)
 
 /*------------------------------------------------------------------------------------*/
 
-SimSet<CcCharSet ** s>          (. int n1, n2; .)
+SimSet<CcCharSet_t ** s>        (. int n1, n2; .)
 =                               (. *s = CcCharSet(); .)
 ( ident                         (. CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, self->t->val);
 				   if (c != NULL) CcCharSet_Or(*s, c->set);
@@ -282,10 +282,10 @@ TokenDecl<const CcObjectType_t * typ> (. char * name = NULL; int kind; CcSymbol_
   Sym<&name, &kind>             (. sym = CcSymbolTable_FindSym(self->symtab, name);
 				   if (sym != NULL) {
 				       CcsGlobals_SemErr(self->globals, self->t, "name %s declared twice", name);
-                                   } else if (type == symbol_t) {
+                                   } else if (typ == symbol_t) {
 				       sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
 				       ((CcSymbolT_t *)sym)->tokenKind = symbol_fixedToken;
-				   } else if (type == symbol_pr) {
+				   } else if (typ == symbol_pr) {
 				       sym = CcSymbolTable_NewPragma(self->symtab, name, self->t->line);
 				       ((CcSymbolPR_t *)sym)->tokenKind = symbol_fixedToken;
 				       ((CcSymbolPR_t *)sym)->semPos = NULL;

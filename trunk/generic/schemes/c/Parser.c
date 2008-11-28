@@ -159,8 +159,9 @@ CcsParser_Destruct(CcsParser_t * self)
 }
 
 /*---- ProductionsBody ----*/
-static void /* OK */
-CcsParser_Coco(CcsParser_t * self) {
+static void
+CcsParser_Coco(CcsParser_t * self)
+{
     CcSymbol_t * sym;
     CcGraph_t * g, * g1, * g2;
     char * gramName = NULL;
@@ -325,8 +326,9 @@ CcsParser_Coco(CcsParser_t * self) {
     CcsParser_Expect(self, 18);
 }
 
-static void /* OK */
-CcsParser_SetDecl(CcsParser_t * self) {
+static void
+CcsParser_SetDecl(CcsParser_t * self)
+{
     CcCharSet_t * s; 
     CcsParser_Expect(self, 1);
     const char * name = self->t->val;
@@ -345,8 +347,9 @@ CcsParser_SetDecl(CcsParser_t * self) {
     CcsParser_Expect(self, 18);
 }
 
-static void /* OK */
-CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ) {
+static void
+CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ)
+{
     char * name = NULL; int kind; CcSymbol_t * sym; CcGraph_t * g; 
 
     CcsParser_Sym(self, &name, &kind);
@@ -404,8 +407,9 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ) {
     }
 }
 
-static void /* OK */
-CcsParser_TokenExpr(CcsParser_t * self, CcGraph_t ** g) {
+static void
+CcsParser_TokenExpr(CcsParser_t * self, CcGraph_t ** g)
+{
     CcGraph_t * g2;
     CcsParser_TokenTerm(self, g);
     CcsBool_t first = TRUE; 
@@ -419,8 +423,9 @@ CcsParser_TokenExpr(CcsParser_t * self, CcGraph_t ** g) {
     }
 }
 
-static void /* OK */
-CcsParser_Set(CcsParser_t * self, CcCharSet_t ** s) {
+static void
+CcsParser_Set(CcsParser_t * self, CcCharSet_t ** s)
+{
     CcCharSet_t * s2; 
     CcsParser_SimSet(self, s);
     while (self->la->kind == 20 || self->la->kind == 21) {
@@ -438,8 +443,9 @@ CcsParser_Set(CcsParser_t * self, CcCharSet_t ** s) {
     }
 }
 
-static void /* OK */
-CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym) {
+static void
+CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym)
+{
     if (self->la->kind == 24) {
 	CcsParser_Get(self);
 	CcsToken_t * beg;
@@ -477,8 +483,9 @@ CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym) {
     }
 }
 
-static void /* OK */
-CcsParser_SemText(CcsParser_t * self, CcsPosition_t ** pos) {
+static void
+CcsParser_SemText(CcsParser_t * self, CcsPosition_t ** pos)
+{
     CcsParser_Expect(self, 39);
     CcsToken_t * beg;
     CcsScanner_IncRef(self->scanner, beg = self->la);
@@ -500,8 +507,9 @@ CcsParser_SemText(CcsParser_t * self, CcsPosition_t ** pos) {
     CcsScanner_DecRef(self->scanner, beg);
 }
 
-static void /* OK */
-CcsParser_Expression(CcsParser_t * self, CcGraph_t ** g) {
+static void
+CcsParser_Expression(CcsParser_t * self, CcGraph_t ** g)
+{
     CcGraph_t * g2;
     CcsParser_Term(self, g);
     CcsBool_t first = TRUE; 
@@ -515,8 +523,9 @@ CcsParser_Expression(CcsParser_t * self, CcGraph_t ** g) {
     }
 }
 
-static void /* OK */
-CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s) {
+static void
+CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s)
+{
     int n1, n2; 
     *s = CcCharSet();
     if (self->la->kind == 1) {
@@ -556,8 +565,9 @@ CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s) {
     }
 }
 
-static void /* OK */
-CcsParser_Char(CcsParser_t * self, int * n) {
+static void
+CcsParser_Char(CcsParser_t * self, int * n)
+{
     CcsParser_Expect(self, 5);
     *n = 0;
     char * name; const char * cur;
@@ -569,8 +579,9 @@ CcsParser_Char(CcsParser_t * self, int * n) {
     if (self->lexical->ignoreCase) *n = tolower(*n);
 }
 
-static void /* OK */
-CcsParser_Sym(CcsParser_t * self, char ** name, int * kind) {
+static void
+CcsParser_Sym(CcsParser_t * self, char ** name, int * kind)
+{
     *name = CcStrdup("???"); *kind = CcsParser_id;
     if (self->la->kind == 1) {
 	CcsParser_Get(self);
@@ -598,8 +609,9 @@ CcsParser_Sym(CcsParser_t * self, char ** name, int * kind) {
     }
 }
 
-static void /* OK */
-CcsParser_Term(CcsParser_t * self, CcGraph_t ** g) {
+static void
+CcsParser_Term(CcsParser_t * self, CcGraph_t ** g)
+{
     CcGraph_t *g2; CcsPosition_t * pos;
     CcNode_t * rslv = NULL; *g = NULL; 
     if (CcsParser_StartOf(self, 17)) {
@@ -627,8 +639,9 @@ CcsParser_Term(CcsParser_t * self, CcGraph_t ** g) {
 	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, CcNodeEps(0)));
 }
 
-static void /* OK */
-CcsParser_Resolver(CcsParser_t * self, CcsPosition_t ** pos) {
+static void
+CcsParser_Resolver(CcsParser_t * self, CcsPosition_t ** pos)
+{
     CcsParser_Expect(self, 37);
     CcsParser_Expect(self, 30);
     CcsToken_t * beg;
@@ -638,8 +651,9 @@ CcsParser_Resolver(CcsParser_t * self, CcsPosition_t ** pos) {
     CcsScanner_DecRef(self->scanner, beg);
 }
 
-static void /* OK */
-CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g) {
+static void
+CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
+{
     char * name = NULL; int kind; CcsPosition_t * pos; CcsBool_t weak = FALSE; 
     *g = NULL;
 
@@ -743,8 +757,9 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g) {
 	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, CcNodeEps(0)));
 }
 
-static void /* OK */
-CcsParser_Attribs(CcsParser_t * self, CcNode_t * p) {
+static void
+CcsParser_Attribs(CcsParser_t * self, CcNode_t * p)
+{
     if (self->la->kind == 24) {
 	CcsParser_Get(self);
 	CcsToken_t * beg;
@@ -782,8 +797,9 @@ CcsParser_Attribs(CcsParser_t * self, CcNode_t * p) {
     } else CcsParser_SynErr(self, 50);
 }
 
-static void /* OK */
-CcsParser_Condition(CcsParser_t * self) {
+static void
+CcsParser_Condition(CcsParser_t * self)
+{
     while (CcsParser_StartOf(self, 20)) {
 	if (self->la->kind == 30) {
 	    CcsParser_Get(self);
@@ -795,8 +811,9 @@ CcsParser_Condition(CcsParser_t * self) {
     CcsParser_Expect(self, 31);
 }
 
-static void /* OK */
-CcsParser_TokenTerm(CcsParser_t * self, CcGraph_t ** g) {
+static void
+CcsParser_TokenTerm(CcsParser_t * self, CcGraph_t ** g)
+{
     CcGraph_t * g2;
     CcsParser_TokenFactor(self, g);
     while (CcsParser_StartOf(self, 8)) {
@@ -815,8 +832,9 @@ CcsParser_TokenTerm(CcsParser_t * self, CcGraph_t ** g) {
     }
 }
 
-static void /* OK */
-CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g) {
+static void
+CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g)
+{
     char * name = NULL; int kind;
     CcTransition_t trans;
     *g = NULL;
