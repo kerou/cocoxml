@@ -402,7 +402,7 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 		} else if (p2 == p) {
 		    SCOS_GenCond(self, output, "if (", ") {", &s1, p2->sub);
 		} else if (p2->down == NULL && equal) {
-		    CcPrintf(output, "} else {\n");
+		    CcPrintfI(output, "} else {\n");
 		} else {
 		    SCOS_GenCond(self, output,
 				 "} else if (", ") {", &s1, p2->sub);
@@ -523,7 +523,7 @@ COS_SynErrors(CcOutputScheme_t * self, CcOutput_t * output)
 		     "this symbol not expected in \\\"\" %s \"\\\"", str);
 	    break;
 	case cet_sync:
-	    CcPrintf(output, "invalid \"\\\"\" %s \"\\\"", str);
+	    CcPrintf(output, "invalid \\\"\" %s \"\\\"", str);
 	    break;
 	}
 	CcFree(str);
