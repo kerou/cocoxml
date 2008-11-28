@@ -263,10 +263,9 @@ CcsParser_Coco(CcsParser_t * self) {
 	if (self->la->kind == 24 || self->la->kind == 26) {
 	    CcsParser_AttrDecl(self, (CcSymbolNT_t *)sym);
 	}
-	if (!undef)
-	    if (noAttrs != (((CcSymbolNT_t *)sym)->attrPos == NULL))
-		CcsGlobals_SemErr(self->globals, self->t,
-				  "attribute mismatch between declaration and use of this symbol");
+	if (!undef && noAttrs != (((CcSymbolNT_t *)sym)->attrPos == NULL))
+	    CcsGlobals_SemErr(self->globals, self->t,
+			      "attribute mismatch between declaration and use of this symbol");
 
 	if (self->la->kind == 39) {
 	    if (sym->base.type == symbol_nt) {
