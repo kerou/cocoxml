@@ -250,13 +250,20 @@ COS_ProductionsHeader(CcOutputScheme_t * self,
 		      CcOutput_t * output)
 {
     CcArrayListIter_t iter;
-    const CcSymbol_t * sym;
+    const CcSymbolNT_t * sym;
     const CcArrayList_t * nonterminals = &self->globals->symtab.nonterminals;
 
-    for (sym = (const CcSymbol_t *)CcArrayList_FirstC(nonterminals, &iter);
-	 sym; sym = (const CcSymbol_t *)CcArrayList_NextC(nonterminals, &iter))
-	CcPrintfI(output, "static void CcsParser_%s(CcsParser_t * self);\n",
-		  sym->name);
+    for (sym = (const CcSymbolNT_t *)CcArrayList_FirstC(nonterminals, &iter);
+	 sym;
+	 sym = (const CcSymbolNT_t *)CcArrayList_NextC(nonterminals, &iter))
+	if (sym->attrPos)
+	    CcPrintfI(output,
+		      "static void CcsParser_%s(CcsParser_t * self, %s);\n",
+		      sym->base.name, sym->attrPos->text);
+	else
+	    CcPrintfI(output,
+		      "static void CcsParser_%s(CcsParser_t * self);\n",
+		      sym->base.name);
     return TRUE;
 }
 
@@ -294,7 +301,7 @@ SCOS_GenCond(CcOutputScheme_t * self, CcOutput_t * output,
 	    }
 	CcPrintf(output, "%s\n", suffix);
     } else {
-	CcPrintfI(output, "%sCcsParser_StartOf(%d)%s\n",
+	CcPrintfI(output, "%sCcsParser_StartOf(self, %d)%s\n",
 		  prefix, CcSyntaxSymSet_New(&ccself->symSet, s), suffix);
     }
 }
@@ -361,7 +368,7 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 	    pwt = (CcNodeWT_t *)p;
 	    CcSyntax_Expected(syntax, &s1, p->next, ccself->curSy);
 	    CcBitArray_Or(&s1, syntax->allSyncSets);
-	    CcPrintfI(output, "CcsParser_ExpecteWeak(self, %d, %d);\n",
+	    CcPrintfI(output, "CcsParser_ExpectWeak(self, %d, %d);\n",
 		      pwt->sym->kind,
 		      CcSyntaxSymSet_New(&ccself->symSet, &s1));
 	    CcBitArray_Destruct(&s1);
@@ -484,12 +491,12 @@ COS_ProductionsBody(CcOutputScheme_t * self, CcOutput_t * output)
 	 sym = (const CcSymbolNT_t *)CcArrayList_NextC(nonterminals, &iter)) {
 	ccself->curSy = (const CcSymbol_t *)sym;
 	if (sym->attrPos == NULL) {
-	    CcPrintfI(output,
-		      "static void CcsParser_%s(CcsParser_t * self)\n",
+	    CcPrintfI(output, "static void\n");
+	    CcPrintfI(output, "CcsParser_%s(CcsParser_t * self)\n",
 		      sym->base.name);
 	} else {
-	    CcPrintfI(output,
-		      "static void CcsParser_%s(CcsParser_t * self, %s)\n",
+	    CcPrintfI(output, "static void\n");
+	    CcPrintfI(output, "CcsParser_%s(CcsParser_t * self, %s)\n",
 		      sym->base.name, sym->attrPos->text);
 	}
 	CcPrintfI(output, "{\n");
