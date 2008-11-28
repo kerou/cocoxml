@@ -49,13 +49,6 @@ COMPILER Coco
     const char  * tokenString;  // used in declarations of literal tokens
     const char  * noString;     // used in declarations of literal tokens
 
-    void Parser_InitDeclarations(Parser_t * self) {
-	self->id  = 0;
-	self->str = 1;
-	self->tokenString = NULL;
-	self->noString = CocoStrdup(L"-none-");
-    }
-
 /*-------------------------------------------------------------------------*/
 
 CHARACTERS
@@ -88,103 +81,94 @@ IGNORE cr + lf + tab
 
 PRODUCTIONS
 
-Coco                            (. Symbol_t  * sym;
-				   Graph_t   * g, * g1, * g2;
-				   char      * gramName = NULL;
-				   CharSet_t * s; 
-                                   Parser_InitDeclarations(self); .)
+Coco                            (. CcSymbol_t  * sym;
+				   CcGraph_t   * g, * g1, * g2;
+				   char        * gramName = NULL;
+				   CcCharSet_t * s; 
+
+				   self->tokenString = NULL; .)
 =
-                                (. int beg = self->la->pos; .)
+                                (. CcsToken_t * beg;
+				   CcsScanner_IncRef(self->scanner, beg = self->la); .)
   { // this section can be used
     // for #include statements
     ANY
-  }                             (. if (self->la->pos != self->beg) {
-	                               self->pgen->usingPos = Position(NULL, beg, self->t->pos - beg + strlen(self->t->val), 0);
-                                   }
-                                .)
+  }                             (. if (self->la->pos != beg->pos) {
+	                               self->usingPos =
+				           CcsScanner_GetPositionWithTail(self->scanner, beg, self->t);
+                                   } .)
 
-  "COMPILER"                    (. self->genScanner = TRUE;
-                                   self->tab->ignored = CharSet(NULL); .)
-  ident                         (. gramName = strdupa(self->t->val);
-                                   beg = self->la->pos;
-                                 .)
-  { ANY }                       (. self->tab->semDeclPos = Position(NULL, beg, self->la->pos-beg, 0); .)
-  [ "IGNORECASE"                (. self->dfa->ignoreCase = TRUE; .) ]   /* pdt */
+  "COMPILER"                    (. self->genScanner = TRUE; .)
+  ident                         (. gramName = CcStrdup(self->t->val);
+  				   CcsScanner_DecRef(self->scanner, beg);
+				   CcsScanner_IncRef(self->scanner, beg = self->la); .)
+  { ANY }                       (. /* self->syntax->semDeclPos = CcsScanner_GetPosition(self->scanner, beg, self->la);
+    				      CcsScanner_DecRef(self->scanner, beg); */ .)
+  [ "IGNORECASE"                (. self->lexical->ignoreCase = TRUE; .) ]   /* pdt */
   [ "CHARACTERS" { SetDecl }]
-  [ "TOKENS"  { TokenDecl<node_t> }]
-  [ "PRAGMAS" { TokenDecl<node_pr> }]
-  { "COMMENTS"                  (. Bool_t nested = FALSE; .)
+  [ "TOKENS"  { TokenDecl<symbol_t> }]
+  [ "PRAGMAS" { TokenDecl<symbol_pr> }]
+  { "COMMENTS"                  (. CcsBool_t nested = FALSE; .)
     "FROM" TokenExpr<&g1> 
     "TO" TokenExpr<&g2>
     [ "NESTED"                  (. nested = TRUE; .)
-    ]                           (. DFA_NewComment(self->dfa, g1->l, g2->l, nested); .)
+    ]                           (. CcLexical_NewComment(self->lexical, self->t,
+    				   			g1->head, g2->head, nested);
+				   CcGraph_Destruct(g1); CcGraph_Destruct(g2); .)
   }
-  { "IGNORE" Set<&s>            (. BitArray_Or(self->tab->ignored, s); .)
+  { "IGNORE" Set<&s>            (. CcCharSet_Or(self->lexical->ignored, s);
+    	     			   CcCharSet_Destruct(s); .)
   }
 
   SYNC 
-  "PRODUCTIONS"                 (. if (self->genScanner) DFA_MakeDeterministic(self->dfa);
-                                       Tab_DeleteNodes(self->tab);
-                                 .)
-  { ident                       (. sym = Tab_FindSym(self->tab, self->t->val);
-                                   Bool_t undef = (sym == NULL);
+  "PRODUCTIONS"                 (. if (self->genScanner) CcLexical_MakeDeterministic(self->lexical);
+  				   CcEBNF_Clear(&self->lexical->base);
+  				   CcEBNF_Clear(&self->syntax->base); .)
+  { ident                       (. sym = CcSymbolTable_FindSym(self->symtab, self->t->val);
+                                   CcsBool_t undef = (sym == NULL);
 				   if (undef) {
-				       sym = Tab_NewSym(self->tab, node_nt, self->t->val, self->t->line);
+				       sym = CcSymbolTable_NewNonTerminal(self->symtab,
+									  self->t->val, self->t->line);
                                    } else {
-				       if (sym->typ == node_nt) {
-					   if (sym->graph != NULL) Parser_SemErr(self, "name declared twice");
+				       if (sym->base.type == symbol_nt) {
+					   if (((CcSymbolNT_t *)sym)->graph != NULL)
+					       CcsGlobals_SemErr(self->globals, self->t, "name declared twice");
 				       } else {
-					   Parser_SemErr(self, "this symbol kind not allowed on left side of production");
+					   CcsGlobals_SemErr(self->globals, self->t,
+					                     "this symbol kind not allowed on left side of production");
 				       }
 				       sym->line = self->t->line;
                                    }
-                                   Bool_t noAttrs = (sym->attrPos == NULL);
-                                   sym->attrPos = NULL;
-                                 .)
-    [ AttrDecl<sym> ]           (. if (!undef)
-                                       if (noAttrs != (sym->attrPos == NULL))
-                                           Parser_SemErr(self, "attribute mismatch between declaration and use of this symbol");
-                                 .)
-    [ SemText<.&sym->semPos.> ] WEAK
+                                   CcsBool_t noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
+				   ((CcSymbolNT_t *)sym)->attrPos = NULL; .)
+    [ AttrDecl<(CcSymbolNT_t *)sym> ]  (. if (!undef && noAttrs != (((CcSymbolNT_t *)sym)->attrPos == NULL))
+                                              CcsParser_SemErr(self->globals, self->t,
+					   	               "attribute mismatch between declaration and use of this symbol"); .)
+    [ SemText<.&((CcSymbolNT_t *)sym)->semPos.> ] WEAK
     '='
-    Expression<&g>              (. sym->graph = g->l;
-				   Tab_Finish(self, g);
-                                .)
+    Expression<&g>              (. ((CcSymbolNT_t *)sym)->graph = g->head;
+				   CcGraph_Finish(g);
+				   CcGraph_Destruct(g); .)
                                 WEAK
     '.'
   }
   "END" ident                   (. if (!strcmp(gramName, self->t->val))
-				       Parser_SemErr(self, "name does not match grammar name");
-				   self->tab->gramSy = Tab_FindSym(self->tag, gramName);
-				   if (self->tab->gramSy == NULL) {
-                                       Parser_SemErr(self, "missing production for grammar name");
+				       CcsGlobals_SemErr(self->globals, self->t,
+				       			 "name does not match grammar name");
+				   self->syntax->gramSy = CcSymbolTable_FindSym(self->symtab, gramName);
+				   CcFree(gramName);
+				   if (self->syntax->gramSy == NULL) {
+                                       CcsGlobals_SemErr(self->globals, self->t,
+				       			 "missing production for grammar name");
                                    } else {
-                                       sym = self->tab->gramSy;
-                                       if (sym->attrPos != NULL)
-					   Parser_SemErr(self, "grammar symbol must not have attributes");
+                                       sym = self->syntax->gramSy;
+                                       if (((CcSymbolNT_t *)sym)->attrPos != NULL)
+					   CcsGlobals_SemErr(self->globals, self->t,
+					   		     "grammar symbol must not have attributes");
                                    }
-				   self->tab->noSym = Tab_NewSym(self->tab, node_t, "???", 0); // noSym gets highest number
-                                   Tab_SetupAnys(self->tab);
-                                   Tab_RenumberPragmas(self->tab);
-                                   if (self->tab->ddt[2]) Tab_PrintNodes(self->tab);
-                                   if (self->errors->count == 0) {
-                                       fprintf(stderr, "checking\n");
-				       Tab_CompSymbolSets(self->tab);
-				       if (self->tab->ddt[7]) Tab_XRef(self->tab);
-				       if (Tab_GrammarOk(self->tab)) {
-					   fprintf(stderr, "parser");
-					   ParserGen_WriteParser(self->pgen);
-					   if (self->genScanner) {
-					       fprintf(stderr, " + scanner");
-					       DFA_WriteScanner(self->dfa);
-					       if (self->tab->ddt[0]) DFA_PrintStates(self->dfa);
-					   }
-					   fprintf(stderr, " generated\n");
-					   if (self->tab->ddt[8]) ParserGen_WriteStatistics(self->pgen);
-				       }
-                                   }
-                                   if (self->tab->ddt[6]) Tab_PrintSymbolTable(self->tab);
-                                 .)
+				   /* noSym gets highest number */
+				   self->syntax->noSy = CcSymbolTable_NewTerminal(self->symtab, "???", 0);
+				   CcSyntax_SetupAnys(self->syntax); .)
   '.'
 .
 
