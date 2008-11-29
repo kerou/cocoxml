@@ -356,7 +356,7 @@ SCOS_UseSwitch(CcOutputScheme_t * self, CcNode_t * p)
     CcArrayList_t * terminals = &self->globals->symtab.terminals;
     CcCOutputScheme_t * ccself = (CcCOutputScheme_t *)self;
 
-    if (p->base.type == node_alt) return FALSE;
+    if (p->base.type != node_alt) return FALSE;
     nAlts = 0;
     CcBitArray(&s1, terminals->Count);
     while (p != NULL) {
@@ -460,11 +460,9 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 		CcBitArray_Or(&s1, &isChecked);
 		output->indent += 4;
 		SCOS_GenCode(self, output, p2->sub, &s1);
+		if (useSwitch) CcPrintfI(output, "break;\n");
 		output->indent -= 4;
-		if (useSwitch) {
-		    CcPrintfI(output, "}\n");
-		    CcPrintfI(output, "break;\n");
-		}
+		if (useSwitch) CcPrintfI(output, "}\n");
 		p2 = p2->down;
 		CcBitArray_Destruct(&s1);
 	    }
@@ -474,7 +472,7 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 		err = CcSyntax_AltError(syntax, ccself->curSy);
 		if (useSwitch) {
 		    CcPrintfI(output,
-			      "default: CcsParser_SynErr(self, %d); break;",
+			      "default: CcsParser_SynErr(self, %d); break;\n",
 			      err);
 		    CcPrintfI(output, "}\n");
 		} else {
@@ -598,7 +596,8 @@ COS_InitSet(CcOutputScheme_t * self, CcOutput_t * output)
 	CcsAssert(setlen == CcBitArray_getCount(cur));
 	for (index = 0; index < setlen; ++index)
 	    setstr[index] = CcBitArray_Get(cur, index) ? '*' : '.';
-	CcPrintfI(output, "\"%s.\",\n", setstr);
+	CcPrintfI(output, "\"%s.\"%s\n", setstr,
+		  cur < ccself->symSet.used - 1 ? "," : "");
     }
     CcFree(setstr);
     return TRUE;
