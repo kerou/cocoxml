@@ -75,6 +75,9 @@ void CcsScanner_DecRef(CcsScanner_t * self, CcsToken_t * token);
 CcsPosition_t *
 CcsScanner_GetPosition(CcsScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end);
+CcsPosition_t *
+CcsScanner_GetPositionBetween(CcsScanner_t * self, const CcsToken_t * begin,
+			      const CcsToken_t * end);
 
 EXTC_END
 
