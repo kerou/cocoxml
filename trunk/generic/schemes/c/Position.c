@@ -42,12 +42,17 @@ CcsPosition_Destruct(CcsPosition_t * self)
 {
     CcsFree(self);
 }
-/*
-const char *
-CcsPosition_Dump(CcsPosition_t * self, char * buf, size_t szbuf)
+
+CcsPosition_t *
+CcsPosition_Clone(const CcsPosition_t * pos)
 {
-    if (self == NULL) snprintf(buf, szbuf, "     ");
-    else snprintf(buf, szbuf, "%5d", self->beg);
-    return buf;
+    CcsPosition_t * self;
+    if (pos == NULL) return NULL;
+    if (!(self = CcsMalloc(sizeof(CcsPosition_t) + pos->len + 1))) return NULL;
+    self->beg = pos->beg;
+    self->len = pos->len;
+    self->col = pos->col;
+    self->text = (char *)(self + 1);
+    memcpy(self->text, pos->text, self->len + 1);
+    return self;
 }
-*/

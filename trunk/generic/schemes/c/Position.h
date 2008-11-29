@@ -40,6 +40,8 @@ struct CcsPosition_s {
 CcsPosition_t * CcsPosition(int beg, int len, int col, const char * text);
 void CcsPosition_Destruct(CcsPosition_t * self);
 
+CcsPosition_t * CcsPosition_Clone(const CcsPosition_t * pos);
+
 const char *
 CcsPosition_Dump(CcsPosition_t * self, char * buf, size_t szbuf);
 
