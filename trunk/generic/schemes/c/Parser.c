@@ -643,7 +643,7 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
 	if (undef) {
 	    if (kind == CcsParser_id) {
 		/* forward nt */
-		sym = CcSymbolTable_NewNonTerminal(self->symtab, name, self->t->line);
+		sym = CcSymbolTable_NewNonTerminal(self->symtab, name, 0);
 	    } else if (self->genScanner) { 
 		sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
 		CcLexical_MatchLiteral(self->lexical, self->t, sym->name, sym);
