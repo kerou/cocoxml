@@ -142,23 +142,13 @@ CcsScanner_DecRef(CcsScanner_t * self, CcsToken_t * token)
 }
 
 CcsPosition_t *
-CcsScanner_GetPosition(CcsScanner_t * self,
-		       CcsToken_t * begin, CcsToken_t * end)
+CcsScanner_GetPosition(CcsScanner_t * self, const CcsToken_t * begin,
+		       const CcsToken_t * end)
 {
     int len = end->pos - begin->pos;
     return CcsPosition(begin->pos, len, begin->col,
 		       CcsBuffer_GetString(&self->buffer, begin->pos, len));
 }
-
-CcsPosition_t *
-CcsScanner_GetPositionWithTail(CcsScanner_t * self,
-			       CcsToken_t * begin, CcsToken_t * end)
-{
-    int len = (end->pos + strlen(end->val)) - begin->pos;
-    return CcsPosition(begin->pos, len, begin->col,
-		    CcsBuffer_GetString(&self->buffer, begin->pos, len));
-}
-
 
 /* All the following things are used by CcsScanner_NextCcsToken. */
 typedef struct {

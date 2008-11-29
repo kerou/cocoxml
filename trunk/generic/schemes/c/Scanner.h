@@ -73,11 +73,8 @@ void CcsScanner_IncRef(CcsScanner_t * self, CcsToken_t * token);
 void CcsScanner_DecRef(CcsScanner_t * self, CcsToken_t * token);
 
 CcsPosition_t *
-CcsScanner_GetPosition(CcsScanner_t * self,
-		       CcsToken_t * begin, CcsToken_t * end);
-CcsPosition_t *
-CcsScanner_GetPositionWithTail(CcsScanner_t * self,
-			       CcsToken_t * begin, CcsToken_t * end);
+CcsScanner_GetPosition(CcsScanner_t * self, const CcsToken_t * begin,
+		       const CcsToken_t * end);
 
 EXTC_END
 
