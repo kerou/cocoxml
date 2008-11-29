@@ -28,6 +28,7 @@
 #include  "lexical/CharSet.h"
 
 static const CcOutputInfo_t CcDumpOutputScheme_OutputInfos[] = {
+    { "NodeTable.html" },
     { "StateTable.html" },
     { "SymbolTable.html" },
     { NULL }
@@ -66,6 +67,36 @@ CharRepr(char * buf, size_t szbuf, int ch)
 	snprintf(buf, szbuf, "%d", ch);
     }
     return buf;
+}
+
+static CcsBool_t
+DumpEBNF(CcOutput_t * output, const CcEBNF_t * ebnf)
+{
+    CcArrayListIter_t iter; const CcNode_t * node;
+
+    for (node = (const CcNode_t *)CcArrayList_FirstC(&ebnf->nodes, &iter);
+	 node; node = (const CcNode_t *)CcArrayList_NextC(&ebnf->nodes, &iter))
+	CcPrintfI(output, "<tr><td>%d</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%s</td><td>%d</td></tr>\n",
+		  node->base.index,
+		  node->base.type->name,
+		  node->next ? node->next->base.index : -1,
+		  node->down ? node->down->base.index : -1,
+		  node->sub ? node->sub->base.index : -1,
+		  node->up ? "TRUE" : "FALSE",
+		  node->line);
+    return TRUE;
+}
+
+static CcsBool_t
+DOS_LexicalNodes(CcOutputScheme_t * self, CcOutput_t * output)
+{
+    return DumpEBNF(output, &self->globals->lexical.base);
+}
+
+static CcsBool_t
+DOS_SyntaxNodes(CcOutputScheme_t * self, CcOutput_t * output)
+{
+    return DumpEBNF(output, &self->globals->syntax.base);
 }
 
 static CcsBool_t
@@ -108,14 +139,31 @@ static CcsBool_t
 DOS_NonTerminals(CcOutputScheme_t * self, CcOutput_t * output)
 {
     CcArrayListIter_t iter; const CcSymbolNT_t * sym;
+    char * firstStr, * followStr, * ntsStr; int index;
+    CcArrayList_t * terminals = &self->globals->symtab.terminals;
     CcArrayList_t * nonterminals = &self->globals->symtab.nonterminals;
 
+    firstStr = CcMalloc(terminals->Count + 1); firstStr[terminals->Count] = 0;
+    followStr = CcMalloc(terminals->Count + 1); followStr[terminals->Count] = 0;
+    ntsStr = CcMalloc(nonterminals->Count + 1); ntsStr[nonterminals->Count] = 0;
     for (sym = (const CcSymbolNT_t *)CcArrayList_First(nonterminals, &iter);
-	 sym; sym = (const CcSymbolNT_t *)CcArrayList_Next(nonterminals, &iter))
-	CcPrintfI(output, "<tr><td>%d</td><td>%s</td><td>%s</td><td>%d</td></tr>\n",
+	 sym; sym = (const CcSymbolNT_t *)CcArrayList_Next(nonterminals, &iter)) {
+	CcsAssert(terminals->Count == CcBitArray_getCount(sym->first));
+	for (index = 0; index < terminals->Count; ++index)
+	    firstStr[index] = CcBitArray_Get(sym->first, index) ? '*' : '.';
+	CcsAssert(terminals->Count == CcBitArray_getCount(sym->follow));
+	for (index = 0; index < terminals->Count; ++index)
+	    followStr[index] = CcBitArray_Get(sym->follow, index) ? '*' : '.';
+	CcsAssert(nonterminals->Count == CcBitArray_getCount(sym->nts));
+	for (index = 0; index < nonterminals->Count; ++index)
+	    ntsStr[index] = CcBitArray_Get(sym->nts, index) ? '*' : '.';
+	CcPrintfI(output, "<tr><td>%d</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n",
 		  sym->base.base.index, sym->base.name,
 		  sym->deletable ? "TRUE" : "FALSE",
-		  sym->graph->base.index);
+		  sym->graph->base.index,
+		  firstStr, followStr, ntsStr);
+    }
+    CcFree(ntsStr); CcFree(followStr); CcFree(firstStr);
     return TRUE;
 }
 
@@ -167,7 +215,11 @@ static CcsBool_t
 CcDumpOutputScheme_write(CcOutputScheme_t * self, CcOutput_t * output,
 			 const char * func, const char * param)
 {
-    if (!strcmp(func, "terminals")) {
+    if (!strcmp(func, "lexicalNodes")) {
+	return DOS_LexicalNodes(self, output);
+    } else if (!strcmp(func, "syntaxNodes")) {
+	return DOS_SyntaxNodes(self, output);
+    } else if (!strcmp(func, "terminals")) {
 	return DOS_Terminals(self, output);
     } else if (!strcmp(func, "pragmas")) {
 	return DOS_Pragmas(self, output);
