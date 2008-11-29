@@ -216,9 +216,9 @@ SchemeDecl
 SectionDecl       (. char * secname; CcsToken_t * beg; .)
 =
   "SECTION" ident (. secname = CcStrdup(self->t->val);
-  	    	     CcsScanner_IncRef(self->scanner, beg = self->la); .)
+  	    	     CcsScanner_IncRef(self->scanner, beg = self->t); .)
   { ANY }         (. CcGlobals_NewSection((CcGlobals_t *)self->globals, secname,
-    		     			  CcsScanner_GetPosition(self->scanner, beg, self->la));
+    		     			  CcsScanner_GetPositionBetween(self->scanner, beg, self->la));
 		     CcsScanner_DecRef(self->scanner, beg);
 		     CcFree(secname); .)
   "END" '.'

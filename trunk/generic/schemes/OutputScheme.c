@@ -282,7 +282,7 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
 	} else if (!strcmp(Command, "enable")) {
 	    enabled = TRUE;
 	} else if ((pos = CcGlobals_GetSection(self->globals, Command))) {
-	    CcSource(&output, pos);
+	    CcPrintf(&output, "%s", pos->text);
 	    enabled = FALSE;
 	} else {
 	    if (!type->write(self, &output, Command, ParamStr))
