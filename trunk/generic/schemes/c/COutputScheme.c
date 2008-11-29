@@ -598,7 +598,7 @@ COS_InitSet(CcOutputScheme_t * self, CcOutput_t * output)
 	CcsAssert(setlen == CcBitArray_getCount(cur));
 	for (index = 0; index < setlen; ++index)
 	    setstr[index] = CcBitArray_Get(cur, index) ? '*' : '.';
-	CcPrintfI(output, "\"%s\",\n", setstr);
+	CcPrintfI(output, "\"%s.\",\n", setstr);
     }
     CcFree(setstr);
     return TRUE;
