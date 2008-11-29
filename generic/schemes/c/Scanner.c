@@ -1,4 +1,5 @@
 /*---- license ----*/
+
 /*---- enable ----*/
 #include  <ctype.h>
 #include  "Scanner.h"
@@ -41,8 +42,8 @@ CcsScanner_Init(CcsScanner_t * self)
 {
     /*---- declarations ----*/
     self->eofSym = 0;
-    self->maxT = 44;
-    self->noSym = 44;
+    self->maxT = 46;
+    self->noSym = 46;
     /*---- enable ----*/
 
     self->busyTokenList = NULL;
@@ -218,26 +219,28 @@ typedef struct {
 
 static const Identifier2KWKind_t i2kArr[] = {
     /*---- identifiers2keywordkinds ----*/
-    { "ANY", 26 },
+    { "ANY", 28 },
     { "CHARACTERS", 11 },
     { "COMMENTS", 14 },
     { "COMPILER", 6 },
     { "CONSTRUCTOR", 8 },
-    { "CONTEXT", 41 },
+    { "CONTEXT", 43 },
     { "DESTRUCTOR", 9 },
     { "END", 22 },
     { "FROM", 15 },
-    { "IF", 40 },
+    { "IF", 42 },
     { "IGNORE", 18 },
     { "IGNORECASE", 10 },
     { "MEMBERS", 7 },
     { "NESTED", 17 },
     { "PRAGMAS", 13 },
     { "PRODUCTIONS", 19 },
-    { "SYNC", 39 },
+    { "SCHEME", 23 },
+    { "SECTION", 24 },
+    { "SYNC", 41 },
     { "TO", 16 },
     { "TOKENS", 12 },
-    { "WEAK", 32 },
+    { "WEAK", 34 },
     /*---- enable ----*/
 };
 static const int i2kNum = sizeof(i2kArr) / sizeof(i2kArr[0]);
@@ -464,7 +467,7 @@ CcsScanner_NextCcsToken(CcsScanner_t * self)
 	    self->ch == '_' ||
 	    (self->ch >= 'a' && self->ch <= 'z')) {
 	    CcsScanner_GetCh(self); goto case_10;
-	} else { kind = 45; break; }
+	} else { kind = 47; break; }
     case 11: case_11:
 	if ((self->ch >= 0 && self->ch <= '\t') ||
 	    (self->ch >= '\v' && self->ch <= '\f') ||
@@ -487,33 +490,33 @@ CcsScanner_NextCcsToken(CcsScanner_t * self)
     case 13:
 	{ kind = 20; break; }
     case 14:
-	{ kind = 23; break; }
-    case 15:
-	{ kind = 24; break; }
-    case 16: case_16:
 	{ kind = 25; break; }
+    case 15:
+	{ kind = 26; break; }
+    case 16: case_16:
+	{ kind = 27; break; }
     case 17:
-	{ kind = 28; break; }
-    case 18: case_18:
-	{ kind = 29; break; }
-    case 19: case_19:
 	{ kind = 30; break; }
-    case 20:
+    case 18: case_18:
 	{ kind = 31; break; }
+    case 19: case_19:
+	{ kind = 32; break; }
+    case 20:
+	{ kind = 33; break; }
     case 21:
-	{ kind = 34; break; }
-    case 22:
-	{ kind = 35; break; }
-    case 23:
 	{ kind = 36; break; }
-    case 24:
+    case 22:
 	{ kind = 37; break; }
-    case 25:
+    case 23:
 	{ kind = 38; break; }
+    case 24:
+	{ kind = 39; break; }
+    case 25:
+	{ kind = 40; break; }
     case 26: case_26:
-	{ kind = 42; break; }
+	{ kind = 44; break; }
     case 27: case_27:
-	{ kind = 43; break; }
+	{ kind = 45; break; }
     case 28:
 	if (self->ch == '.') {
 	    CcsScanner_GetCh(self); goto case_16;
@@ -525,11 +528,11 @@ CcsScanner_NextCcsToken(CcsScanner_t * self)
     case 29:
 	if (self->ch == '.') {
 	    CcsScanner_GetCh(self); goto case_18;
-	} else { kind = 27; break; }
+	} else { kind = 29; break; }
     case 30:
 	if (self->ch == '.') {
 	    CcsScanner_GetCh(self); goto case_26;
-	} else { kind = 33; break; }
+	} else { kind = 35; break; }
     /*---- enable ----*/
     }
     t = CcsToken(kind, pos, col, line,

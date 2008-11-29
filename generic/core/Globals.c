@@ -31,7 +31,10 @@ CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
     if (!CcSymbolTable(&self->symtab)) goto errquit1;
     if (!CcLexical(&self->lexical, self)) goto errquit2;
     if (!CcSyntax(&self->syntax, self)) goto errquit3;
+    if (!CcArrayList(&self->sections)) goto errquit4;
     return self;
+ errquit4:
+    CcSyntax_Destruct(&self->syntax);
  errquit3:
     CcLexical_Destruct(&self->lexical);
  errquit2:
@@ -45,6 +48,7 @@ CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
 void
 CcGlobals_Destruct(CcGlobals_t * self)
 {
+    CcArrayList_Destruct(&self->sections);
     CcSyntax_Destruct(&self->syntax);
     CcLexical_Destruct(&self->lexical);
     CcSymbolTable_Destruct(&self->symtab);
@@ -60,4 +64,46 @@ CcGlobals_Parse(CcGlobals_t * self)
     if (!CcLexical_Finish(&self->lexical)) return FALSE;
     if (!CcSyntax_Finish(&self->syntax)) return FALSE;
     return TRUE;
+}
+
+typedef struct {
+    CcObject_t base;
+    char * name;
+    CcsPosition_t * pos;
+}  CcSection_t;
+
+static void
+CcSection_Destruct(CcObject_t * self)
+{
+    CcSection_t * ccself = (CcSection_t *)self;
+
+    CcsPosition_Destruct(ccself->pos);
+    CcFree(ccself->name);
+    CcObject_Destruct(self);
+}
+
+static const CcObjectType_t SectionType = {
+    sizeof(CcSection_t), "Section", CcSection_Destruct
+};
+
+void
+CcGlobals_NewSection(CcGlobals_t * self, const char * secname,
+		     CcsPosition_t * pos)
+{
+    CcSection_t * section = (CcSection_t *)
+	CcArrayList_New(&self->sections, CcObject(&SectionType));
+    section->name = CcStrdup(secname);
+    section->pos = pos;
+}
+
+const CcsPosition_t *
+CcGlobals_GetSection(const CcGlobals_t * self, const char * secname)
+{
+    CcArrayListIter_t iter; const CcSection_t * section;
+
+    for (section = (const CcSection_t *)CcArrayList_FirstC(&self->sections, &iter);
+	 section;
+	 section = (const CcSection_t *)CcArrayList_NextC(&self->sections, &iter))
+	if (!strcmp(section->name, secname)) return section->pos;
+    return NULL;
 }

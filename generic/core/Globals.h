@@ -48,6 +48,8 @@ struct CcGlobals_s {
     CcSymbolTable_t   symtab;
     CcLexical_t       lexical;
     CcSyntax_t        syntax;
+
+    CcArrayList_t     sections;
 };
 
 CcGlobals_t *
@@ -55,6 +57,11 @@ CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp);
 void CcGlobals_Destruct(CcGlobals_t * self);
 
 CcsBool_t CcGlobals_Parse(CcGlobals_t * self);
+
+void CcGlobals_NewSection(CcGlobals_t * self, const char * secname,
+			  CcsPosition_t * pos);
+const CcsPosition_t *
+CcGlobals_GetSection(const CcGlobals_t * self, const char * secname);
 
 EXTC_END
 

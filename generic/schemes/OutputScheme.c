@@ -239,13 +239,12 @@ static CcsBool_t
 CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
 			     const char * outPath, const char * prefix)
 {
-    CcArgumentsIter_t iter;
-    const char * license;
     char tempOutPath[PATH_MAX];
-    FILE * tempfp, * outfp, * licensefp;
+    FILE * tempfp, * outfp;
     char lnbuf[4096]; CcsBool_t enabled;
     char Command[128], ParamStr[128], replacedPrefix[128];
     CcOutput_t output;
+    const CcsPosition_t * pos;
     const CommentMark_t * tempCM = Path2CommentMark(tempPath);
     const CcOutputSchemeType_t * type =
 	(const CcOutputSchemeType_t *)self->base.type;
@@ -282,21 +281,8 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
 	    snprintf(replacedPrefix, sizeof(replacedPrefix), "%s", ParamStr);
 	} else if (!strcmp(Command, "enable")) {
 	    enabled = TRUE;
-	} else if (!strcmp(Command, "license")) {
-	    if ((license =
-		 CcArguments_First(self->arguments, "license", &iter))) {
-		if (!(licensefp = fopen(license, "r"))) {
-		    fprintf(stderr, "open %s for read failed.\n", license);
-		    goto errquit2;
-		}
-		while (fgets(lnbuf, sizeof(lnbuf), licensefp))
-		    if (fputs(lnbuf, outfp) < 0) {
-			fprintf(stderr, "write %s failed.\n", outPath);
-			fclose(licensefp);
-			goto errquit2;
-		    }
-		fclose(licensefp);
-	    }
+	} else if ((pos = CcGlobals_GetSection(self->globals, Command))) {
+	    CcSource(&output, pos);
 	    enabled = FALSE;
 	} else {
 	    if (!type->write(self, &output, Command, ParamStr))

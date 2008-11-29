@@ -225,22 +225,6 @@ COS_Scan3(CcOutputScheme_t * self, CcOutput_t * output)
 }
 
 static CcsBool_t
-COS_hIncludes(CcOutputScheme_t * self, CcOutput_t * output)
-{
-    if (self->globals->base.parser.hIncludes)
-	CcSource(output, self->globals->base.parser.hIncludes);
-    return TRUE;
-}
-
-static CcsBool_t
-COS_cIncludes(CcOutputScheme_t * self, CcOutput_t * output)
-{
-    if (self->globals->base.parser.cIncludes)
-	CcSource(output, self->globals->base.parser.cIncludes);
-    return TRUE;
-}
-
-static CcsBool_t
 COS_Members(CcOutputScheme_t * self, CcOutput_t * output)
 {
     if (self->globals->base.parser.members)
@@ -628,10 +612,6 @@ CcCOutputScheme_write(CcOutputScheme_t * self, CcOutput_t * output,
 	return COS_Scan1(self, output);
     } else if (!strcmp(func, "scan3")) {
 	return COS_Scan3(self, output);
-    } else if (!strcmp(func, "hIncludes")) {
-	return COS_hIncludes(self, output);
-    } else if (!strcmp(func, "cIncludes")) {
-	return COS_cIncludes(self, output);
     } else if (!strcmp(func, "members")) {
 	return COS_Members(self, output);
     } else if (!strcmp(func, "constructor")) {
