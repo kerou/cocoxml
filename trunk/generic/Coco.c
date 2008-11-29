@@ -46,21 +46,6 @@ static const char * usage_format =
     "Scanner[.lang].frame and Parser[.lang].frame files needed in ATG directory\n"
     "or in a directory specified in the -frames option.\n";
 
-static const char * hIncludes =
-    "#ifndef   COCO_DEFS_H\n"
-    "#include  \"Defs.h\"\n"
-    "#endif\n";
-
-static const char * cIncludes =
-    "#include  \"Globals.h\"\n"
-    "#include  \"lexical/CharSet.h\"\n"
-    "#include  \"lexical/CharClass.h\"\n"
-    "#include  \"lexical/Nodes.h\"\n"
-    "#include  \"syntax/Nodes.h\"\n"
-    "static const int CcsParser_id = 0;\n"
-    "static const int CcsParser_str = 1;\n"
-    "static const char * noString = \"~none~\";\n";
-
 int
 main(int argc, char * argv[])
 {
@@ -80,11 +65,12 @@ main(int argc, char * argv[])
     if (!CcGlobals(&globals, atgName, stderr)) goto errquit0;
     if (!CcGlobals_Parse(&globals)) goto errquit1;
 
-    globals.base.parser.hIncludes = CcsPosition(0, strlen(hIncludes), 0, hIncludes);
-    globals.base.parser.cIncludes = CcsPosition(0, strlen(cIncludes), 0, cIncludes);
-
     schemeName = CcArguments_First(&arguments, "scheme", &iter);
-    if (schemeName == NULL || !strcmp(schemeName, "c")) {
+    if (schemeName == NULL) {
+	schemeName = globals.base.parser.schemeName;
+	if (schemeName == NULL) schemeName = "dump";
+    }
+    if (!strcmp(schemeName, "c")) {
 	if (!(scheme = (CcOutputScheme_t *)
 	      CcCOutputScheme(&globals, &arguments)))
 	    goto errquit1;

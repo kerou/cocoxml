@@ -1,4 +1,5 @@
 /*---- license ----*/
+
 /*---- enable ----*/
 #ifndef  COCO_PARSER_H
 #define  COCO_PARSER_H
@@ -8,7 +9,7 @@
 #endif
 
 /*---- hIncludes ----*/
-#ifndef   COCO_DEFS_H
+#ifndef  COCO_DEFS_H
 #include  "Defs.h"
 #endif
 /*---- enable ----*/
@@ -24,8 +25,7 @@ struct CcsParser_s {
     /*---- members ----*/
     char            * tokenString;
     CcsBool_t         genScanner;
-    CcsPosition_t   * hIncludes;
-    CcsPosition_t   * cIncludes;
+    char            * schemeName;
     CcsPosition_t   * members;
     CcsPosition_t   * constructor;
     CcsPosition_t   * destructor;
