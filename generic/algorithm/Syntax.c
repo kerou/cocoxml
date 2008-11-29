@@ -229,7 +229,6 @@ CcSyntax_LeadingAny(CcSyntax_t * self, CcNode_t * p)
     CcNode_t * a;
 
     if (p == NULL) return NULL;
-    a = NULL;
     if (p->base.type == node_any) {
 	a = p;
     } else if (p->base.type == node_alt) {
@@ -239,6 +238,8 @@ CcSyntax_LeadingAny(CcSyntax_t * self, CcNode_t * p)
 	a = CcSyntax_LeadingAny(self, p->sub);
     } else if (CcNode_DelNode(p) && !p->up) {
 	a = CcSyntax_LeadingAny(self, p->next);
+    } else {
+	a = NULL;
     }
     return a;
 }
@@ -266,7 +267,7 @@ CcSyntax_FindAS(CcSyntax_t * self, CcNode_t * p)
 		CcSyntax_FindAS(self, q->sub);
 		a = CcSyntax_LeadingAny(self, q->sub);
 		if (a != NULL) {
-		    CcSyntax_First(self, &s0, p->down);
+		    CcSyntax_First(self, &s0, q->down);
 		    CcBitArray_Or(&s0, &s1);
 		    CcBitArray_Subtract(((CcNodeANY_t *)a)->set, &s0);
 		    CcBitArray_Destruct(&s0);
@@ -287,13 +288,12 @@ CcSyntax_FindAS(CcSyntax_t * self, CcNode_t * p)
 static void
 CcSyntax_CompAnySets(CcSyntax_t * self)
 {
-    int idx; CcSymbolNT_t * sym;
-    CcSymbolTable_t * symtab = &self->globals->symtab;
+    CcArrayListIter_t iter; CcSymbolNT_t * sym;
+    CcArrayList_t * nonterminals = &self->globals->symtab.nonterminals;
 
-    for (idx = 0; idx < symtab->nonterminals.Count; ++idx) {
-	sym = (CcSymbolNT_t *)CcArrayList_Get(&symtab->nonterminals, idx);
+    for (sym = (CcSymbolNT_t *)CcArrayList_First(nonterminals, &iter);
+	 sym; sym = (CcSymbolNT_t *)CcArrayList_Next(nonterminals, &iter))
 	CcSyntax_FindAS(self, sym->graph);
-    }
 }
 
 void
