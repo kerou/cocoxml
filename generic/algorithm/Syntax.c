@@ -109,7 +109,7 @@ CcSyntax_First0(CcSyntax_t * self, CcBitArray_t * ret,
 	    CcBitArray_Destruct(&fs0);
 	}
 	if (!CcNode_DelNode(p)) break;
-	p = p ->next;
+	p = p->next;
     }
 }
 
