@@ -63,7 +63,7 @@ MEMBERS
     CcSyntax_t      * syntax;
 
 CONSTRUCTOR
-    self->tokenString = NULL:
+    self->tokenString = NULL;
     self->genScanner = FALSE;
     self->hIncludes = NULL;
     self->cIncludes = NULL;
@@ -131,10 +131,19 @@ Coco                            (. CcSymbol_t  * sym;
 
   "COMPILER"                    (. self->genScanner = TRUE; .)
   ident                         (. gramName = CcStrdup(self->t->val);
-  				   CcsScanner_DecRef(self->scanner, beg);
-				   CcsScanner_IncRef(self->scanner, beg = self->la); .)
-  { ANY }                       (. /* self->syntax->semDeclPos = CcsScanner_GetPosition(self->scanner, beg, self->la);
-    				      CcsScanner_DecRef(self->scanner, beg); */ .)
+  				   CcsScanner_DecRef(self->scanner, beg); .)
+  [ "MEMBERS"                   (. CcsScanner_IncRef(self->scanner, beg = self->la); .)
+    { ANY }                     (. self->members = CcsScanner_GetPosition(self->scanner, beg, self->la);
+      	  			   CcsScanner_DecRef(self->scanner, beg); .)
+    ]
+  [ "CONSTRUCTOR"               (. CcsScanner_IncRef(self->scanner, beg = self->la); .)
+    { ANY }			(. self->constructor = CcsScanner_GetPosition(self->scanner, beg, self->la);
+      	  			   CcsScanner_DecRef(self->scanner, beg); .)
+    ]
+  [ "DESTRUCTOR"                (. CcsScanner_IncRef(self->scanner, beg = self->la); .)
+    { ANY }			(. self->destructor = CcsScanner_GetPosition(self->scanner, beg, self->la);
+      	  			   CcsScanner_DecRef(self->scanner, beg); .)
+    ]
   [ "IGNORECASE"                (. self->lexical->ignoreCase = TRUE; .) ]   /* pdt */
   [ "CHARACTERS" { SetDecl }]
   [ "TOKENS"  { TokenDecl<symbol_t> }]
@@ -170,6 +179,7 @@ Coco                            (. CcSymbol_t  * sym;
 				       }
 				       sym->line = self->t->line;
                                    }
+				   CcsAssert(sym->base.type == symbol_nt);
                                    CcsBool_t noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
 				   ((CcSymbolNT_t *)sym)->attrPos = NULL; .)
     [ AttrDecl<(CcSymbolNT_t *)sym> ]  (. if (!undef && noAttrs != (((CcSymbolNT_t *)sym)->attrPos == NULL))
