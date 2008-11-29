@@ -251,7 +251,7 @@ COS_Members(CcOutputScheme_t * self, CcOutput_t * output)
 static CcsBool_t
 COS_Constructor(CcOutputScheme_t * self, CcOutput_t * output)
 {
-    CcPrintfI(output, "    self->maxT = %d;\n",
+    CcPrintfI(output, "self->maxT = %d;\n",
 	      self->globals->symtab.terminals.Count - 1);
     if (self->globals->base.parser.constructor)
 	CcSource(output, self->globals->base.parser.constructor);
@@ -592,12 +592,19 @@ COS_InitSet(CcOutputScheme_t * self, CcOutput_t * output)
 
     setlen = self->globals->symtab.terminals.Count;
     setstr = CcMalloc(setlen + 1); setstr[setlen] = 0;
+    if (setlen > 4) {
+	for (index = 0; index < setlen; ++index)
+	    if (index == 0) setstr[index] = '*';
+	    else setstr[index] = index % 5 == 0 ? '0' + index % 10 : ' ';
+	CcPrintfI(output, "/%s */\n", setstr);
+    }
     for (cur = ccself->symSet.start; cur < ccself->symSet.used; ++cur) {
 	CcsAssert(setlen == CcBitArray_getCount(cur));
 	for (index = 0; index < setlen; ++index)
 	    setstr[index] = CcBitArray_Get(cur, index) ? '*' : '.';
-	CcPrintfI(output, "\"%s.\"%s\n", setstr,
-		  cur < ccself->symSet.used - 1 ? "," : "");
+	CcPrintfI(output, "\"%s.\"%c /* %d */\n", setstr,
+		  cur < ccself->symSet.used - 1 ? ',' : ' ',
+		  cur - ccself->symSet.start);
     }
     CcFree(setstr);
     return TRUE;
