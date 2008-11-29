@@ -392,7 +392,7 @@ Factor<CcGraph_t ** g>          (. char * name = NULL; int kind; CcsPosition_t *
                                    if (undef) {
                                        if (kind == CcsParser_id) {
 				           /* forward nt */
-                                           sym = CcSymbolTable_NewNonTerminal(self->symtab, name, self->t->line);
+                                           sym = CcSymbolTable_NewNonTerminal(self->symtab, name, 0);
 				       } else if (self->genScanner) {
 					   sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
 					   CcLexical_MatchLiteral(self->lexical, self->t, sym->name, sym);
