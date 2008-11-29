@@ -103,7 +103,7 @@ CcSyntax_First0(CcSyntax_t * self, CcBitArray_t * ret,
 	    CcSyntax_First0(self, &fs0, p->down, mark);
 	    CcBitArray_Or(ret, &fs0);
 	    CcBitArray_Destruct(&fs0);
-	} else if (p->base.type == node_iter && p->base.type == node_opt) {
+	} else if (p->base.type == node_iter || p->base.type == node_opt) {
 	    CcSyntax_First0(self, &fs0, p->sub, mark);
 	    CcBitArray_Or(ret, &fs0);
 	    CcBitArray_Destruct(&fs0);
