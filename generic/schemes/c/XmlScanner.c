@@ -18,6 +18,22 @@
 #include  "c/XmlScanner.h"
 #include  "c/Token.h"
 
+static CcsToken_t **
+CXS_GetLastPtr(CcsXmlScanner_t * self)
+{
+    CcsToken_t * cur;
+    if (self->tokens == NULL) return &self->tokens;
+    for (cur = self->tokens; cur->next; cur = cur->next);
+    return &cur->next;
+}
+
+static CcsToken_t **
+CXS_Append(CcsToken_t ** lastptr, CcsToken_t * token)
+{
+    *lastptr = token;
+    return &token->next;
+}
+
 static void
 CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
 {
@@ -26,6 +42,8 @@ CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
 static void
 CXS_EndElement(void * self, const XML_Char * name)
 {
+    CcsToken_t ** lastptr = CXS_GetLastPtr(self);
+    /*lastptr = CXS_Append(lastptr, CcsToken());*/
 }
 
 static void
