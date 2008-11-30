@@ -54,9 +54,21 @@ void _CcsAssertFailed_(const char * vstr, const char * fname, int line);
 typedef struct CcsErrorPool_s CcsErrorPool_t;
 typedef struct CcsToken_s CcsToken_t;
 typedef struct CcsPosition_s CcsPosition_t;
+
 typedef struct CcsScanner_s CcsScanner_t;
 typedef struct CcsParser_s CcsParser_t;
 typedef struct CcsGlobals_s CcsGlobals_t;
+
+typedef enum {
+    XSO_UnknownTag, XSO_UnknowAttr, XSO_UnknownProcessInstruction,
+    XSO_Text, XSO_CData, XSO_Comment, XSO_Whitespace,
+    XSO_UNS_Text, XSO_UNS_CData, XSO_UNS_Comment, XSO_UNS_Whitespace,
+    XSO_UT_Text, XSO_UT_CData, XSO_UT_Comment, XSO_UT_Whitespace,
+    XSO_SIZE
+}  CcsXmlSpecOption_t;
+typedef struct CcsXmlScanner_s CcsXmlScanner_t;
+typedef struct CcsXmlParser_s CcsXmlParser_t;
+typedef struct CcsXmlGlobals_s CcsXmlGlobals_t;
 
 #define CcsMalloc(size)  _CcsMalloc_(size, __FILE__, __LINE__)
 void * _CcsMalloc_(size_t size, const char * fname, int line);
