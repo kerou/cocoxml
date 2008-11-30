@@ -22,20 +22,9 @@
 #include "c/CDefs.h"
 #endif
 
+#include  <expat.h>
+
 EXTC_BEGIN
-
-struct CcsXmlScanner_s {
-    CcsXmlGlobals_t * globals;
-};
-
-CcsXmlScanner_t *
-CcsXmlScanner(CcsXmlScanner_t * self, CcsXmlGlobals_t * globals,
-	      const char * filename);
-void CcsXmlScanner_Destruct(CcsXmlScanner_t * self);
-CcsToken_t * CcsXmlScanner_GetDummy(CcsXmlScanner_t * self);
-CcsToken_t * CcsXmlScanner_Scan(CcsXmlScanner_t * self);
-CcsToken_t * CcsXmlScanner_Peek(CcsXmlScanner_t * self);
-void CcsXmlScanner_ResetPeek(CcsXmlScanner_t * self);
 
 typedef struct {
     const char * name;
@@ -64,8 +53,34 @@ typedef struct {
     const CcsXmlPInstruction_t * lastPInstruction;
 } CcsXmlSpec_t;
 
-extern const CcsXmlSpec_t firstXmlSpec[];
-extern const CcsXmlSpec_t * lastXmlSpec;
+struct CcsXmlScanner_s {
+    CcsXmlGlobals_t * globals;
+
+    const CcsXmlSpec_t * firstspec;
+    const CcsXmlSpec_t * lastspec;
+
+    XML_Parser parser;
+    FILE * fp;
+
+    CcsToken_t * dummy;
+    CcsToken_t * tokens;
+    CcsToken_t * peek;
+};
+
+CcsXmlScanner_t *
+CcsXmlScanner(CcsXmlScanner_t * self,
+	      CcsXmlGlobals_t * globals,
+	      const char * filename,
+	      const CcsXmlSpec_t * firstspec,
+	      const CcsXmlSpec_t * lastspec);
+
+void CcsXmlScanner_Destruct(CcsXmlScanner_t * self);
+CcsToken_t * CcsXmlScanner_GetDummy(CcsXmlScanner_t * self);
+CcsToken_t * CcsXmlScanner_Scan(CcsXmlScanner_t * self);
+CcsToken_t * CcsXmlScanner_Peek(CcsXmlScanner_t * self);
+void CcsXmlScanner_ResetPeek(CcsXmlScanner_t * self);
+void CcsXmlScanner_IncRef(CcsXmlScanner_t * self, CcsToken_t * token);
+void CcsXmlScanner_DecRef(CcsXmlScanner_t * self, CcsToken_t * token);
 
 EXTC_END
 
