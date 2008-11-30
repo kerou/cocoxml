@@ -28,8 +28,8 @@ EXTC_BEGIN
 
 typedef struct {
     const char * name;
-    int beginKind;
-    int endKind;
+    int kind;
+    int kindEnd;
 } CcsXmlTag_t;
 
 typedef struct {
@@ -44,20 +44,23 @@ typedef struct {
 
 typedef struct {
     const char * nsURI;
-    CcsBool_t options[XSO_SIZE];
+    int kinds[XSO_SIZE];
     const CcsXmlTag_t * firstTag;  /* The sorted tag list. */
-    const CcsXmlTag_t * lastTag;
+    size_t numTags;
     const CcsXmlAttr_t * firstAttr; /* The sorted attr list. */
-    const CcsXmlAttr_t * lastAttr;
+    size_t numAttrs;
     const CcsXmlPInstruction_t * firstPInstruction; /* The sorted PI list. */
-    const CcsXmlPInstruction_t * lastPInstruction;
+    size_t numPInstructions;
 } CcsXmlSpec_t;
+
+#define  SZ_SPECSTACK  256
 
 struct CcsXmlScanner_s {
     CcsXmlGlobals_t * globals;
 
+    int kindUnknownNS;
     const CcsXmlSpec_t * firstspec;
-    const CcsXmlSpec_t * lastspec;
+    size_t numspecs;
 
     XML_Parser parser;
     FILE * fp;
@@ -65,14 +68,15 @@ struct CcsXmlScanner_s {
     CcsToken_t * dummy;
     CcsToken_t * tokens;
     CcsToken_t * peek;
+
+    const CcsXmlSpec_t * specStack[SZ_SPECSTACK];
+    const CcsXmlSpec_t ** curSpecStack;
 };
 
 CcsXmlScanner_t *
-CcsXmlScanner(CcsXmlScanner_t * self,
-	      CcsXmlGlobals_t * globals,
-	      const char * filename,
-	      const CcsXmlSpec_t * firstspec,
-	      const CcsXmlSpec_t * lastspec);
+CcsXmlScanner(CcsXmlScanner_t * self, CcsXmlGlobals_t * globals,
+	      const char * filename, int kindUnknownNS,
+	      const CcsXmlSpec_t * firstspec, size_t numspecs);
 
 void CcsXmlScanner_Destruct(CcsXmlScanner_t * self);
 CcsToken_t * CcsXmlScanner_GetDummy(CcsXmlScanner_t * self);

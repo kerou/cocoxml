@@ -7,4 +7,5 @@ Import('env', 'lib')
 env.Program('AutoTests', ['AutoTests.c', 'TestBitArray.c', 'TestCharSet.c',
                           lib])
 env.Program('TestScanner', ['TestScanner.c', lib])
+env.Program('TestXmlScanner', ['TestXmlScanner.c', lib], LIBS=['expat'])
 env.Program('TestGlobals', ['TestGlobals.c', lib])

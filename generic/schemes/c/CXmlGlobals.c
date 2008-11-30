@@ -16,3 +16,18 @@
  59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
 #include  "c/CXmlGlobals.h"
+
+CcsXmlGlobals_t *
+CcsXmlGlobals(CcsXmlGlobals_t * self, const char * fname, FILE * errfp)
+{
+}
+
+void
+CcsXmlGlobals_Destruct(CcsXmlGlobals_t * self)
+{
+}
+
+void
+CcsXmlGlobals_Parse(CcsXmlGlobals_t * self)
+{
+}

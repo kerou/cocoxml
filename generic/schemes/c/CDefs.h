@@ -60,7 +60,8 @@ typedef struct CcsParser_s CcsParser_t;
 typedef struct CcsGlobals_s CcsGlobals_t;
 
 typedef enum {
-    XSO_UnknownTag, XSO_UnknowAttr, XSO_UnknownProcessInstruction,
+    XSO_UnknownTag, XSO_UnknownTagEnd,
+    XSO_UnknownAttr, XSO_UnknownProcessingInstruction,
     XSO_Text, XSO_CData, XSO_Comment, XSO_Whitespace,
     XSO_UNS_Text, XSO_UNS_CData, XSO_UNS_Comment, XSO_UNS_Whitespace,
     XSO_UT_Text, XSO_UT_CData, XSO_UT_Comment, XSO_UT_Whitespace,

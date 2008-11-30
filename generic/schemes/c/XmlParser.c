@@ -16,3 +16,18 @@
  59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
 #include  "c/XmlParser.h"
+
+CcsXmlParser_t *
+CcsXmlParser(CcsXmlParser_t * self, CcsGlobals_t * globals)
+{
+}
+
+void
+CcsXmlParser_Destruct(CcsXmlParser_t * self)
+{
+}
+
+void
+CcsXmlParser_Parse(CcsXmlParser_t * self)
+{
+}
