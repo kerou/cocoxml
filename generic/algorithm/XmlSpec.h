@@ -34,14 +34,6 @@
 
 EXTC_BEGIN
 
-enum CcXmlSpecOption_e {
-    XSO_UnknownTag, XSO_UnknowAttr, XSO_UnknownProcessInstruction,
-    XSO_Text, XSO_CData, XSO_Comment, XSO_Whitespace,
-    XSO_UNS_Text, XSO_UNS_CData, XSO_UNS_Comment, XSO_UNS_Whitespace,
-    XSO_UT_Text, XSO_UT_CData, XSO_UT_Comment, XSO_UT_Whitespace,
-    XSO_SIZE
-};
-
 struct CcXmlSpec_s {
     CcObject_t base;
 
@@ -55,7 +47,7 @@ struct CcXmlSpec_s {
 CcXmlSpec_t * CcXmlSpec(const char * nsURI);
 
 void
-CcXmlSpec_SetOption(CcXmlSpec_t * self, CcXmlSpecOption_t option, int line);
+CcXmlSpec_SetOption(CcXmlSpec_t * self, CcsXmlSpecOption_t option, int line);
 void CcXmlSpec_AddTag(CcXmlSpec_t * self, const char * tagname, int line);
 void CcXmlSpec_AddAttr(CcXmlSpec_t * self, const char * attrname, int line);
 void CcXmlSpec_AddProcessInstruction(CcXmlSpec_t * self,

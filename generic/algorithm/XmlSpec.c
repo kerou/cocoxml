@@ -52,7 +52,7 @@ CcXmlSpec_Destruct(CcObject_t * self)
 }
 
 void
-CcXmlSpec_SetOption(CcXmlSpec_t * self, CcXmlSpecOption_t option, int line)
+CcXmlSpec_SetOption(CcXmlSpec_t * self, CcsXmlSpecOption_t option, int line)
 {
     self->options[option] = TRUE;
 }
