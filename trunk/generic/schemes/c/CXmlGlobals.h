@@ -18,6 +18,10 @@
 #ifndef  COCO_CXMLGLOBALS_H
 #define  COCO_CXMLGLOBALS_H
 
+#ifndef  COCO_ERRORPOOL_H
+#include "c/ErrorPool.h"
+#endif
+
 #ifndef  COCO_XMLSCANNER_H
 #include "c/XmlScanner.h"
 #endif
@@ -27,6 +31,18 @@
 #endif
 
 EXTC_BEGIN
+
+struct CcsXmlGlobals_s {
+    CcsErrorPool_t error;
+    CcsXmlScanner_t scanner;
+    CcsXmlParser_t parser;
+};
+
+CcsXmlGlobals_t *
+CcsXmlGlobals(CcsXmlGlobals_t * self, const char * fname, FILE * errfp);
+void CcsXmlGlobals_Destruct(CcsXmlGlobals_t * self);
+void CcsXmlGlobals_Parse(CcsXmlGlobals_t * self);
+
 EXTC_END
 
 #endif

@@ -23,6 +23,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 EXTC_BEGIN
+
+struct CcsXmlParser_s {
+    CcsXmlGlobals_t * globals;
+    CcsXmlScanner_t * scanner;
+    CcsToken_t      * t;
+    CcsToken_t      * la;
+};
+
+CcsXmlParser_t * CcsXmlParser(CcsXmlParser_t * self, CcsGlobals_t * globals);
+void CcsXmlParser_Destruct(CcsXmlParser_t * self);
+void CcsXmlParser_Parse(CcsXmlParser_t * self);
+
 EXTC_END
 
-#endif
+#endif /* COCO_XMLPARSER_H */
