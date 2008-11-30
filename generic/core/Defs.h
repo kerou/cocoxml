@@ -61,6 +61,10 @@ typedef struct CcMelted_s CcMelted_t;
 typedef struct CcState_s CcState_t;
 typedef struct CcTarget_s CcTarget_t;
 
+/* XmlSpec types */
+typedef enum CcXmlSpecOption_e CcXmlSpecOption_t;
+typedef struct CcXmlSpec_s CcXmlSpec_t;
+
 #define CcMalloc(size) _CcMalloc_(size, __FILE__, __LINE__)
 void * _CcMalloc_(size_t size, const char * fname, int line);
 
