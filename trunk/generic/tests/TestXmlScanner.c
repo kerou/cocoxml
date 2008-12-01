@@ -67,7 +67,8 @@ main(int argc, char * argv[])
 	if (t) CcsXmlScanner_DecRef(&scanner, t);
 	t = la;
 	if (t) {
-	    printf("t->kind = %d\n", t->kind);
+	    printf("t->kind = %d val = (%s)\n",
+		   t->kind, t->val ? t->val : "(null)");
 	}
 	la = CcsXmlScanner_Scan(&scanner);
 	if (la == NULL) break;
