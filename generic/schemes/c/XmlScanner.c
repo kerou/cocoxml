@@ -84,7 +84,7 @@ CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
     CcsToken_t * last = CXS_GetLastToken(ccself);
     const char * localname = strchr(name, nsSep);
 
-    if (localname == NULL) localname = name;
+    localname = localname ? localname + 1 : name;
     if (!(tagSpec = (const CcsXmlSpec_t *)
 	  bsearch(name, ccself->firstspec, ccself->numspecs,
 		  sizeof(CcsXmlSpec_t), cmpXmlSpec))) {
@@ -110,9 +110,12 @@ CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
 	CcsAssert(curattr[1] != NULL);
 	localname = strchr(curattr[0], nsSep);
 	if (localname == NULL) { attrSpec = tagSpec; localname = curattr[0]; }
-	else attrSpec = (const CcsXmlSpec_t *)
-		 bsearch(curattr[0], ccself->firstspec, ccself->numspecs,
-			 sizeof(CcsXmlSpec_t), cmpXmlSpec);
+	else {
+	    attrSpec = (const CcsXmlSpec_t *)
+		bsearch(curattr[0], ccself->firstspec, ccself->numspecs,
+			sizeof(CcsXmlSpec_t), cmpXmlSpec);
+	    ++localname;
+	}
 	if (!attrSpec) {
 	    last = CXS_Append(ccself, last,
 				 ccself->kindUnknownNS, NULL, 0);
@@ -138,7 +141,7 @@ CXS_EndElement(void * self, const XML_Char * name)
     CcsToken_t * last = CXS_GetLastToken(ccself);
     const char * localname = strchr(name, nsSep);
 
-    if (localname == NULL) localname = name;
+    localname = localname ? localname + 1 : name;
     if (!(tagSpec = (const CcsXmlSpec_t *)
 	  bsearch(name, ccself->firstspec, ccself->numspecs,
 		  sizeof(CcsXmlSpec_t), cmpXmlSpec))) {
@@ -235,6 +238,7 @@ CcsXmlScanner_Parse(CcsXmlScanner_t * self)
 {
     char buf[4096]; int rc;
     enum XML_Status status;
+    enum XML_Error error;
 
     while (self->tokens == NULL) {
 	rc = fread(buf, 1, sizeof(buf), self->fp);
@@ -243,9 +247,9 @@ CcsXmlScanner_Parse(CcsXmlScanner_t * self)
 	    return FALSE;
 	}
 	status = XML_Parse(self->parser, buf, rc, rc < sizeof(buf));
-	if (status != XML_STATUS_OK) {
-	    fprintf(stderr, "XML Parse error: %s.\n",
-		    XML_ErrorString(XML_GetErrorCode(self->parser)));
+	if (status != XML_STATUS_OK &&
+	    (error = XML_GetErrorCode(self->parser)) != XML_ERROR_FINISHED) {
+	    fprintf(stderr, "XML Parse error: %s.\n", XML_ErrorString(error));
 	    return FALSE;
 	}
 	if (feof(self->fp)) return FALSE;
