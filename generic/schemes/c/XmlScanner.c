@@ -66,30 +66,6 @@ cmpXmlTag(const void * localname, const void * tag)
     const CcsXmlTag_t * cctag = (const CcsXmlTag_t *)tag;
     return strcmp(localname, cctag->name);
 }
-
-static int
-cmpXmlAttr(const void * localname, const void * attr)
-{
-    const CcsXmlAttr_t * ccattr = (const CcsXmlAttr_t *)attr;
-    return strcmp(localname, ccattr->name);
-}
-
-static int
-cmpXmlPI(const void * localname, const void * pi)
-{
-    const CcsXmlPInstruction_t * ccpi = (const CcsXmlPInstruction_t *)pi;
-    return strcmp(localname, ccpi->name);
-}
-
-static int
-casecmpXmlSpec(const void * name, const void * spec)
-{
-    const char * localname = strchr(name, nsSep);
-    const CcsXmlSpec_t * ccspec = (const CcsXmlSpec_t *)spec;
-    return localname == NULL ? strcmp("", ccspec->nsURI) :
-	strncasecmp(name, ccspec->nsURI, localname - (const char *)name);
-}
-
 static int
 casecmpXmlTag(const void * localname, const void * tag)
 {
@@ -98,13 +74,24 @@ casecmpXmlTag(const void * localname, const void * tag)
 }
 
 static int
+cmpXmlAttr(const void * localname, const void * attr)
+{
+    const CcsXmlAttr_t * ccattr = (const CcsXmlAttr_t *)attr;
+    return strcmp(localname, ccattr->name);
+}
+static int
 casecmpXmlAttr(const void * localname, const void * attr)
 {
     const CcsXmlAttr_t * ccattr = (const CcsXmlAttr_t *)attr;
     return strcasecmp(localname, ccattr->name);
 }
 
-
+static int
+cmpXmlPI(const void * localname, const void * pi)
+{
+    const CcsXmlPInstruction_t * ccpi = (const CcsXmlPInstruction_t *)pi;
+    return strcmp(localname, ccpi->name);
+}
 static int
 casecmpXmlPI(const void * localname, const void * pi)
 {
@@ -125,11 +112,11 @@ CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
     localname = localname ? localname + 1 : name;
     if (!(tagSpec = (const CcsXmlSpec_t *)
 	  bsearch(name, ccself->firstspec, ccself->numspecs,
-		  sizeof(CcsXmlSpec_t), ccself->cmpNS))) {
+		  sizeof(CcsXmlSpec_t), cmpXmlSpec))) {
 	last = CXS_Append(ccself, last, ccself->kindUnknownNS, NULL, 0);
     } else if (!(tag = (const CcsXmlTag_t *)
-		 bsearch(localname, tagSpec->firstTag, tagSpec->numTags,
-			 sizeof(CcsXmlTag_t), ccself->cmpTag))) {
+		 bsearch(localname, tagSpec->firstTag, tagSpec->numTags, sizeof(CcsXmlTag_t),
+			 tagSpec->caseSensitive ? cmpXmlTag : casecmpXmlTag))) {
 	last = CXS_Append(ccself, last,
 			     tagSpec->kinds[XSO_UnknownTag], NULL, 0);
     } else {
@@ -151,15 +138,15 @@ CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
 	else {
 	    attrSpec = (const CcsXmlSpec_t *)
 		bsearch(curattr[0], ccself->firstspec, ccself->numspecs,
-			sizeof(CcsXmlSpec_t), ccself->cmpNS);
+			sizeof(CcsXmlSpec_t), cmpXmlSpec);
 	    ++localname;
 	}
 	if (!attrSpec) {
 	    last = CXS_Append(ccself, last,
 				 ccself->kindUnknownNS, NULL, 0);
 	} else if (!(attr = (const CcsXmlAttr_t *)
-		     bsearch(localname, attrSpec->firstAttr, attrSpec->numAttrs,
-			     sizeof(CcsXmlAttr_t), ccself->cmpAttr))) {
+		     bsearch(localname, attrSpec->firstAttr, attrSpec->numAttrs, sizeof(CcsXmlAttr_t),
+			     attrSpec->caseSensitive ? cmpXmlAttr : casecmpXmlAttr))) {
 	    last = CXS_Append(ccself, last,
 				 attrSpec->kinds[XSO_UnknownAttr],
 				 curattr[1], strlen(curattr[1]));
@@ -182,11 +169,11 @@ CXS_EndElement(void * self, const XML_Char * name)
     localname = localname ? localname + 1 : name;
     if (!(tagSpec = (const CcsXmlSpec_t *)
 	  bsearch(name, ccself->firstspec, ccself->numspecs,
-		  sizeof(CcsXmlSpec_t), ccself->cmpNS))) {
+		  sizeof(CcsXmlSpec_t), cmpXmlSpec))) {
 	CXS_Append(ccself, last, ccself->kindUnknownNS, NULL, 0);
     } else if (!(tag = (const CcsXmlTag_t *)
-		 bsearch(localname, tagSpec->firstTag, tagSpec->numTags,
-			 sizeof(CcsXmlTag_t), ccself->cmpTag))) {
+		 bsearch(localname, tagSpec->firstTag, tagSpec->numTags, sizeof(CcsXmlTag_t),
+			 tagSpec->caseSensitive ? cmpXmlTag : casecmpXmlTag))) {
 	CXS_Append(ccself, last, tagSpec->kinds[XSO_UnknownTagEnd], NULL, 0);
     } else {
 	CXS_Append(ccself, last, tag->kindEnd, NULL, 0);
@@ -217,22 +204,10 @@ CXS_Comment(void * self, const XML_Char * data)
 static const char * dummyval = "dummy";
 CcsXmlScanner_t *
 CcsXmlScanner(CcsXmlScanner_t * self, CcsXmlGlobals_t * globals,
-	      const char * filename, CcsBool_t caseSensitive,
-	      int kindUnknownNS, const CcsXmlSpec_t * firstspec,
-	      size_t numspecs)
+	      const char * filename, int kindUnknownNS,
+	      const CcsXmlSpec_t * firstspec, size_t numspecs)
 {
     self->globals = globals;
-    if (caseSensitive) {
-	self->cmpNS = cmpXmlSpec;
-	self->cmpTag = cmpXmlTag;
-	self->cmpAttr = cmpXmlAttr;
-	self->cmpPI = cmpXmlPI;
-    } else {
-	self->cmpNS = casecmpXmlSpec;
-	self->cmpTag = casecmpXmlTag;
-	self->cmpAttr = casecmpXmlAttr;
-	self->cmpPI = casecmpXmlPI;
-    }
     self->kindUnknownNS = kindUnknownNS;
     self->firstspec = firstspec;
     self->numspecs = numspecs;
