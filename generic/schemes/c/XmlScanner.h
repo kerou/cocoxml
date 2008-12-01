@@ -55,9 +55,15 @@ typedef struct {
 
 #define  SZ_SPECSTACK  256
 
+typedef int (* CcsXmlCmpFunc_t)(const void *, const void *);
+
 struct CcsXmlScanner_s {
     CcsXmlGlobals_t * globals;
 
+    CcsXmlCmpFunc_t cmpNS;
+    CcsXmlCmpFunc_t cmpTag;
+    CcsXmlCmpFunc_t cmpAttr;
+    CcsXmlCmpFunc_t cmpPI;
     int kindUnknownNS;
     const CcsXmlSpec_t * firstspec;
     size_t numspecs;
@@ -75,8 +81,9 @@ struct CcsXmlScanner_s {
 
 CcsXmlScanner_t *
 CcsXmlScanner(CcsXmlScanner_t * self, CcsXmlGlobals_t * globals,
-	      const char * filename, int kindUnknownNS,
-	      const CcsXmlSpec_t * firstspec, size_t numspecs);
+	      const char * filename, CcsBool_t caseSensitive,
+	      int kindUnknownNS, const CcsXmlSpec_t * firstspec,
+	      size_t numspecs);
 
 void CcsXmlScanner_Destruct(CcsXmlScanner_t * self);
 CcsToken_t * CcsXmlScanner_GetDummy(CcsXmlScanner_t * self);
