@@ -22,8 +22,32 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "c/XmlScanner.h"
+#include  "c/Token.h"
+
+static const CcsXmlTag_t xsltTags[] = {
+    { "apply-templates", 23, 24 },
+    { "stylesheet", 17, 18 },
+    { "template", 19, 20 },
+    { "text", 25, 26 },
+    { "value-of", 21, 22 },
+};
+
+static const CcsXmlAttr_t xsltAttrs[] = {
+    { "match", 28 },
+    { "priority", 30 },
+    { "select", 29 },
+    { "version", 27 },
+};
 
 static const CcsXmlSpec_t specs[] = {
+    {  /* XSLT */
+	"http://www.w3.org/1999/XSL/Transform",
+	{ 1, 2, 3, 4, 5, 6, 7, 8,
+	  9, 10, 11, 12, 13, 14, 15, 16 },
+	xsltTags, sizeof(xsltTags) / sizeof(xsltTags[0]),
+	xsltAttrs, sizeof(xsltAttrs) / sizeof(xsltAttrs[0]),
+	NULL, 0
+    }
 };
 
 int
@@ -43,6 +67,7 @@ main(int argc, char * argv[])
 	if (t) CcsXmlScanner_DecRef(&scanner, t);
 	t = la;
 	if (t) {
+	    printf("t->kind = %d\n", t->kind);
 	}
 	la = CcsXmlScanner_Scan(&scanner);
 	if (la == NULL) break;

@@ -20,23 +20,23 @@
 #include  "c/CXmlGlobals.h"
 #include  "c/ErrorPool.h"
 
-static const char nsSep = ':';
+static const char nsSep = '@';
 
-static CcsToken_t **
-CXS_GetLastPtr(CcsXmlScanner_t * self)
+static CcsToken_t *
+CXS_GetLastToken(CcsXmlScanner_t * self)
 {
     CcsToken_t * cur;
-    if (self->tokens == NULL) return &self->tokens;
+    if (self->tokens == NULL) return NULL;
     for (cur = self->tokens; cur->next; cur = cur->next);
-    return &cur->next;
+    return cur;
 }
 
-static CcsToken_t **
-CXS_Append(CcsXmlScanner_t * self, CcsToken_t ** lastptr,
+static CcsToken_t *
+CXS_Append(CcsXmlScanner_t * self, CcsToken_t * last,
 	   int kind, const char * val, size_t vallen)
 {
     CcsToken_t * token;
-    if (kind < 0) return lastptr;
+    if (kind < 0) return last;
     token = CcsToken(kind,
 		     XML_GetCurrentByteIndex(self->parser),
 		     XML_GetCurrentColumnNumber(self->parser),
@@ -44,10 +44,11 @@ CXS_Append(CcsXmlScanner_t * self, CcsToken_t ** lastptr,
 		     val, vallen);
     if (token == NULL) {
 	fprintf(stderr, "Not enough memory!");
-	return lastptr;
+	return last;
     }
-    *lastptr = token;
-    return &token->next;
+    if (last == NULL) self->tokens = self->peek = token;
+    else last->next = token;
+    return token;
 }
 
 static int
@@ -76,27 +77,28 @@ cmpXmlAttr(const void * localname, const void * attr)
 static void
 CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
 {
-    const CcsXmlSpec_t * spec; const CcsXmlTag_t * tag;
-    const XML_Char ** curattr; const CcsXmlAttr_t * attr;
+    const XML_Char ** curattr;
+    const CcsXmlSpec_t * tagSpec, * attrSpec;
+    const CcsXmlTag_t * tag; const CcsXmlAttr_t * attr;
     CcsXmlScanner_t * ccself = (CcsXmlScanner_t *)self;
-    CcsToken_t ** lastptr = CXS_GetLastPtr(ccself);
+    CcsToken_t * last = CXS_GetLastToken(ccself);
     const char * localname = strchr(name, nsSep);
 
     if (localname == NULL) localname = name;
-    if (!(spec = (const CcsXmlSpec_t *)
+    if (!(tagSpec = (const CcsXmlSpec_t *)
 	  bsearch(name, ccself->firstspec, ccself->numspecs,
 		  sizeof(CcsXmlSpec_t), cmpXmlSpec))) {
-	lastptr = CXS_Append(ccself, lastptr, ccself->kindUnknownNS, NULL, 0);
+	last = CXS_Append(ccself, last, ccself->kindUnknownNS, NULL, 0);
     } else if (!(tag = (const CcsXmlTag_t *)
-		 bsearch(localname, spec->firstTag, spec->numTags,
+		 bsearch(localname, tagSpec->firstTag, tagSpec->numTags,
 			 sizeof(CcsXmlTag_t), cmpXmlTag))) {
-	lastptr = CXS_Append(ccself, lastptr,
-			     spec->kinds[XSO_UnknownTag], NULL, 0);
+	last = CXS_Append(ccself, last,
+			     tagSpec->kinds[XSO_UnknownTag], NULL, 0);
     } else {
-	lastptr = CXS_Append(ccself, lastptr, tag->kind, NULL, 0);
+	last = CXS_Append(ccself, last, tag->kind, NULL, 0);
     }
     if (ccself->curSpecStack - ccself->specStack < SZ_SPECSTACK) {
-	*ccself->curSpecStack = spec;
+	*ccself->curSpecStack = tagSpec;
     } else {
 	CcsErrorPool_Error(&ccself->globals->error,
 			   XML_GetCurrentLineNumber(ccself->parser),
@@ -107,20 +109,21 @@ CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
     for (curattr = attrs; curattr[0] != NULL; curattr += 2) {
 	CcsAssert(curattr[1] != NULL);
 	localname = strchr(curattr[0], nsSep);
-	if (localname == NULL) localname = curattr[0];
-	if (!(spec = (const CcsXmlSpec_t *)
-	      bsearch(curattr[0], ccself->firstspec, ccself->numspecs,
-		      sizeof(CcsXmlSpec_t), cmpXmlSpec))) {
-	    lastptr = CXS_Append(ccself, lastptr,
+	if (localname == NULL) { attrSpec = tagSpec; localname = curattr[0]; }
+	else attrSpec = (const CcsXmlSpec_t *)
+		 bsearch(curattr[0], ccself->firstspec, ccself->numspecs,
+			 sizeof(CcsXmlSpec_t), cmpXmlSpec);
+	if (!attrSpec) {
+	    last = CXS_Append(ccself, last,
 				 ccself->kindUnknownNS, NULL, 0);
 	} else if (!(attr = (const CcsXmlAttr_t *)
-		     bsearch(localname, spec->firstAttr, spec->numAttrs,
+		     bsearch(localname, attrSpec->firstAttr, attrSpec->numAttrs,
 			     sizeof(CcsXmlAttr_t), cmpXmlAttr))) {
-	    lastptr = CXS_Append(ccself, lastptr,
-				 spec->kinds[XSO_UnknownAttr],
+	    last = CXS_Append(ccself, last,
+				 attrSpec->kinds[XSO_UnknownAttr],
 				 curattr[1], strlen(curattr[1]));
 	} else {
-	    lastptr = CXS_Append(ccself, lastptr,
+	    last = CXS_Append(ccself, last,
 				 attr->kind, curattr[1], strlen(curattr[1]));
 	}
     }
@@ -129,29 +132,29 @@ CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
 static void
 CXS_EndElement(void * self, const XML_Char * name)
 {
-    const CcsXmlSpec_t * spec;
+    const CcsXmlSpec_t * tagSpec;
     const CcsXmlTag_t * tag;
     CcsXmlScanner_t * ccself = (CcsXmlScanner_t *)self;
-    CcsToken_t ** lastptr = CXS_GetLastPtr(ccself);
+    CcsToken_t * last = CXS_GetLastToken(ccself);
     const char * localname = strchr(name, nsSep);
 
     if (localname == NULL) localname = name;
-    if (!(spec = (const CcsXmlSpec_t *)
+    if (!(tagSpec = (const CcsXmlSpec_t *)
 	  bsearch(name, ccself->firstspec, ccself->numspecs,
 		  sizeof(CcsXmlSpec_t), cmpXmlSpec))) {
-	CXS_Append(ccself, lastptr, ccself->kindUnknownNS, NULL, 0);
+	CXS_Append(ccself, last, ccself->kindUnknownNS, NULL, 0);
     } else if (!(tag = (const CcsXmlTag_t *)
-		 bsearch(localname, spec->firstTag, spec->numTags,
+		 bsearch(localname, tagSpec->firstTag, tagSpec->numTags,
 			 sizeof(CcsXmlTag_t), cmpXmlTag))) {
-	CXS_Append(ccself, lastptr, spec->kinds[XSO_UnknownTagEnd], NULL, 0);
+	CXS_Append(ccself, last, tagSpec->kinds[XSO_UnknownTagEnd], NULL, 0);
     } else {
-	CXS_Append(ccself, lastptr, tag->kindEnd, NULL, 0);
+	CXS_Append(ccself, last, tag->kindEnd, NULL, 0);
     }
     CcsAssert(ccself->specStack < ccself->curSpecStack);
     --ccself->curSpecStack;
 #ifndef NDEBUG
     if (ccself->curSpecStack - ccself->specStack < SZ_SPECSTACK)
-	CcsAssert(spec == *ccself->curSpecStack);
+	CcsAssert(tagSpec == *ccself->curSpecStack);
 #endif
 }
 
@@ -193,9 +196,9 @@ CcsXmlScanner(CcsXmlScanner_t * self, CcsXmlGlobals_t * globals,
 	fprintf(stderr, "Can not open '%s'.\n", filename);
 	goto errquit0;
     }
-    if (!(self->peek = self->tokens = self->dummy =
-	  CcsToken(0, 0, 0, 0, dummyval, strlen(dummyval))))
+    if (!(self->dummy = CcsToken(0, 0, 0, 0, dummyval, strlen(dummyval))))
 	goto errquit1;
+    self->tokens = self->peek = NULL;
     CcsXmlScanner_IncRef(self, self->dummy);
     self->curSpecStack = self->specStack;
     return self;
@@ -255,12 +258,14 @@ CcsXmlScanner_Scan(CcsXmlScanner_t * self)
 {
     CcsToken_t * token;
     while (self->tokens == NULL)
-	if (!CcsXmlScanner_Parse(self)) return NULL;
+	if (!CcsXmlScanner_Parse(self)) break;
     token = self->tokens;
-    if (self->peek == self->tokens)
-	self->tokens = self->peek = self->tokens->next;
-    else
-	self->tokens = self->tokens->next;
+    if (token) {
+	if (self->peek == self->tokens)
+	    self->tokens = self->peek = self->tokens->next;
+	else
+	    self->tokens = self->tokens->next;
+    }
     return token;
 }
 
@@ -271,8 +276,10 @@ CcsXmlScanner_Peek(CcsXmlScanner_t * self)
     while (self->peek == NULL)
 	if (!CcsXmlScanner_Parse(self)) return NULL;
     token = self->peek;
-    self->peek = self->peek->next;
-    CcsXmlScanner_IncRef(self, token);
+    if (token) {
+	self->peek = self->peek->next;
+	CcsXmlScanner_IncRef(self, token);
+    }
     return token;
 }
 
