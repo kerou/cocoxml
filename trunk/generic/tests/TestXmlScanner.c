@@ -60,7 +60,7 @@ main(int argc, char * argv[])
 	fprintf(stderr, "argc != 2\n");
 	return -1;
     }
-    CcsXmlScanner(&scanner, NULL, argv[1], -1,
+    CcsXmlScanner(&scanner, NULL, argv[1], TRUE, -1,
 		  specs, sizeof(specs) / sizeof(specs[0]));
     t = NULL; la = CcsXmlScanner_GetDummy(&scanner);
     for (;;) {
