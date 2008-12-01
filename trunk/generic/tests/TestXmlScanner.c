@@ -41,7 +41,7 @@ static const CcsXmlAttr_t xsltAttrs[] = {
 
 static const CcsXmlSpec_t specs[] = {
     {  /* XSLT */
-	"http://www.w3.org/1999/XSL/Transform",
+	"http://www.w3.org/1999/XSL/Transform", TRUE,
 	{ 1, 2, 3, 4, 5, 6, 7, 8,
 	  9, 10, 11, 12, 13, 14, 15, 16 },
 	xsltTags, sizeof(xsltTags) / sizeof(xsltTags[0]),
@@ -60,7 +60,7 @@ main(int argc, char * argv[])
 	fprintf(stderr, "argc != 2\n");
 	return -1;
     }
-    CcsXmlScanner(&scanner, NULL, argv[1], TRUE, -1,
+    CcsXmlScanner(&scanner, NULL, argv[1], -1,
 		  specs, sizeof(specs) / sizeof(specs[0]));
     t = NULL; la = CcsXmlScanner_GetDummy(&scanner);
     for (;;) {
