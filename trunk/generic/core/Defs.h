@@ -48,6 +48,7 @@ typedef struct CcSourceOutputScheme_s CcSourceOutputScheme_t;
 
 /* Algorithm types */
 typedef struct CcLexical_s CcLexical_t;
+typedef struct CcXmlSpecMap_s CcXmlSpecMap_t;
 typedef struct CcSyntax_s CcSyntax_t;
 typedef struct CcSymbolTable_s CcSymbolTable_t;
 
