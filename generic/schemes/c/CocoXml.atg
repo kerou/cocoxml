@@ -38,20 +38,12 @@ END.
 
 SECTION cIncludes
 #include  "Globals.h"
-#include  "lexical/CharSet.h"
-#include  "lexical/CharClass.h"
-#include  "lexical/Nodes.h"
 #include  "syntax/Nodes.h"
-static const int CcsParser_id = 0;
-static const int CcsParser_str = 1;
-static const char * noString = "~none~";
 END.
 
-COMPILER Coco
+COMPILER CocoXml
 
 MEMBERS
-    char            * tokenString;
-    CcsBool_t         genScanner;
     char            * schemeName;
     CcsPosition_t   * members;
     CcsPosition_t   * constructor;
@@ -59,19 +51,17 @@ MEMBERS
 
     /* Shortcut pointers */
     CcSymbolTable_t * symtab;
-    CcLexical_t     * lexical;
+    CcXmlSpecMap_t  * xmlspecmap;
     CcSyntax_t      * syntax;
 
 CONSTRUCTOR
-    self->tokenString = NULL;
-    self->genScanner = FALSE;
     self->schemeName = NULL;
     self->members = NULL;
     self->constructor = NULL;
     self->destructor = NULL;
 
     self->symtab = &((CcGlobals_t *)globals)->symtab;
-    self->lexical = &((CcGlobals_t *)globals)->lexical;
+    self->xmlspecmap = &((CcGlobals_t *)globals)->xmlspecmap;
     self->syntax = &((CcGlobals_t *)globals)->syntax;
 
 DESTRUCTOR
@@ -79,8 +69,6 @@ DESTRUCTOR
     if (self->constructor) CcsPosition_Destruct(self->constructor);
     if (self->members) CcsPosition_Destruct(self->members);
     if (self->schemeName) CcFree(self->schemeName);
-    if (self->tokenString && self->tokenString != noString)
-        CcFree(self->tokenString);
 
 CHARACTERS
     letter    = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_".
@@ -101,7 +89,6 @@ TOKENS
     char      = '\'' ( charCh | '\\' printable { hex } ) '\''.
 
 PRAGMAS
-    ddtSym    = '$' { digit | letter }.  (. .)
 
 COMMENTS FROM "/*" TO "*/" NESTED
 COMMENTS FROM "//" TO lf
@@ -115,12 +102,11 @@ PRODUCTIONS
 Coco                            (. CcSymbol_t  * sym;
 				   CcGraph_t   * g, * g1, * g2;
 				   char        * gramName = NULL;
-				   CcCharSet_t * s; 
-				   CcsToken_t  * beg;
-				   self->tokenString = NULL; .)
+				   CcXmlSpec_t * xsdef;
+				   CcsToken_t  * beg; .)
 =
   { SchemeDecl | SectionDecl }
-  "COMPILER"                    (. self->genScanner = TRUE; .)
+  "COMPILER"
   ident                         (. gramName = CcStrdup(self->t->val); .)
   [ "MEMBERS"                   (. CcsScanner_IncRef(self->scanner, beg = self->la); .)
     { ANY }                     (. self->members = CcsScanner_GetPosition(self->scanner, beg, self->la);
@@ -134,25 +120,12 @@ Coco                            (. CcSymbol_t  * sym;
     { ANY }			(. self->destructor = CcsScanner_GetPosition(self->scanner, beg, self->la);
       	  			   CcsScanner_DecRef(self->scanner, beg); .)
     ]
-  [ "IGNORECASE"                (. self->lexical->ignoreCase = TRUE; .) ]   /* pdt */
-  [ "CHARACTERS" { SetDecl }]
-  [ "TOKENS"  { TokenDecl<symbol_t> }]
-  [ "PRAGMAS" { TokenDecl<symbol_pr> }]
-  { "COMMENTS"                  (. CcsBool_t nested = FALSE; .)
-    "FROM" TokenExpr<&g1> 
-    "TO" TokenExpr<&g2>
-    [ "NESTED"                  (. nested = TRUE; .)
-    ]                           (. CcLexical_NewComment(self->lexical, self->t,
-    				   			g1->head, g2->head, nested);
-				   CcGraph_Destruct(g1); CcGraph_Destruct(g2); .)
-  }
-  { "IGNORE" Set<&s>            (. CcCharSet_Or(self->lexical->ignored, s);
-    	     			   CcCharSet_Destruct(s); .)
-  }
+
+  XmlSpecDecl<&xsdef>           (. CcXmlSpecMap_Add(self->xmlspecmap, "", xsdef); .)
+  { XmlNamespaceDecl }
 
   SYNC 
-  "PRODUCTIONS"                 (. if (self->genScanner) CcLexical_MakeDeterministic(self->lexical);
-  				   CcEBNF_Clear(&self->lexical->base);
+  "PRODUCTIONS"                 (. CcXmlSpecMap_MakeTerminals(self->xmlspecmap, self->symtab);
   				   CcEBNF_Clear(&self->syntax->base); .)
   { ident                       (. sym = CcSymbolTable_FindSym(self->symtab, self->t->val);
                                    CcsBool_t undef = (sym == NULL);
@@ -226,119 +199,61 @@ SectionDecl       (. char * secname; CcsToken_t * beg; .)
 
 /*------------------------------------------------------------------------------------*/
 
-SetDecl                         (. CcCharSet_t * s; .)
+XmlNamespaceDecl            (. char * nsURI; CcXmlSpec_t * xsdef; .)
 =
-  ident                         (. const char * name = self->t->val;
-				   CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, name);
-				   if (c != NULL)
-				       CcsGlobals_SemErr(self->globals, self->t,
-				                         "name '%s' declared twice", name); .)
-  '=' Set<&s>                   (. if (CcCharSet_Elements(s) == 0)
-				       CcsGlobals_SemErr(self->globals, self->t,
-				                         "character set must not be empty");
-				   CcLexical_NewCharClass(self->lexical, name, s); .)
-  '.'
+  "NAMESPACE" string        (. nsURI = CcStrdup(self->t->val); .)
+  XmlSpecDecl<&xsdef>       (. if (!CcXmlSpecMap_Add(self->xmlspecmap, nsURI, xsdef))
+      			           CcsGlobals_SemErr(self->globals, self->t,
+				   		     "The namespace '%s' is defined more than once.", nsURI); .)
+  "END"                     (. CcFree(nsURI); .)
 .
 
 /*------------------------------------------------------------------------------------*/
 
-Set<CcCharSet_t ** s>           (. CcCharSet_t * s2; .)
+XmlSpecDecl<CcXmlSpec_t ** xsdef> (. *xsdef = CcXmlSpec(); .)
 =
-  SimSet<s>
-  { '+' SimSet<&s2>             (. CcCharSet_Or(*s, s2);
-    				   CcCharSet_Destruct(s2); .)
-  | '-' SimSet<&s2>             (. CcCharSet_Subtract(*s, s2);
-    				   CcCharSet_Destruct(s2); .)
-  }
+  [ "IGNORECASE"                  (. CcXmlSpec_SetCaseSensitive(*xsdef, FALSE); .) ]
+  [ "OPTIONS" { OptionDecl<*xsdef> } ]
+  [ "TAGS" { XmlTagDecl<*xsdef> } ]
+  [ "ATTRS" { XmlAttrDecl<*xsdef> } ]
+  [ "PROCESSING_INSTRUCTIONS" { ProcessingInstructions<*xsdef> } ]
 .
 
 /*------------------------------------------------------------------------------------*/
 
-SimSet<CcCharSet_t ** s>        (. int n1, n2; .)
-=                               (. *s = CcCharSet(); .)
-( ident                         (. CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, self->t->val);
-				   if (c != NULL) CcCharSet_Or(*s, c->set);
-				   else CcsGlobals_SemErr(self->globals, self->t, "undefined name"); .)
-| string                        (. const char * cur0; int ch;
-  				   char * cur, * name = CcUnescape(self->t->val);
-				   if (self->lexical->ignoreCase) {
-				       for (cur = name; *cur; ++cur) *cur = tolower(*cur);
-				   }
-				   cur0 = name;
-				   while (*cur0) {
-				       ch = CcsUTF8GetCh(&cur0, name + strlen(name));
-				       CcsAssert(ch >= 0);
-				       CcCharSet_Set(*s, ch);
-                                   }
-				   CcFree(name); .)
-| Char<&n1>                     (. CcCharSet_Set(*s, n1); .)
-  [ ".." Char<&n2>              (. int idx;
-				   for (idx = n1; idx <= n2; ++idx) CcCharSet_Set(*s, idx); .)
-  ]
-| "ANY"                         (. CcCharSet_Fill(*s, COCO_WCHAR_MAX); .)
-)
-.
-
-/*--------------------------------------------------------------------------------------*/
-
-Char<int * n>          (. char * name; const char * cur; .)
+OptionDecl<CcXmlSpec_t * xsdef>
 =
-  char                 (. *n = 0;
-		          cur = name = CcUnescape(self->t->val);
-			  *n = CcsUTF8GetCh(&cur, name + strlen(name));
-			  if (*cur != 0)
-			      CcsGlobals_SemErr(self->globals, self->t,
-			          "unacceptable character value: '%s'", self->t->val);
-			  CcFree(name);
-			  if (self->lexical->ignoreCase) *n = tolower(*n); .)
+  ident (. CcXmlSpec_SetOption(xsdef, self->t->val); .)
 .
 
 /*------------------------------------------------------------------------------------*/
 
-TokenDecl<const CcObjectType_t * typ> (. char * name = NULL; int kind; CcSymbol_t * sym; CcGraph_t * g; .)
+XmlTagDecl<CcXmlSpec_t * xsdef>    (. char * tagname; int line; .)
 =
-  Sym<&name, &kind>             (. sym = CcSymbolTable_FindSym(self->symtab, name);
-				   if (sym != NULL) {
-				       CcsGlobals_SemErr(self->globals, self->t, "name '%s' declared twice", name);
-                                   } else if (typ == symbol_t) {
-				       sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
-				       ((CcSymbolT_t *)sym)->tokenKind = symbol_fixedToken;
-				   } else if (typ == symbol_pr) {
-				       sym = CcSymbolTable_NewPragma(self->symtab, name, self->t->line);
-				       ((CcSymbolPR_t *)sym)->tokenKind = symbol_fixedToken;
-				       ((CcSymbolPR_t *)sym)->semPos = NULL;
-                                   }
-				   if (self->tokenString && self->tokenString != noString)
-				       CcFree(self->tokenString);
-				   self->tokenString = NULL;
-				   CcFree(name); .)
-  SYNC
-  ( '=' TokenExpr<&g> '.'       (. if (kind == CcsParser_str)
-				       CcsGlobals_SemErr(self->globals, self->t,
-				       			 "a literal must not be declared with a structure");
-				   CcGraph_Finish(g);
-				   if (self->tokenString == NULL || self->tokenString == noString) {
-				       CcLexical_ConvertToStates(self->lexical, g->head, sym);
-                                   } else { /* CcsParser_TokenExpr is a single string */
-				       if (CcHashTable_Get(&self->lexical->literals,
-							   self->tokenString) != NULL)
-					   CcsGlobals_SemErr(self->globals, self->t,
-					   		     "token string '%s' declared twice", self->tokenString);
-				       CcHashTable_Set(&self->lexical->literals,
-				                       self->tokenString, (CcObject_t *)sym);
-				       CcLexical_MatchLiteral(self->lexical, self->t,
-				                              self->tokenString, sym);
-				       CcFree(self->tokenString);
-                                   }
-				   self->tokenString = NULL;
-				   CcGraph_Destruct(g); .)
-  |                             (. if (kind == CcsParser_id) self->genScanner = FALSE;
-				   else CcLexical_MatchLiteral(self->lexical, self->t, sym->name, sym); .)
-  )
-  [ SemText<.&((CcSymbolPR_t *)sym)->semPos.> (. if (typ != symbol_pr)
-    			     		      	     CcsGlobals_SemErr(self->globals, self->t,
-						     		       "semantic action not allowed here"); .)
-  ]
+  ident                            (. tagname = CcStrdup(self->t->val); .)
+  "="
+  string                           (. CcXmlSpec_AddTag(xsdef, tagname, self->t->val, line);
+  				      CcFree(tagname); .)
+.
+
+/*------------------------------------------------------------------------------------*/
+
+XmlAttrDecl(CcXmlSpec_t * xsdef>   (. char * attrname; int line; .)
+=
+  ident                            (. attrname = CcStrdup(self->t->val); line = self->t->line; .)
+  "="
+  string                           (. CcXmlSpec_AddAttr(xsdef, attrname, self->t->val, line);
+  				      CcFree(attrname); .)
+.
+
+/*------------------------------------------------------------------------------------*/
+
+ProcessingInstruction<CcXmlSpec_t * xsdef>  (. char * target; int line; .)
+=
+  ident                                     (. target = CcStrdup(self->t->val); line = self->t->line; .)
+  "="
+  string                                    (. CcXmlSpec_AddProcessInstruction(xsdef, target, self->t->val, line);
+  					       CcFree(target); .)
 .
 
 /*------------------------------------------------------------------------------------*/
@@ -401,27 +316,17 @@ Term<CcGraph_t ** g>            (. CcGraph_t * g2; CcsPosition_t * pos; CcNode_t
 
 /*------------------------------------------------------------------------------------*/
 
-Factor<CcGraph_t ** g>          (. char * name = NULL; int kind; CcsPosition_t * pos; CcsBool_t weak = FALSE; 
+Factor<CcGraph_t ** g>          (. char * name = NULL; CcsPosition_t * pos; CcsBool_t weak = FALSE; 
                                    *g = NULL; .)
 =
 ( [ "WEAK"                      (. weak = TRUE; .)
   ]
-  Sym<&name, &kind>             (. CcSymbol_t * sym = CcSymbolTable_FindSym(self->symtab, name);
-                                   if (sym == NULL && kind == CcsParser_str)
-                                       sym = (CcSymbol_t *)CcHashTable_Get(&self->lexical->literals, name);
+  Sym<&name>                    (. CcSymbol_t * sym = CcSymbolTable_FindSym(self->symtab, name);
                                    CcsBool_t undef = (sym == NULL);
                                    if (undef) {
-                                       if (kind == CcsParser_id) {
-				           /* forward nt */
-                                           sym = CcSymbolTable_NewNonTerminal(self->symtab, name, 0);
-				       } else if (self->genScanner) {
-					   sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
-					   CcLexical_MatchLiteral(self->lexical, self->t, sym->name, sym);
-				       } else {  /* undefined string in production */
-					   CcsGlobals_SemErr(self->globals, self->t,
-					                     "undefined string in production");
-					   sym = self->syntax->eofSy;  /* dummy */
-				       }
+				        CcsGlobals_SemErr(self->globals, self->t,
+					                  "undefined token in production");
+					sym = self->syntax->eofSy;  /* dummy */
                                    }
 				   CcFree(name);
                                    if (sym->base.type != symbol_t && sym->base.type != symbol_nt)
@@ -435,9 +340,7 @@ Factor<CcGraph_t ** g>          (. char * name = NULL; int kind; CcsPosition_t *
 
 				   CcNode_t * p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->line, weak);
 				   *g = CcGraphP(p); .)
-  [ Attribs<p>                  (. if (kind != CcsParser_id)
-                                       CcsGlobals_SemErr(self->globals, self->t,
-				                         "a literal must not have attributes"); .)
+  [ Attribs<p>
   ]                             (. if (undef) {
                                        if (sym->base.type == symbol_nt)
 				           ((CcSymbolNT_t *)sym)->attrPos = CcsPosition_Clone(((CcNodeNT_t *)p)->pos);
@@ -478,84 +381,9 @@ Condition = { "(" Condition | ANY } ")" .
 
 /*------------------------------------------------------------------------------------*/
 
-TokenExpr<CcGraph_t ** g>       (. CcGraph_t * g2; .)
+Sym<char ** name>
 =
-  TokenTerm<g>                  (. CcsBool_t first = TRUE; .)
-  {                             WEAK
-    '|'
-    TokenTerm<&g2>              (. if (first) { CcEBNF_MakeFirstAlt(&self->lexical->base, *g); first = FALSE; }
-                                   CcEBNF_MakeAlternative(&self->lexical->base, *g, g2);
-				   CcGraph_Destruct(g2); .)
-  }
-.
-
-/*------------------------------------------------------------------------------------*/
-
-TokenTerm<CcGraph_t ** g>       (. CcGraph_t * g2; .)
-=
-  TokenFactor<g>
-  { TokenFactor<&g2>            (. CcEBNF_MakeSequence(&self->lexical->base, *g, g2);
-                                   CcGraph_Destruct(g2); .)
-  }
-  [ "CONTEXT"
-    '(' TokenExpr<&g2>          (. CcLexical_SetContextTrans(self->lexical, g2->head);
-				   self->lexical->hasCtxMoves = TRUE;
-				   CcEBNF_MakeSequence(&self->lexical->base, *g, g2); .)
-    ')'
-  ]
-.
-
-/*------------------------------------------------------------------------------------*/
-
-TokenFactor<CcGraph_t ** g>     (. char * name = NULL; int kind; CcTransition_t trans; .)
-=
-                                (. *g = NULL; .)
-( Sym<&name, &kind>             (. if (kind == CcsParser_id) {
-	                               CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, name);
-                                       if (c == NULL) {
-					   CcsGlobals_SemErr(self->globals, self->t, "undefined name");
-					   c = CcLexical_NewCharClass(self->lexical, name, CcCharSet());
-				       }
-				       CcTransition_FromCharSet(&trans, c->set, trans_normal,
-				                                &self->lexical->classes);
-				       *g = CcGraphP(CcEBNF_NewNode(&self->lexical->base,
-				                                    CcNodeTrans(0, &trans)));
-				       CcTransition_Destruct(&trans);
-				       if (self->tokenString && self->tokenString != noString)
-				           CcFree(self->tokenString);
-				       self->tokenString = (char *)noString;
-                                   } else { /* CcsParser_str */
-	                               *g = CcLexical_StrToGraph(self->lexical, name, self->t);
-				       if (self->tokenString == NULL) self->tokenString = CcStrdup(name);
-				       else {
-				           if (self->tokenString != noString) CcFree(self->tokenString);
-					   self->tokenString = (char *)noString;
-				       }
-                                   }
-				   CcFree(name); .)
-| '(' TokenExpr<g> ')'
-| '[' TokenExpr<g> ']'          (. CcEBNF_MakeOption(&self->lexical->base, *g); .)
-| '{' TokenExpr<g> '}'          (. CcEBNF_MakeIteration(&self->lexical->base, *g); .)
-)                               (. if (*g == NULL) /* invalid start of TokenFactor */
-                                     *g = CcGraphP(CcEBNF_NewNode(&self->lexical->base, CcNodeEps(0))); .)
-.
-
-/*------------------------------------------------------------------------------------*/
-
-Sym<char ** name, int * kind>
-=                               (. *name = CcStrdup("???"); *kind = CcsParser_id; .)
-( ident                         (. *kind = CcsParser_id; CcFree(*name); *name = CcStrdup(self->t->val); .)
-| (string                       (. CcFree(*name); *name = CcStrdup(self->t->val); .)
-  | char                        (. CcFree(*name); *name = CcStrdup(self->t->val); .)
-  )                             (. *kind = CcsParser_str;
-                                   if (self->lexical->ignoreCase) {
-                                       char * cur;
-				       for (cur = *name; *cur; ++cur) *cur = tolower(*cur);
-				   }
-				   if (strchr(*name, ' '))
-				       CcsGlobals_SemErr(self->globals, self->t,
-				                         "literal tokens \"%s\" can not contain blanks", *name); .)
-)
+ ident                          (. *name = CcStrdup(self->t->val); .)
 .
 
 /*------------------------------------------------------------------------------------*/
