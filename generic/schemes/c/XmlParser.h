@@ -1,3 +1,4 @@
+/*---- license ----*/
 /*-------------------------------------------------------------------------
 Copyright (c) 2008, Charles Wang <charlesw123456@gmail.com>
 
@@ -15,6 +16,7 @@ You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc., 
 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
+/*---- enable ----*/
 #ifndef  COCO_XMLPARSER_H
 #define  COCO_XMLPARSER_H
 
@@ -22,13 +24,30 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "c/CDefs.h"
 #endif
 
+/*---- hIncludes ----*/
+#ifndef  COCO_DEFS_H
+#include  "Defs.h"
+#endif
+/*---- enable ----*/
+
 EXTC_BEGIN
 
 struct CcsXmlParser_s {
-    CcsXmlGlobals_t * globals;
+    CcsGlobals_t    * globals;
     CcsXmlScanner_t * scanner;
     CcsToken_t      * t;
     CcsToken_t      * la;
+    int               maxT;
+    /*---- members ----*/
+    char            * schemeName;
+    CcsPosition_t   * members;
+    CcsPosition_t   * constructor;
+    CcsPosition_t   * destructor;
+    /* Shortcut pointers */
+    CcSymbolTable_t * symtab;
+    CcXmlSpecMap_t  * xmlspecmap;
+    CcSyntax_t      * syntax;
+    /*---- enable ----*/
 };
 
 CcsXmlParser_t * CcsXmlParser(CcsXmlParser_t * self, CcsGlobals_t * globals);
