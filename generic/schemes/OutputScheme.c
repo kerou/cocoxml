@@ -268,6 +268,7 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
 	}
     }
 
+    printf("Updating %s to %s.....\n", tempPath, outPath);
     output.outfp = outfp;
     enabled = TRUE; replacedPrefix[0] = 0;
     while (fgets(lnbuf, sizeof(lnbuf), tempfp)) {
