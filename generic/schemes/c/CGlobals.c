@@ -75,6 +75,16 @@ CcsGlobals_SemErr(CcsGlobals_t * self, const CcsToken_t * t,
     va_end(ap);
 }
 
+void
+CcsGlobals_SemErrLC(CcsGlobals_t * self, int line, int col,
+		    const char * format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    CcsErrorPool_VError(&self->error, line, col, format, ap);
+    va_end(ap);
+}
+
 void CcsGlobals_Fatal(CcsGlobals_t * self, const CcsToken_t * t,
 		      const char * format, ...)
 {

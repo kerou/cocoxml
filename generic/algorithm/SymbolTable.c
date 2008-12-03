@@ -41,6 +41,18 @@ CcSymbolTable_Destruct(CcSymbolTable_t * self)
     CcArrayList_Destruct(&self->pragmas);
 }
 
+CcsBool_t
+CcSymbolTable_NewTerminalWithCheck(CcSymbolTable_t * self, const char * name,
+				   int line)
+{
+    CcArrayListIter_t iter; CcSymbol_t * sym;
+    for (sym = (CcSymbol_t *)CcArrayList_First(&self->terminals, &iter);
+	 sym; sym = (CcSymbol_t *)CcArrayList_Next(&self->terminals, &iter))
+	if (!strcmp(sym->name, name)) return FALSE;
+    CcArrayList_New(&self->terminals, (CcObject_t *)CcSymbolT(name, line));
+    return TRUE;
+}
+
 CcSymbol_t *
 CcSymbolTable_NewTerminal(CcSymbolTable_t * self, const char * name, int line)
 {

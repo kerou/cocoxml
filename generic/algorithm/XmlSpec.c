@@ -22,6 +22,9 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "XmlSpec.h"
+#include  "c/Token.h"
+#include  "Globals.h"
+#include  "SymbolTable.h"
 
 static void CcXmlSpec_Destruct(CcObject_t * self);
 
@@ -33,6 +36,7 @@ CcXmlSpec_t *
 CcXmlSpec(void)
 {
     CcXmlSpec_t * self = (CcXmlSpec_t *)CcObject(&XmlSpecType);
+    self->caseSensitive = TRUE;
     CcArrayList(&self->Tags);
     CcArrayList(&self->Attrs);
     CcArrayList(&self->PInstructions);
@@ -50,29 +54,92 @@ CcXmlSpec_Destruct(CcObject_t * self)
 }
 
 void
+CcXmlSpec_SetCaseSensitive(CcXmlSpec_t * self, CcsBool_t caseSensitive)
+{
+    self->caseSensitive = caseSensitive;
+}
+
+void
 CcXmlSpec_SetOption(CcXmlSpec_t * self, CcsXmlSpecOption_t option,
 		    CcsBool_t value, int line)
 {
     self->options[option] = value;
 }
 
-void
-CcXmlSpec_AddTag(CcXmlSpec_t * self, const char * tagname, int line)
+typedef struct {
+    CcObject_t base;
+    char * name;
+    int line;
+    int col;
+}  CcXmlData_t;
+
+static void
+CcXmlData_Destruct(CcObject_t * self)
 {
+    CcXmlData_t * ccself = (CcXmlData_t *)self;
+    if (ccself->name) CcFree(ccself->name);
+    CcObject_Destruct(self);
+}
+
+static const CcObjectType_t XmlDataType = {
+    sizeof(CcXmlData_t), "XmlData", CcXmlData_Destruct
+};
+
+static CcObject_t *
+CcXmlData(const CcsToken_t * token)
+{
+    CcXmlData_t * self = (CcXmlData_t *)CcObject(&XmlDataType);
+    self->name = CcUnescape(token->val);
+    self->line = token->line;
+    self->col = token->col;
+    return (CcObject_t *)self;
 }
 
 void
-CcXmlSpec_AddAttr(CcXmlSpec_t * self, const char * attrname, int line)
+CcXmlSpec_AddTag(CcXmlSpec_t * self, const CcsToken_t * token)
 {
+    CcArrayList_New(&self->Tags, CcXmlData(token));
 }
 
 void
-CcXmlSpec_AddProcessInstruction(CcXmlSpec_t * self, const char * target,
-				const char * data, int line)
+CcXmlSpec_AddAttr(CcXmlSpec_t * self, const CcsToken_t * token)
 {
+    CcArrayList_New(&self->Attrs, CcXmlData(token));
 }
 
 void
-CcXmlSpec_MakeTerminals(const CcXmlSpec_t * self, CcSymbolTable_t * symtab)
+CcXmlSpec_AddProcessInstruction(CcXmlSpec_t * self, const CcsToken_t * token)
 {
+    CcArrayList_New(&self->PInstructions, CcXmlData(token));
+}
+
+void
+CcXmlSpec_MakeTerminals(const CcXmlSpec_t * self, CcGlobals_t * globals)
+{
+    char EndTag[128];
+    CcArrayListIter_t iter; const CcXmlData_t * data;
+    CcSymbolTable_t * symtab = &globals->symtab;
+
+    for (data = (const CcXmlData_t *)CcArrayList_FirstC(&self->Tags, &iter);
+	 data; data = (const CcXmlData_t *)CcArrayList_NextC(&self->Tags, &iter)) {
+	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->name, data->line))
+	    CcsGlobals_SemErrLC(&globals->base, data->line, data->col,
+				"Symbol %s is defined twice.\n", data->name);
+	snprintf(EndTag, sizeof(EndTag), "END_%s", data->name);
+	if (!CcSymbolTable_NewTerminalWithCheck(symtab, EndTag, data->line))
+	    CcsGlobals_SemErrLC(&globals->base, data->line, data->col,
+				"Symbol %s is defined twice.\n", EndTag);
+    }
+
+    for (data = (const CcXmlData_t *)CcArrayList_FirstC(&self->Attrs, &iter);
+	 data; data = (const CcXmlData_t *)CcArrayList_NextC(&self->Attrs, &iter))
+	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->name, data->line))
+	    CcsGlobals_SemErrLC(&globals->base, data->line, data->col,
+				"Symbol %s is defined twice.\n", data->name);
+	
+    for (data = (const CcXmlData_t *)CcArrayList_FirstC(&self->PInstructions, &iter);
+	 data; data = (const CcXmlData_t *)CcArrayList_NextC(&self->PInstructions, &iter))
+	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->name, data->line))
+	    CcsGlobals_SemErrLC(&globals->base, data->line, data->col,
+				"Symbol %s is defined twice.\n", data->name);
 }

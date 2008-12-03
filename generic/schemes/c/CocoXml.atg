@@ -228,31 +228,31 @@ OptionDecl<CcXmlSpec_t * xsdef>
 
 /*------------------------------------------------------------------------------------*/
 
-XmlTagDecl<CcXmlSpec_t * xsdef>    (. char * tagname; int line; .)
+XmlTagDecl<CcXmlSpec_t * xsdef>    (. char * tagname; .)
 =
   ident                            (. tagname = CcStrdup(self->t->val); .)
   "="
-  string                           (. CcXmlSpec_AddTag(xsdef, tagname, self->t->val, line);
+  string                           (. CcXmlSpec_AddTag(xsdef, tagname, self->t);
   				      CcFree(tagname); .)
 .
 
 /*------------------------------------------------------------------------------------*/
 
-XmlAttrDecl(CcXmlSpec_t * xsdef>   (. char * attrname; int line; .)
+XmlAttrDecl(CcXmlSpec_t * xsdef>   (. char * attrname; .)
 =
-  ident                            (. attrname = CcStrdup(self->t->val); line = self->t->line; .)
+  ident                            (. attrname = CcStrdup(self->t->val); .)
   "="
-  string                           (. CcXmlSpec_AddAttr(xsdef, attrname, self->t->val, line);
+  string                           (. CcXmlSpec_AddAttr(xsdef, attrname, self->t);
   				      CcFree(attrname); .)
 .
 
 /*------------------------------------------------------------------------------------*/
 
-ProcessingInstruction<CcXmlSpec_t * xsdef>  (. char * target; int line; .)
+ProcessingInstruction<CcXmlSpec_t * xsdef>  (. char * target; .)
 =
-  ident                                     (. target = CcStrdup(self->t->val); line = self->t->line; .)
+  ident                                     (. target = CcStrdup(self->t->val); .)
   "="
-  string                                    (. CcXmlSpec_AddProcessInstruction(xsdef, target, self->t->val, line);
+  string                                    (. CcXmlSpec_AddProcessInstruction(xsdef, target, self->t);
   					       CcFree(target); .)
 .
 
