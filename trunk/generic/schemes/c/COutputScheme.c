@@ -34,13 +34,6 @@
    symSet is used. */
 #define  maxTerm  3
 
-static const CcOutputInfo_t CcCOutputScheme_OutputInfos[] = {
-    { "Scanner.c" },
-    { "Parser.c" },
-    { "Parser.h" },
-    { NULL }
-};
-
 static const char *
 CharRepr(char * buf, size_t szbuf, int ch)
 {
@@ -645,7 +638,7 @@ CcCOutputScheme_Destruct(CcObject_t * self)
 
 static const CcOutputSchemeType_t COutputSchemeType = {
     { sizeof(CcCOutputScheme_t), "COutputScheme", CcCOutputScheme_Destruct },
-    CcCOutputScheme_OutputInfos, CcCOutputScheme_write
+    CcCOutputScheme_write
 };
 
 CcCOutputScheme_t *

@@ -27,13 +27,6 @@
 #include  "lexical/Target.h"
 #include  "lexical/CharSet.h"
 
-static const CcOutputInfo_t CcDumpOutputScheme_OutputInfos[] = {
-    { "NodeTable.html" },
-    { "StateTable.html" },
-    { "SymbolTable.html" },
-    { NULL }
-};
-
 static const char *
 CharRepr(char * buf, size_t szbuf, int ch)
 {
@@ -240,8 +233,7 @@ CcDumpOutputScheme_Destruct(CcObject_t * self)
 
 static const CcOutputSchemeType_t DumpOutputSchemeType = {
     { sizeof(CcDumpOutputScheme_t), "DumpOutputScheme",
-      CcDumpOutputScheme_Destruct },
-    CcDumpOutputScheme_OutputInfos, CcDumpOutputScheme_write
+      CcDumpOutputScheme_Destruct }, CcDumpOutputScheme_write
 };
 
 CcDumpOutputScheme_t *

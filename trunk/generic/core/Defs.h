@@ -33,6 +33,7 @@ EXTC_BEGIN
 /* Basic DataStructures */
 typedef struct CcObjectType_s CcObjectType_t;
 typedef struct CcObject_s CcObject_t;
+typedef struct CcString_s CcString_t;
 typedef struct CcArrayList_s CcArrayList_t;
 typedef struct CcBitArray_s CcBitArray_t;
 typedef struct CcHashTable_s CcHashTable_t;
