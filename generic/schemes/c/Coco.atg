@@ -1,4 +1,5 @@
 SCHEME c
+UPDATES "Scanner.c" "Parser.h" "Parser.c" END.
 SECTION license
 /*-------------------------------------------------------------------------
  Coco.ATG -- Attributed Grammar
@@ -119,7 +120,7 @@ Coco                            (. CcSymbol_t  * sym;
 				   CcsToken_t  * beg;
 				   self->tokenString = NULL; .)
 =
-  { SchemeDecl | SectionDecl }
+  { SchemeDecl | SectionDecl | UpdateDecl }
   "COMPILER"                    (. self->genScanner = TRUE; .)
   ident                         (. gramName = CcStrdup(self->t->val); .)
   [ "MEMBERS"                   (. CcsScanner_IncRef(self->scanner, beg = self->la); .)
@@ -221,6 +222,14 @@ SectionDecl       (. char * secname; CcsToken_t * beg; .)
     		     			  CcsScanner_GetPositionBetween(self->scanner, beg, self->la));
 		     CcsScanner_DecRef(self->scanner, beg);
 		     CcFree(secname); .)
+  "END" '.'
+.
+
+/*------------------------------------------------------------------------------------*/
+
+UpdateDecl
+=
+  "UPDATES" { string (. CcGlobals_AddUpdate((CcGlobals_t *)self->globals, self->t->val); .) }
   "END" '.'
 .
 
