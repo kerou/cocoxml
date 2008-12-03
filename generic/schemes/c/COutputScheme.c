@@ -220,8 +220,10 @@ COS_Scan3(CcOutputScheme_t * self, CcOutput_t * output)
 static CcsBool_t
 COS_Members(CcOutputScheme_t * self, CcOutput_t * output)
 {
-    if (self->globals->base.parser.members)
-	CcSource(output, self->globals->base.parser.members);
+    if (self->globals->base.parser && self->globals->base.parser->members)
+	CcSource(output, self->globals->base.parser->members);
+    if (self->globals->base.xmlparser && self->globals->base.xmlparser->members)
+	CcSource(output, self->globals->base.xmlparser->members);
     return TRUE;
 }
 
@@ -230,16 +232,21 @@ COS_Constructor(CcOutputScheme_t * self, CcOutput_t * output)
 {
     CcPrintfI(output, "self->maxT = %d;\n",
 	      self->globals->symtab.terminals.Count - 1);
-    if (self->globals->base.parser.constructor)
-	CcSource(output, self->globals->base.parser.constructor);
+    if (self->globals->base.parser && self->globals->base.parser->constructor)
+	CcSource(output, self->globals->base.parser->constructor);
+    if (self->globals->base.xmlparser &&
+	self->globals->base.xmlparser->constructor)
+	CcSource(output, self->globals->base.xmlparser->constructor);
     return TRUE;
 }
 
 static CcsBool_t
 COS_Destructor(CcOutputScheme_t * self, CcOutput_t * output)
 {
-    if (self->globals->base.parser.destructor)
-	CcSource(output, self->globals->base.parser.destructor);
+    if (self->globals->base.parser->destructor)
+	CcSource(output, self->globals->base.parser->destructor);
+    if (self->globals->base.xmlparser->destructor)
+	CcSource(output, self->globals->base.xmlparser->destructor);
     return TRUE;
 }
 

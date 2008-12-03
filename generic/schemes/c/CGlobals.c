@@ -28,11 +28,31 @@ CcsGlobals_t *
 CcsGlobals(CcsGlobals_t * self, const char * fname, FILE * errfp)
 {
     if (!CcsErrorPool(&self->error, errfp)) goto errquit0;
-    if (!CcsScanner(&self->scanner, self, fname)) goto errquit1;
-    if (!CcsParser(&self->parser, self)) goto errquit2;
+    if (!(self->scanner = CcsScanner(&self->u.c.ScannerSpace, self, fname)))
+	goto errquit1;
+    if (!(self->parser = CcsParser(&self->u.c.ParserSpace, self)))
+	goto errquit2;
     return self;
  errquit2:
-    CcsScanner_Destruct(&self->scanner);
+    CcsScanner_Destruct(self->scanner);
+ errquit1:
+    CcsErrorPool_Destruct(&self->error);
+ errquit0:
+    return NULL;
+}
+
+CcsGlobals_t *
+CcsGlobalsXml(CcsGlobals_t * self, const char * fname, FILE * errfp)
+{
+    if (!CcsErrorPool(&self->error, errfp)) goto errquit0;
+    if (!(self->xmlscanner =
+	  CcsXmlScanner(&self->u.xml.XmlScannerSpace, self, fname)))
+	goto errquit1;
+    if (!(self->xmlparser = CcsXmlParser(&self->u.xml.XmlParserSpace, self)))
+	goto errquit2;
+    return self;
+ errquit2:
+    CcsXmlScanner_Destruct(self->xmlscanner);
  errquit1:
     CcsErrorPool_Destruct(&self->error);
  errquit0:
@@ -42,15 +62,18 @@ CcsGlobals(CcsGlobals_t * self, const char * fname, FILE * errfp)
 void
 CcsGlobals_Destruct(CcsGlobals_t * self)
 {
-    CcsParser_Destruct(&self->parser);
-    CcsScanner_Destruct(&self->scanner);
+    if (self->parser) CcsParser_Destruct(self->parser);
+    if (self->scanner) CcsScanner_Destruct(self->scanner);
+    if (self->xmlparser) CcsXmlParser_Destruct(self->xmlparser);
+    if (self->xmlscanner) CcsXmlScanner_Destruct(self->xmlscanner);
     CcsErrorPool_Destruct(&self->error);
 }
 
 void
 CcsGlobals_Parse(CcsGlobals_t * self)
 {
-    CcsParser_Parse(&self->parser);
+    if (self->parser) CcsParser_Parse(self->parser);
+    if (self->xmlparser) CcsXmlParser_Parse(self->xmlparser);
 }
 
 void

@@ -54,16 +54,16 @@ typedef struct {
     size_t numPInstructions;
 } CcsXmlSpec_t;
 
+extern const int kindUnknownNS;
+extern const CcsXmlSpec_t firstXmlSpec[];
+extern const size_t numXmlSpecs;
+
 #define  SZ_SPECSTACK  256
 
 typedef int (* CcsXmlCmpFunc_t)(const void *, const void *);
 
 struct CcsXmlScanner_s {
-    CcsXmlGlobals_t * globals;
-
-    int kindUnknownNS;
-    const CcsXmlSpec_t * firstspec;
-    size_t numspecs;
+    CcsGlobals_t * globals;
 
     XML_Parser parser;
     FILE * fp;
@@ -77,9 +77,8 @@ struct CcsXmlScanner_s {
 };
 
 CcsXmlScanner_t *
-CcsXmlScanner(CcsXmlScanner_t * self, CcsXmlGlobals_t * globals,
-	      const char * filename, int kindUnknownNS,
-	      const CcsXmlSpec_t * firstspec, size_t numspecs);
+CcsXmlScanner(CcsXmlScanner_t * self, CcsGlobals_t * globals,
+	      const char * filename);
 
 void CcsXmlScanner_Destruct(CcsXmlScanner_t * self);
 CcsToken_t * CcsXmlScanner_GetDummy(CcsXmlScanner_t * self);

@@ -57,7 +57,6 @@ typedef struct CcsPosition_s CcsPosition_t;
 
 typedef struct CcsScanner_s CcsScanner_t;
 typedef struct CcsParser_s CcsParser_t;
-typedef struct CcsGlobals_s CcsGlobals_t;
 
 typedef enum {
     XSO_UnknownTag, XSO_UnknownTagEnd,
@@ -69,7 +68,8 @@ typedef enum {
 }  CcsXmlSpecOption_t;
 typedef struct CcsXmlScanner_s CcsXmlScanner_t;
 typedef struct CcsXmlParser_s CcsXmlParser_t;
-typedef struct CcsXmlGlobals_s CcsXmlGlobals_t;
+
+typedef struct CcsGlobals_s CcsGlobals_t;
 
 #define CcsMalloc(size)  _CcsMalloc_(size, __FILE__, __LINE__)
 void * _CcsMalloc_(size_t size, const char * fname, int line);

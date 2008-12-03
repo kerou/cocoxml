@@ -25,25 +25,48 @@
 #define  COCO_CGLOBALS_H
 
 #ifndef  COCO_ERRORPOOL_H
-#include "ErrorPool.h"
+#include "c/ErrorPool.h"
 #endif
 
 #ifndef  COCO_SCANNER_H
-#include "Scanner.h"
+#include "c/Scanner.h"
 #endif
 
 #ifndef  COCO_PARSER_H
-#include "Parser.h"
+#include "c/Parser.h"
+#endif
+
+#ifndef  COCO_XMLSCANNER_H
+#include "c/XmlScanner.h"
+#endif
+
+#ifndef  COCO_XMLPARSER_H
+#include "c/XmlParser.h"
 #endif
 
 struct CcsGlobals_s {
     CcsErrorPool_t error;
-    CcsScanner_t scanner;
-    CcsParser_t parser;
+    CcsScanner_t * scanner;
+    CcsParser_t * parser;
+    CcsXmlScanner_t * xmlscanner;
+    CcsXmlParser_t * xmlparser;
+    union {
+	struct {
+	    CcsScanner_t ScannerSpace;
+	    CcsParser_t ParserSpace;
+	} c;
+	struct {
+	    CcsXmlScanner_t XmlScannerSpace;
+	    CcsXmlParser_t XmlParserSpace;
+	} xml;
+    } u;
 };
 
 CcsGlobals_t *
 CcsGlobals(CcsGlobals_t * self, const char * fname, FILE * errfp);
+CcsGlobals_t *
+CcsGlobalsXml(CcsGlobals_t * self, const char * fname, FILE * errfp);
+
 void CcsGlobals_Destruct(CcsGlobals_t * self);
 void CcsGlobals_Parse(CcsGlobals_t * self);
 void CcsGlobals_Warning(CcsGlobals_t * self, const CcsToken_t * t,
