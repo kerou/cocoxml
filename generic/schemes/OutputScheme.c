@@ -28,6 +28,7 @@
 #include  <unistd.h>
 #include  "OutputScheme.h"
 #include  "Arguments.h"
+#include  "String.h"
 
 static const char * _8tab_ = "\t\t\t\t\t\t\t\t";
 static const char * _7space_ = "       ";
@@ -316,7 +317,7 @@ CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self)
     const char * prefix, * updatePath; CcArgumentsIter_t iter;
     const char * updateDir; CcArrayListIter_t iter0;
     const CcArrayList_t * updates = &self->globals->updates;
-    const char * updateFile; char updatePath0[PATH_MAX];
+    const CcString_t * updateFile; char updatePath0[PATH_MAX];
 
     prefix = CcArguments_First(self->arguments, "prefix", &iter);
     for (updatePath = CcArguments_First(self->arguments, "u", &iter);
@@ -325,9 +326,9 @@ CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self)
 	    return FALSE;
     for (updateDir = CcArguments_First(self->arguments, "ud", &iter);
 	 updateDir; updateDir = CcArguments_Next(self->arguments, &iter))
-	for (updateFile = (const char *)CcArrayList_FirstC(updates, &iter0);
-	     updateFile; updateFile = (const char *)CcArrayList_NextC(updates, &iter0)) {
-	    MakePath(updatePath0, sizeof(updatePath0), updateDir, updateFile);
+	for (updateFile = (const CcString_t *)CcArrayList_FirstC(updates, &iter0);
+	     updateFile; updateFile = (const CcString_t *)CcArrayList_NextC(updates, &iter0)) {
+	    MakePath(updatePath0, sizeof(updatePath0), updateDir, updateFile->value);
 	    if (!CcOutputScheme_ApplyTemplate(self, updatePath0, updatePath0, prefix))
 		return FALSE;
 	}
