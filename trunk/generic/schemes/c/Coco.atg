@@ -71,10 +71,6 @@ CONSTRUCTOR
     self->constructor = NULL;
     self->destructor = NULL;
 
-    self->symtab = &((CcGlobals_t *)globals)->symtab;
-    self->lexical = ((CcGlobals_t *)globals)->lexical;
-    self->syntax = &((CcGlobals_t *)globals)->syntax;
-
 DESTRUCTOR
     if (self->destructor) CcsPosition_Destruct(self->destructor);
     if (self->constructor) CcsPosition_Destruct(self->constructor);
@@ -118,7 +114,10 @@ Coco                            (. CcSymbol_t  * sym;
 				   char        * gramName = NULL;
 				   CcCharSet_t * s; 
 				   CcsToken_t  * beg;
-				   self->tokenString = NULL; .)
+				   self->tokenString = NULL;
+				   self->symtab = &((CcGlobals_t *)self->globals)->symtab;
+				   self->lexical = ((CcGlobals_t *)self->globals)->lexical;
+				   self->syntax = &((CcGlobals_t *)self->globals)->syntax; .)
 =
   { SchemeDecl | SectionDecl | UpdateDecl }
   "COMPILER"                    (. self->genScanner = TRUE; .)
