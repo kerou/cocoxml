@@ -30,21 +30,15 @@
 static const char * usage_format =
     "Usage: %s Grammar.atg {{Option}}\n"
     "Options:\n"
-    "  -namespace <namespaceName>\n"
-    "  -frames    <frameFilesDirectory>\n"
-    "  -trace     <traceString>\n"
-    "  -o         <outputDirectory>\n"
-    "Valid characters in the trace string:\n"
-    "  A  trace automaton\n"
-    "  F  list first/follow sets\n"
-    "  G  print syntax graph\n"
-    "  I  trace computation of first sets\n"
-    "  J  list ANY and SYNC sets\n"
-    "  P  print statistics\n"
-    "  S  list symbol table\n"
-    "  X  list cross reference table\n"
-    "Scanner[.lang].frame and Parser[.lang].frame files needed in ATG directory\n"
-    "or in a directory specified in the -frames option.\n";
+    "  -lang    <LANGUAGE>\n"
+    "  -scheme  <SCHEME>\n"
+    "  -u       <UPDATED-FILE>\n"
+    "  -ud      <UPDATED-DIR>\n"
+    "\n"
+    "The possible value of LANGUAGE is 'xml', which is used for CocoXml.atg. But default, Coco.atg is used.\n"
+    "The possible value of SCHEME is 'c' or 'dump', 'c' is default.\n"
+    "Multiple UPDATE-FILEs are possible, they specifies all of the files which should be updated.\n"
+    "Multiple UPDATE-DIRs are permitted, all atg specified files in UPDATE-DIRs are updated.\n";
 
 int
 main(int argc, char * argv[])
