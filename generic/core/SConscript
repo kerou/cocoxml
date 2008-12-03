@@ -6,5 +6,5 @@ Import('env')
 Import('libobjs')
 
 libobjs.extend(map(lambda src: env.Object(src),
-                   ['Defs.c', 'Object.c', 'ArrayList.c', 'BitArray.c',
-                    'HashTable.c', 'Globals.c', 'Arguments.c']))
+                   ['Defs.c', 'Object.c', 'String.c', 'ArrayList.c',
+                    'BitArray.c', 'HashTable.c', 'Globals.c', 'Arguments.c']))

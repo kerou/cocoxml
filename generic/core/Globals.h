@@ -50,6 +50,7 @@ struct CcGlobals_s {
     CcSyntax_t        syntax;
 
     CcArrayList_t     sections;
+    CcArrayList_t     updates;
 };
 
 CcGlobals_t *

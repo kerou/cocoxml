@@ -32,7 +32,10 @@ CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
     if (!CcLexical(&self->lexical, self)) goto errquit2;
     if (!CcSyntax(&self->syntax, self)) goto errquit3;
     if (!CcArrayList(&self->sections)) goto errquit4;
+    if (!CcArrayList(&self->updates)) goto errquit5;
     return self;
+ errquit5:
+    CcArrayList_Destruct(&self->sections);
  errquit4:
     CcSyntax_Destruct(&self->syntax);
  errquit3:
@@ -48,6 +51,7 @@ CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
 void
 CcGlobals_Destruct(CcGlobals_t * self)
 {
+    CcArrayList_Destruct(&self->updates);
     CcArrayList_Destruct(&self->sections);
     CcSyntax_Destruct(&self->syntax);
     CcLexical_Destruct(&self->lexical);
@@ -106,4 +110,10 @@ CcGlobals_GetSection(const CcGlobals_t * self, const char * secname)
 	 section = (const CcSection_t *)CcArrayList_NextC(&self->sections, &iter))
 	if (!strcmp(section->name, secname)) return section->pos;
     return NULL;
+}
+
+void
+CcGlobals_AddUpdate(CcGlobals_t * self, const char * update)
+{
+    CcArrayList_New(&self->updates, CcString(update));
 }

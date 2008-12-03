@@ -313,36 +313,23 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
 CcsBool_t
 CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self)
 {
+    const char * prefix, * updatePath; CcArgumentsIter_t iter;
+    const char * updateDir; CcArrayListIter_t iter0;
+    const CcArrayList_t * updates = &self->globals->updates;
+    const char * updateFile; char updatePath0[PATH_MAX];
 
-    const char * tempDir, * outDir, * prefix; CcArgumentsIter_t iter;
-    const CcOutputInfo_t * outinfo;
-    char tempPath[PATH_MAX], outPath[PATH_MAX];
-    const char * outFile; char * outFileBase, * BoutFileBase;
-
-    tempDir = CcArguments_First(self->arguments, "tempdir", &iter);
-    outDir = CcArguments_First(self->arguments, "outdir", &iter);
     prefix = CcArguments_First(self->arguments, "prefix", &iter);
-    for (outinfo = ((CcOutputSchemeType_t *)self->base.type)->OutInfoArray;
-	 outinfo->template; ++outinfo) {
-	MakePath(tempPath, sizeof(tempPath), tempDir, outinfo->template);
-	outFile = CcArguments_First(self->arguments, "o", &iter);
-	if (!outFile) {
-	    MakePath(outPath, sizeof(outPath), outDir, outinfo->template);
-	    if (!CcOutputScheme_ApplyTemplate(self, tempPath, outPath, prefix))
+    for (updatePath = CcArguments_First(self->arguments, "u", &iter);
+	 updatePath; updatePath = CcArguments_Next(self->arguments, &iter))
+	if (!CcOutputScheme_ApplyTemplate(self, updatePath, updatePath, prefix)) 
+	    return FALSE;
+    for (updateDir = CcArguments_First(self->arguments, "ud", &iter);
+	 updateDir; updateDir = CcArguments_Next(self->arguments, &iter))
+	for (updateFile = (const char *)CcArrayList_FirstC(updates, &iter0);
+	     updateFile; updateFile = (const char *)CcArrayList_NextC(updates, &iter0)) {
+	    MakePath(updatePath0, sizeof(updatePath0), updateDir, updateFile);
+	    if (!CcOutputScheme_ApplyTemplate(self, updatePath0, updatePath0, prefix))
 		return FALSE;
 	}
-	for (;outFile; outFile = CcArguments_Next(self->arguments, &iter)) {
-	    outFileBase = CcStrdup(outFile);
-	    BoutFileBase = basename(outFileBase);
-	    if (!strcmp(BoutFileBase, outinfo->template)) {
-		MakePath(outPath, sizeof(outPath), outDir, outFileBase);
-		CcFree(outFileBase);
-		if (!CcOutputScheme_ApplyTemplate(self, tempPath, outPath, prefix))
-		    return FALSE;
-	    } else {
-		CcFree(outFileBase);
-	    }
-	}
-    }
     return TRUE;
 }
