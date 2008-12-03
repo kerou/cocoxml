@@ -139,7 +139,7 @@ CcsParser_t *
 CcsParser(CcsParser_t * self, CcsGlobals_t * globals)
 {
     self->globals = globals;
-    self->scanner = &globals->scanner;
+    self->scanner = globals->scanner;
     self->t = self->la = NULL;
     /*---- constructor ----*/
     self->maxT = 47;
