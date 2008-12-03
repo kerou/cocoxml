@@ -27,8 +27,9 @@
 #define  SZ_XMLSPECMAP  127
 
 CcXmlSpecMap_t *
-CcXmlSpecMap(CcXmlSpecMap_t * self)
+CcXmlSpecMap(CcXmlSpecMap_t * self, CcGlobals_t * globals)
 {
+    self->globals = globals;
     CcArrayList(&self->storage);
     CcHashTable(&self->map, SZ_XMLSPECMAP);
     return self;
@@ -59,4 +60,11 @@ CcXmlSpecMap_MakeTerminals(const CcXmlSpecMap_t * self, CcGlobals_t * globals)
     for (xmlspec = (const CcXmlSpec_t *)CcArrayList_FirstC(&self->storage, &iter);
 	 xmlspec; xmlspec = (const CcXmlSpec_t *)CcArrayList_NextC(&self->storage, &iter))
 	CcXmlSpec_MakeTerminals(xmlspec, globals);
+}
+
+CcsBool_t
+CcXmlSpecMap_Finish(CcXmlSpecMap_t * self)
+{
+    CcXmlSpecMap_MakeTerminals(self, self->globals);
+    return TRUE;
 }

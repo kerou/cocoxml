@@ -30,7 +30,9 @@ CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
 {
     if (!CcsGlobals(&self->base, fname, errfp)) goto errquit0;
     if (!CcSymbolTable(&self->symtab)) goto errquit1;
-    if (!CcLexical(&self->lexical, self)) goto errquit2;
+    if (!(self->lexical = CcLexical(&self->u.lexicalSpace, self)))
+	goto errquit2;
+    self->xmlspecmap = NULL;
     if (!CcSyntax(&self->syntax, self)) goto errquit3;
     if (!CcArrayList(&self->sections)) goto errquit4;
     if (!CcArrayList(&self->updates)) goto errquit5;
@@ -40,7 +42,33 @@ CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
  errquit4:
     CcSyntax_Destruct(&self->syntax);
  errquit3:
-    CcLexical_Destruct(&self->lexical);
+    CcLexical_Destruct(self->lexical);
+ errquit2:
+    CcSymbolTable_Destruct(&self->symtab);
+ errquit1:
+    CcsGlobals_Destruct(&self->base);
+ errquit0:
+    return NULL;
+}
+
+CcGlobals_t *
+CcGlobalsXml(CcGlobals_t * self, const char * fname, FILE * errfp)
+{
+    if (!CcsGlobalsXml(&self->base, fname, errfp)) goto errquit0;
+    if (!CcSymbolTable(&self->symtab)) goto errquit1;
+    self->lexical = NULL;
+    if (!(self->xmlspecmap = CcXmlSpecMap(&self->u.xmlspecmapSpace, self)))
+	goto errquit2;
+    if (!CcSyntax(&self->syntax, self)) goto errquit3;
+    if (!CcArrayList(&self->sections)) goto errquit4;
+    if (!CcArrayList(&self->updates)) goto errquit5;
+    return self;
+ errquit5:
+    CcArrayList_Destruct(&self->sections);
+ errquit4:
+    CcSyntax_Destruct(&self->syntax);
+ errquit3:
+    CcXmlSpecMap_Destruct(self->xmlspecmap);
  errquit2:
     CcSymbolTable_Destruct(&self->symtab);
  errquit1:
@@ -55,7 +83,8 @@ CcGlobals_Destruct(CcGlobals_t * self)
     CcArrayList_Destruct(&self->updates);
     CcArrayList_Destruct(&self->sections);
     CcSyntax_Destruct(&self->syntax);
-    CcLexical_Destruct(&self->lexical);
+    if (self->lexical) CcLexical_Destruct(self->lexical);
+    if (self->xmlspecmap) CcXmlSpecMap_Destruct(self->xmlspecmap);
     CcSymbolTable_Destruct(&self->symtab);
     CcsGlobals_Destruct(&self->base);
 }
@@ -66,7 +95,9 @@ CcGlobals_Parse(CcGlobals_t * self)
     CcsGlobals_Parse(&self->base);
     if (self->base.error.errorCount > 0) return FALSE;
     if (!CcSymbolTable_Finish(&self->symtab)) return FALSE;
-    if (!CcLexical_Finish(&self->lexical)) return FALSE;
+    if (self->lexical && !CcLexical_Finish(self->lexical)) return FALSE;
+    if (self->xmlspecmap && !CcXmlSpecMap_Finish(self->xmlspecmap))
+	return FALSE;
     if (!CcSyntax_Finish(&self->syntax)) return FALSE;
     return TRUE;
 }

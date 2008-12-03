@@ -150,7 +150,7 @@ CcsParser(CcsParser_t * self, CcsGlobals_t * globals)
     self->constructor = NULL;
     self->destructor = NULL;
     self->symtab = &((CcGlobals_t *)globals)->symtab;
-    self->lexical = &((CcGlobals_t *)globals)->lexical;
+    self->lexical = ((CcGlobals_t *)globals)->lexical;
     self->syntax = &((CcGlobals_t *)globals)->syntax;
     /*---- enable ----*/
     return self;

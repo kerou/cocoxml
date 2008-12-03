@@ -35,11 +35,12 @@
 EXTC_BEGIN
 
 struct CcXmlSpecMap_s {
+    CcGlobals_t * globals;
     CcArrayList_t storage;
     CcHashTable_t map;
 };
 
-CcXmlSpecMap_t * CcXmlSpecMap(CcXmlSpecMap_t * self);
+CcXmlSpecMap_t * CcXmlSpecMap(CcXmlSpecMap_t * self, CcGlobals_t * globals);
 void CcXmlSpecMap_Destruct(CcXmlSpecMap_t * self);
 
 CcsBool_t
@@ -48,6 +49,7 @@ CcXmlSpecMap_Add(CcXmlSpecMap_t * self, const char * nsURI,
 
 void CcXmlSpecMap_MakeTerminals(const CcXmlSpecMap_t * self,
 				CcGlobals_t * symtab);
+CcsBool_t CcXmlSpecMap_Finish(CcXmlSpecMap_t * self);
 
 EXTC_END
 

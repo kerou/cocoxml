@@ -72,7 +72,7 @@ CONSTRUCTOR
     self->destructor = NULL;
 
     self->symtab = &((CcGlobals_t *)globals)->symtab;
-    self->lexical = &((CcGlobals_t *)globals)->lexical;
+    self->lexical = ((CcGlobals_t *)globals)->lexical;
     self->syntax = &((CcGlobals_t *)globals)->syntax;
 
 DESTRUCTOR
