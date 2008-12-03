@@ -47,7 +47,7 @@ CcXmlSpecMap_Add(CcXmlSpecMap_t * self, const char * nsURI,
 		 CcXmlSpec_t * xmlspec);
 
 void CcXmlSpecMap_MakeTerminals(const CcXmlSpecMap_t * self,
-				CcSymbolTable_t * symtab);
+				CcGlobals_t * symtab);
 
 EXTC_END
 

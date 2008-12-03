@@ -43,6 +43,12 @@ struct CcSymbolTable_s {
 CcSymbolTable_t * CcSymbolTable(CcSymbolTable_t * self);
 void CcSymbolTable_Destruct(CcSymbolTable_t * self);
 
+/* name is a unescaped string. */
+CcsBool_t
+CcSymbolTable_NewTerminalWithCheck(CcSymbolTable_t * self, const char * name,
+				   int line);
+
+/* name is not unescaped yet. */
 CcSymbol_t *
 CcSymbolTable_NewTerminal(CcSymbolTable_t * self, const char * name, int line);
 

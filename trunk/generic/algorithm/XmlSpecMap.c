@@ -52,11 +52,11 @@ CcXmlSpecMap_Add(CcXmlSpecMap_t * self, const char * nsURI, CcXmlSpec_t * xmlspe
 }
 
 void
-CcXmlSpecMap_MakeTerminals(const CcXmlSpecMap_t * self, CcSymbolTable_t * symtab)
+CcXmlSpecMap_MakeTerminals(const CcXmlSpecMap_t * self, CcGlobals_t * globals)
 {
     CcArrayListIter_t iter; const CcXmlSpec_t * xmlspec;
 
     for (xmlspec = (const CcXmlSpec_t *)CcArrayList_FirstC(&self->storage, &iter);
 	 xmlspec; xmlspec = (const CcXmlSpec_t *)CcArrayList_NextC(&self->storage, &iter))
-	CcXmlSpec_MakeTerminals(xmlspec, symtab);
+	CcXmlSpec_MakeTerminals(xmlspec, globals);
 }
