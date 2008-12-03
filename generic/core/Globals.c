@@ -23,6 +23,7 @@
 -------------------------------------------------------------------------*/
 #include  "Globals.h"
 #include  "c/CGlobals.h"
+#include  "String.h"
 
 CcGlobals_t *
 CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
@@ -115,5 +116,7 @@ CcGlobals_GetSection(const CcGlobals_t * self, const char * secname)
 void
 CcGlobals_AddUpdate(CcGlobals_t * self, const char * update)
 {
-    CcArrayList_New(&self->updates, CcString(update));
+    char * update0 = CcUnescape(update);
+    CcArrayList_New(&self->updates, (CcObject_t *)CcString(update0));
+    CcFree(update0);
 }

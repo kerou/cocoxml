@@ -64,6 +64,8 @@ void CcGlobals_NewSection(CcGlobals_t * self, const char * secname,
 const CcsPosition_t *
 CcGlobals_GetSection(const CcGlobals_t * self, const char * secname);
 
+void CcGlobals_AddUpdate(CcGlobals_t * self, const char * update);
+
 EXTC_END
 
 #endif  /* COCO_GLOBALS_H */
