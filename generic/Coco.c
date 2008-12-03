@@ -64,7 +64,7 @@ main(int argc, char * argv[])
 	return 0;
     }
     lang = CcArguments_First(&arguments, "lang", &iter);
-    if (!strcmp(lang, "xml")) {
+    if (lang != NULL && !strcmp(lang, "xml")) {
 	if (!CcGlobalsXml(&globals, atgName, stderr)) goto errquit0;
     } else {
 	if (!CcGlobals(&globals, atgName, stderr)) goto errquit0;
@@ -91,6 +91,7 @@ main(int argc, char * argv[])
 	scheme = NULL;
     }
     if (scheme) {
+	printf("scheme '%s' is used.\n", schemeName);
 	if (!CcOutputScheme_GenerateOutputs(scheme)) goto errquit2;
 	CcObject_VDestruct((CcObject_t *)scheme);
     }
