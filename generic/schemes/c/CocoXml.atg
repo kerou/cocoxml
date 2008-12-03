@@ -1,4 +1,5 @@
 SCHEME c
+UPDATES "XmlParser.h" "XmlParser.c" "XSData.c" END.
 SECTION license
 /*-------------------------------------------------------------------------
  Coco.ATG -- Attributed Grammar
