@@ -83,7 +83,7 @@ DumpEBNF(CcOutput_t * output, const CcEBNF_t * ebnf)
 static CcsBool_t
 DOS_LexicalNodes(CcOutputScheme_t * self, CcOutput_t * output)
 {
-    return DumpEBNF(output, &self->globals->lexical.base);
+    return DumpEBNF(output, &self->globals->lexical->base);
 }
 
 static CcsBool_t
@@ -170,7 +170,7 @@ DOS_States(CcOutputScheme_t * self, CcOutput_t * output)
     CcCharSet_t * s;
     const CcRange_t * curRange;
     char buf0[8], buf1[8];
-    const CcArrayList_t * states = &self->globals->lexical.states;
+    const CcArrayList_t * states = &self->globals->lexical->states;
 
     for (state = (const CcState_t *)CcArrayList_FirstC(states, &iter);
 	 state; state = (const CcState_t *)CcArrayList_NextC(states, &iter)) {

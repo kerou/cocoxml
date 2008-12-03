@@ -66,7 +66,7 @@ CharRepr(char * buf, size_t szbuf, int ch)
 static CcsBool_t
 COS_Defines(CcOutputScheme_t * self, CcOutput_t * output)
 {
-    if (!self->globals->lexical.ignoreCase)
+    if (!self->globals->lexical->ignoreCase)
 	CcPrintfI(output, "#define CASE_SENSITIVE\n");
     return TRUE;
 }
@@ -90,7 +90,7 @@ COS_Chars2States(CcOutputScheme_t * self, CcOutput_t * output)
     CcLexical_StartTab_t * table, * cur;
     char buf0[8], buf1[8];
     CcPrintfI(output, "{ EoF, EoF, -1 },\n");
-    table = CcLexical_GetStartTab(&self->globals->lexical, &numEle);
+    table = CcLexical_GetStartTab(self->globals->lexical, &numEle);
     for (cur = table; cur - table < numEle; ++cur)
 	CcPrintfI(output, "{ %d, %d, %d },\t/* %s %s */\n",
 		  cur->keyFrom, cur->keyTo, cur->state,
@@ -106,7 +106,7 @@ COS_Identifiers2KeywordKinds(CcOutputScheme_t * self, CcOutput_t * output)
     int numEle;
     CcLexical_Identifier_t * list, * cur;
 
-    list = CcLexical_GetIdentifiers(&self->globals->lexical, &numEle);
+    list = CcLexical_GetIdentifiers(self->globals->lexical, &numEle);
     for (cur = list; cur - list < numEle; ++cur)
 	CcPrintfI(output, "{ %s, %d },\n", cur->name, cur->index);
     CcLexical_Identifiers_Destruct(list, numEle);
@@ -119,7 +119,7 @@ COS_Comments(CcOutputScheme_t * self, CcOutput_t * output)
     const CcComment_t * cur;
     char buf0[8], buf1[8], buf2[8], buf3[8];
     output->indent += 4;
-    for (cur = self->globals->lexical.firstComment; cur; cur = cur->next)
+    for (cur = self->globals->lexical->firstComment; cur; cur = cur->next)
 	CcPrintfI(output, "{ { %s, %s }, { %s, %s }, %s },\n",
 		  CharRepr(buf0, sizeof(buf0), cur->start[0]),
 		  CharRepr(buf1, sizeof(buf1), cur->start[1]),
@@ -135,7 +135,7 @@ COS_Scan1(CcOutputScheme_t * self, CcOutput_t * output)
 {
     const CcRange_t * curRange;
     char buf0[8], buf1[8];
-    for (curRange = self->globals->lexical.ignored->head;
+    for (curRange = self->globals->lexical->ignored->head;
 	 curRange; curRange = curRange->next) {
 	if (curRange->from == curRange->to)
 	    CcPrintfI(output, "|| self->ch == %s\n",
@@ -206,9 +206,9 @@ COS_Scan3(CcOutputScheme_t * self, CcOutput_t * output)
     CcArrayListIter_t iter;
     CcBitArray_t mask;
     const CcState_t * state;
-    CcArrayList_t * stateArr = &self->globals->lexical.states;
+    CcArrayList_t * stateArr = &self->globals->lexical->states;
 
-    CcLexical_TargetStates(&self->globals->lexical, &mask);
+    CcLexical_TargetStates(self->globals->lexical, &mask);
     state = (CcState_t *)CcArrayList_First(stateArr, &iter);
     for (state = (const CcState_t *)CcArrayList_Next(stateArr, &iter);
 	 state; state = (const CcState_t *)CcArrayList_Next(stateArr, &iter))

@@ -52,6 +52,7 @@ main(int argc, char * argv[])
     CcArguments_t arguments;
     CcArgumentsIter_t iter;
     CcGlobals_t   globals;
+    const char * lang;
     const char * atgName, * schemeName;
     CcOutputScheme_t * scheme;
 
@@ -62,7 +63,12 @@ main(int argc, char * argv[])
 	printf(usage_format, argv[0]);
 	return 0;
     }
-    if (!CcGlobals(&globals, atgName, stderr)) goto errquit0;
+    lang = CcArguments_First(&arguments, "lang", &iter);
+    if (!strcmp(lang, "xml")) {
+	if (!CcGlobalsXml(&globals, atgName, stderr)) goto errquit0;
+    } else {
+	if (!CcGlobals(&globals, atgName, stderr)) goto errquit0;
+    }
     if (!CcGlobals_Parse(&globals)) goto errquit1;
 
     schemeName = CcArguments_First(&arguments, "scheme", &iter);

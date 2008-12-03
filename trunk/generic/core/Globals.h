@@ -36,6 +36,10 @@
 #include  "Lexical.h"
 #endif
 
+#ifndef  COCO_XMLSPECMAP_H
+#include  "XmlSpecMap.h"
+#endif
+
 #ifndef  COCO_SYNTAX_H
 #include  "Syntax.h"
 #endif
@@ -46,7 +50,12 @@ struct CcGlobals_s {
     CcsGlobals_t      base;
 
     CcSymbolTable_t   symtab;
-    CcLexical_t       lexical;
+    CcLexical_t     * lexical;
+    CcXmlSpecMap_t  * xmlspecmap;
+    union {
+	CcLexical_t    lexicalSpace;
+	CcXmlSpecMap_t xmlspecmapSpace;
+    } u;
     CcSyntax_t        syntax;
 
     CcArrayList_t     sections;
@@ -55,6 +64,8 @@ struct CcGlobals_s {
 
 CcGlobals_t *
 CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp);
+CcGlobals_t *
+CcGlobalsXml(CcGlobals_t * self, const char * fname, FILE * errfp);
 void CcGlobals_Destruct(CcGlobals_t * self);
 
 CcsBool_t CcGlobals_Parse(CcGlobals_t * self);
