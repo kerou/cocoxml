@@ -24,6 +24,7 @@
 #include  "c/XmlScanner.h"
 #include  "c/Token.h"
 
+#if 0
 static const CcsXmlTag_t xsltTags[] = {
     { "apply-templates", 23, 24 },
     { "stylesheet", 17, 18 },
@@ -49,7 +50,7 @@ static const CcsXmlSpec_t specs[] = {
 	NULL, 0
     }
 };
-
+#endif
 int
 main(int argc, char * argv[])
 {
@@ -60,8 +61,7 @@ main(int argc, char * argv[])
 	fprintf(stderr, "argc != 2\n");
 	return -1;
     }
-    CcsXmlScanner(&scanner, NULL, argv[1], -1,
-		  specs, sizeof(specs) / sizeof(specs[0]));
+    CcsXmlScanner(&scanner, NULL, argv[1]);
     t = NULL; la = CcsXmlScanner_GetDummy(&scanner);
     for (;;) {
 	if (t) CcsXmlScanner_DecRef(&scanner, t);

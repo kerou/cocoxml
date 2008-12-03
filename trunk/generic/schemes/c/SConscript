@@ -8,5 +8,5 @@ Import('libobjs')
 libobjs.extend(map(lambda src: env.Object(src),
                    ['CDefs.c', 'ErrorPool.c', 'Buffer.c', 'Token.c',
                     'Position.c', 'Scanner.c', 'Parser.c', 'CGlobals.c',
-                    'XmlScanner.c', 'XSData.c', 'XmlParser.c', 'CXmlGlobals.c',
+                    'XmlScanner.c', 'XSData.c', 'XmlParser.c',
                     'COutputScheme.c']))

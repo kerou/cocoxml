@@ -17,7 +17,7 @@
 -------------------------------------------------------------------------*/
 #include  "c/XmlScanner.h"
 #include  "c/Token.h"
-#include  "c/CXmlGlobals.h"
+#include  "c/CGlobals.h"
 #include  "c/ErrorPool.h"
 
 static const char nsSep = '@';
@@ -111,9 +111,9 @@ CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
 
     localname = localname ? localname + 1 : name;
     if (!(tagSpec = (const CcsXmlSpec_t *)
-	  bsearch(name, ccself->firstspec, ccself->numspecs,
+	  bsearch(name, firstXmlSpec, numXmlSpecs,
 		  sizeof(CcsXmlSpec_t), cmpXmlSpec))) {
-	last = CXS_Append(ccself, last, ccself->kindUnknownNS, NULL, 0);
+	last = CXS_Append(ccself, last, kindUnknownNS, NULL, 0);
     } else if (!(tag = (const CcsXmlTag_t *)
 		 bsearch(localname, tagSpec->firstTag, tagSpec->numTags, sizeof(CcsXmlTag_t),
 			 tagSpec->caseSensitive ? cmpXmlTag : casecmpXmlTag))) {
@@ -137,13 +137,12 @@ CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
 	if (localname == NULL) { attrSpec = tagSpec; localname = curattr[0]; }
 	else {
 	    attrSpec = (const CcsXmlSpec_t *)
-		bsearch(curattr[0], ccself->firstspec, ccself->numspecs,
+		bsearch(curattr[0], firstXmlSpec, numXmlSpecs,
 			sizeof(CcsXmlSpec_t), cmpXmlSpec);
 	    ++localname;
 	}
 	if (!attrSpec) {
-	    last = CXS_Append(ccself, last,
-				 ccself->kindUnknownNS, NULL, 0);
+	    last = CXS_Append(ccself, last, kindUnknownNS, NULL, 0);
 	} else if (!(attr = (const CcsXmlAttr_t *)
 		     bsearch(localname, attrSpec->firstAttr, attrSpec->numAttrs, sizeof(CcsXmlAttr_t),
 			     attrSpec->caseSensitive ? cmpXmlAttr : casecmpXmlAttr))) {
@@ -168,9 +167,9 @@ CXS_EndElement(void * self, const XML_Char * name)
 
     localname = localname ? localname + 1 : name;
     if (!(tagSpec = (const CcsXmlSpec_t *)
-	  bsearch(name, ccself->firstspec, ccself->numspecs,
+	  bsearch(name, firstXmlSpec, numXmlSpecs,
 		  sizeof(CcsXmlSpec_t), cmpXmlSpec))) {
-	CXS_Append(ccself, last, ccself->kindUnknownNS, NULL, 0);
+	CXS_Append(ccself, last, kindUnknownNS, NULL, 0);
     } else if (!(tag = (const CcsXmlTag_t *)
 		 bsearch(localname, tagSpec->firstTag, tagSpec->numTags, sizeof(CcsXmlTag_t),
 			 tagSpec->caseSensitive ? cmpXmlTag : casecmpXmlTag))) {
@@ -203,14 +202,10 @@ CXS_Comment(void * self, const XML_Char * data)
 
 static const char * dummyval = "dummy";
 CcsXmlScanner_t *
-CcsXmlScanner(CcsXmlScanner_t * self, CcsXmlGlobals_t * globals,
-	      const char * filename, int kindUnknownNS,
-	      const CcsXmlSpec_t * firstspec, size_t numspecs)
+CcsXmlScanner(CcsXmlScanner_t * self, CcsGlobals_t * globals,
+	      const char * filename)
 {
     self->globals = globals;
-    self->kindUnknownNS = kindUnknownNS;
-    self->firstspec = firstspec;
-    self->numspecs = numspecs;
     self->parser = XML_ParserCreateNS(NULL, nsSep);
     CcsAssert(self->parser);
 

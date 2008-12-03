@@ -18,9 +18,12 @@
 -------------------------------------------------------------------------*/
 #include  "c/XmlScanner.h"
 
+/*---- kindUnknownNS ----*/
+const int kindUnknownNS = -1;
+/*---- enable ----*/
+
 const CcsXmlSpec_t firstXmlSpec[] = {
     /*---- XmlSpecList ----*/
     /*---- enable ----*/
 };
-const CcsXmlSpec_t * lastXmlSpec =
-    firstXmlSpec + sizeof(firstXmlSpec) / sizeof(firstXmlSpec[0]);
+const size_t numXmlSpecs = sizeof(firstXmlSpec) / sizeof(firstXmlSpec[0]);

@@ -67,7 +67,10 @@ main(int argc, char * argv[])
 
     schemeName = CcArguments_First(&arguments, "scheme", &iter);
     if (schemeName == NULL) {
-	schemeName = globals.base.parser.schemeName;
+	if (globals.base.parser)
+	    schemeName = globals.base.parser->schemeName;
+	else if (globals.base.xmlparser)
+	    schemeName = globals.base.xmlparser->schemeName;
 	if (schemeName == NULL) schemeName = "dump";
     }
     if (!strcmp(schemeName, "c")) {
