@@ -149,9 +149,6 @@ CcsParser(CcsParser_t * self, CcsGlobals_t * globals)
     self->members = NULL;
     self->constructor = NULL;
     self->destructor = NULL;
-    self->symtab = &((CcGlobals_t *)globals)->symtab;
-    self->lexical = ((CcGlobals_t *)globals)->lexical;
-    self->syntax = &((CcGlobals_t *)globals)->syntax;
     /*---- enable ----*/
     return self;
 }
@@ -178,7 +175,10 @@ CcsParser_Coco(CcsParser_t * self)
     char        * gramName = NULL;
     CcCharSet_t * s; 
     CcsToken_t  * beg;
-    self->tokenString = NULL; 
+    self->tokenString = NULL;
+    self->symtab = &((CcGlobals_t *)self->globals)->symtab;
+    self->lexical = ((CcGlobals_t *)self->globals)->lexical;
+    self->syntax = &((CcGlobals_t *)self->globals)->syntax; 
     while (self->la->kind == 23 || self->la->kind == 24 || self->la->kind == 25) {
 	if (self->la->kind == 23) {
 	    CcsParser_SchemeDecl(self);
