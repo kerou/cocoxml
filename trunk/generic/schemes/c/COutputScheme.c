@@ -243,9 +243,10 @@ COS_Constructor(CcOutputScheme_t * self, CcOutput_t * output)
 static CcsBool_t
 COS_Destructor(CcOutputScheme_t * self, CcOutput_t * output)
 {
-    if (self->globals->base.parser->destructor)
+    if (self->globals->base.parser && self->globals->base.parser->destructor)
 	CcSource(output, self->globals->base.parser->destructor);
-    if (self->globals->base.xmlparser->destructor)
+    if (self->globals->base.xmlparser &&
+	self->globals->base.xmlparser->destructor)
 	CcSource(output, self->globals->base.xmlparser->destructor);
     return TRUE;
 }
@@ -278,25 +279,27 @@ COS_ProductionsHeader(CcOutputScheme_t * self,
     CcArrayListIter_t iter;
     const CcSymbolNT_t * sym;
     const CcArrayList_t * nonterminals = &self->globals->symtab.nonterminals;
+    CcCOutputScheme_t * ccself = (CcCOutputScheme_t *)self;
 
     for (sym = (const CcSymbolNT_t *)CcArrayList_FirstC(nonterminals, &iter);
 	 sym;
 	 sym = (const CcSymbolNT_t *)CcArrayList_NextC(nonterminals, &iter))
 	if (sym->attrPos)
 	    CcPrintfI(output,
-		      "static void CcsParser_%s(CcsParser_t * self, %s);\n",
-		      sym->base.name, sym->attrPos->text);
+		      "static void %s_%s(%s_t * self, %s);\n",
+		      ccself->ParserStem, sym->base.name,
+		      ccself->ParserStem, sym->attrPos->text);
 	else
-	    CcPrintfI(output,
-		      "static void CcsParser_%s(CcsParser_t * self);\n",
-		      sym->base.name);
+	    CcPrintfI(output, "static void %s_%s(%s_t * self);\n",
+		      ccself->ParserStem, sym->base.name, ccself->ParserStem);
     return TRUE;
 }
 
 static CcsBool_t
 COS_ParseRoot(CcOutputScheme_t * self, CcOutput_t * output)
 {
-    CcPrintfI(output, "CcsParser_%s(self);\n",
+    CcCOutputScheme_t * ccself = (CcCOutputScheme_t *)self;
+    CcPrintfI(output, "%s_%s(self);\n", ccself->ParserStem,
 	      self->globals->syntax.gramSy->name);
     return TRUE;
 }
@@ -327,8 +330,9 @@ SCOS_GenCond(CcOutputScheme_t * self, CcOutput_t * output,
 	    }
 	CcPrintf(output, "%s\n", suffix);
     } else {
-	CcPrintfI(output, "%sCcsParser_StartOf(self, %d)%s\n",
-		  prefix, CcSyntaxSymSet_New(&ccself->symSet, s), suffix);
+	CcPrintfI(output, "%s%s_StartOf(self, %d)%s\n",
+		  prefix, ccself->ParserStem,
+		  CcSyntaxSymSet_New(&ccself->symSet, s), suffix);
     }
 }
 
@@ -378,28 +382,29 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 	if (p->base.type == node_nt) {
 	    pnt = (CcNodeNT_t *)p;
 	    if (pnt->pos) {
-		CcPrintfI(output, "CcsParser_%s(self, %s);\n",
-			  pnt->sym->name, pnt->pos->text);
+		CcPrintfI(output, "%s_%s(self, %s);\n",
+			  ccself->ParserStem, pnt->sym->name, pnt->pos->text);
 	    } else {
-		CcPrintfI(output, "CcsParser_%s(self);\n", pnt->sym->name);
+		CcPrintfI(output, "%s_%s(self);\n",
+			  ccself->ParserStem, pnt->sym->name);
 	    }
 	} else if (p->base.type == node_t) {
 	    pt = (CcNodeT_t *)p;
 	    if (CcBitArray_Get(&isChecked, pt->sym->kind))
-		CcPrintfI(output, "CcsParser_Get(self);\n");
+		CcPrintfI(output, "%s_Get(self);\n", ccself->ParserStem);
 	    else
-		CcPrintfI(output, "CcsParser_Expect(self, %d);\n",
-			  pt->sym->kind);
+		CcPrintfI(output, "%s_Expect(self, %d);\n",
+			  ccself->ParserStem, pt->sym->kind);
 	} else if (p->base.type == node_wt) {
 	    pwt = (CcNodeWT_t *)p;
 	    CcSyntax_Expected(syntax, &s1, p->next, ccself->curSy);
 	    CcBitArray_Or(&s1, syntax->allSyncSets);
-	    CcPrintfI(output, "CcsParser_ExpectWeak(self, %d, %d);\n",
-		      pwt->sym->kind,
+	    CcPrintfI(output, "%s_ExpectWeak(self, %d, %d);\n",
+		      ccself->ParserStem, pwt->sym->kind,
 		      CcSyntaxSymSet_New(&ccself->symSet, &s1));
 	    CcBitArray_Destruct(&s1);
 	} else if (p->base.type == node_any) {
-	    CcPrintfI(output, "CcsParser_Get(self);\n");
+	    CcPrintfI(output, "%s_Get(self);\n", ccself->ParserStem);
 	} else if (p->base.type == node_eps) {
 	} else if (p->base.type == node_rslv) {
 	} else if (p->base.type == node_sem) {
@@ -411,9 +416,8 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 	    CcBitArray_Clone(&s1, psync->set);
 	    SCOS_GenCond(self, output, "while (!(", ")) {", &s1, p);
 	    output->indent += 4;
-	    CcPrintfI(output,
-		      "CcsParser_SynErr(self, %d); CcsParser_Get(self);\n",
-		      err);
+	    CcPrintfI(output, "%s_SynErr(self, %d); %s_Get(self);\n",
+		      ccself->ParserStem, err, ccself->ParserStem);
 	    output->indent -= 4;
 	    CcPrintfI(output, "}\n");
 	    CcBitArray_Destruct(&s1);
@@ -455,13 +459,12 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 	    } else {
 		err = CcSyntax_AltError(syntax, ccself->curSy);
 		if (useSwitch) {
-		    CcPrintfI(output,
-			      "default: CcsParser_SynErr(self, %d); break;\n",
-			      err);
+		    CcPrintfI(output, "default: %s_SynErr(self, %d); break;\n",
+			      ccself->ParserStem, err);
 		    CcPrintfI(output, "}\n");
 		} else {
-		    CcPrintfI(output, "} else CcsParser_SynErr(self, %d);\n",
-			      err);
+		    CcPrintfI(output, "} else %s_SynErr(self, %d);\n",
+			      ccself->ParserStem, err);
 		}
 	    }
 	} else if (p->base.type == node_iter) {
@@ -470,8 +473,8 @@ SCOS_GenCode(CcOutputScheme_t * self, CcOutput_t * output,
 		CcSyntax_Expected(syntax, &s1, p2->next, ccself->curSy);
 		CcSyntax_Expected(syntax, &s2, p->next, ccself->curSy);
 		CcPrintfI(output,
-			  "while (CcsParser_WeakSeparator(self, %d, %d, %d)) {\n",
-			  ((CcNodeWT_t *)p2)->sym->kind,
+			  "while (%s_WeakSeparator(self, %d, %d, %d)) {\n",
+			  ccself->ParserStem, ((CcNodeWT_t *)p2)->sym->kind,
 			  CcSyntaxSymSet_New(&ccself->symSet, &s1),
 			  CcSyntaxSymSet_New(&ccself->symSet, &s2));
 		CcBitArray_Destruct(&s1); CcBitArray_Destruct(&s2);
@@ -520,12 +523,14 @@ COS_ProductionsBody(CcOutputScheme_t * self, CcOutput_t * output)
 	ccself->curSy = (const CcSymbol_t *)sym;
 	if (sym->attrPos == NULL) {
 	    CcPrintfI(output, "static void\n");
-	    CcPrintfI(output, "CcsParser_%s(CcsParser_t * self)\n",
-		      sym->base.name);
+	    CcPrintfI(output, "%s_%s(%s_t * self)\n",
+		      ccself->ParserStem, sym->base.name,
+		      ccself->ParserStem);
 	} else {
 	    CcPrintfI(output, "static void\n");
-	    CcPrintfI(output, "CcsParser_%s(CcsParser_t * self, %s)\n",
-		      sym->base.name, sym->attrPos->text);
+	    CcPrintfI(output, "%s_%s(%s_t * self, %s)\n",
+		      ccself->ParserStem, sym->base.name,
+		      ccself->ParserStem, sym->attrPos->text);
 	}
 	CcPrintfI(output, "{\n");
 	output->indent += 4;
@@ -653,6 +658,9 @@ CcCOutputScheme(CcGlobals_t * globals, CcArguments_t * arguments)
 {
     CcCOutputScheme_t * self = (CcCOutputScheme_t *)
 	CcOutputScheme(&COutputSchemeType, globals, arguments);
+    if (globals->base.parser) self->ParserStem = "CcsParser";
+    else if (globals->base.xmlparser) self->ParserStem = "CcsXmlParser";
+    else { CcsAssert(0); }
     CcSyntaxSymSet(&self->symSet);
     CcSyntaxSymSet_New(&self->symSet, self->base.globals->syntax.allSyncSets);
     return self;
