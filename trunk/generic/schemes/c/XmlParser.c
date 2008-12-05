@@ -78,7 +78,6 @@ CcsXmlParser_WeakSeparator(CcsXmlParser_t * self, int n, int syFol, int repFol)
 /*---- ProductionsHeader ----*/
 /*---- enable ----*/
 
-
 void
 CcsXmlParser_Parse(CcsXmlParser_t * self)
 {
