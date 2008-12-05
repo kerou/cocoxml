@@ -28,7 +28,6 @@
  Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
-/*---- prefix(Ccs) ----*/
 #ifndef  COCO_PARSER_H
 #define  COCO_PARSER_H
 
