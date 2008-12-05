@@ -28,6 +28,7 @@
  Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
+/*---- prefix(Ccs) ----*/
 #ifndef  COCO_PARSER_H
 #define  COCO_PARSER_H
 
@@ -53,6 +54,7 @@ struct CcsParser_s {
     char            * tokenString;
     CcsBool_t         genScanner;
     char            * schemeName;
+    char            * prefix;
     CcsPosition_t   * members;
     CcsPosition_t   * constructor;
     CcsPosition_t   * destructor;
