@@ -30,6 +30,7 @@ CcXmlSpecMap_t *
 CcXmlSpecMap(CcXmlSpecMap_t * self, CcGlobals_t * globals)
 {
     self->globals = globals;
+    self->kindUnknownNS = -1;
     CcArrayList(&self->storage);
     CcHashTable(&self->map, SZ_XMLSPECMAP);
     return self;
