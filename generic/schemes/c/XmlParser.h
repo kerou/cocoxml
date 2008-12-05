@@ -40,6 +40,7 @@ struct CcsXmlParser_s {
     int               maxT;
     /*---- members ----*/
     char            * schemeName;
+    char            * prefix;
     CcsPosition_t   * members;
     CcsPosition_t   * constructor;
     CcsPosition_t   * destructor;
