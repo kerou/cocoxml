@@ -28,6 +28,10 @@
 #include  "Object.h"
 #endif
 
+#ifndef  COCO_BITARRAY_H
+#include  "BitArray.h"
+#endif
+
 #ifndef  COCO_ARRAYLIST_H
 #include  "ArrayList.h"
 #endif
@@ -37,19 +41,18 @@ EXTC_BEGIN
 struct CcXmlSpec_s {
     CcObject_t base;
 
+    CcGlobals_t * globals;
     CcsBool_t caseSensitive;
-    CcsBool_t options[XSO_SIZE];
+    CcBitArray_t options;
     CcArrayList_t Tags;
     CcArrayList_t Attrs;
     CcArrayList_t PInstructions;
 };
 
-CcXmlSpec_t * CcXmlSpec(void);
+CcXmlSpec_t * CcXmlSpec(CcGlobals_t * globals);
 
 void CcXmlSpec_SetCaseSensitive(CcXmlSpec_t * self, CcsBool_t caseSensitive);
-void
-CcXmlSpec_SetOption(CcXmlSpec_t * self, CcsXmlSpecOption_t option,
-		    CcsBool_t value, int line);
+void CcXmlSpec_SetOption(CcXmlSpec_t * self, const CcsToken_t * token);
 void CcXmlSpec_AddTag(CcXmlSpec_t * self, const char * tokenName,
 		      const CcsToken_t * token);
 void CcXmlSpec_AddAttr(CcXmlSpec_t * self, const char * tokenName,

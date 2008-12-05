@@ -33,10 +33,12 @@ static const CcObjectType_t XmlSpecType = {
 };
 
 CcXmlSpec_t *
-CcXmlSpec(void)
+CcXmlSpec(CcGlobals_t * globals)
 {
     CcXmlSpec_t * self = (CcXmlSpec_t *)CcObject(&XmlSpecType);
+    self->globals = globals;
     self->caseSensitive = TRUE;
+    CcBitArray(&self->options, XSO_SIZE);
     CcArrayList(&self->Tags);
     CcArrayList(&self->Attrs);
     CcArrayList(&self->PInstructions);
@@ -50,6 +52,7 @@ CcXmlSpec_Destruct(CcObject_t * self)
     CcArrayList_Destruct(&ccself->PInstructions);
     CcArrayList_Destruct(&ccself->Attrs);
     CcArrayList_Destruct(&ccself->Tags);
+    CcBitArray_Destruct(&ccself->options);
     CcObject_Destruct(self);
 }
 
@@ -60,10 +63,16 @@ CcXmlSpec_SetCaseSensitive(CcXmlSpec_t * self, CcsBool_t caseSensitive)
 }
 
 void
-CcXmlSpec_SetOption(CcXmlSpec_t * self, CcsXmlSpecOption_t option,
-		    CcsBool_t value, int line)
+CcXmlSpec_SetOption(CcXmlSpec_t * self, const CcsToken_t * token)
 {
-    self->options[option] = value;
+    CcsXmlSpecOption_t option;
+    for (option = XSO_UnknownTag; option < XSO_SIZE; ++option)
+	if (!strcmp(token->val, CcsXmlSpecOptionNames[option])) {
+	    CcBitArray_Set(&self->options, option, TRUE);
+	    return;
+	}
+    CcsGlobals_SemErr(&self->globals->base, token,
+		      "Unrecognized option '%s' encountered.", token->val);
 }
 
 typedef struct {

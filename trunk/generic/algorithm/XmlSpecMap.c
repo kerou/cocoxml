@@ -23,6 +23,7 @@
 -------------------------------------------------------------------------*/
 #include  "XmlSpecMap.h"
 #include  "XmlSpec.h"
+#include  "Globals.h"
 
 #define  SZ_XMLSPECMAP  127
 
@@ -56,11 +57,21 @@ CcXmlSpecMap_Add(CcXmlSpecMap_t * self, const char * nsURI, CcXmlSpec_t * xmlspe
 void
 CcXmlSpecMap_MakeTerminals(const CcXmlSpecMap_t * self, CcGlobals_t * globals)
 {
+    CcBitArray_t options; CcsXmlSpecOption_t option;
     CcArrayListIter_t iter; const CcXmlSpec_t * xmlspec;
+    CcSymbolTable_t * symtab = &globals->symtab;
 
+    CcBitArray(&options, XSO_SIZE);
     for (xmlspec = (const CcXmlSpec_t *)CcArrayList_FirstC(&self->storage, &iter);
-	 xmlspec; xmlspec = (const CcXmlSpec_t *)CcArrayList_NextC(&self->storage, &iter))
+	 xmlspec; xmlspec = (const CcXmlSpec_t *)CcArrayList_NextC(&self->storage, &iter)) {
 	CcXmlSpec_MakeTerminals(xmlspec, globals);
+	CcBitArray_Or(&options, &xmlspec->options);
+    }
+    for (option = XSO_UnknownTag; option < XSO_SIZE; ++option)
+	if (!CcSymbolTable_NewTerminalWithCheck(symtab, CcsXmlSpecOptionNames[option], 0))
+	    CcsGlobals_SemErr(&globals->base, NULL,
+			      "Symbol %s is defined twice.\n", CcsXmlSpecOptionNames[option]);
+    CcBitArray_Destruct(&options);
 }
 
 CcsBool_t
@@ -68,4 +79,24 @@ CcXmlSpecMap_Finish(CcXmlSpecMap_t * self)
 {
     CcXmlSpecMap_MakeTerminals(self, self->globals);
     return TRUE;
+}
+
+void
+CcXmlSpecMap_GetOptionKinds(const CcXmlSpecMap_t * self, int * kinds,
+			    const CcGlobals_t * globals)
+{
+    int * cur; CcsXmlSpecOption_t option; const CcSymbol_t * sym;
+    CcArrayListIter_t iter; const CcXmlSpec_t * xmlspec;
+    const CcSymbolTable_t * symtab = &globals->symtab;
+
+    for (cur = kinds; cur - kinds < XSO_SIZE; ++cur) *cur = -1;
+    for (xmlspec = (const CcXmlSpec_t *)CcArrayList_FirstC(&self->storage, &iter);
+	 xmlspec; xmlspec = (const CcXmlSpec_t *)CcArrayList_NextC(&self->storage, &iter)) {
+	for (option = XSO_UnknownTag; option < XSO_SIZE; ++option) {
+	    if (kinds[option] != -1) continue;
+	    if (!CcBitArray_Get(&xmlspec->options, option)) continue;
+	    sym = CcSymbolTable_CheckTerminal(symtab, CcsXmlSpecOptionNames[option]);
+	    kinds[option] = sym->base.index;
+	}
+    }
 }
