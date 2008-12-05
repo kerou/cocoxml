@@ -59,7 +59,6 @@ MEMBERS
     CcSyntax_t      * syntax;
 
 CONSTRUCTOR
-    globals->UseLexical = FALSE;
     self->schemeName = NULL;
     self->prefix = NULL;
     self->members = NULL;
@@ -227,7 +226,7 @@ XmlNamespaceDecl            (. char * nsURI; CcXmlSpec_t * xsdef; .)
 
 /*------------------------------------------------------------------------------------*/
 
-XmlSpecDecl<CcXmlSpec_t ** xsdef> (. *xsdef = CcXmlSpec(); .)
+XmlSpecDecl<CcXmlSpec_t ** xsdef> (. *xsdef = CcXmlSpec((CcGlobals_t *)self->globals); .)
 =
   [ "IGNORECASE"                  (. CcXmlSpec_SetCaseSensitive(*xsdef, FALSE); .) ]
   [ "OPTIONS" { OptionDecl<*xsdef> } ]

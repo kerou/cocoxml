@@ -69,8 +69,8 @@ CcsXmlScanner_Init(CcsXmlScanner_t * self)
 {
     /*---- declarations ----*/
     self->eofSym = 0;
-    self->maxT = 47;
-    self->noSym = 47;
+    self->maxT = 40;
+    self->noSym = 40;
     /*---- enable ----*/
 
     self->busyTokenList = NULL;
@@ -202,26 +202,23 @@ typedef struct {
 static const Char2State_t c2sArr[] = {
     /*---- chars2states ----*/
     { EoF, EoF, -1 },
-    { 34, 34, 11 },	/* '"' '"' */
-    { 36, 36, 10 },	/* '$' '$' */
+    { 34, 34, 10 },	/* '"' '"' */
     { 39, 39, 5 },	/* '\'' '\'' */
-    { 40, 40, 30 },	/* '(' '(' */
-    { 41, 41, 21 },	/* ')' ')' */
-    { 43, 43, 14 },	/* '+' '+' */
-    { 45, 45, 15 },	/* '-' '-' */
-    { 46, 46, 28 },	/* '.' '.' */
+    { 40, 40, 26 },	/* '(' '(' */
+    { 41, 41, 17 },	/* ')' ')' */
+    { 46, 46, 24 },	/* '.' '.' */
     { 48, 57, 2 },	/* '0' '9' */
-    { 60, 60, 29 },	/* '<' '<' */
-    { 61, 61, 13 },	/* '=' '=' */
-    { 62, 62, 17 },	/* '>' '>' */
+    { 60, 60, 25 },	/* '<' '<' */
+    { 61, 61, 12 },	/* '=' '=' */
+    { 62, 62, 13 },	/* '>' '>' */
     { 65, 90, 1 },	/* 'A' 'Z' */
-    { 91, 91, 22 },	/* '[' '[' */
-    { 93, 93, 23 },	/* ']' ']' */
+    { 91, 91, 18 },	/* '[' '[' */
+    { 93, 93, 19 },	/* ']' ']' */
     { 95, 95, 1 },	/* '_' '_' */
     { 97, 122, 1 },	/* 'a' 'z' */
-    { 123, 123, 24 },	/* '{' '{' */
-    { 124, 124, 20 },	/* '|' '|' */
-    { 125, 125, 25 },	/* '}' '}' */
+    { 123, 123, 20 },	/* '{' '{' */
+    { 124, 124, 16 },	/* '|' '|' */
+    { 125, 125, 21 },	/* '}' '}' */
     /*---- enable ----*/
 };
 static const int c2sNum = sizeof(c2sArr) / sizeof(c2sArr[0]);
@@ -251,29 +248,25 @@ typedef struct {
 
 static const Identifier2KWKind_t i2kArr[] = {
     /*---- identifiers2keywordkinds ----*/
-    { "ANY", 29 },
-    { "CHARACTERS", 11 },
-    { "COMMENTS", 14 },
+    { "ANY", 35 },
+    { "ATTRS", 21 },
     { "COMPILER", 6 },
     { "CONSTRUCTOR", 8 },
-    { "CONTEXT", 44 },
     { "DESTRUCTOR", 9 },
-    { "END", 22 },
-    { "FROM", 15 },
-    { "IF", 43 },
-    { "IGNORE", 18 },
-    { "IGNORECASE", 10 },
+    { "END", 13 },
+    { "IF", 37 },
+    { "IGNORECASE", 18 },
     { "MEMBERS", 7 },
-    { "NESTED", 17 },
-    { "PRAGMAS", 13 },
-    { "PRODUCTIONS", 19 },
-    { "SCHEME", 23 },
-    { "SECTION", 24 },
-    { "SYNC", 42 },
-    { "TO", 16 },
-    { "TOKENS", 12 },
-    { "UPDATES", 25 },
-    { "WEAK", 35 },
+    { "NAMESPACE", 17 },
+    { "OPTIONS", 19 },
+    { "PROCESSING_INSTRUCTIONS", 22 },
+    { "PRODUCTIONS", 10 },
+    { "SCHEME", 14 },
+    { "SECTION", 15 },
+    { "SYNC", 36 },
+    { "TAGS", 20 },
+    { "UPDATES", 16 },
+    { "WEAK", 28 },
     /*---- enable ----*/
 };
 static const int i2kNum = sizeof(i2kArr) / sizeof(i2kArr[0]);
@@ -495,77 +488,62 @@ CcsXmlScanner_NextToken(CcsXmlScanner_t * self)
     case 9: case_9:
 	{ kind = 5; break; }
     case 10: case_10:
-	if ((self->ch >= '0' && self->ch <= '9') ||
-	    (self->ch >= 'A' && self->ch <= 'Z') ||
-	    self->ch == '_' ||
-	    (self->ch >= 'a' && self->ch <= 'z')) {
-	    CcsXmlScanner_GetCh(self); goto case_10;
-	} else { kind = 48; break; }
-    case 11: case_11:
 	if ((self->ch >= 0 && self->ch <= '\t') ||
 	    (self->ch >= '\v' && self->ch <= '\f') ||
 	    (self->ch >= 14 && self->ch <= '!') ||
 	    (self->ch >= '#' && self->ch <= '[') ||
 	    (self->ch >= ']' && self->ch <= 65535)) {
-	    CcsXmlScanner_GetCh(self); goto case_11;
+	    CcsXmlScanner_GetCh(self); goto case_10;
 	} else if (self->ch == '"') {
 	    CcsXmlScanner_GetCh(self); goto case_3;
 	} else if (self->ch == '\\') {
-	    CcsXmlScanner_GetCh(self); goto case_12;
+	    CcsXmlScanner_GetCh(self); goto case_11;
 	} else if (self->ch == '\n' ||
 	    self->ch == '\r') {
 	    CcsXmlScanner_GetCh(self); goto case_4;
 	} else { kind = self->noSym; break; }
-    case 12: case_12:
+    case 11: case_11:
 	if ((self->ch >= ' ' && self->ch <= '~')) {
-	    CcsXmlScanner_GetCh(self); goto case_11;
+	    CcsXmlScanner_GetCh(self); goto case_10;
 	} else { kind = self->noSym; break; }
+    case 12:
+	{ kind = 11; break; }
     case 13:
-	{ kind = 20; break; }
-    case 14:
+	{ kind = 24; break; }
+    case 14: case_14:
+	{ kind = 25; break; }
+    case 15: case_15:
 	{ kind = 26; break; }
-    case 15:
+    case 16:
 	{ kind = 27; break; }
-    case 16: case_16:
-	{ kind = 28; break; }
     case 17:
+	{ kind = 30; break; }
+    case 18:
 	{ kind = 31; break; }
-    case 18: case_18:
+    case 19:
 	{ kind = 32; break; }
-    case 19: case_19:
-	{ kind = 33; break; }
     case 20:
-	{ kind = 34; break; }
+	{ kind = 33; break; }
     case 21:
-	{ kind = 37; break; }
-    case 22:
+	{ kind = 34; break; }
+    case 22: case_22:
 	{ kind = 38; break; }
-    case 23:
+    case 23: case_23:
 	{ kind = 39; break; }
     case 24:
-	{ kind = 40; break; }
-    case 25:
-	{ kind = 41; break; }
-    case 26: case_26:
-	{ kind = 45; break; }
-    case 27: case_27:
-	{ kind = 46; break; }
-    case 28:
-	if (self->ch == '.') {
-	    CcsXmlScanner_GetCh(self); goto case_16;
-	} else if (self->ch == '>') {
-	    CcsXmlScanner_GetCh(self); goto case_19;
+	if (self->ch == '>') {
+	    CcsXmlScanner_GetCh(self); goto case_15;
 	} else if (self->ch == ')') {
-	    CcsXmlScanner_GetCh(self); goto case_27;
-	} else { kind = 21; break; }
-    case 29:
+	    CcsXmlScanner_GetCh(self); goto case_23;
+	} else { kind = 12; break; }
+    case 25:
 	if (self->ch == '.') {
-	    CcsXmlScanner_GetCh(self); goto case_18;
-	} else { kind = 30; break; }
-    case 30:
+	    CcsXmlScanner_GetCh(self); goto case_14;
+	} else { kind = 23; break; }
+    case 26:
 	if (self->ch == '.') {
-	    CcsXmlScanner_GetCh(self); goto case_26;
-	} else { kind = 36; break; }
+	    CcsXmlScanner_GetCh(self); goto case_22;
+	} else { kind = 29; break; }
     /*---- enable ----*/
     }
     t = CcsToken(kind, pos, col, line,
