@@ -35,9 +35,10 @@
 EXTC_BEGIN
 
 struct CcXmlSpecMap_s {
-    CcGlobals_t * globals;
-    CcArrayList_t storage;
-    CcHashTable_t map;
+    CcGlobals_t   * globals;
+    int             kindUnknownNS;
+    CcArrayList_t   storage;
+    CcHashTable_t   map;
 };
 
 CcXmlSpecMap_t * CcXmlSpecMap(CcXmlSpecMap_t * self, CcGlobals_t * globals);
