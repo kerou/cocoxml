@@ -43,6 +43,8 @@ struct CcHashTable_s {
 CcHashTable_t * CcHashTable(CcHashTable_t * self, size_t size);
 void CcHashTable_Destruct(CcHashTable_t * self);
 
+int CcHashTable_Num(const CcHashTable_t * self);
+
 int CcHashTable_Set(CcHashTable_t * self,
 		    const char * key, CcObject_t * value);
 CcObject_t * CcHashTable_Get(CcHashTable_t * self, const char * key);
