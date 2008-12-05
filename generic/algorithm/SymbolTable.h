@@ -44,6 +44,8 @@ CcSymbolTable_t * CcSymbolTable(CcSymbolTable_t * self);
 void CcSymbolTable_Destruct(CcSymbolTable_t * self);
 
 /* name is a unescaped string. */
+const CcSymbol_t *
+CcSymbolTable_CheckTerminal(const CcSymbolTable_t * self, const char * name);
 CcsBool_t
 CcSymbolTable_NewTerminalWithCheck(CcSymbolTable_t * self, const char * name,
 				   int line);
