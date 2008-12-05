@@ -30,15 +30,9 @@ CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
 {
     if (!CcsGlobals(&self->base, fname, errfp)) goto errquit0;
     if (!CcSymbolTable(&self->symtab)) goto errquit1;
-    if (self->base.UseLexical) {
-	if (!(self->lexical = CcLexical(&self->u.lexicalSpace, self)))
-	    goto errquit2;
-	self->xmlspecmap = NULL;
-    } else {
-	if (!(self->xmlspecmap = CcXmlSpecMap(&self->u.xmlspecmapSpace, self)))
-	    goto errquit2;
-	self->lexical = NULL;
-    }
+    if (!(self->lexical = CcLexical(&self->u.lexicalSpace, self)))
+	goto errquit2;
+    self->xmlspecmap = NULL;
     if (!CcSyntax(&self->syntax, self)) goto errquit3;
     if (!CcArrayList(&self->sections)) goto errquit4;
     if (!CcArrayList(&self->updates)) goto errquit5;
@@ -48,8 +42,7 @@ CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
  errquit4:
     CcSyntax_Destruct(&self->syntax);
  errquit3:
-    if (self->base.UseLexical) CcLexical_Destruct(self->lexical);
-    else CcXmlSpecMap_Destruct(self->xmlspecmap);
+    CcLexical_Destruct(self->lexical);
  errquit2:
     CcSymbolTable_Destruct(&self->symtab);
  errquit1:
