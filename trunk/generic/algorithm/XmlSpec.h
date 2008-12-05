@@ -50,10 +50,13 @@ void CcXmlSpec_SetCaseSensitive(CcXmlSpec_t * self, CcsBool_t caseSensitive);
 void
 CcXmlSpec_SetOption(CcXmlSpec_t * self, CcsXmlSpecOption_t option,
 		    CcsBool_t value, int line);
-void CcXmlSpec_AddTag(CcXmlSpec_t * self, const CcsToken_t * token);
-void CcXmlSpec_AddAttr(CcXmlSpec_t * self, const CcsToken_t * token);
+void CcXmlSpec_AddTag(CcXmlSpec_t * self, const char * tokenName,
+		      const CcsToken_t * token);
+void CcXmlSpec_AddAttr(CcXmlSpec_t * self, const char * tokenName,
+		       const CcsToken_t * token);
 void
-CcXmlSpec_AddProcessInstruction(CcXmlSpec_t * self, const CcsToken_t * token);
+CcXmlSpec_AddProcessInstruction(CcXmlSpec_t * self, const char * tokenName,
+				const CcsToken_t * token);
 
 void
 CcXmlSpec_MakeTerminals(const CcXmlSpec_t * self, CcGlobals_t * globals);
