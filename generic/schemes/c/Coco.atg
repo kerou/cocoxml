@@ -39,6 +39,7 @@ SECTION hIncludes
 END.
 
 SECTION cIncludes
+#include  <ctype.h>
 #include  "Globals.h"
 #include  "lexical/CharSet.h"
 #include  "lexical/CharClass.h"
