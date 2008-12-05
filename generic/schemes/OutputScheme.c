@@ -220,17 +220,24 @@ static void
 TextWritter(FILE * outfp, char * lnbuf,
 	    const char * replacedPrefix, const char * prefix)
 {
-    char * start, * cur; int len;
-    if (prefix == NULL || !*replacedPrefix) { fputs(lnbuf, outfp); return; }
+    CcsBool_t WordStart; char * start, * cur; int len;
+    if (prefix == NULL || !*replacedPrefix ||
+	!strcmp(replacedPrefix, prefix)) {
+	fputs(lnbuf, outfp); return;
+    }
     len = strlen(replacedPrefix);
-    start = cur = lnbuf;
+    start = cur = lnbuf; WordStart = TRUE;
     while (*cur) {
-	if (*cur != *replacedPrefix) ++cur;
-	else if (strncmp(cur, replacedPrefix, len)) ++cur;
-	else { /* An instance of replacedPrefix is found. */
+	if (!WordStart ||
+	    *cur != *replacedPrefix ||
+	    strncmp(cur, replacedPrefix, len)) {
+	    WordStart = !isalnum(*cur) && *cur != '_';
+	    ++cur;
+	} else { /* An instance of replacedPrefix is found. */
 	    *cur = 0;
 	    fprintf(outfp, "%s%s", start, prefix);
 	    start = (cur += len);
+	    WordStart = FALSE;
 	}
     }
     fputs(start, outfp);
