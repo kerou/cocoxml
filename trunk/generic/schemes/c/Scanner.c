@@ -38,7 +38,7 @@
 static int Char2State(int chr);
 static int Identifier2KWKind(const char * key, size_t keylen, int defaultVal);
 static void CcsScanner_Init(CcsScanner_t * self);
-static CcsToken_t * CcsScanner_NextCcsToken(CcsScanner_t * self);
+static CcsToken_t * CcsScanner_NextToken(CcsScanner_t * self);
 static void CcsScanner_GetCh(CcsScanner_t * self);
 
 static const char * dummyval = "dummy";
@@ -106,7 +106,7 @@ CcsScanner_Scan(CcsScanner_t * self)
 {
     CcsToken_t * cur;
     if (*self->curToken == NULL) {
-	*self->curToken = CcsScanner_NextCcsToken(self);
+	*self->curToken = CcsScanner_NextToken(self);
 	if (self->curToken == &self->busyTokenList)
 	    CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
     }
@@ -122,7 +122,7 @@ CcsScanner_Peek(CcsScanner_t * self)
     CcsToken_t * cur;
     do {
 	if (*self->peekToken == NULL) {
-	    *self->peekToken = CcsScanner_NextCcsToken(self);
+	    *self->peekToken = CcsScanner_NextToken(self);
 	    if (self->peekToken == &self->busyTokenList)
 		CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
 	}
@@ -192,7 +192,7 @@ CcsScanner_GetPositionBetween(CcsScanner_t * self, const CcsToken_t * begin,
     return CcsPosition(begpos + (cur - start), last - cur, 0, cur);
 }
 
-/* All the following things are used by CcsScanner_NextCcsToken. */
+/* All the following things are used by CcsScanner_NextToken. */
 typedef struct {
     int keyFrom;
     int keyTo;
@@ -427,7 +427,7 @@ CcsScanner_Comment(CcsScanner_t * self, const CcsComment_t * c)
 }
 
 CcsToken_t *
-CcsScanner_NextCcsToken(CcsScanner_t * self)
+CcsScanner_NextToken(CcsScanner_t * self)
 {
     int pos, line, col, state, kind; CcsToken_t * t;
     const CcsComment_t * curComment;
