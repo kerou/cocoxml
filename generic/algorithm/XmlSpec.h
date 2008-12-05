@@ -56,7 +56,25 @@ void
 CcXmlSpec_AddProcessInstruction(CcXmlSpec_t * self, const CcsToken_t * token);
 
 void
-CcXmlSpec_MakeTerminals(const CcXmlSpec_t * self, CcGlobals_t * symtab);
+CcXmlSpec_MakeTerminals(const CcXmlSpec_t * self, CcGlobals_t * globals);
+
+typedef struct {
+    char * name;
+    int kind0;
+    int kind1;
+}  CcXmlSpecData_t;
+
+CcXmlSpecData_t *
+CcXmlSpec_GetSortedTagList(const CcXmlSpec_t * self,
+			   const CcGlobals_t * globals, size_t * retNum);
+CcXmlSpecData_t *
+CcXmlSpec_GetSortedAttrList(const CcXmlSpec_t * self,
+			    const CcGlobals_t * globals, size_t * retNum);
+CcXmlSpecData_t *
+CcXmlSpec_GetSortedPIList(const CcXmlSpec_t * self,
+			  const CcGlobals_t * globals, size_t * retNum);
+
+void CcXmlSpecData_Destruct(CcXmlSpecData_t * self, size_t num);
 
 EXTC_END
 
