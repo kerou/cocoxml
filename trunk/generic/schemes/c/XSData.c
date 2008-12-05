@@ -22,6 +22,9 @@
 const int kindUnknownNS = -1;
 /*---- enable ----*/
 
+/*---- XmlSpecSubLists ----*/
+/*---- enable ----*/
+
 const CcsXmlSpec_t firstXmlSpec[] = {
     /*---- XmlSpecList ----*/
     /*---- enable ----*/

@@ -28,6 +28,7 @@
 #include  "lexical/State.h"
 #include  "lexical/Target.h"
 #include  "lexical/Transition.h"
+#include  "XmlSpec.h"
 #include  "syntax/Nodes.h"
 
 /* When the number of possible terminals is greater than maxTerm,
@@ -214,6 +215,155 @@ COS_Scan3(CcOutputScheme_t * self, CcOutput_t * output)
 	 state; state = (const CcState_t *)CcArrayList_Next(stateArr, &iter))
 	COS_WriteState(self, output, state, &mask);
     CcBitArray_Destruct(&mask);
+    return TRUE;
+}
+
+static CcsBool_t
+COS_KindUnknownNS(CcOutputScheme_t * self, CcOutput_t * output)
+{
+    CcsAssert(self->globals->xmlspecmap);
+    CcPrintfI(output, "int kindUnknownNS = %d;\n", self->globals->xmlspecmap);
+    return TRUE;
+}
+
+static int
+cmpSpecKey(const void * cs0, const void * cs1)
+{
+    return strcmp(*(const char **)cs0, *(const char **)cs1);
+}
+
+static CcsBool_t
+COS_XmlSpecSubList(CcOutputScheme_t * self, CcOutput_t * output)
+{
+    int count; CcHTIterator_t iter;
+    const char ** keylist, ** curkey;
+    const CcXmlSpec_t * spec;
+    CcXmlSpecData_t * datalist, * datacur; size_t datanum; char * tmp;
+    CcXmlSpecMap_t * map = self->globals->xmlspecmap;
+
+    CcsAssert(map != NULL);
+    count = CcHashTable_Num(&map->map);
+    keylist = curkey = CcMalloc(sizeof(char *) * count);
+    CcHashTable_GetIterator(&map->map, &iter);
+    while (CcHTIterator_Forward(&iter)) *curkey++ = CcHTIterator_Key(&iter);
+    CcsAssert(curkey - keylist == count);
+    qsort(keylist, count, sizeof(const char *), cmpSpecKey);
+
+    CcPrintfI(output, "static const CcsXmlTag_t XmlTags[] = {\n");
+    for (curkey = keylist; curkey - keylist < count; ++curkey) {
+	spec = (const CcXmlSpec_t *)CcHashTable_Get(&map->map, *curkey);
+	CcsAssert(spec != NULL);
+	datalist = CcXmlSpec_GetSortedTagList(spec, self->globals, &datanum);
+	if (datanum == 0) continue;
+	output->indent += 4;
+	for (datacur = datalist; datacur - datalist < datanum; ++datacur) {
+	    tmp = CcEscape(datacur->name);
+	    CcPrintfI(output, "{ %s, %d, %d },\n",
+		      tmp, datacur->kind0, datacur->kind1);
+	    CcFree(tmp);
+	}
+	CcXmlSpecData_Destruct(datalist, datanum);
+    }
+    CcPrintf(output, "};\n");
+
+    CcPrintfI(output, "static const CcsXmlAttr_t XmlAttrs[] = {\n");
+    for (curkey = keylist; curkey - keylist < count; ++curkey) {
+	spec = (const CcXmlSpec_t *)CcHashTable_Get(&map->map, *curkey);
+	CcsAssert(spec != NULL);
+	datalist = CcXmlSpec_GetSortedAttrList(spec, self->globals, &datanum);
+	if (datanum == 0) continue;
+	output->indent += 4;
+	for (datacur = datalist; datacur - datalist < datanum; ++datacur) {
+	    tmp = CcEscape(datacur->name);
+	    CcPrintfI(output, "{ %s, %d },\n", tmp, datacur->kind0);
+	    CcFree(tmp);
+	}
+	CcXmlSpecData_Destruct(datalist, datanum);
+    }
+    CcPrintf(output, "};\n");
+
+    CcPrintfI(output, "static const CcsXmlPInstruction_t XmlPIs[] = {\n");
+    for (curkey = keylist; curkey - keylist < count; ++curkey) {
+	spec = (const CcXmlSpec_t *)CcHashTable_Get(&map->map, *curkey);
+	CcsAssert(spec != NULL);
+	datalist = CcXmlSpec_GetSortedPIList(spec, self->globals, &datanum);
+	if (datanum == 0) continue;
+	output->indent += 4;
+	for (datacur = datalist; datacur - datalist < datanum; ++datacur) {
+	    tmp = CcEscape(datacur->name);
+	    CcPrintfI(output, "{ %s, %d },\n", tmp, datacur->kind0);
+	    CcFree(tmp);
+	}
+	CcXmlSpecData_Destruct(datalist, datanum);
+    }
+    CcPrintf(output, "};\n");
+
+    CcFree(keylist);
+    return TRUE;
+}
+
+static CcsBool_t
+COS_XmlSpecList(CcOutputScheme_t * self, CcOutput_t * output)
+{
+    int count; CcHTIterator_t iter;
+    const char ** keylist, ** curkey;
+    int cntTagList, cntAttrList, cntPIList;
+    char * tmp; CcsXmlSpecOption_t option;
+    const CcXmlSpec_t * spec;
+    CcXmlSpecData_t * datalist; size_t datanum;
+    CcXmlSpecMap_t * map = self->globals->xmlspecmap;
+
+    CcsAssert(map != NULL);
+    count = CcHashTable_Num(&map->map);
+    keylist = curkey = CcMalloc(sizeof(char *) * count);
+    CcHashTable_GetIterator(&map->map, &iter);
+    while (CcHTIterator_Forward(&iter)) *curkey++ = CcHTIterator_Key(&iter);
+    CcsAssert(curkey - keylist == count);
+    qsort(keylist, count, sizeof(const char *), cmpSpecKey);
+
+    cntTagList = cntAttrList = cntPIList = 0;
+    for (curkey = keylist; curkey - keylist < count; ++curkey) {
+	spec = (const CcXmlSpec_t *)CcHashTable_Get(&map->map, *curkey);
+	CcsAssert(spec != NULL);
+	tmp = CcEscape(*curkey);
+	CcPrintfI(output, "{ %s, %s,\n", tmp,
+		  spec->caseSensitive ? "TRUE" : "FALSE");
+	CcFree(tmp);
+	output->indent += 4;
+	CcPrintfI(output, "{");
+	for (option = XSO_UnknownTag; option < XSO_SIZE; ++option)
+	    CcPrintf(output, " %d,", spec->options[option]);
+	CcPrintf(output, " },\n");
+
+	datalist = CcXmlSpec_GetSortedTagList(spec, self->globals, &datanum);
+	if (datanum == 0) CcPrintfI(output, "NULL, 0, /* Tags */\n");
+	else {
+	    CcPrintfI(output, "XmlTags + %d, %d,\n", cntTagList, datanum);
+	    cntTagList += datanum;
+	}
+	CcXmlSpecData_Destruct(datalist, datanum);
+
+	datalist = CcXmlSpec_GetSortedAttrList(spec, self->globals, &datanum);
+	if (datanum == 0) CcPrintfI(output, "NULL, 0, /* Attrs */\n");
+	else {
+	    CcPrintfI(output, "XmlAttrs + %d, %d,\n", cntAttrList, datanum);
+	    cntAttrList += datanum;
+	}
+	CcXmlSpecData_Destruct(datalist, datanum);
+
+	datalist = CcXmlSpec_GetSortedPIList(spec, self->globals, &datanum);
+	if (datanum == 0) {
+	    CcPrintfI(output, "NULL, 0, /* Processing Instructions */\n");
+	} else {
+	    CcPrintfI(output, "XmlPIs + %d, %d,\n", cntPIList, datanum);
+	    cntPIList += datanum;
+	}
+	CcXmlSpecData_Destruct(datalist, datanum);
+
+	output->indent -= 4;
+	CcPrintfI(output, "},\n");
+    }
+    CcFree(keylist);
     return TRUE;
 }
 
@@ -617,6 +767,12 @@ CcCOutputScheme_write(CcOutputScheme_t * self, CcOutput_t * output,
 	return COS_Scan1(self, output);
     } else if (!strcmp(func, "scan3")) {
 	return COS_Scan3(self, output);
+    } else if (!strcmp(func, "kindUnknownNS")) {
+	return COS_KindUnknownNS(self, output);
+    } else if (!strcmp(func, "XmlSpecSubList")) {
+	return COS_XmlSpecSubList(self, output);
+    } else if (!strcmp(func, "XmlSpecList")) {
+	return COS_XmlSpecList(self, output);
     } else if (!strcmp(func, "members")) {
 	return COS_Members(self, output);
     } else if (!strcmp(func, "constructor")) {
