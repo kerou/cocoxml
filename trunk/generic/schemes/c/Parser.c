@@ -28,12 +28,13 @@
  Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
-#include  <ctype.h>
-#include  "Parser.h"
-#include  "Token.h"
-#include  "CGlobals.h"
+#include  "c/Parser.h"
+#include  "c/Scanner.h"
+#include  "c/Token.h"
+#include  "c/CGlobals.h"
 
 /*---- cIncludes ----*/
+#include  <ctype.h>
 #include  "Globals.h"
 #include  "lexical/CharSet.h"
 #include  "lexical/CharClass.h"

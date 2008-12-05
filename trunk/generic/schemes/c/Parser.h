@@ -32,7 +32,7 @@
 #define  COCO_PARSER_H
 
 #ifndef  COCO_CDEFS_H
-#include  "CDefs.h"
+#include "c/CDefs.h"
 #endif
 
 /*---- hIncludes ----*/
@@ -70,4 +70,4 @@ void CcsParser_Parse(CcsParser_t * self);
 
 EXTC_END
 
-#endif  /* COCO_PARSER_H */
+#endif /* COCO_PARSER_H */

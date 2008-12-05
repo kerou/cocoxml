@@ -35,6 +35,8 @@ CcsXmlParser_Get(CcsXmlParser_t * self)
 	self->t = self->la;
 	self->la = CcsXmlScanner_Scan(self->scanner);
 	if (self->la->kind <= self->maxT) { /*++self->errDist;*/ break; }
+	/*---- Pragmas ----*/
+	/*---- enable ----*/
 	self->la = self->t;
     }
 }
