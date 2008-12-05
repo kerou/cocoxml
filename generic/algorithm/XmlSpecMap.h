@@ -52,6 +52,10 @@ void CcXmlSpecMap_MakeTerminals(const CcXmlSpecMap_t * self,
 				CcGlobals_t * symtab);
 CcsBool_t CcXmlSpecMap_Finish(CcXmlSpecMap_t * self);
 
+void
+CcXmlSpecMap_GetOptionKinds(const CcXmlSpecMap_t * self, int * kinds,
+			    const CcGlobals_t * globals);
+
 EXTC_END
 
 #endif /* COCO_XMLSPECMAP_H */
