@@ -1,5 +1,3 @@
-SCHEME c
-UPDATES "Scanner.c" "Parser.h" "Parser.c" END.
 SECTION license
 /*-------------------------------------------------------------------------
  Coco.ATG -- Attributed Grammar
@@ -31,6 +29,9 @@ SECTION license
 -------------------------------------------------------------------------*/
 END.
 
+SCHEME c Ccs
+UPDATES "Scanner.c" "Parser.h" "Parser.c" END.
+
 SECTION hIncludes
 #ifndef  COCO_DEFS_H
 #include  "Defs.h"
@@ -54,6 +55,7 @@ MEMBERS
     char            * tokenString;
     CcsBool_t         genScanner;
     char            * schemeName;
+    char            * prefix;
     CcsPosition_t   * members;
     CcsPosition_t   * constructor;
     CcsPosition_t   * destructor;
@@ -67,6 +69,7 @@ CONSTRUCTOR
     self->tokenString = NULL;
     self->genScanner = FALSE;
     self->schemeName = NULL;
+    self->prefix = NULL;
     self->members = NULL;
     self->constructor = NULL;
     self->destructor = NULL;
@@ -75,6 +78,7 @@ DESTRUCTOR
     if (self->destructor) CcsPosition_Destruct(self->destructor);
     if (self->constructor) CcsPosition_Destruct(self->constructor);
     if (self->members) CcsPosition_Destruct(self->members);
+    if (self->prefix) CcFree(self->prefix);
     if (self->schemeName) CcFree(self->schemeName);
     if (self->tokenString && self->tokenString != noString)
         CcFree(self->tokenString);
@@ -209,6 +213,8 @@ SchemeDecl
 =
   "SCHEME" ident  (. if (self->schemeName) CcFree(self->schemeName);
   	   	     self->schemeName = CcStrdup(self->t->val); .)
+  ident           (. if (self->prefix) CcFree(self->prefix);
+  		     self->prefix = CcStrdup(self->t->val); .)
 .
 
 /*------------------------------------------------------------------------------------*/

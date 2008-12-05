@@ -146,6 +146,7 @@ CcsParser(CcsParser_t * self, CcsGlobals_t * globals)
     self->tokenString = NULL;
     self->genScanner = FALSE;
     self->schemeName = NULL;
+    self->prefix = NULL;
     self->members = NULL;
     self->constructor = NULL;
     self->destructor = NULL;
@@ -160,6 +161,7 @@ CcsParser_Destruct(CcsParser_t * self)
     if (self->destructor) CcsPosition_Destruct(self->destructor);
     if (self->constructor) CcsPosition_Destruct(self->constructor);
     if (self->members) CcsPosition_Destruct(self->members);
+    if (self->prefix) CcFree(self->prefix);
     if (self->schemeName) CcFree(self->schemeName);
     if (self->tokenString && self->tokenString != noString)
 	CcFree(self->tokenString);
@@ -334,6 +336,9 @@ CcsParser_SchemeDecl(CcsParser_t * self)
     CcsParser_Expect(self, 1);
     if (self->schemeName) CcFree(self->schemeName);
     self->schemeName = CcStrdup(self->t->val); 
+    CcsParser_Expect(self, 1);
+    if (self->prefix) CcFree(self->prefix);
+    self->prefix = CcStrdup(self->t->val); 
 }
 
 static void
