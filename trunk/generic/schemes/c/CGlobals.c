@@ -28,6 +28,7 @@ CcsGlobals_t *
 CcsGlobals(CcsGlobals_t * self, const char * fname, FILE * errfp)
 {
     if (!CcsErrorPool(&self->error, errfp)) goto errquit0;
+    self->UseLexical = TRUE;
     self->xmlscanner = NULL; self->xmlparser = NULL;
     if (!(self->scanner = CcsScanner(&self->u.c.ScannerSpace, self, fname)))
 	goto errquit1;
@@ -46,6 +47,7 @@ CcsGlobals_t *
 CcsGlobalsXml(CcsGlobals_t * self, const char * fname, FILE * errfp)
 {
     if (!CcsErrorPool(&self->error, errfp)) goto errquit0;
+    self->UseLexical = FALSE;
     self->scanner = NULL; self->parser = NULL;
     if (!(self->xmlscanner =
 	  CcsXmlScanner(&self->u.xml.XmlScannerSpace, self, fname)))

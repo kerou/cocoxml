@@ -46,6 +46,7 @@
 
 struct CcsGlobals_s {
     CcsErrorPool_t error;
+    CcsBool_t UseLexical;
     CcsScanner_t * scanner;
     CcsParser_t * parser;
     CcsXmlScanner_t * xmlscanner;

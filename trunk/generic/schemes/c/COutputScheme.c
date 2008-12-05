@@ -309,6 +309,7 @@ COS_XmlSpecSubList(CcCOutputScheme_t * self, CcOutput_t * output)
 static CcsBool_t
 COS_XmlSpecList(CcCOutputScheme_t * self, CcOutput_t * output)
 {
+    int kinds[XSO_SIZE];
     int count; CcHTIterator_t iter;
     const char ** keylist, ** curkey;
     int cntTagList, cntAttrList, cntPIList;
@@ -318,6 +319,7 @@ COS_XmlSpecList(CcCOutputScheme_t * self, CcOutput_t * output)
     CcXmlSpecMap_t * map = self->base.globals->xmlspecmap;
 
     CcsAssert(map != NULL);
+    CcXmlSpecMap_GetOptionKinds(map, kinds, self->base.globals);
     count = CcHashTable_Num(&map->map);
     keylist = curkey = CcMalloc(sizeof(char *) * count);
     CcHashTable_GetIterator(&map->map, &iter);
@@ -336,7 +338,8 @@ COS_XmlSpecList(CcCOutputScheme_t * self, CcOutput_t * output)
 	output->indent += 4;
 	CcPrintfI(output, "{");
 	for (option = XSO_UnknownTag; option < XSO_SIZE; ++option)
-	    CcPrintf(output, " %d,", spec->options[option]);
+	    CcPrintf(output, " %d,",
+		     CcBitArray_Get(&spec->options, option) ? kinds[option] : -1);
 	CcPrintf(output, " },\n");
 
 	datalist = CcXmlSpec_GetSortedTagList(spec, self->base.globals,
