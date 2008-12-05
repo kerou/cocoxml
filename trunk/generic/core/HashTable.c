@@ -56,6 +56,16 @@ void CcHashTable_Destruct(CcHashTable_t * self)
     CcFree(self->first);
 }
 
+int
+CcHashTable_Num(const CcHashTable_t * self)
+{
+    CcHTEntry_t ** cur; int count;
+    count = 0;
+    for (cur = self->first; cur < self->last; ++cur)
+	if (*cur) ++count;
+    return count;
+}
+
 CcsBool_t
 CcHashTable_Set(CcHashTable_t * self, const char * key, CcObject_t * value)
 {
