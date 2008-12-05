@@ -66,6 +66,7 @@ typedef enum {
     XSO_UT_Text, XSO_UT_CData, XSO_UT_Comment, XSO_UT_Whitespace,
     XSO_SIZE
 }  CcsXmlSpecOption_t;
+extern const char * CcsXmlSpecOptionNames[];
 typedef struct CcsXmlScanner_s CcsXmlScanner_t;
 typedef struct CcsXmlParser_s CcsXmlParser_t;
 
