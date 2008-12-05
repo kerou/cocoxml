@@ -68,6 +68,7 @@ CcXmlSpec_SetOption(CcXmlSpec_t * self, CcsXmlSpecOption_t option,
 
 typedef struct {
     CcObject_t base;
+    char * tokenName;
     char * name;
     int line;
     int col;
@@ -78,6 +79,7 @@ CcXmlData_Destruct(CcObject_t * self)
 {
     CcXmlData_t * ccself = (CcXmlData_t *)self;
     if (ccself->name) CcFree(ccself->name);
+    if (ccself->tokenName) CcFree(ccself->tokenName);
     CcObject_Destruct(self);
 }
 
@@ -86,9 +88,10 @@ static const CcObjectType_t XmlDataType = {
 };
 
 static CcObject_t *
-CcXmlData(const CcsToken_t * token)
+CcXmlData(const char * tokenName, const CcsToken_t * token)
 {
     CcXmlData_t * self = (CcXmlData_t *)CcObject(&XmlDataType);
+    self->tokenName = CcUnescape(tokenName);
     self->name = CcUnescape(token->val);
     self->line = token->line;
     self->col = token->col;
@@ -96,21 +99,24 @@ CcXmlData(const CcsToken_t * token)
 }
 
 void
-CcXmlSpec_AddTag(CcXmlSpec_t * self, const CcsToken_t * token)
+CcXmlSpec_AddTag(CcXmlSpec_t * self, const char * tokenName,
+		 const CcsToken_t * token)
 {
-    CcArrayList_New(&self->Tags, CcXmlData(token));
+    CcArrayList_New(&self->Tags, CcXmlData(tokenName, token));
 }
 
 void
-CcXmlSpec_AddAttr(CcXmlSpec_t * self, const CcsToken_t * token)
+CcXmlSpec_AddAttr(CcXmlSpec_t * self, const char * tokenName,
+		  const CcsToken_t * token)
 {
-    CcArrayList_New(&self->Attrs, CcXmlData(token));
+    CcArrayList_New(&self->Attrs, CcXmlData(tokenName, token));
 }
 
 void
-CcXmlSpec_AddProcessInstruction(CcXmlSpec_t * self, const CcsToken_t * token)
+CcXmlSpec_AddProcessInstruction(CcXmlSpec_t * self, const char * tokenName,
+				const CcsToken_t * token)
 {
-    CcArrayList_New(&self->PInstructions, CcXmlData(token));
+    CcArrayList_New(&self->PInstructions, CcXmlData(tokenName, token));
 }
 
 void
@@ -122,10 +128,10 @@ CcXmlSpec_MakeTerminals(const CcXmlSpec_t * self, CcGlobals_t * globals)
 
     for (data = (const CcXmlData_t *)CcArrayList_FirstC(&self->Tags, &iter);
 	 data; data = (const CcXmlData_t *)CcArrayList_NextC(&self->Tags, &iter)) {
-	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->name, data->line))
+	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->tokenName, data->line))
 	    CcsGlobals_SemErrLC(&globals->base, data->line, data->col,
-				"Symbol %s is defined twice.\n", data->name);
-	snprintf(EndTag, sizeof(EndTag), "END_%s", data->name);
+				"Symbol %s is defined twice.\n", data->tokenName);
+	snprintf(EndTag, sizeof(EndTag), "END_%s", data->tokenName);
 	if (!CcSymbolTable_NewTerminalWithCheck(symtab, EndTag, data->line))
 	    CcsGlobals_SemErrLC(&globals->base, data->line, data->col,
 				"Symbol %s is defined twice.\n", EndTag);
@@ -133,15 +139,15 @@ CcXmlSpec_MakeTerminals(const CcXmlSpec_t * self, CcGlobals_t * globals)
 
     for (data = (const CcXmlData_t *)CcArrayList_FirstC(&self->Attrs, &iter);
 	 data; data = (const CcXmlData_t *)CcArrayList_NextC(&self->Attrs, &iter))
-	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->name, data->line))
+	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->tokenName, data->line))
 	    CcsGlobals_SemErrLC(&globals->base, data->line, data->col,
-				"Symbol %s is defined twice.\n", data->name);
+				"Symbol %s is defined twice.\n", data->tokenName);
 	
     for (data = (const CcXmlData_t *)CcArrayList_FirstC(&self->PInstructions, &iter);
 	 data; data = (const CcXmlData_t *)CcArrayList_NextC(&self->PInstructions, &iter))
-	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->name, data->line))
+	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->tokenName, data->line))
 	    CcsGlobals_SemErrLC(&globals->base, data->line, data->col,
-				"Symbol %s is defined twice.\n", data->name);
+				"Symbol %s is defined twice.\n", data->tokenName);
 }
 
 static int
@@ -152,12 +158,12 @@ cmpXSData(const void * data0, const void * data1)
 }
 
 static CcXmlSpecData_t *
-CcXmlSpec_GetSortedList(const CcArrayList_t * array, const CcGlobals_t * globals,
-			size_t * retNum)
+CcXmlSpec_GetSortedList(const CcArrayList_t * array, CcsBool_t useEnd,
+			const CcGlobals_t * globals, size_t * retNum)
 {
     CcXmlSpecData_t * retlist, * curret;
     const CcXmlData_t * data; CcArrayListIter_t iter;
-    const CcSymbol_t * sym;
+    const CcSymbol_t * sym; char EndTag[128];
     const CcSymbolTable_t * symtab = &globals->symtab;
 
     *retNum = array->Count;
@@ -166,9 +172,15 @@ CcXmlSpec_GetSortedList(const CcArrayList_t * array, const CcGlobals_t * globals
     for (data = (const CcXmlData_t *)CcArrayList_FirstC(array, &iter);
 	 data; data = (const CcXmlData_t *)CcArrayList_NextC(array, &iter)) {
 	curret->name = CcStrdup(data->name);
-	sym = CcSymbolTable_CheckTerminal(symtab, curret->name);
+	sym = CcSymbolTable_CheckTerminal(symtab, data->tokenName);
 	CcsAssert(sym != NULL);
 	curret->kind0 = sym->base.index;
+	if (useEnd) {
+	    snprintf(EndTag, sizeof(EndTag), "END_%s", data->tokenName);
+	    sym = CcSymbolTable_CheckTerminal(symtab, EndTag);
+	    CcsAssert(sym != NULL);
+	    curret->kind1 = sym->base.index;
+	}
 	++curret;
     }
     CcsAssert(curret - retlist == array->Count);
@@ -180,39 +192,27 @@ CcXmlSpecData_t *
 CcXmlSpec_GetSortedTagList(const CcXmlSpec_t * self,
 			   const CcGlobals_t * globals, size_t * retNum)
 {
-    CcXmlSpecData_t * retlist, * curret; char EndTag[128];
-    const CcSymbol_t * sym;
-    const CcSymbolTable_t * symtab = &globals->symtab;
-
-    retlist = CcXmlSpec_GetSortedList(&self->Tags, globals, retNum);
-    for (curret = retlist; curret - retlist < *retNum; ++curret) {
-	snprintf(EndTag, sizeof(EndTag), "END_%s", curret->name);
-	sym = CcSymbolTable_CheckTerminal(symtab, EndTag);
-	CcsAssert(sym != NULL);
-	curret->kind1 = sym->base.index;
-    }
-    return retlist;
+    return CcXmlSpec_GetSortedList(&self->Tags, TRUE, globals, retNum);
 }
 
 CcXmlSpecData_t *
 CcXmlSpec_GetSortedAttrList(const CcXmlSpec_t * self,
 			    const CcGlobals_t * globals, size_t * retNum)
 {
-    return CcXmlSpec_GetSortedList(&self->Attrs, globals, retNum);
+    return CcXmlSpec_GetSortedList(&self->Attrs, FALSE, globals, retNum);
 }
 
 CcXmlSpecData_t *
 CcXmlSpec_GetSortedPIList(const CcXmlSpec_t * self,
 			  const CcGlobals_t * globals, size_t * retNum)
 {
-    return CcXmlSpec_GetSortedList(&self->PInstructions, globals, retNum);
+    return CcXmlSpec_GetSortedList(&self->PInstructions, FALSE, globals, retNum);
 }
 
 void
 CcXmlSpecData_Destruct(CcXmlSpecData_t * self, size_t num)
 {
     CcXmlSpecData_t * cur;
-    for (cur = self; cur - self < num; ++cur)
-	CcFree(cur->name);
+    for (cur = self; cur - self < num; ++cur) CcFree(cur->name);
     CcFree(self);
 }
