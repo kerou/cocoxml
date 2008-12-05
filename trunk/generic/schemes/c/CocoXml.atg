@@ -96,7 +96,7 @@ IGNORE cr + lf + tab
 
 PRODUCTIONS
 
-Coco                            (. CcSymbol_t  * sym;
+CocoXml                         (. CcSymbol_t  * sym;
 				   CcGraph_t   * g, * g1, * g2;
 				   char        * gramName = NULL;
 				   CcXmlSpec_t * xsdef;
@@ -225,7 +225,7 @@ XmlSpecDecl<CcXmlSpec_t ** xsdef> (. *xsdef = CcXmlSpec(); .)
   [ "OPTIONS" { OptionDecl<*xsdef> } ]
   [ "TAGS" { XmlTagDecl<*xsdef> } ]
   [ "ATTRS" { XmlAttrDecl<*xsdef> } ]
-  [ "PROCESSING_INSTRUCTIONS" { ProcessingInstructions<*xsdef> } ]
+  [ "PROCESSING_INSTRUCTIONS" { XmlPIDecl<*xsdef> } ]
 .
 
 /*------------------------------------------------------------------------------------*/
@@ -247,7 +247,7 @@ XmlTagDecl<CcXmlSpec_t * xsdef>    (. char * tagname; .)
 
 /*------------------------------------------------------------------------------------*/
 
-XmlAttrDecl(CcXmlSpec_t * xsdef>   (. char * attrname; .)
+XmlAttrDecl<CcXmlSpec_t * xsdef>   (. char * attrname; .)
 =
   ident                            (. attrname = CcStrdup(self->t->val); .)
   "="
@@ -257,12 +257,12 @@ XmlAttrDecl(CcXmlSpec_t * xsdef>   (. char * attrname; .)
 
 /*------------------------------------------------------------------------------------*/
 
-ProcessingInstruction<CcXmlSpec_t * xsdef>  (. char * target; .)
+XmlPIDecl<CcXmlSpec_t * xsdef>     (. char * target; .)
 =
-  ident                                     (. target = CcStrdup(self->t->val); .)
+  ident                            (. target = CcStrdup(self->t->val); .)
   "="
-  string                                    (. CcXmlSpec_AddProcessInstruction(xsdef, target, self->t);
-  					       CcFree(target); .)
+  string                           (. CcXmlSpec_AddProcessInstruction(xsdef, target, self->t);
+  				      CcFree(target); .)
 .
 
 /*------------------------------------------------------------------------------------*/
@@ -437,4 +437,4 @@ SemText<CcsPosition_t ** pos>
 
 /*------------------------------------------------------------------------------------*/
   
-END Coco.
+END CocoXml.
