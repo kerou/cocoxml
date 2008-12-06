@@ -22,6 +22,8 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "dump/DumpOutputScheme.h"
+#include  "c/Parser.h"
+#include  "c/XmlParser.h"
 #include  "lexical/State.h"
 #include  "lexical/Action.h"
 #include  "lexical/Target.h"
@@ -237,9 +239,12 @@ static const CcOutputSchemeType_t DumpOutputSchemeType = {
 };
 
 CcDumpOutputScheme_t *
-CcDumpOutputScheme(CcGlobals_t * globals, CcArguments_t * arguments)
+CcDumpOutputScheme(CcsParser_t * parser, CcsXmlParser_t * xmlparser,
+		   CcArguments_t * arguments)
 {
     CcDumpOutputScheme_t * self = (CcDumpOutputScheme_t *)
-	CcOutputScheme(&DumpOutputSchemeType, globals, arguments);
+	CcOutputScheme(&DumpOutputSchemeType,
+		       parser ? &parser->globals :
+		       xmlparser ? &xmlparser->globals : NULL, arguments);
     return self;
 }

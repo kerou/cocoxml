@@ -134,6 +134,12 @@ CcsParser_Parse(CcsParser_t * self)
     CcsParser_Expect(self, 0);
 }
 
+CcsBool_t
+CcsParser_Finish(CcsParser_t * self)
+{
+    return CcGlobals_Finish(&self->globals);
+}
+
 void
 CcsParser_SemErr(CcsParser_t * self, const CcsToken_t * token,
 		 const char * format, ...)
@@ -162,7 +168,7 @@ CcsParser(CcsParser_t * self, const char * fname, FILE * errfp)
     if (!CcsScanner(&self->scanner, &self->errpool, fname)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
-    if (!CcGlobals(&self->globals)) goto ERRQUIT;
+    if (!CcGlobals(&self->globals, &self->errpool)) goto ERRQUIT;
     self->maxT = 47;
     self->tokenString = NULL;
     self->genScanner = FALSE;

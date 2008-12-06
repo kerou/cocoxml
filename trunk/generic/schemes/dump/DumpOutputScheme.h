@@ -35,7 +35,8 @@ typedef struct {
 } CcDumpOutputScheme_t;
 
 CcDumpOutputScheme_t *
-CcDumpOutputScheme(CcGlobals_t * globals, CcArguments_t * arguments);
+CcDumpOutputScheme(CcsParser_t * parser, CcsXmlParser_t * xmlparser,
+		   CcArguments_t * arguments);
 
 EXTC_END
 

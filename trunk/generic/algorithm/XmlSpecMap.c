@@ -24,6 +24,7 @@
 #include  "XmlSpecMap.h"
 #include  "XmlSpec.h"
 #include  "Globals.h"
+#include  "c/ErrorPool.h"
 
 #define  SZ_XMLSPECMAP  127
 
@@ -69,8 +70,8 @@ CcXmlSpecMap_MakeTerminals(const CcXmlSpecMap_t * self, CcGlobals_t * globals)
     }
     for (option = XSO_UnknownTag; option < XSO_SIZE; ++option)
 	if (!CcSymbolTable_NewTerminalWithCheck(symtab, CcsXmlSpecOptionNames[option], 0))
-	    CcsGlobals_SemErr(&globals->base, NULL,
-			      "Symbol %s is defined twice.\n", CcsXmlSpecOptionNames[option]);
+	    CcsErrorPool_Error(globals->errpool, 0, 0,
+			       "Symbol %s is defined twice.\n", CcsXmlSpecOptionNames[option]);
     CcBitArray_Destruct(&options);
 }
 

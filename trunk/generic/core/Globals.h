@@ -61,7 +61,7 @@ CcGlobals_t * CcGlobals(CcGlobals_t * self, CcsErrorPool_t * errpool);
 CcGlobals_t * CcGlobalsXml(CcGlobals_t * self, CcsErrorPool_t * errpool);
 void CcGlobals_Destruct(CcGlobals_t * self);
 
-CcsBool_t CcGlobals_Parse(CcGlobals_t * self);
+CcsBool_t CcGlobals_Finish(CcGlobals_t * self);
 
 void CcGlobals_NewSection(CcGlobals_t * self, const char * secname,
 			  CcsPosition_t * pos);

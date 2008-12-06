@@ -123,6 +123,12 @@ CcsXmlParser_Parse(CcsXmlParser_t * self)
     CcsXmlParser_Expect(self, 0);
 }
 
+CcsBool_t
+CcsXmlParser_Finish(CcsXmlParser_t * self)
+{
+    return CcGlobals_Finish(&self->globals);
+}
+
 void
 CcsXmlParser_SemErr(CcsXmlParser_t * self, const CcsToken_t * token,
 		    const char * format, ...)
@@ -151,7 +157,7 @@ CcsXmlParser(CcsXmlParser_t * self, const char * fname, FILE * errfp)
     if (!CcsXmlScanner(&self->scanner, &self->errpool, fname)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
-    if (!CcGlobalsXml(&self->globals)) goto ERRQUIT;
+    if (!CcGlobalsXml(&self->globals, &self->errpool)) goto ERRQUIT;
     self->maxT = 40;
     self->schemeName = NULL;
     self->prefix = NULL;
