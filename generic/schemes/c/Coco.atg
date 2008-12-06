@@ -178,7 +178,10 @@ Coco                            (. CcSymbol_t  * sym;
                                    }
 				   CcsAssert(sym->base.type == symbol_nt);
                                    CcsBool_t noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
-				   ((CcSymbolNT_t *)sym)->attrPos = NULL; .)
+				   if (!noAttrs) {
+				       CcsPosition_Destruct(((CcSymbolNT_t *)sym)->attrPos);
+				       ((CcSymbolNT_t *)sym)->attrPos = NULL; 
+				   } .)
     [ AttrDecl<(CcSymbolNT_t *)sym> ]  (. if (!undef && noAttrs != (((CcSymbolNT_t *)sym)->attrPos == NULL))
                                               CcsParser_SemErrT(self, "attribute mismatch between declaration and use of this symbol"); .)
     [ SemText<.&((CcSymbolNT_t *)sym)->semPos.> ] WEAK
