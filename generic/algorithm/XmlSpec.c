@@ -22,9 +22,10 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "XmlSpec.h"
-#include  "c/Token.h"
 #include  "Globals.h"
 #include  "SymbolTable.h"
+#include  "c/ErrorPool.h"
+#include  "c/Token.h"
 
 static void CcXmlSpec_Destruct(CcObject_t * self);
 
@@ -71,8 +72,8 @@ CcXmlSpec_SetOption(CcXmlSpec_t * self, const CcsToken_t * token)
 	    CcBitArray_Set(&self->options, option, TRUE);
 	    return;
 	}
-    CcsGlobals_SemErr(&self->globals->base, token,
-		      "Unrecognized option '%s' encountered.", token->val);
+    CcsErrorPool_Error(self->globals->errpool, token->line, token->col,
+		       "Unrecognized option '%s' encountered.", token->val);
 }
 
 typedef struct {
@@ -138,25 +139,25 @@ CcXmlSpec_MakeTerminals(const CcXmlSpec_t * self, CcGlobals_t * globals)
     for (data = (const CcXmlData_t *)CcArrayList_FirstC(&self->Tags, &iter);
 	 data; data = (const CcXmlData_t *)CcArrayList_NextC(&self->Tags, &iter)) {
 	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->tokenName, data->line))
-	    CcsGlobals_SemErrLC(&globals->base, data->line, data->col,
-				"Symbol %s is defined twice.\n", data->tokenName);
+	    CcsErrorPool_Error(globals->errpool, data->line, data->col,
+			       "Symbol %s is defined twice.\n", data->tokenName);
 	snprintf(EndTag, sizeof(EndTag), "END_%s", data->tokenName);
 	if (!CcSymbolTable_NewTerminalWithCheck(symtab, EndTag, data->line))
-	    CcsGlobals_SemErrLC(&globals->base, data->line, data->col,
-				"Symbol %s is defined twice.\n", EndTag);
+	    CcsErrorPool_Error(globals->errpool, data->line, data->col,
+			       "Symbol %s is defined twice.\n", EndTag);
     }
 
     for (data = (const CcXmlData_t *)CcArrayList_FirstC(&self->Attrs, &iter);
 	 data; data = (const CcXmlData_t *)CcArrayList_NextC(&self->Attrs, &iter))
 	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->tokenName, data->line))
-	    CcsGlobals_SemErrLC(&globals->base, data->line, data->col,
-				"Symbol %s is defined twice.\n", data->tokenName);
+	    CcsErrorPool_Error(globals->errpool, data->line, data->col,
+			       "Symbol %s is defined twice.\n", data->tokenName);
 	
     for (data = (const CcXmlData_t *)CcArrayList_FirstC(&self->PInstructions, &iter);
 	 data; data = (const CcXmlData_t *)CcArrayList_NextC(&self->PInstructions, &iter))
 	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->tokenName, data->line))
-	    CcsGlobals_SemErrLC(&globals->base, data->line, data->col,
-				"Symbol %s is defined twice.\n", data->tokenName);
+	    CcsErrorPool_Error(globals->errpool, data->line, data->col,
+			       "Symbol %s is defined twice.\n", data->tokenName);
 }
 
 static int

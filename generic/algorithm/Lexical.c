@@ -34,6 +34,8 @@
 #include  "lexical/Nodes.h"
 #include  "lexical/State.h"
 #include  "lexical/Target.h"
+#include  "c/ErrorPool.h"
+#include  "c/Token.h"
 
 /* SZ_LITERALS is a prime number, auto-extending is not supported now */
 #define  SZ_LITERALS 127
@@ -95,7 +97,8 @@ CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
     const char * cur, * slast;
     char * s = CcUnescape(str);
     if (strlen(s) == 0)
-	CcsGlobals_SemErr(&self->globals->base, t, "empty token not allowed");
+	CcsErrorPool_Error(self->globals->errpool,
+			   t->line, t->col, "empty token not allowed");
     g = CcGraph();
     cur = s; slast = s + strlen(s);
     while (cur < slast) {
@@ -155,8 +158,8 @@ CcLexical_NewTransition(CcLexical_t * self, CcState_t * from, CcState_t * to,
     CcTarget_t * t; CcAction_t * a;
 
     if (to == (CcState_t *)CcArrayList_Get(&self->states, 0))
-	CcsGlobals_SemErr(&self->globals->base, NULL,
-			  "token must not start with an iteration");
+	CcsErrorPool_Error(self->globals->errpool, 0, 0,
+			   "token must not start with an iteration");
     t = CcTarget(to);
     a = CcAction(trans); a->target = t;
     CcState_AddAction(from, a);
@@ -360,7 +363,7 @@ CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbol_t * sym)
     CcsAssert(sym->base.type == symbol_t || sym->base.type == symbol_pr);
     self->curSy = sym;
     if (CcNode_DelGraph(p))
-	CcsGlobals_SemErr(&self->globals->base, NULL, "token might be empty");
+	CcsErrorPool_Error(self->globals->errpool, 0, 0, "token might be empty");
     firstState = (CcState_t *)CcArrayList_Get(&self->states, 0);
     CcLexical_NumberNodes(self, p, firstState, TRUE);
 
@@ -422,9 +425,9 @@ CcLexical_MatchLiteral(CcLexical_t * self, const CcsToken_t * t,
 	       (a != NULL && a->trans.code == trans_context)) {
 	/* s matched a token with a fixed definition or a token with
 	 * an appendix that will be cut off */
-	CcsGlobals_SemErr(&self->globals->base, NULL,
-			  "tokens '%s' and '%s' cannot be distinguished",
-			  sym->name, matchedSym->name);
+	CcsErrorPool_Error(self->globals->errpool, 0, 0,
+			   "tokens '%s' and '%s' cannot be distinguished",
+			   sym->name, matchedSym->name);
     } else { /* matchedSym == classToken || classLitToken */
 	CcSymbol_SetTokenKind(matchedSym, symbol_classLitToken);
 	CcSymbol_SetTokenKind(sym, symbol_litToken);
@@ -560,10 +563,10 @@ CcLexical_GetTargetStates(CcLexical_t * self, CcAction_t * a,
 	    if (*endOf == NULL || *endOf == t->state->endOf)
 		*endOf = t->state->endOf;
 	    else {
-		CcsGlobals_SemErr(&self->globals->base, NULL, 
-				  "Tokens %s and %s cannot be distinguished\n",
-				  (*endOf)->name,
-				  t->state->endOf->name);
+		CcsErrorPool_Error(self->globals->errpool, 0, 0,
+				   "Tokens %s and %s cannot be distinguished\n",
+				   (*endOf)->name,
+				   t->state->endOf->name);
 	    }
 	}
 	if (t->state->ctx) {
@@ -594,16 +597,16 @@ CcLexical_CommentStr(CcLexical_t * self, const CcsToken_t * token,
 	if (p->base.type == node_trans) {
 	    trans = &((CcNodeTrans_t *)p)->trans;
 	    if (CcTransition_Size(trans) != 1)
-		CcsGlobals_SemErr(&self->globals->base, token,
-				  "character set contains more than 1 character");
+		CcsErrorPool_Error(self->globals->errpool, token->line, token->col,
+				   "character set contains more than 1 character");
 	    *cur++ = CcTransition_First(trans);
 	} else {
-	    CcsGlobals_SemErr(&self->globals->base, token,
-			      "comment delimiters may not be structured");
+	    CcsErrorPool_Error(self->globals->errpool, token->line, token->col,
+			       "comment delimiters may not be structured");
 	}
 	if (cur - output > 2) {
-	    CcsGlobals_SemErr(&self->globals->base, token,
-			      "comment delimiters must be 1 or 2 characters long");
+	    CcsErrorPool_Error(self->globals->errpool, token->line, token->col,
+			       "comment delimiters must be 1 or 2 characters long");
 	    cur = output; *cur++ = '?';
 	    break;
 	}
@@ -622,8 +625,8 @@ CcLexical_NewComment(CcLexical_t * self, const CcsToken_t * token,
     CcLexical_CommentStr(self, token, start, from);
     CcLexical_CommentStr(self, token, stop, to);
     if (nested && start[0] == stop[0]) {
-	CcsGlobals_SemErr(&self->globals->base, token,
-			  "The first char of start and stop of nested comment is same.");
+	CcsErrorPool_Error(self->globals->errpool, token->line, token->col,
+			   "The first char of start and stop of nested comment is same.");
 	return;
     }
     c = CcComment(start, stop, nested);

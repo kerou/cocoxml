@@ -24,6 +24,7 @@
 #include  "Syntax.h"
 #include  "Globals.h"
 #include  "syntax/Nodes.h"
+#include  "c/ErrorPool.h"
 
 CcSyntax_t *
 CcSyntax(CcSyntax_t * self, CcGlobals_t * globals)
@@ -393,8 +394,8 @@ CcSyntax_CompDeletableSymbols(CcSyntax_t * self)
     for (sym = (CcSymbolNT_t *)CcArrayList_First(ntarr, &iter);
 	 sym; sym = (CcSymbolNT_t *)CcArrayList_Next(ntarr, &iter)) {
 	if (sym->deletable) 
-	    CcsGlobals_Warning(&self->globals->base, NULL,
-			       " %s deletable", sym->base.name);
+	    CcsErrorPool_Warning(self->globals->errpool, 0, 0,
+				 " %s deletable", sym->base.name);
     }
 }
 
@@ -487,8 +488,8 @@ CcSyntax_NoCircularProductions(CcSyntax_t * self)
 	ok = FALSE;
 	leftsym = (CcSymbol_t *)CcArrayList_Get(ntarr, curPair->left);
 	rightsym = (CcSymbol_t *)CcArrayList_Get(ntarr, curPair->right);
-	CcsGlobals_SemErr(&self->globals->base, NULL, " '%s' --> '%s'",
-			  leftsym->name, rightsym->name);
+	CcsErrorPool_Error(self->globals->errpool, 0, 0, " '%s' --> '%s'",
+			   leftsym->name, rightsym->name);
 	curPair0 = curPair->next;
 	CcFree(curPair);
     }
@@ -508,9 +509,9 @@ CcSyntax_LL1Error(CcSyntax_t * self, int cond, CcSymbol_t * sym)
     case 4: s3 = "contents of [...] or {...} must not be deletable"; break;
     default: s3 = ""; break;
     }
-    CcsGlobals_Warning(&self->globals->base, NULL,
-		       "  LL1 warning in '%s': %s%s%s%s",
-		       self->curSy->name, s0, s1, s2, s3);
+    CcsErrorPool_Warning(self->globals->errpool, 0, 0,
+			 "  LL1 warning in '%s': %s%s%s%s",
+			 self->curSy->name, s0, s1, s2, s3);
 }
 
 static void
@@ -606,12 +607,12 @@ CcSyntax_CheckRes(CcSyntax_t * self, CcNode_t * p, CcsBool_t rslvAllowed)
 		if (q->sub->base.type == node_rslv) {
 		    CcSyntax_Expected(self, &fs, q->sub->next, self->curSy);
 		    if (CcBitArray_Intersect(&fs, &soFar))
-			CcsGlobals_Warning(&self->globals->base, NULL,
-					   "Resolver will never be evaluated. "
-					   "Place it at previous conflicting alternative.");
+			CcsErrorPool_Warning(self->globals->errpool, 0, 0,
+					     "Resolver will never be evaluated. "
+					     "Place it at previous conflicting alternative.");
 		    if (!CcBitArray_Intersect(&fs, &expected))
-			CcsGlobals_Warning(&self->globals->base, NULL,
-					   "Misplaced resolver: no LL(1) conflict.");
+			CcsErrorPool_Warning(self->globals->errpool, 0, 0,
+					     "Misplaced resolver: no LL(1) conflict.");
 		    CcBitArray_Destruct(&fs);
 		} else {
 		    CcSyntax_Expected(self, &fs, q->sub, self->curSy);
@@ -626,14 +627,14 @@ CcSyntax_CheckRes(CcSyntax_t * self, CcNode_t * p, CcsBool_t rslvAllowed)
 		CcSyntax_First(self, &fs, p->sub->next);
 		CcSyntax_Expected(self, &fsNext, p->next, self->curSy);
 		if (!CcBitArray_Intersect(&fs, &fsNext))
-		    CcsGlobals_Warning(&self->globals->base, NULL,
-				       "Misplaced resolver: no LL(1) conflict.");
+		    CcsErrorPool_Warning(self->globals->errpool, 0, 0,
+					 "Misplaced resolver: no LL(1) conflict.");
 	    }
 	    CcSyntax_CheckRes(self, p->sub, TRUE);
 	} else if (p->base.type == node_rslv) {
 	    if (!rslvAllowed)
-		CcsGlobals_Warning(&self->globals->base, NULL,
-				   "Misplaced resolver: no alternative.");
+		CcsErrorPool_Warning(self->globals->errpool, 0, 0,
+				     "Misplaced resolver: no alternative.");
 	}
 	if (p->up) break;
 	p = p->next;
@@ -664,8 +665,8 @@ CcSyntax_NtsComplete(CcSyntax_t * self)
 	sym = (CcSymbolNT_t *)CcArrayList_Get(&symtab->nonterminals, idx);
 	if (sym->graph == NULL) {
 	    complete = FALSE;
-	    CcsGlobals_SemErr(&self->globals->base, NULL,
-			      "No production for %s", sym->base.name);
+	    CcsErrorPool_Error(self->globals->errpool, 0, 0,
+			       "No production for %s", sym->base.name);
 	}
     }
     return complete;
@@ -709,8 +710,8 @@ CcSyntax_AllNtReached(CcSyntax_t * self)
 	sym = (CcSymbol_t *)CcArrayList_Get(&symtab->nonterminals, idx);
 	if (!CcBitArray_Get(self->visited, sym->kind)) {
 	    ok = FALSE;
-	    CcsGlobals_SemErr(&self->globals->base, NULL,
-			      " '%s' cannot be reached", sym->name);
+	    CcsErrorPool_Error(self->globals->errpool, 0, 0,
+			       " '%s' cannot be reached", sym->name);
 	}
     }
     return ok;
@@ -758,9 +759,9 @@ CcSyntax_AllNtToTerm(CcSyntax_t * self)
 	 sym; sym = (CcSymbolNT_t *)CcArrayList_Next(ntarr, &iter)) {
 	if (!CcBitArray_Get(&mark, sym->base.kind)) {
 	    ok = FALSE;
-	    CcsGlobals_SemErr(&self->globals->base, NULL,
-			      " %s cannot be derived to terminals",
-			      sym->base.name);
+	    CcsErrorPool_Error(self->globals->errpool, 0, 0,
+			       " %s cannot be derived to terminals",
+			       sym->base.name);
 	}
     }
     CcBitArray_Destruct(&mark);

@@ -72,6 +72,7 @@ struct CcsParser_s {
 CcsParser_t * CcsParser(CcsParser_t * self, const char * fname, FILE * errfp);
 void CcsParser_Destruct(CcsParser_t * self);
 void CcsParser_Parse(CcsParser_t * self);
+CcsBool_t CcsParser_Finish(CcsParser_t * self);
 
 void CcsParser_SemErr(CcsParser_t * self, const CcsToken_t * token,
 		      const char * format, ...);
