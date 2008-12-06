@@ -22,13 +22,13 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "Globals.h"
-#include  "c/CGlobals.h"
 #include  "BasicObjects.h"
+#include  "c/ErrorPool.h"
 
 CcGlobals_t *
-CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
+CcGlobals(CcGlobals_t * self, CcsErrorPool_t * errpool)
 {
-    if (!CcsGlobals(&self->base, fname, errfp)) goto errquit0;
+    self->errpool = errpool;
     if (!CcSymbolTable(&self->symtab)) goto errquit1;
     if (!(self->lexical = CcLexical(&self->u.lexicalSpace, self)))
 	goto errquit2;
@@ -46,15 +46,13 @@ CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
  errquit2:
     CcSymbolTable_Destruct(&self->symtab);
  errquit1:
-    CcsGlobals_Destruct(&self->base);
- errquit0:
     return NULL;
 }
 
 CcGlobals_t *
-CcGlobalsXml(CcGlobals_t * self, const char * fname, FILE * errfp)
+CcGlobalsXml(CcGlobals_t * self, CcsErrorPool_t * errpool)
 {
-    if (!CcsGlobalsXml(&self->base, fname, errfp)) goto errquit0;
+    self->errpool = errpool;
     if (!CcSymbolTable(&self->symtab)) goto errquit1;
     self->lexical = NULL;
     if (!(self->xmlspecmap = CcXmlSpecMap(&self->u.xmlspecmapSpace, self)))
@@ -72,8 +70,6 @@ CcGlobalsXml(CcGlobals_t * self, const char * fname, FILE * errfp)
  errquit2:
     CcSymbolTable_Destruct(&self->symtab);
  errquit1:
-    CcsGlobals_Destruct(&self->base);
- errquit0:
     return NULL;
 }
 
@@ -86,14 +82,12 @@ CcGlobals_Destruct(CcGlobals_t * self)
     if (self->lexical) CcLexical_Destruct(self->lexical);
     if (self->xmlspecmap) CcXmlSpecMap_Destruct(self->xmlspecmap);
     CcSymbolTable_Destruct(&self->symtab);
-    CcsGlobals_Destruct(&self->base);
 }
 
 CcsBool_t
-CcGlobals_Parse(CcGlobals_t * self)
+CcGlobals_Finish(CcGlobals_t * self)
 {
-    CcsGlobals_Parse(&self->base);
-    if (self->base.error.errorCount > 0) return FALSE;
+    if (self->errpool->errorCount > 0) return FALSE;
     if (!CcSymbolTable_Finish(&self->symtab)) return FALSE;
     if (self->lexical && !CcLexical_Finish(self->lexical)) return FALSE;
     if (self->xmlspecmap && !CcXmlSpecMap_Finish(self->xmlspecmap))

@@ -36,13 +36,18 @@ EXTC_BEGIN
 
 typedef struct {
     CcOutputScheme_t base;
+
+    CcsParser_t * parser;
+    CcsXmlParser_t * xmlparser;
+
     const char * prefix;
     CcSyntaxSymSet_t symSet;
     const CcSymbol_t * curSy;
 } CcCOutputScheme_t;
 
 CcCOutputScheme_t *
-CcCOutputScheme(CcGlobals_t * globals, CcArguments_t * arguments);
+CcCOutputScheme(CcsParser_t * parser, CcsXmlParser_t * xmlparser,
+		CcGlobals_t * globals, CcArguments_t * arguments);
 
 EXTC_END
 

@@ -29,9 +29,7 @@
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
 #include  "c/XmlParser.h"
-#include  "c/XmlScanner.h"
 #include  "c/Token.h"
-#include  "c/CGlobals.h"
 
 /*---- cIncludes ----*/
 #include  "XmlSpec.h"
@@ -47,7 +45,7 @@ CcsXmlParser_Get(CcsXmlParser_t * self)
 {
     for (;;) {
 	self->t = self->la;
-	self->la = CcsXmlScanner_Scan(self->scanner);
+	self->la = CcsXmlScanner_Scan(&self->scanner);
 	if (self->la->kind <= self->maxT) { /*++self->errDist;*/ break; }
 	/*---- Pragmas ----*/
 	/*---- enable ----*/
@@ -117,7 +115,7 @@ void
 CcsXmlParser_Parse(CcsXmlParser_t * self)
 {
     self->t = NULL;
-    self->la = CcsXmlScanner_GetDummy(self->scanner);
+    self->la = CcsXmlScanner_GetDummy(&self->scanner);
     CcsXmlParser_Get(self);
     /*---- ParseRoot ----*/
     CcsXmlParser_CocoXml(self);
@@ -125,21 +123,51 @@ CcsXmlParser_Parse(CcsXmlParser_t * self)
     CcsXmlParser_Expect(self, 0);
 }
 
-CcsXmlParser_t *
-CcsXmlParser(CcsXmlParser_t * self, CcsGlobals_t * globals)
+void
+CcsXmlParser_SemErr(CcsXmlParser_t * self, const CcsToken_t * token,
+		    const char * format, ...)
 {
-    self->globals = globals;
-    self->scanner = globals->xmlscanner;
+    va_list ap;
+    va_start(ap, format);
+    CcsErrorPool_VError(&self->errpool, token->line, token->col,
+			format, ap);
+    va_end(ap);
+}
+
+void
+CcsXmlParser_SemErrT(CcsXmlParser_t * self, const char * format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    CcsErrorPool_VError(&self->errpool, self->t->line, self->t->col,
+			format, ap);
+    va_end(ap);
+}
+
+CcsXmlParser_t *
+CcsXmlParser(CcsXmlParser_t * self, const char * fname, FILE * errfp)
+{
+    if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
+    if (!CcsXmlScanner(&self->scanner, &self->errpool, fname)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
+    if (!CcGlobalsXml(&self->globals)) goto ERRQUIT;
     self->maxT = 40;
     self->schemeName = NULL;
     self->prefix = NULL;
     self->members = NULL;
     self->constructor = NULL;
     self->destructor = NULL;
+    self->symtab = &self->globals.symtab;
+    self->xmlspecmap = self->globals.xmlspecmap;
+    self->syntax = &self->globals.syntax; 
     /*---- enable ----*/
     return self;
+ ERRQUIT:
+ errquit1:
+    CcsErrorPool_Destruct(&self->errpool);
+ errquit0:
+    return NULL;
 }
 
 void
@@ -151,7 +179,10 @@ CcsXmlParser_Destruct(CcsXmlParser_t * self)
     if (self->members) CcsPosition_Destruct(self->members);
     if (self->prefix) CcFree(self->prefix);
     if (self->schemeName) CcFree(self->schemeName);
+    CcGlobals_Destruct(&self->globals);
     /*---- enable ----*/
+    CcsXmlScanner_Destruct(&self->scanner);
+    CcsErrorPool_Destruct(&self->errpool);
 }
 
 /*---- ProductionsBody ----*/
@@ -163,9 +194,6 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
     char        * gramName = NULL;
     CcXmlSpec_t * xsdef;
     CcsToken_t  * beg;
-    self->symtab = &((CcGlobals_t *)self->globals)->symtab;
-    self->xmlspecmap = ((CcGlobals_t *)self->globals)->xmlspecmap;
-    self->syntax = &((CcGlobals_t *)self->globals)->syntax; 
     while (self->la->kind == 14 || self->la->kind == 15 || self->la->kind == 16) {
 	if (self->la->kind == 14) {
 	    CcsXmlParser_SchemeDecl(self);
@@ -180,30 +208,30 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
     gramName = CcStrdup(self->t->val); 
     if (self->la->kind == 7) {
 	CcsXmlParser_Get(self);
-	CcsXmlScanner_IncRef(self->scanner, beg = self->la); 
+	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 1)) {
 	    CcsXmlParser_Get(self);
 	}
-	self->members = CcsXmlScanner_GetPosition(self->scanner, beg, self->la);
-	CcsXmlScanner_DecRef(self->scanner, beg); 
+	self->members = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
+	CcsXmlScanner_DecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 8) {
 	CcsXmlParser_Get(self);
-	CcsXmlScanner_IncRef(self->scanner, beg = self->la); 
+	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 2)) {
 	    CcsXmlParser_Get(self);
 	}
-	self->constructor = CcsXmlScanner_GetPosition(self->scanner, beg, self->la);
-			  CcsXmlScanner_DecRef(self->scanner, beg); 
+	self->constructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
+			  CcsXmlScanner_DecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 9) {
 	CcsXmlParser_Get(self);
-	CcsXmlScanner_IncRef(self->scanner, beg = self->la); 
+	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 3)) {
 	    CcsXmlParser_Get(self);
 	}
-	self->destructor = CcsXmlScanner_GetPosition(self->scanner, beg, self->la);
-			  CcsXmlScanner_DecRef(self->scanner, beg); 
+	self->destructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
+			  CcsXmlScanner_DecRef(&self->scanner, beg); 
     }
     CcsXmlParser_XmlSpecDecl(self, &xsdef);
     CcXmlSpecMap_Add(self->xmlspecmap, "", xsdef); 
@@ -214,7 +242,7 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
 	CcsXmlParser_SynErr(self, 41); CcsXmlParser_Get(self);
     }
     CcsXmlParser_Expect(self, 10);
-    CcXmlSpecMap_MakeTerminals(self->xmlspecmap, (CcGlobals_t *)self->globals);
+    CcXmlSpecMap_MakeTerminals(self->xmlspecmap, &self->globals);
     CcEBNF_Clear(&self->syntax->base); 
     while (self->la->kind == 1) {
 	CcsXmlParser_Get(self);
@@ -226,10 +254,9 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
 	} else {
 	    if (sym->base.type == symbol_nt) {
 		if (((CcSymbolNT_t *)sym)->graph != NULL)
-		    CcsGlobals_SemErr(self->globals, self->t, "name declared twice");
+		    CcsXmlParser_SemErrT(self, "name declared twice");
 	    } else {
-		CcsGlobals_SemErr(self->globals, self->t,
-				  "this symbol kind not allowed on left side of production");
+		CcsXmlParser_SemErrT(self, "this symbol kind not allowed on left side of production");
 	    }
 	    sym->line = self->t->line;
 	}
@@ -240,8 +267,7 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
 	    CcsXmlParser_AttrDecl(self, (CcSymbolNT_t *)sym);
 	}
 	if (!undef && noAttrs != (((CcSymbolNT_t *)sym)->attrPos == NULL))
-	    CcsGlobals_SemErr(self->globals, self->t,
-			      "attribute mismatch between declaration and use of this symbol"); 
+	    CcsXmlParser_SemErrT(self, "attribute mismatch between declaration and use of this symbol"); 
 	if (self->la->kind == 38) {
 	    CcsXmlParser_SemText(self, &((CcSymbolNT_t *)sym)->semPos);
 	}
@@ -255,18 +281,15 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
     CcsXmlParser_Expect(self, 13);
     CcsXmlParser_Expect(self, 1);
     if (strcmp(gramName, self->t->val))
-	CcsGlobals_SemErr(self->globals, self->t,
-			  "name does not match grammar name");
+	CcsXmlParser_SemErrT(self, "name does not match grammar name");
     self->syntax->gramSy = CcSymbolTable_FindSym(self->symtab, gramName);
     CcFree(gramName);
     if (self->syntax->gramSy == NULL) {
-	CcsGlobals_SemErr(self->globals, self->t,
-			  "missing production for grammar name");
+	CcsXmlParser_SemErrT(self, "missing production for grammar name");
     } else {
 	sym = self->syntax->gramSy;
 	if (((CcSymbolNT_t *)sym)->attrPos != NULL)
-	    CcsGlobals_SemErr(self->globals, self->t,
-			      "grammar symbol must not have attributes");
+	    CcsXmlParser_SemErrT(self, "grammar symbol must not have attributes");
     }
     /* noSym gets highest number */
     self->syntax->noSy = CcSymbolTable_NewTerminal(self->symtab, "???", 0);
@@ -293,13 +316,13 @@ CcsXmlParser_SectionDecl(CcsXmlParser_t * self)
     CcsXmlParser_Expect(self, 15);
     CcsXmlParser_Expect(self, 1);
     secname = CcStrdup(self->t->val);
-    CcsXmlScanner_IncRef(self->scanner, beg = self->t); 
+    CcsXmlScanner_IncRef(&self->scanner, beg = self->t); 
     while (CcsXmlParser_StartOf(self, 6)) {
 	CcsXmlParser_Get(self);
     }
-    CcGlobals_NewSection((CcGlobals_t *)self->globals, secname,
-			 CcsXmlScanner_GetPositionBetween(self->scanner, beg, self->la));
-    CcsXmlScanner_DecRef(self->scanner, beg);
+    CcGlobals_NewSection(&self->globals, secname,
+			 CcsXmlScanner_GetPositionBetween(&self->scanner, beg, self->la));
+    CcsXmlScanner_DecRef(&self->scanner, beg);
     CcFree(secname); 
     CcsXmlParser_Expect(self, 13);
     CcsXmlParser_Expect(self, 12);
@@ -311,7 +334,7 @@ CcsXmlParser_UpdateDecl(CcsXmlParser_t * self)
     CcsXmlParser_Expect(self, 16);
     while (self->la->kind == 3) {
 	CcsXmlParser_Get(self);
-	CcGlobals_AddUpdate((CcGlobals_t *)self->globals, self->t->val); 
+	CcGlobals_AddUpdate(&self->globals, self->t->val); 
     }
     CcsXmlParser_Expect(self, 13);
     CcsXmlParser_Expect(self, 12);
@@ -320,7 +343,7 @@ CcsXmlParser_UpdateDecl(CcsXmlParser_t * self)
 static void
 CcsXmlParser_XmlSpecDecl(CcsXmlParser_t * self, CcXmlSpec_t ** xsdef)
 {
-    *xsdef = CcXmlSpec((CcGlobals_t *)self->globals); 
+    *xsdef = CcXmlSpec(&self->globals); 
     if (self->la->kind == 18) {
 	CcsXmlParser_Get(self);
 	CcXmlSpec_SetCaseSensitive(*xsdef, FALSE); 
@@ -360,8 +383,7 @@ CcsXmlParser_XmlNamespaceDecl(CcsXmlParser_t * self)
     nsURI = CcStrdup(self->t->val); 
     CcsXmlParser_XmlSpecDecl(self, &xsdef);
     if (!CcXmlSpecMap_Add(self->xmlspecmap, nsURI, xsdef))
-	CcsGlobals_SemErr(self->globals, self->t,
-			  "The namespace '%s' is defined more than once.", nsURI); 
+	CcsXmlParser_SemErrT(self, "The namespace '%s' is defined more than once.", nsURI); 
     CcsXmlParser_Expect(self, 13);
     CcFree(nsURI); 
 }
@@ -372,35 +394,33 @@ CcsXmlParser_AttrDecl(CcsXmlParser_t * self, CcSymbolNT_t * sym)
     if (self->la->kind == 23) {
 	CcsXmlParser_Get(self);
 	CcsToken_t * beg;
-	CcsXmlScanner_IncRef(self->scanner, beg = self->la); 
+	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 7)) {
 	    if (CcsXmlParser_StartOf(self, 8)) {
 		CcsXmlParser_Get(self);
 	    } else {
 		CcsXmlParser_Get(self);
-		CcsGlobals_SemErr(self->globals, self->t,
-				  "bad string in attributes"); 
+		CcsXmlParser_SemErrT(self, "bad string in attributes"); 
 	    }
 	}
 	CcsXmlParser_Expect(self, 24);
-	sym->attrPos = CcsXmlScanner_GetPosition(self->scanner, beg, self->t);
-	CcsXmlScanner_DecRef(self->scanner, beg); 
+	sym->attrPos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
+	CcsXmlScanner_DecRef(&self->scanner, beg); 
     } else if (self->la->kind == 25) {
 	CcsXmlParser_Get(self);
 	CcsToken_t * beg;
-	CcsXmlScanner_IncRef(self->scanner, beg = self->la); 
+	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 9)) {
 	    if (CcsXmlParser_StartOf(self, 10)) {
 		CcsXmlParser_Get(self);
 	    } else {
 		CcsXmlParser_Get(self);
-		CcsGlobals_SemErr(self->globals, self->t,
-				  "bad string in attributes"); 
+		CcsXmlParser_SemErrT(self, "bad string in attributes"); 
 	    }
 	}
 	CcsXmlParser_Expect(self, 26);
-	sym->attrPos = CcsXmlScanner_GetPosition(self->scanner, beg, self->t);
-	CcsXmlScanner_DecRef(self->scanner, beg); 
+	sym->attrPos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
+	CcsXmlScanner_DecRef(&self->scanner, beg); 
     } else CcsXmlParser_SynErr(self, 42);
 }
 
@@ -409,23 +429,21 @@ CcsXmlParser_SemText(CcsXmlParser_t * self, CcsPosition_t ** pos)
 {
     CcsXmlParser_Expect(self, 38);
     CcsToken_t * beg;
-    CcsXmlScanner_IncRef(self->scanner, beg = self->la); 
+    CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
     while (CcsXmlParser_StartOf(self, 11)) {
 	if (CcsXmlParser_StartOf(self, 12)) {
 	    CcsXmlParser_Get(self);
 	} else if (self->la->kind == 4) {
 	    CcsXmlParser_Get(self);
-	    CcsGlobals_SemErr(self->globals, self->t,
-			      "bad string in semantic action"); 
+	    CcsXmlParser_SemErrT(self, "bad string in semantic action"); 
 	} else {
 	    CcsXmlParser_Get(self);
-	    CcsGlobals_SemErr(self->globals, self->t,
-			      "missing end of previous semantic action"); 
+	    CcsXmlParser_SemErrT(self, "missing end of previous semantic action"); 
 	}
     }
     CcsXmlParser_Expect(self, 39);
-    *pos = CcsXmlScanner_GetPosition(self->scanner, beg, self->t);
-    CcsXmlScanner_DecRef(self->scanner, beg); 
+    *pos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
+    CcsXmlScanner_DecRef(&self->scanner, beg); 
 }
 
 static void
@@ -521,10 +539,10 @@ CcsXmlParser_Resolver(CcsXmlParser_t * self, CcsPosition_t ** pos)
     CcsXmlParser_Expect(self, 37);
     CcsXmlParser_Expect(self, 29);
     CcsToken_t * beg;
-    CcsXmlScanner_IncRef(self->scanner, beg = self->la); 
+    CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
     CcsXmlParser_Condition(self);
-    *pos = CcsXmlScanner_GetPosition(self->scanner, beg, self->t);
-    CcsXmlScanner_DecRef(self->scanner, beg); 
+    *pos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
+    CcsXmlScanner_DecRef(&self->scanner, beg); 
 }
 
 static void
@@ -542,18 +560,15 @@ CcsXmlParser_Factor(CcsXmlParser_t * self, CcGraph_t ** g)
 	CcSymbol_t * sym = CcSymbolTable_FindSym(self->symtab, name);
 	CcsBool_t undef = (sym == NULL);
 	if (undef) {
-	     CcsGlobals_SemErr(self->globals, self->t,
-			       "undefined token in production");
+	     CcsXmlParser_SemErrT(self, "undefined token in production");
 	     sym = self->syntax->eofSy;  /* dummy */
 	}
 	CcFree(name);
 	if (sym->base.type != symbol_t && sym->base.type != symbol_nt)
-	    CcsGlobals_SemErr(self->globals, self->t,
-			      "this symbol kind is not allowed in a production");
+	    CcsXmlParser_SemErrT(self, "this symbol kind is not allowed in a production");
 	if (weak) {
 	    if (sym->base.type != symbol_t)
-		CcsGlobals_SemErr(self->globals, self->t,
-				  "only terminals may be weak");
+		CcsXmlParser_SemErrT(self, "only terminals may be weak");
 	}
 	CcNode_t * p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->line, weak);
 	*g = CcGraphP(p); 
@@ -566,8 +581,7 @@ CcsXmlParser_Factor(CcsXmlParser_t * self, CcGraph_t ** g)
 	} else if (sym->base.type == symbol_nt &&
 		   (((CcNodeNT_t *)p)->pos == NULL) !=
 		   (((CcSymbolNT_t *)sym)->attrPos == NULL))
-	    CcsGlobals_SemErr(self->globals, self->t,
-			      "attribute mismatch between declaration and use of this symbol"); 
+	    CcsXmlParser_SemErrT(self, "attribute mismatch between declaration and use of this symbol"); 
 	break;
     }
     case 29: {
@@ -628,37 +642,35 @@ CcsXmlParser_Attribs(CcsXmlParser_t * self, CcNode_t * p)
     if (self->la->kind == 23) {
 	CcsXmlParser_Get(self);
 	CcsToken_t * beg;
-	CcsXmlScanner_IncRef(self->scanner, beg = self->la); 
+	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 7)) {
 	    if (CcsXmlParser_StartOf(self, 8)) {
 		CcsXmlParser_Get(self);
 	    } else {
 		CcsXmlParser_Get(self);
-		CcsGlobals_SemErr(self->globals, self->t,
-				  "bad string in attributes"); 
+		CcsXmlParser_SemErrT(self, "bad string in attributes"); 
 	    }
 	}
 	CcsXmlParser_Expect(self, 24);
-	CcNode_SetPosition(p, CcsXmlScanner_GetPosition(self->scanner,
+	CcNode_SetPosition(p, CcsXmlScanner_GetPosition(&self->scanner,
 						     beg, self->t));
-	CcsXmlScanner_DecRef(self->scanner, beg); 
+	CcsXmlScanner_DecRef(&self->scanner, beg); 
     } else if (self->la->kind == 25) {
 	CcsXmlParser_Get(self);
 	CcsToken_t * beg;
-	CcsXmlScanner_IncRef(self->scanner, beg = self->la); 
+	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 9)) {
 	    if (CcsXmlParser_StartOf(self, 10)) {
 		CcsXmlParser_Get(self);
 	    } else {
 		CcsXmlParser_Get(self);
-		CcsGlobals_SemErr(self->globals, self->t,
-				  "bad string in attributes"); 
+		CcsXmlParser_SemErrT(self, "bad string in attributes"); 
 	    }
 	}
 	CcsXmlParser_Expect(self, 26);
-	CcNode_SetPosition(p, CcsXmlScanner_GetPosition(self->scanner,
+	CcNode_SetPosition(p, CcsXmlScanner_GetPosition(&self->scanner,
 						     beg, self->t));
-	CcsXmlScanner_DecRef(self->scanner, beg); 
+	CcsXmlScanner_DecRef(&self->scanner, beg); 
     } else CcsXmlParser_SynErr(self, 45);
 }
 
@@ -736,7 +748,7 @@ CcsXmlParser_SynErr(CcsXmlParser_t * self, int n)
 	s = format;
 	break;
     }
-    CcsGlobals_SemErr(self->globals, self->la, "%s", s);
+    CcsXmlParser_SemErr(self, self->la, "%s", s);
 }
 
 static const char * set[] = {
