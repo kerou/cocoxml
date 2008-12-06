@@ -268,7 +268,10 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
 	}
 	CcsAssert(sym->base.type == symbol_nt);
 	CcsBool_t noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
-	((CcSymbolNT_t *)sym)->attrPos = NULL; 
+	if (!noAttrs) {
+	    CcsPosition_Destruct(((CcSymbolNT_t *)sym)->attrPos);
+	    ((CcSymbolNT_t *)sym)->attrPos = NULL; 
+	}
 	if (self->la->kind == 23 || self->la->kind == 25) {
 	    CcsXmlParser_AttrDecl(self, (CcSymbolNT_t *)sym);
 	}
