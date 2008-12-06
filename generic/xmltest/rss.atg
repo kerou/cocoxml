@@ -1,3 +1,4 @@
+SECTION license
 /*-------------------------------------------------------------------------
 rss.atg -- RSS(Really Simple Syndication) Grammer
 Copyright (c) 2008 Charles Wang <charlesw123456@gmail.com>
@@ -16,10 +17,15 @@ You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc., 
 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
+END.
+
 /*-------------------------------------------------------------------------
  compile with:
    Coco -lang xml rss.atg
 -------------------------------------------------------------------------*/
+
+SCHEME c Rss
+UPDATES "Parser4Xml.h" "Parser4Xml.c" "Data4Xml.c" END.
 
 COMPILER Rss
 
@@ -79,30 +85,30 @@ Rss = (. Channel channel; rss = new Rss(); .)
 Channel<out Channel channel> = (. channel = new Channel(); .)
 	CHANNEL { ChannelProperty<channel> } END_CHANNEL.
 
-ChannelProperty<Channel channel>  (. string value;
+ChannelProperty<Channel channel>  (. char * value;
 			             Cloud cloud;
 				     Image image;
 				     TextInput textInput;
 				     Item item; .) =
-	Title<out value>            (. channel.title = value; .)
-	| Link<out value>           (. channel.link = value; .)
-	| Description<out value>    (. channel.description = value; .)
-	| Language<out value>       (. channel.language = value; .)
-	| Copyright<out value>      (. channel.copyright = value; .)
-	| ManagingEditor<out value> (. channel.managingEditor = value; .)
-	| WebMaster<out value>      (. channel.webMaster = value; .)
-	| PubDate<out value>        (. channel.pubDate = value; .)
-	| LastBuildDate<out value>  (. channel.lastBuildDate = value; .)
-	| Category<out value>       (. channel.category = value; .)
-	| Generator<out value>      (. channel.generator = value; .)
-	| Docs<out value>           (. channel.docs = value; .)
+	Title<&value>            (. channel.title = value; .)
+	| Link<&value>           (. channel.link = value; .)
+	| Description<&value>    (. channel.description = value; .)
+	| Language<&value>       (. channel.language = value; .)
+	| Copyright<&value>      (. channel.copyright = value; .)
+	| ManagingEditor<&value> (. channel.managingEditor = value; .)
+	| WebMaster<&value>      (. channel.webMaster = value; .)
+	| PubDate<&value>        (. channel.pubDate = value; .)
+	| LastBuildDate<&value>  (. channel.lastBuildDate = value; .)
+	| Category<&value>       (. channel.category = value; .)
+	| Generator<&value>      (. channel.generator = value; .)
+	| Docs<&value>           (. channel.docs = value; .)
 	| Cloud<out cloud>          (. channel.cloud = cloud; .)
-	| Ttl<out value>            (. channel.ttl = value; .)
+	| Ttl<&value>            (. channel.ttl = value; .)
 	| Image<out image>          (. channel.image = image; .)
-	| Rating<out value>         (. channel.rating = value; .)
+	| Rating<&value>         (. channel.rating = value; .)
 	| TextInput<out textInput>  (. channel.textInput = textInput; .)
-	| SkipHours<out value>      (. channel.skipHours = value; .)
-	| SkipDays<out value>       (. channel.skipDays = value; .)
+	| SkipHours<&value>      (. channel.skipHours = value; .)
+	| SkipDays<&value>       (. channel.skipDays = value; .)
         | Item<out item>            (. channel.AddItem(item); .)
 .
 
@@ -119,90 +125,90 @@ Cloud<out Cloud cloud> = (. cloud = new Cloud(); .)
 Image<out Image image> = (. image = new Image(); .)
 	IMAGE { ImageProperty<image> } END_IMAGE.
 
-ImageProperty<Image image>  (. string value; .) =
-	Url<out value>      (. image.url = value; .)
-	| Title<out value>  (. image.title = value; .)
-	| Link<out value>   (. image.link = value; .)
-	| Width<out value>  (. image.width = value; .)
-	| Height<out value> (. image.height = value; .)
+ImageProperty<Image image>  (. char * value; .) =
+	Url<&value>      (. image.url = value; .)
+	| Title<&value>  (. image.title = value; .)
+	| Link<&value>   (. image.link = value; .)
+	| Width<&value>  (. image.width = value; .)
+	| Height<&value> (. image.height = value; .)
 .
 
 TextInput<out TextInput textInput> = (. textInput = new TextInput(); .)
 	TEXT_INPUT { TextInputProperty<textInput> } END_TEXT_INPUT.
 
-TextInputProperty<TextInput textInput> (. string value; .) =
-	Title<out value>         (. textInput.title = value; .)
-	| Description<out value> (. textInput.description = value; .)
-	| Name<out value>        (. textInput.name = value; .)
-	| Link<out value>        (. textInput.link = value; .)
+TextInputProperty<TextInput textInput> (. char * value; .) =
+	Title<&value>         (. textInput.title = value; .)
+	| Description<&value> (. textInput.description = value; .)
+	| Name<&value>        (. textInput.name = value; .)
+	| Link<&value>        (. textInput.link = value; .)
 .
 
 Item<out Item item> = (. item = new Item(); .)
 	ITEM { ItemProperty<item> } END_ITEM.
 
-ItemProperty<Item item> (. string value; Image image; .) =
-	Title<out value>          (. item.title = value; .)
-	| Link<out value>         (. item.link = value; .)
-	| Description<out value>  (. item.description = value; .)
-	| Author<out value>       (. item.author = value; .)
-	| Category<out value>     (. item.category = value; .)
-	| Comments<out value>     (. item.comments = value; .)
-	| Enclosure<out value>    (. item.enclosure = value; .)
-	| Guid<out value>         (. item.guid = value; .)
-	| PubDate<out value>      (. item.pubdate = value; .)
-	| Source<out value>       (. item.source = value; .)
+ItemProperty<Item item> (. char * value; Image image; .) =
+	Title<&value>          (. item.title = value; .)
+	| Link<&value>         (. item.link = value; .)
+	| Description<&value>  (. item.description = value; .)
+	| Author<&value>       (. item.author = value; .)
+	| Category<&value>     (. item.category = value; .)
+	| Comments<&value>     (. item.comments = value; .)
+	| Enclosure<&value>    (. item.enclosure = value; .)
+	| Guid<&value>         (. item.guid = value; .)
+	| PubDate<&value>      (. item.pubdate = value; .)
+	| Source<&value>       (. item.source = value; .)
 	| Image<out image>        (. item.image = image; .)
 .
 
 
-Title<out string value> = TITLE TEXT (. value = t.val; .) END_TITLE.
+Title<char ** value> = TITLE TEXT (. value = CcStrdup(self->t->val); .) END_TITLE.
 
-Link<out string value> = LINK TEXT (. value = t.val; .) END_LINK .
+Link<char ** value> = LINK TEXT (. value = CcStrdup(self->t->val); .) END_LINK .
 
-Description<out string value> = DESCRIPTION TEXT (. value = t.val; .) END_DESCRIPTION .
+Description<char ** value> = DESCRIPTION TEXT (. value = CcStrdup(self->t->val); .) END_DESCRIPTION .
 
-Language<out string value> = LANGUAGE TEXT (. value = t.val; .) END_LANGUAGE.
+Language<char ** value> = LANGUAGE TEXT (. value = CcStrdup(self->t->val); .) END_LANGUAGE.
 
-Copyright<out string value> = COPYRIGHT TEXT (. value = t.val; .) END_COPYRIGHT.
+Copyright<char ** value> = COPYRIGHT TEXT (. value = CcStrdup(self->t->val); .) END_COPYRIGHT.
 
-ManagingEditor<out string value> = MANAGING_EDITOR TEXT (. value = t.val; .) END_MANAGING_EDITOR.
+ManagingEditor<char ** value> = MANAGING_EDITOR TEXT (. value = CcStrdup(self->t->val); .) END_MANAGING_EDITOR.
 
-WebMaster<out string value> = WEB_MASTER TEXT (. value = t.val; .) END_WEB_MASTER.
+WebMaster<char ** value> = WEB_MASTER TEXT (. value = CcStrdup(self->t->val); .) END_WEB_MASTER.
 
-PubDate<out string value> = PUB_DATE TEXT (. value = t.val; .) END_PUB_DATE.
+PubDate<char ** value> = PUB_DATE TEXT (. value = CcStrdup(self->t->val); .) END_PUB_DATE.
 
-LastBuildDate<out string value> = LAST_BUILD_DATE TEXT (. value = t.val; .) END_LAST_BUILD_DATE.
+LastBuildDate<char ** value> = LAST_BUILD_DATE TEXT (. value = CcStrdup(self->t->val); .) END_LAST_BUILD_DATE.
 
-Category<out string value> = CATEGORY TEXT (. value = t.val; .) END_CATEGORY.
+Category<char ** value> = CATEGORY TEXT (. value = CcStrdup(self->t->val); .) END_CATEGORY.
 
-Generator<out string value> = GENERATOR TEXT (. value = t.val; .) END_GENERATOR.
+Generator<char ** value> = GENERATOR TEXT (. value = CcStrdup(self->t->val); .) END_GENERATOR.
 
-Docs<out string value> = DOCS TEXT (. value = t.val; .) END_DOCS.
+Docs<char ** value> = DOCS TEXT (. value = CcStrdup(self->t->val); .) END_DOCS.
 
-Ttl<out string value> = TTL TEXT (. value = t.val; .) END_TTL.
+Ttl<char ** value> = TTL TEXT (. value = CcStrdup(self->t->val); .) END_TTL.
 
-Url<out string value> = URL TEXT (. value = t.val; .) END_URL.
+Url<char ** value> = URL TEXT (. value = CcStrdup(self->t->val); .) END_URL.
 
-Width<out string value> = WIDTH TEXT (. value = t.val; .) END_WIDTH.
+Width<char ** value> = WIDTH TEXT (. value = CcStrdup(self->t->val); .) END_WIDTH.
 
-Height<out string value> = HEIGHT TEXT (. value = t.val; .) END_HEIGHT.
+Height<char ** value> = HEIGHT TEXT (. value = CcStrdup(self->t->val); .) END_HEIGHT.
 
-Rating<out string value> = RATING TEXT (. value = t.val; .) END_RATING.
+Rating<char ** value> = RATING TEXT (. value = CcStrdup(self->t->val); .) END_RATING.
 
-Name<out string value> = NAME TEXT (. value = t.val; .) END_NAME.
+Name<char ** value> = NAME TEXT (. value = CcStrdup(self->t->val); .) END_NAME.
 
-SkipHours<out string value> = SKIP_HOURS TEXT (. value = t.val; .) END_SKIP_HOURS.
+SkipHours<char ** value> = SKIP_HOURS TEXT (. value = CcStrdup(self->t->val); .) END_SKIP_HOURS.
 
-SkipDays<out string value> = SKIP_DAYS TEXT (. value = t.val; .) END_SKIP_DAYS.
+SkipDays<char ** value> = SKIP_DAYS TEXT (. value = CcStrdup(self->t->val); .) END_SKIP_DAYS.
 
-Author<out string value> = AUTHOR TEXT (. value = t.val; .) END_AUTHOR.
+Author<char ** value> = AUTHOR TEXT (. value = CcStrdup(self->t->val); .) END_AUTHOR.
 
-Comments<out string value> = COMMENTS TEXT (. value = t.val; .) END_COMMENTS.
+Comments<char ** value> = COMMENTS TEXT (. value = CcStrdup(self->t->val); .) END_COMMENTS.
 
-Enclosure<out string value> = ENCLOSURE TEXT (. value = t.val; .) END_ENCLOSURE.
+Enclosure<char ** value> = ENCLOSURE TEXT (. value = CcStrdup(self->t->val); .) END_ENCLOSURE.
 
-Guid<out string value> = GUID TEXT (. value = t.val; .) END_GUID.
+Guid<char ** value> = GUID TEXT (. value = CcStrdup(self->t->val); .) END_GUID.
 
-Source<out string value> = SOURCE TEXT (. value = t.val; .) END_SOURCE.
+Source<char ** value> = SOURCE TEXT (. value = CcStrdup(self->t->val); .) END_SOURCE.
 
 END Rss.
