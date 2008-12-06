@@ -24,6 +24,10 @@
 #ifndef  COCO_EBNF_H
 #define  COCO_EBNF_H
 
+#ifndef  COCO_OBJECT_H
+#include  "Object.h"
+#endif
+
 #ifndef  COCO_ARRAYLIST_H
 #include  "ArrayList.h"
 #endif

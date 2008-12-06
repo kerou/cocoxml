@@ -24,8 +24,8 @@
 #ifndef  COCO_HASHTABLE_H
 #define  COCO_HASHTABLE_H
 
-#ifndef  COCO_OBJECT_H
-#include  "Object.h"
+#ifndef  COCO_DEFS_H
+#include  "Defs.h"
 #endif
 
 EXTC_BEGIN
