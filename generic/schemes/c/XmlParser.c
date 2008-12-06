@@ -228,7 +228,7 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
 	    CcsXmlParser_Get(self);
 	}
 	self->constructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
-			  CcsXmlScanner_DecRef(&self->scanner, beg); 
+	CcsXmlScanner_DecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 9) {
 	CcsXmlParser_Get(self);
@@ -237,7 +237,7 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
 	    CcsXmlParser_Get(self);
 	}
 	self->destructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
-			  CcsXmlScanner_DecRef(&self->scanner, beg); 
+	CcsXmlScanner_DecRef(&self->scanner, beg); 
     }
     CcsXmlParser_XmlSpecDecl(self, &xsdef);
     CcXmlSpecMap_Add(self->xmlspecmap, "", xsdef); 
@@ -271,7 +271,7 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
 	if (!noAttrs) {
 	    CcsPosition_Destruct(((CcSymbolNT_t *)sym)->attrPos);
 	    ((CcSymbolNT_t *)sym)->attrPos = NULL; 
-	}
+	} 
 	if (self->la->kind == 23 || self->la->kind == 25) {
 	    CcsXmlParser_AttrDecl(self, (CcSymbolNT_t *)sym);
 	}
