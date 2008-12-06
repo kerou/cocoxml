@@ -61,7 +61,8 @@ CcOutputScheme(const CcOutputSchemeType_t * type, CcGlobals_t * globals,
 	       CcArguments_t * arguments);
 void CcOutputScheme_Destruct(CcObject_t * self);
 
-CcsBool_t CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self);
+CcsBool_t
+CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self, const char * atgname);
 
 EXTC_END
 
