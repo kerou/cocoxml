@@ -40,7 +40,7 @@
 #endif
 
 /*---- hIncludes ----*/
-#ifndef  COCO_GLOBLAS_H
+#ifndef  COCO_GLOBALS_H
 #include  "Globals.h"
 #endif
 /*---- enable ----*/
