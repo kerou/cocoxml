@@ -127,17 +127,17 @@ Coco                            (. CcSymbol_t  * sym;
   { SchemeDecl | SectionDecl | UpdateDecl }
   "COMPILER"                    (. self->genScanner = TRUE; .)
   ident                         (. gramName = CcStrdup(self->t->val); .)
-  [ "MEMBERS"                   (. CcsScanner_IncRef(self->scanner, beg = self->la); .)
-    { ANY }                     (. self->members = CcsScanner_GetPosition(self->scanner, beg, self->la);
-      	  			   CcsScanner_DecRef(self->scanner, beg); .)
+  [ "MEMBERS"                   (. CcsScanner_IncRef(&self->scanner, beg = self->la); .)
+    { ANY }                     (. self->members = CcsScanner_GetPosition(&self->scanner, beg, self->la);
+      	  			   CcsScanner_DecRef(&self->scanner, beg); .)
     ]
-  [ "CONSTRUCTOR"               (. CcsScanner_IncRef(self->scanner, beg = self->la); .)
-    { ANY }			(. self->constructor = CcsScanner_GetPosition(self->scanner, beg, self->la);
-      	  			   CcsScanner_DecRef(self->scanner, beg); .)
+  [ "CONSTRUCTOR"               (. CcsScanner_IncRef(&self->scanner, beg = self->la); .)
+    { ANY }			(. self->constructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
+      	  			   CcsScanner_DecRef(&self->scanner, beg); .)
     ]
-  [ "DESTRUCTOR"                (. CcsScanner_IncRef(self->scanner, beg = self->la); .)
-    { ANY }			(. self->destructor = CcsScanner_GetPosition(self->scanner, beg, self->la);
-      	  			   CcsScanner_DecRef(self->scanner, beg); .)
+  [ "DESTRUCTOR"                (. CcsScanner_IncRef(&self->scanner, beg = self->la); .)
+    { ANY }			(. self->destructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
+      	  			   CcsScanner_DecRef(&self->scanner, beg); .)
     ]
   [ "IGNORECASE"                (. self->lexical->ignoreCase = TRUE; .) ]   /* pdt */
   [ "CHARACTERS" { SetDecl }]
@@ -167,10 +167,9 @@ Coco                            (. CcSymbol_t  * sym;
                                    } else {
 				       if (sym->base.type == symbol_nt) {
 					   if (((CcSymbolNT_t *)sym)->graph != NULL)
-					       CcsGlobals_SemErr(self->globals, self->t, "name declared twice");
+					       CcsParser_SemErr(self, "name declared twice");
 				       } else {
-					   CcsGlobals_SemErr(self->globals, self->t,
-					                     "this symbol kind not allowed on left side of production");
+					   CcsParser_SemErr(self, "this symbol kind not allowed on left side of production");
 				       }
 				       sym->line = self->t->line;
                                    }
@@ -178,8 +177,7 @@ Coco                            (. CcSymbol_t  * sym;
                                    CcsBool_t noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
 				   ((CcSymbolNT_t *)sym)->attrPos = NULL; .)
     [ AttrDecl<(CcSymbolNT_t *)sym> ]  (. if (!undef && noAttrs != (((CcSymbolNT_t *)sym)->attrPos == NULL))
-                                              CcsGlobals_SemErr(self->globals, self->t,
-					   	                "attribute mismatch between declaration and use of this symbol"); .)
+                                              CcsParser_SemErr(self, "attribute mismatch between declaration and use of this symbol"); .)
     [ SemText<.&((CcSymbolNT_t *)sym)->semPos.> ] WEAK
     '='
     Expression<&g>              (. ((CcSymbolNT_t *)sym)->graph = g->head;
@@ -189,18 +187,15 @@ Coco                            (. CcSymbol_t  * sym;
     '.'
   }
   "END" ident                   (. if (strcmp(gramName, self->t->val))
-				       CcsGlobals_SemErr(self->globals, self->t,
-				       			 "name does not match grammar name");
+				       CcsParser_SemErr(self, "name does not match grammar name");
 				   self->syntax->gramSy = CcSymbolTable_FindSym(self->symtab, gramName);
 				   CcFree(gramName);
 				   if (self->syntax->gramSy == NULL) {
-                                       CcsGlobals_SemErr(self->globals, self->t,
-				       			 "missing production for grammar name");
+                                       CcsParser_SemErr(self, "missing production for grammar name");
                                    } else {
                                        sym = self->syntax->gramSy;
                                        if (((CcSymbolNT_t *)sym)->attrPos != NULL)
-					   CcsGlobals_SemErr(self->globals, self->t,
-					   		     "grammar symbol must not have attributes");
+					   CcsParser_SemErr(self, "grammar symbol must not have attributes");
                                    }
 				   /* noSym gets highest number */
 				   self->syntax->noSy = CcSymbolTable_NewTerminal(self->symtab, "???", 0);
@@ -223,10 +218,10 @@ SchemeDecl
 SectionDecl       (. char * secname; CcsToken_t * beg; .)
 =
   "SECTION" ident (. secname = CcStrdup(self->t->val);
-  	    	     CcsScanner_IncRef(self->scanner, beg = self->t); .)
+  	    	     CcsScanner_IncRef(&self->scanner, beg = self->t); .)
   { ANY }         (. CcGlobals_NewSection((CcGlobals_t *)self->globals, secname,
-    		     			  CcsScanner_GetPositionBetween(self->scanner, beg, self->la));
-		     CcsScanner_DecRef(self->scanner, beg);
+    		     			  CcsScanner_GetPositionBetween(&self->scanner, beg, self->la));
+		     CcsScanner_DecRef(&self->scanner, beg);
 		     CcFree(secname); .)
   "END" '.'
 .
@@ -246,11 +241,9 @@ SetDecl                         (. CcCharSet_t * s; .)
   ident                         (. const char * name = self->t->val;
 				   CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, name);
 				   if (c != NULL)
-				       CcsGlobals_SemErr(self->globals, self->t,
-				                         "name '%s' declared twice", name); .)
+				       CcsParser_SemErr(self, "name '%s' declared twice", name); .)
   '=' Set<&s>                   (. if (CcCharSet_Elements(s) == 0)
-				       CcsGlobals_SemErr(self->globals, self->t,
-				                         "character set must not be empty");
+				       CcsParser_SemErr(self, "character set must not be empty");
 				   CcLexical_NewCharClass(self->lexical, name, s); .)
   '.'
 .
@@ -273,7 +266,7 @@ SimSet<CcCharSet_t ** s>        (. int n1, n2; .)
 =                               (. *s = CcCharSet(); .)
 ( ident                         (. CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, self->t->val);
 				   if (c != NULL) CcCharSet_Or(*s, c->set);
-				   else CcsGlobals_SemErr(self->globals, self->t, "undefined name"); .)
+				   else CcsParser_SemErr(self, "undefined name"); .)
 | string                        (. const char * cur0; int ch;
   				   char * cur, * name = CcUnescape(self->t->val);
 				   if (self->lexical->ignoreCase) {
@@ -302,8 +295,7 @@ Char<int * n>          (. char * name; const char * cur; .)
 		          cur = name = CcUnescape(self->t->val);
 			  *n = CcsUTF8GetCh(&cur, name + strlen(name));
 			  if (*cur != 0)
-			      CcsGlobals_SemErr(self->globals, self->t,
-			          "unacceptable character value: '%s'", self->t->val);
+			      CcsParser_SemErr(self, "unacceptable character value: '%s'", self->t->val);
 			  CcFree(name);
 			  if (self->lexical->ignoreCase) *n = tolower(*n); .)
 .
@@ -314,7 +306,7 @@ TokenDecl<const CcObjectType_t * typ> (. char * name = NULL; int kind; CcSymbol_
 =
   Sym<&name, &kind>             (. sym = CcSymbolTable_FindSym(self->symtab, name);
 				   if (sym != NULL) {
-				       CcsGlobals_SemErr(self->globals, self->t, "name '%s' declared twice", name);
+				       CcsParser_SemErr(self, "name '%s' declared twice", name);
                                    } else if (typ == symbol_t) {
 				       sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
 				       ((CcSymbolT_t *)sym)->tokenKind = symbol_fixedToken;
@@ -329,16 +321,14 @@ TokenDecl<const CcObjectType_t * typ> (. char * name = NULL; int kind; CcSymbol_
 				   CcFree(name); .)
   SYNC
   ( '=' TokenExpr<&g> '.'       (. if (kind == CcsParser_str)
-				       CcsGlobals_SemErr(self->globals, self->t,
-				       			 "a literal must not be declared with a structure");
+				       CcsParser_SemErr(self, "a literal must not be declared with a structure");
 				   CcGraph_Finish(g);
 				   if (self->tokenString == NULL || self->tokenString == noString) {
 				       CcLexical_ConvertToStates(self->lexical, g->head, sym);
                                    } else { /* CcsParser_TokenExpr is a single string */
 				       if (CcHashTable_Get(&self->lexical->literals,
 							   self->tokenString) != NULL)
-					   CcsGlobals_SemErr(self->globals, self->t,
-					   		     "token string '%s' declared twice", self->tokenString);
+					   CcsParser_SemErr(self, "token string '%s' declared twice", self->tokenString);
 				       CcHashTable_Set(&self->lexical->literals,
 				                       self->tokenString, (CcObject_t *)sym);
 				       CcLexical_MatchLiteral(self->lexical, self->t,
@@ -351,8 +341,7 @@ TokenDecl<const CcObjectType_t * typ> (. char * name = NULL; int kind; CcSymbol_
 				   else CcLexical_MatchLiteral(self->lexical, self->t, sym->name, sym); .)
   )
   [ SemText<.&((CcSymbolPR_t *)sym)->semPos.> (. if (typ != symbol_pr)
-    			     		      	     CcsGlobals_SemErr(self->globals, self->t,
-						     		       "semantic action not allowed here"); .)
+    			     		      	     CcsParser_SemErr(self, "semantic action not allowed here"); .)
   ]
 .
 
@@ -361,21 +350,19 @@ TokenDecl<const CcObjectType_t * typ> (. char * name = NULL; int kind; CcSymbol_
 AttrDecl<CcSymbolNT_t * sym>
 =
   '<'                           (. CcsToken_t * beg;
-  				   CcsScanner_IncRef(self->scanner, beg = self->la); .)
+  				   CcsScanner_IncRef(&self->scanner, beg = self->la); .)
   { ANY
-  | badString                   (. CcsGlobals_SemErr(self->globals, self->t,
-    				   		     "bad string in attributes"); .)
+  | badString                   (. CcsParser_SemErr(self, "bad string in attributes"); .)
   }
-  '>'                           (. sym->attrPos = CcsScanner_GetPosition(self->scanner, beg, self->t);
-  				   CcsScanner_DecRef(self->scanner, beg); .)
+  '>'                           (. sym->attrPos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
+  				   CcsScanner_DecRef(&self->scanner, beg); .)
 | "<."                          (. CcsToken_t * beg;
-  				   CcsScanner_IncRef(self->scanner, beg = self->la); .)
+  				   CcsScanner_IncRef(&self->scanner, beg = self->la); .)
   { ANY
-  | badString                   (. CcsGlobals_SemErr(self->globals, self->t,
-    				   		     "bad string in attributes"); .)
+  | badString                   (. CcsParser_SemErr(self, "bad string in attributes"); .)
   }
-  ".>"                          (. sym->attrPos = CcsScanner_GetPosition(self->scanner, beg, self->t);
-     				   CcsScanner_DecRef(self->scanner, beg); .)
+  ".>"                          (. sym->attrPos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
+     				   CcsScanner_DecRef(&self->scanner, beg); .)
 .
 
 /*------------------------------------------------------------------------------------*/
@@ -433,34 +420,29 @@ Factor<CcGraph_t ** g>          (. char * name = NULL; int kind; CcsPosition_t *
 					   sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
 					   CcLexical_MatchLiteral(self->lexical, self->t, sym->name, sym);
 				       } else {  /* undefined string in production */
-					   CcsGlobals_SemErr(self->globals, self->t,
-					                     "undefined string in production");
+					   CcsParser_SemErr(self, "undefined string in production");
 					   sym = self->syntax->eofSy;  /* dummy */
 				       }
                                    }
 				   CcFree(name);
                                    if (sym->base.type != symbol_t && sym->base.type != symbol_nt)
-                                       CcsGlobals_SemErr(self->globals, self->t,
-				                         "this symbol kind is not allowed in a production");
+                                       CcsParser_SemErr(self, "this symbol kind is not allowed in a production");
                                    if (weak) {
 				       if (sym->base.type != symbol_t)
-				           CcsGlobals_SemErr(self->globals, self->t,
-					                     "only terminals may be weak");
+				           CcsParser_SemErr(self, "only terminals may be weak");
 				   }
 
 				   CcNode_t * p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->line, weak);
 				   *g = CcGraphP(p); .)
   [ Attribs<p>                  (. if (kind != CcsParser_id)
-                                       CcsGlobals_SemErr(self->globals, self->t,
-				                         "a literal must not have attributes"); .)
+                                       CcsParser_SemErr(self, "a literal must not have attributes"); .)
   ]                             (. if (undef) {
                                        if (sym->base.type == symbol_nt)
 				           ((CcSymbolNT_t *)sym)->attrPos = CcsPosition_Clone(((CcNodeNT_t *)p)->pos);
                                    } else if (sym->base.type == symbol_nt &&
 				              (((CcNodeNT_t *)p)->pos == NULL) !=
 					      (((CcSymbolNT_t *)sym)->attrPos == NULL))
-				       CcsGlobals_SemErr(self->globals, self->t,
-				                         "attribute mismatch between declaration and use of this symbol"); .)
+				       CcsParser_SemErr(self, "attribute mismatch between declaration and use of this symbol"); .)
 | '(' Expression<g> ')'
 | '[' Expression<g> ']'         (. CcEBNF_MakeOption(&self->syntax->base, *g); .)
 | '{' Expression<g> '}'         (. CcEBNF_MakeIteration(&self->syntax->base, *g); .)
@@ -482,9 +464,9 @@ Factor<CcGraph_t ** g>          (. char * name = NULL; int kind; CcsPosition_t *
 Resolver<CcsPosition_t ** pos>
 =
   "IF" "("                       (. CcsToken_t * beg;
-                                    CcsScanner_IncRef(self->scanner, beg = self->la); .)
-  Condition                      (. *pos = CcsScanner_GetPosition(self->scanner, beg, self->t);
-                                    CcsScanner_DecRef(self->scanner, beg); .)
+                                    CcsScanner_IncRef(&self->scanner, beg = self->la); .)
+  Condition                      (. *pos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
+                                    CcsScanner_DecRef(&self->scanner, beg); .)
 .
 
 /*------------------------------------------------------------------------------------*/
@@ -528,7 +510,7 @@ TokenFactor<CcGraph_t ** g>     (. char * name = NULL; int kind; CcTransition_t 
 ( Sym<&name, &kind>             (. if (kind == CcsParser_id) {
 	                               CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, name);
                                        if (c == NULL) {
-					   CcsGlobals_SemErr(self->globals, self->t, "undefined name");
+					   CcsParser_SemErr(self, "undefined name");
 					   c = CcLexical_NewCharClass(self->lexical, name, CcCharSet());
 				       }
 				       CcTransition_FromCharSet(&trans, c->set, trans_normal,
@@ -568,8 +550,7 @@ Sym<char ** name, int * kind>
 				       for (cur = *name; *cur; ++cur) *cur = tolower(*cur);
 				   }
 				   if (strchr(*name, ' '))
-				       CcsGlobals_SemErr(self->globals, self->t,
-				                         "literal tokens \"%s\" can not contain blanks", *name); .)
+				       CcsParser_SemErr(self, "literal tokens \"%s\" can not contain blanks", *name); .)
 )
 .
 
@@ -578,23 +559,21 @@ Sym<char ** name, int * kind>
 Attribs<CcNode_t * p>
 =
   '<'                           (. CcsToken_t * beg;
-                                   CcsScanner_IncRef(self->scanner, beg = self->la); .)
+                                   CcsScanner_IncRef(&self->scanner, beg = self->la); .)
   { ANY 
-  | badString                   (. CcsGlobals_SemErr(self->globals, self->t,
-                                                     "bad string in attributes"); .)
+  | badString                   (. CcsParser_SemErr(self, "bad string in attributes"); .)
   }
-  '>'                           (. CcNode_SetPosition(p, CcsScanner_GetPosition(self->scanner,
+  '>'                           (. CcNode_SetPosition(p, CcsScanner_GetPosition(&self->scanner,
                                                                                 beg, self->t));
-                                   CcsScanner_DecRef(self->scanner, beg); .)
+                                   CcsScanner_DecRef(&self->scanner, beg); .)
 | "<."                          (. CcsToken_t * beg;
-                                   CcsScanner_IncRef(self->scanner, beg = self->la); .)
+                                   CcsScanner_IncRef(&self->scanner, beg = self->la); .)
   { ANY 
-  | badString                   (. CcsGlobals_SemErr(self->globals, self->t,
-                                                     "bad string in attributes"); .)
+  | badString                   (. CcsParser_SemErr(self, "bad string in attributes"); .)
   }
-  ".>"                          (. CcNode_SetPosition(p, CcsScanner_GetPosition(self->scanner,
+  ".>"                          (. CcNode_SetPosition(p, CcsScanner_GetPosition(&self->scanner,
                                                                                 beg, self->t));
-                                   CcsScanner_DecRef(self->scanner, beg); .)
+                                   CcsScanner_DecRef(&self->scanner, beg); .)
 .
 
 /*------------------------------------------------------------------------------------*/
@@ -602,15 +581,13 @@ Attribs<CcNode_t * p>
 SemText<CcsPosition_t ** pos>
 =
   "(."                          (. CcsToken_t * beg;
-                                   CcsScanner_IncRef(self->scanner, beg = self->la); .)
+                                   CcsScanner_IncRef(&self->scanner, beg = self->la); .)
   { ANY
-  | badString                   (. CcsGlobals_SemErr(self->globals, self->t,
-                                                     "bad string in semantic action"); .)
-  | "(."                        (. CcsGlobals_SemErr(self->globals, self->t,
-                                                     "missing end of previous semantic action"); .)
+  | badString                   (. CcsParser_SemErr(self, "bad string in semantic action"); .)
+  | "(."                        (. CcsParser_SemErr(self, "missing end of previous semantic action"); .)
   }
-  ".)"                          (. *pos = CcsScanner_GetPosition(self->scanner, beg, self->t);
-                                   CcsScanner_DecRef(self->scanner, beg); .)
+  ".)"                          (. *pos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
+                                   CcsScanner_DecRef(&self->scanner, beg); .)
 .
 
 /*------------------------------------------------------------------------------------*/

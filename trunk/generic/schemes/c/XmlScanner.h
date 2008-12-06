@@ -39,7 +39,7 @@
 EXTC_BEGIN
 
 struct CcsXmlScanner_s {
-    CcsGlobals_t * globals;
+    CcsErrorPool_t * errpool;
 
     int            eofSym;
     int            noSym;
@@ -63,7 +63,7 @@ struct CcsXmlScanner_s {
 };
 
 CcsXmlScanner_t *
-CcsXmlScanner(CcsXmlScanner_t * self, CcsGlobals_t * globals,
+CcsXmlScanner(CcsXmlScanner_t * self, CcsErrorPool_t * errpool,
 	      const char * filename);
 void CcsXmlScanner_Destruct(CcsXmlScanner_t * self);
 CcsToken_t * CcsXmlScanner_GetDummy(CcsXmlScanner_t * self);

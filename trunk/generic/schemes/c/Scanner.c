@@ -43,10 +43,11 @@ static void CcsScanner_GetCh(CcsScanner_t * self);
 
 static const char * dummyval = "dummy";
 CcsScanner_t *
-CcsScanner(CcsScanner_t * self, CcsGlobals_t * globals, const char * filename)
+CcsScanner(CcsScanner_t * self, CcsErrorPool_t * errpool,
+	   const char * filename)
 {
     FILE * fp;
-    self->globals = globals;
+    self->errpool = errpool;
     if (!(fp = fopen(filename, "r"))) {
 	fprintf(stderr, "Can not open '%s'.\n", filename);
 	goto errquit0;

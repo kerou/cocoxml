@@ -31,25 +31,30 @@
 #ifndef  COCO_XMLPARSER_H
 #define  COCO_XMLPARSER_H
 
-#ifndef  COCO_CDEFS_H
-#include "c/CDefs.h"
+#ifndef  COCO_ERRORPOOL_H
+#include "c/ErrorPool.h"
+#endif
+
+#ifndef  COCO_XMLSCANNER_H
+#include "c/XmlScanner.h"
 #endif
 
 /*---- hIncludes ----*/
-#ifndef  COCO_DEFS_H
-#include  "Defs.h"
+#ifndef  COCO_GLOBALS_H
+#include  "Globals.h"
 #endif
 /*---- enable ----*/
 
 EXTC_BEGIN
 
 struct CcsXmlParser_s {
-    CcsGlobals_t    * globals;
-    CcsXmlScanner_t * scanner;
+    CcsErrorPool_t    errpool;
+    CcsXmlScanner_t   scanner;
     CcsToken_t      * t;
     CcsToken_t      * la;
     int               maxT;
     /*---- members ----*/
+    CcGlobals_t       globals;
     char            * schemeName;
     char            * prefix;
     CcsPosition_t   * members;
@@ -62,9 +67,16 @@ struct CcsXmlParser_s {
     /*---- enable ----*/
 };
 
-CcsXmlParser_t * CcsXmlParser(CcsXmlParser_t * self, CcsGlobals_t * globals);
+CcsXmlParser_t *
+CcsXmlParser(CcsXmlParser_t * self, const char * fname, FILE * errfp);
 void CcsXmlParser_Destruct(CcsXmlParser_t * self);
 void CcsXmlParser_Parse(CcsXmlParser_t * self);
+
+void
+CcsXmlParser_SemErr(CcsXmlParser_t * self, const CcsToken_t * token,
+		    const char * format, ...);
+void
+CcsXmlParser_SemErrT(CcsXmlParser_t * self, const char * format, ...);
 
 EXTC_END
 

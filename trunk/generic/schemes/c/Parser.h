@@ -31,25 +31,30 @@
 #ifndef  COCO_PARSER_H
 #define  COCO_PARSER_H
 
-#ifndef  COCO_CDEFS_H
-#include "c/CDefs.h"
+#ifndef  COCO_ERRORPOOL_H
+#include "c/ErrorPool.h"
+#endif
+
+#ifndef  COCO_SCANNER_H
+#include "c/Scanner.h"
 #endif
 
 /*---- hIncludes ----*/
-#ifndef  COCO_DEFS_H
-#include  "Defs.h"
+#ifndef  COCO_GLOBLAS_H
+#include  "Globals.h"
 #endif
 /*---- enable ----*/
 
 EXTC_BEGIN
 
 struct CcsParser_s {
-    CcsGlobals_t    * globals;
-    CcsScanner_t    * scanner;
+    CcsErrorPool_t    errpool;
+    CcsScanner_t      scanner;
     CcsToken_t      * t;
     CcsToken_t      * la;
     int               maxT;
     /*---- members ----*/
+    CcGlobals_t       globals;
     char            * tokenString;
     CcsBool_t         genScanner;
     char            * schemeName;
@@ -64,9 +69,13 @@ struct CcsParser_s {
     /*---- enable ----*/
 };
 
-CcsParser_t * CcsParser(CcsParser_t * self, CcsGlobals_t * globals);
+CcsParser_t * CcsParser(CcsParser_t * self, const char * fname, FILE * errfp);
 void CcsParser_Destruct(CcsParser_t * self);
 void CcsParser_Parse(CcsParser_t * self);
+
+void CcsParser_SemErr(CcsParser_t * self, const CcsToken_t * token,
+		      const char * format, ...);
+void CcsParser_SemErrT(CcsParser_t * self, const char * format, ...);
 
 EXTC_END
 

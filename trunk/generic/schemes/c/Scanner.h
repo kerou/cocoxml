@@ -39,7 +39,7 @@
 EXTC_BEGIN
 
 struct CcsScanner_s {
-    CcsGlobals_t * globals;
+    CcsErrorPool_t * errpool;
 
     int            eofSym;
     int            noSym;
@@ -63,7 +63,8 @@ struct CcsScanner_s {
 };
 
 CcsScanner_t *
-CcsScanner(CcsScanner_t * self, CcsGlobals_t * globals, const char * filename);
+CcsScanner(CcsScanner_t * self, CcsErrorPool_t * errpool,
+	   const char * filename);
 void CcsScanner_Destruct(CcsScanner_t * self);
 CcsToken_t * CcsScanner_GetDummy(CcsScanner_t * self);
 CcsToken_t * CcsScanner_Scan(CcsScanner_t * self);

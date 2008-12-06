@@ -22,6 +22,8 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "c/COutputScheme.h"
+#include  "c/Parser.h"
+#include  "c/XmlParser.h"
 #include  "lexical/Action.h"
 #include  "lexical/CharSet.h"
 #include  "lexical/Comment.h"
@@ -380,12 +382,10 @@ COS_XmlSpecList(CcCOutputScheme_t * self, CcOutput_t * output)
 static CcsBool_t
 COS_Members(CcCOutputScheme_t * self, CcOutput_t * output)
 {
-    if (self->base.globals->base.parser &&
-	self->base.globals->base.parser->members)
-	CcSource(output, self->base.globals->base.parser->members);
-    if (self->base.globals->base.xmlparser &&
-	self->base.globals->base.xmlparser->members)
-	CcSource(output, self->base.globals->base.xmlparser->members);
+    if (self->parser &&	self->parser->members)
+	CcSource(output, self->parser->members);
+    if (self->xmlparser && self->xmlparser->members)
+	CcSource(output, self->xmlparser->members);
     return TRUE;
 }
 
@@ -394,24 +394,20 @@ COS_Constructor(CcCOutputScheme_t * self, CcOutput_t * output)
 {
     CcPrintfI(output, "self->maxT = %d;\n",
 	      self->base.globals->symtab.terminals.Count - 1);
-    if (self->base.globals->base.parser &&
-	self->base.globals->base.parser->constructor)
-	CcSource(output, self->base.globals->base.parser->constructor);
-    if (self->base.globals->base.xmlparser &&
-	self->base.globals->base.xmlparser->constructor)
-	CcSource(output, self->base.globals->base.xmlparser->constructor);
+    if (self->parser && self->parser->constructor)
+	CcSource(output, self->parser->constructor);
+    if (self->xmlparser && self->xmlparser->constructor)
+	CcSource(output, self->xmlparser->constructor);
     return TRUE;
 }
 
 static CcsBool_t
 COS_Destructor(CcCOutputScheme_t * self, CcOutput_t * output)
 {
-    if (self->base.globals->base.parser &&
-	self->base.globals->base.parser->destructor)
-	CcSource(output, self->base.globals->base.parser->destructor);
-    if (self->base.globals->base.xmlparser &&
-	self->base.globals->base.xmlparser->destructor)
-	CcSource(output, self->base.globals->base.xmlparser->destructor);
+    if (self->parser && self->parser->destructor)
+	CcSource(output, self->parser->destructor);
+    if (self->xmlparser && self->xmlparser->destructor)
+	CcSource(output, self->xmlparser->destructor);
     return TRUE;
 }
 
@@ -821,15 +817,16 @@ static const CcOutputSchemeType_t COutputSchemeType = {
 };
 
 CcCOutputScheme_t *
-CcCOutputScheme(CcGlobals_t * globals, CcArguments_t * arguments)
+CcCOutputScheme(CcsParser_t * parser, CcsXmlParser_t * xmlparser,
+		CcGlobals_t * globals, CcArguments_t * arguments)
 {
     CcCOutputScheme_t * self = (CcCOutputScheme_t *)
 	CcOutputScheme(&COutputSchemeType, globals, arguments);
-    if (globals->base.parser) {
-	self->prefix = globals->base.parser->prefix;
-    } else if (globals->base.xmlparser) {
-	self->prefix = globals->base.xmlparser->prefix;
-    } else { CcsAssert(0); }
+    self->parser = parser;
+    self->xmlparser = xmlparser;
+    if (parser) self->prefix = parser->prefix;
+    else if (xmlparser) self->prefix = xmlparser->prefix;
+    else { CcsAssert(0); }
     if (self->prefix == NULL) self->prefix = "";
     CcSyntaxSymSet(&self->symSet);
     CcSyntaxSymSet_New(&self->symSet, self->base.globals->syntax.allSyncSets);

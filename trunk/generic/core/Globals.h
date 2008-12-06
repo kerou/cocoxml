@@ -24,10 +24,6 @@
 #ifndef  COCO_GLOBALS_H
 #define  COCO_GLOBALS_H
 
-#ifndef  COCO_CGLOBALS_H
-#include  "c/CGlobals.h"
-#endif
-
 #ifndef  COCO_SYMBOLTABLE_H
 #include  "SymbolTable.h"
 #endif
@@ -47,8 +43,7 @@
 EXTC_BEGIN
 
 struct CcGlobals_s {
-    CcsGlobals_t      base;
-
+    CcsErrorPool_t  * errpool;
     CcSymbolTable_t   symtab;
     CcLexical_t     * lexical;
     CcXmlSpecMap_t  * xmlspecmap;
@@ -62,10 +57,8 @@ struct CcGlobals_s {
     CcArrayList_t     updates;
 };
 
-CcGlobals_t *
-CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp);
-CcGlobals_t *
-CcGlobalsXml(CcGlobals_t * self, const char * fname, FILE * errfp);
+CcGlobals_t * CcGlobals(CcGlobals_t * self, CcsErrorPool_t * errpool);
+CcGlobals_t * CcGlobalsXml(CcGlobals_t * self, CcsErrorPool_t * errpool);
 void CcGlobals_Destruct(CcGlobals_t * self);
 
 CcsBool_t CcGlobals_Parse(CcGlobals_t * self);
