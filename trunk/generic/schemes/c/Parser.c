@@ -168,8 +168,8 @@ CcsParser(CcsParser_t * self, const char * fname, FILE * errfp)
     if (!CcsScanner(&self->scanner, &self->errpool, fname)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
-    if (!CcGlobals(&self->globals, &self->errpool)) goto ERRQUIT;
     self->maxT = 47;
+    if (!CcGlobals(&self->globals, &self->errpool)) goto ERRQUIT;
     self->tokenString = NULL;
     self->genScanner = FALSE;
     self->schemeName = NULL;
@@ -179,7 +179,7 @@ CcsParser(CcsParser_t * self, const char * fname, FILE * errfp)
     self->destructor = NULL;
     self->symtab = &self->globals.symtab;
     self->lexical = self->globals.lexical;
-    self->syntax = &self->globals.syntax; 
+    self->syntax = &self->globals.syntax;
     /*---- enable ----*/
     return self;
  ERRQUIT:
@@ -215,7 +215,7 @@ CcsParser_Coco(CcsParser_t * self)
     char        * gramName = NULL;
     CcCharSet_t * s; 
     CcsToken_t  * beg;
-    self->tokenString = NULL;
+    self->tokenString = NULL; 
     while (self->la->kind == 23 || self->la->kind == 24 || self->la->kind == 25) {
 	if (self->la->kind == 23) {
 	    CcsParser_SchemeDecl(self);

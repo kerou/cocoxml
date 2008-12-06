@@ -157,8 +157,8 @@ CcsXmlParser(CcsXmlParser_t * self, const char * fname, FILE * errfp)
     if (!CcsXmlScanner(&self->scanner, &self->errpool, fname)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
-    if (!CcGlobalsXml(&self->globals, &self->errpool)) goto ERRQUIT;
     self->maxT = 40;
+    if (!CcGlobalsXml(&self->globals, &self->errpool)) goto ERRQUIT;
     self->schemeName = NULL;
     self->prefix = NULL;
     self->members = NULL;
@@ -199,7 +199,7 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
     CcGraph_t   * g;
     char        * gramName = NULL;
     CcXmlSpec_t * xsdef;
-    CcsToken_t  * beg;
+    CcsToken_t  * beg; 
     while (self->la->kind == 14 || self->la->kind == 15 || self->la->kind == 16) {
 	if (self->la->kind == 14) {
 	    CcsXmlParser_SchemeDecl(self);
@@ -658,8 +658,7 @@ CcsXmlParser_Attribs(CcsXmlParser_t * self, CcNode_t * p)
 	    }
 	}
 	CcsXmlParser_Expect(self, 24);
-	CcNode_SetPosition(p, CcsXmlScanner_GetPosition(&self->scanner,
-						     beg, self->t));
+	CcNode_SetPosition(p, CcsXmlScanner_GetPosition(&self->scanner, beg, self->t));
 	CcsXmlScanner_DecRef(&self->scanner, beg); 
     } else if (self->la->kind == 25) {
 	CcsXmlParser_Get(self);

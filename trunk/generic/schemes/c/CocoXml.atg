@@ -33,8 +33,8 @@ SCHEME c CcsXml
 UPDATES "XmlParser.h" "XmlParser.c" "XmlScanner.c" END.
 
 SECTION hIncludes
-#ifndef  COCO_DEFS_H
-#include  "Defs.h"
+#ifndef  COCO_GLOBALS_H
+#include  "Globals.h"
 #endif
 END.
 
@@ -47,6 +47,7 @@ END.
 COMPILER CocoXml
 
 MEMBERS
+    CcGlobals_t       globals;
     char            * schemeName;
     char            * prefix;
     CcsPosition_t   * members;
@@ -59,11 +60,15 @@ MEMBERS
     CcSyntax_t      * syntax;
 
 CONSTRUCTOR
+    if (!CcGlobalsXml(&self->globals, &self->errpool)) goto ERRQUIT;
     self->schemeName = NULL;
     self->prefix = NULL;
     self->members = NULL;
     self->constructor = NULL;
     self->destructor = NULL;
+    self->symtab = &self->globals.symtab;
+    self->xmlspecmap = self->globals.xmlspecmap;
+    self->syntax = &self->globals.syntax; 
 
 DESTRUCTOR
     if (self->destructor) CcsPosition_Destruct(self->destructor);
@@ -71,6 +76,7 @@ DESTRUCTOR
     if (self->members) CcsPosition_Destruct(self->members);
     if (self->prefix) CcFree(self->prefix);
     if (self->schemeName) CcFree(self->schemeName);
+    CcGlobals_Destruct(&self->globals);
 
 CHARACTERS
     letter    = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_".
@@ -105,11 +111,7 @@ CocoXml                         (. CcSymbol_t  * sym;
 				   CcGraph_t   * g;
 				   char        * gramName = NULL;
 				   CcXmlSpec_t * xsdef;
-				   CcsToken_t  * beg;
-
-				   self->symtab = &((CcGlobals_t *)self->globals)->symtab;
-				   self->xmlspecmap = ((CcGlobals_t *)self->globals)->xmlspecmap;
-				   self->syntax = &((CcGlobals_t *)self->globals)->syntax; .)
+				   CcsToken_t  * beg; .)
 =
   { SchemeDecl | SectionDecl | UpdateDecl }
   "COMPILER"
@@ -131,7 +133,7 @@ CocoXml                         (. CcSymbol_t  * sym;
   { XmlNamespaceDecl }
 
   SYNC 
-  "PRODUCTIONS"                 (. CcXmlSpecMap_MakeTerminals(self->xmlspecmap, (CcGlobals_t *)self->globals);
+  "PRODUCTIONS"                 (. CcXmlSpecMap_MakeTerminals(self->xmlspecmap, &self->globals);
   				   CcEBNF_Clear(&self->syntax->base); .)
   { ident                       (. sym = CcSymbolTable_FindSym(self->symtab, self->t->val);
                                    CcsBool_t undef = (sym == NULL);
@@ -141,9 +143,9 @@ CocoXml                         (. CcSymbol_t  * sym;
                                    } else {
 				       if (sym->base.type == symbol_nt) {
 					   if (((CcSymbolNT_t *)sym)->graph != NULL)
-					       CcsXmlParser_SemErr(self, "name declared twice");
+					       CcsXmlParser_SemErrT(self, "name declared twice");
 				       } else {
-					   CcsXmlParser_SemErr(self, "this symbol kind not allowed on left side of production");
+					   CcsXmlParser_SemErrT(self, "this symbol kind not allowed on left side of production");
 				       }
 				       sym->line = self->t->line;
                                    }
@@ -151,7 +153,7 @@ CocoXml                         (. CcSymbol_t  * sym;
                                    CcsBool_t noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
 				   ((CcSymbolNT_t *)sym)->attrPos = NULL; .)
     [ AttrDecl<(CcSymbolNT_t *)sym> ]  (. if (!undef && noAttrs != (((CcSymbolNT_t *)sym)->attrPos == NULL))
-                                              CcsXmlParser_SemErr(self, "attribute mismatch between declaration and use of this symbol"); .)
+                                              CcsXmlParser_SemErrT(self, "attribute mismatch between declaration and use of this symbol"); .)
     [ SemText<.&((CcSymbolNT_t *)sym)->semPos.> ] WEAK
     '='
     Expression<&g>              (. ((CcSymbolNT_t *)sym)->graph = g->head;
@@ -161,15 +163,15 @@ CocoXml                         (. CcSymbol_t  * sym;
     '.'
   }
   "END" ident                   (. if (strcmp(gramName, self->t->val))
-				       CcsXmlParser_SemErr(self, "name does not match grammar name");
+				       CcsXmlParser_SemErrT(self, "name does not match grammar name");
 				   self->syntax->gramSy = CcSymbolTable_FindSym(self->symtab, gramName);
 				   CcFree(gramName);
 				   if (self->syntax->gramSy == NULL) {
-                                       CcsXmlParser_SemErr(self, "missing production for grammar name");
+                                       CcsXmlParser_SemErrT(self, "missing production for grammar name");
                                    } else {
                                        sym = self->syntax->gramSy;
                                        if (((CcSymbolNT_t *)sym)->attrPos != NULL)
-					   CcsXmlParser_SemErr(self, "grammar symbol must not have attributes");
+					   CcsXmlParser_SemErrT(self, "grammar symbol must not have attributes");
                                    }
 				   /* noSym gets highest number */
 				   self->syntax->noSy = CcSymbolTable_NewTerminal(self->symtab, "???", 0);
@@ -193,7 +195,7 @@ SectionDecl       (. char * secname; CcsToken_t * beg; .)
 =
   "SECTION" ident (. secname = CcStrdup(self->t->val);
   	    	     CcsXmlScanner_IncRef(&self->scanner, beg = self->t); .)
-  { ANY }         (. CcGlobals_NewSection((CcGlobals_t *)self->globals, secname,
+  { ANY }         (. CcGlobals_NewSection(&self->globals, secname,
     		     			  CcsXmlScanner_GetPositionBetween(&self->scanner, beg, self->la));
 		     CcsXmlScanner_DecRef(&self->scanner, beg);
 		     CcFree(secname); .)
@@ -204,7 +206,7 @@ SectionDecl       (. char * secname; CcsToken_t * beg; .)
 
 UpdateDecl
 =
-  "UPDATES" { string (. CcGlobals_AddUpdate((CcGlobals_t *)self->globals, self->t->val); .) }
+  "UPDATES" { string (. CcGlobals_AddUpdate(&self->globals, self->t->val); .) }
   "END" '.'
 .
 
@@ -214,13 +216,13 @@ XmlNamespaceDecl            (. char * nsURI; CcXmlSpec_t * xsdef; .)
 =
   "NAMESPACE" string        (. nsURI = CcStrdup(self->t->val); .)
   XmlSpecDecl<&xsdef>       (. if (!CcXmlSpecMap_Add(self->xmlspecmap, nsURI, xsdef))
-      			           CcsXmlParser_SemErr(self, "The namespace '%s' is defined more than once.", nsURI); .)
+      			           CcsXmlParser_SemErrT(self, "The namespace '%s' is defined more than once.", nsURI); .)
   "END"                     (. CcFree(nsURI); .)
 .
 
 /*------------------------------------------------------------------------------------*/
 
-XmlSpecDecl<CcXmlSpec_t ** xsdef> (. *xsdef = CcXmlSpec((CcGlobals_t *)self->globals); .)
+XmlSpecDecl<CcXmlSpec_t ** xsdef> (. *xsdef = CcXmlSpec(&self->globals); .)
 =
   [ "IGNORECASE"                  (. CcXmlSpec_SetCaseSensitive(*xsdef, FALSE); .) ]
   [ "OPTIONS" { OptionDecl<*xsdef> } ]
@@ -273,14 +275,14 @@ AttrDecl<CcSymbolNT_t * sym>
   '<'                           (. CcsToken_t * beg;
   				   CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
   { ANY
-  | badString                   (. CcsXmlParser_SemErr(self, "bad string in attributes"); .)
+  | badString                   (. CcsXmlParser_SemErrT(self, "bad string in attributes"); .)
   }
   '>'                           (. sym->attrPos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
   				   CcsXmlScanner_DecRef(&self->scanner, beg); .)
 | "<."                          (. CcsToken_t * beg;
   				   CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
   { ANY
-  | badString                   (. CcsXmlParser_SemErr(self, "bad string in attributes"); .)
+  | badString                   (. CcsXmlParser_SemErrT(self, "bad string in attributes"); .)
   }
   ".>"                          (. sym->attrPos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
      				   CcsXmlScanner_DecRef(&self->scanner, beg); .)
@@ -332,15 +334,15 @@ Factor<CcGraph_t ** g>          (. char * name = NULL; CcsPosition_t * pos; CcsB
   Sym<&name>                    (. CcSymbol_t * sym = CcSymbolTable_FindSym(self->symtab, name);
                                    CcsBool_t undef = (sym == NULL);
                                    if (undef) {
-				        CcsXmlParser_SemErr(self, "undefined token in production");
+				        CcsXmlParser_SemErrT(self, "undefined token in production");
 					sym = self->syntax->eofSy;  /* dummy */
                                    }
 				   CcFree(name);
                                    if (sym->base.type != symbol_t && sym->base.type != symbol_nt)
-                                       CcsXmlParser_SemErr(self, "this symbol kind is not allowed in a production");
+                                       CcsXmlParser_SemErrT(self, "this symbol kind is not allowed in a production");
                                    if (weak) {
 				       if (sym->base.type != symbol_t)
-				           CcsXmlParser_SemErr(self, "only terminals may be weak");
+				           CcsXmlParser_SemErrT(self, "only terminals may be weak");
 				   }
 
 				   CcNode_t * p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->line, weak);
@@ -352,7 +354,7 @@ Factor<CcGraph_t ** g>          (. char * name = NULL; CcsPosition_t * pos; CcsB
                                    } else if (sym->base.type == symbol_nt &&
 				              (((CcNodeNT_t *)p)->pos == NULL) !=
 					      (((CcSymbolNT_t *)sym)->attrPos == NULL))
-				       CcsXmlParser_SemErr(self, "attribute mismatch between declaration and use of this symbol"); .)
+				       CcsXmlParser_SemErrT(self, "attribute mismatch between declaration and use of this symbol"); .)
 | '(' Expression<g> ')'
 | '[' Expression<g> ']'         (. CcEBNF_MakeOption(&self->syntax->base, *g); .)
 | '{' Expression<g> '}'         (. CcEBNF_MakeIteration(&self->syntax->base, *g); .)
@@ -397,14 +399,14 @@ Attribs<CcNode_t * p>
   '<'                           (. CcsToken_t * beg;
                                    CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
   { ANY 
-  | badString                   (. CcsXmlParser_SemErr(self, "bad string in attributes"); .)
+  | badString                   (. CcsXmlParser_SemErrT(self, "bad string in attributes"); .)
   }
   '>'                           (. CcNode_SetPosition(p, CcsXmlScanner_GetPosition(&self->scanner, beg, self->t));
                                    CcsXmlScanner_DecRef(&self->scanner, beg); .)
 | "<."                          (. CcsToken_t * beg;
                                    CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
   { ANY 
-  | badString                   (. CcsXmlParser_SemErr(self, "bad string in attributes"); .)
+  | badString                   (. CcsXmlParser_SemErrT(self, "bad string in attributes"); .)
   }
   ".>"                          (. CcNode_SetPosition(p, CcsXmlScanner_GetPosition(&self->scanner,
                                                                                 beg, self->t));
@@ -418,8 +420,8 @@ SemText<CcsPosition_t ** pos>
   "(."                          (. CcsToken_t * beg;
                                    CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
   { ANY
-  | badString                   (. CcsXmlParser_SemErr(self, "bad string in semantic action"); .)
-  | "(."                        (. CcsXmlParser_SemErr(self, "missing end of previous semantic action"); .)
+  | badString                   (. CcsXmlParser_SemErrT(self, "bad string in semantic action"); .)
+  | "(."                        (. CcsXmlParser_SemErrT(self, "missing end of previous semantic action"); .)
   }
   ".)"                          (. *pos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
                                    CcsXmlScanner_DecRef(&self->scanner, beg); .)
