@@ -24,6 +24,10 @@
 #ifndef  COCO_ARGUMENTS_H
 #define  COCO_ARGUMENTS_H
 
+#ifndef  COCO_OBJECT_H
+#include  "Object.h"
+#endif
+
 #ifndef  COCO_ARRAYLIST_H
 #include  "ArrayList.h"
 #endif

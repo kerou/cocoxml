@@ -22,6 +22,7 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "ArrayList.h"
+#include  "Object.h"
 
 CcArrayList_t *
 CcArrayList(CcArrayList_t * self)

@@ -23,7 +23,7 @@
 -------------------------------------------------------------------------*/
 #include  "Globals.h"
 #include  "c/CGlobals.h"
-#include  "String.h"
+#include  "BasicObjects.h"
 
 CcGlobals_t *
 CcGlobals(CcGlobals_t * self, const char * fname, FILE * errfp)
