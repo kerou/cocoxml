@@ -216,6 +216,7 @@ CheckMark(const char * lnbuf, const char * startMark, const char * endMark,
     return TRUE;
 }
 
+#if 0
 static void
 TextWritter(FILE * outfp, char * lnbuf,
 	    const char * replacedPrefix, const char * prefix)
@@ -242,6 +243,7 @@ TextWritter(FILE * outfp, char * lnbuf,
     }
     fputs(start, outfp);
 }
+#endif
 
 static CcsBool_t
 CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
@@ -282,7 +284,8 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
 	if (!CheckMark(lnbuf, tempCM->start, tempCM->end, &output.indent,
 		       Command, sizeof(Command), ParamStr, sizeof(ParamStr))) {
 	    /* Common line */
-	    if (enabled) TextWritter(outfp, lnbuf, replacedPrefix, prefix);
+	    /*if (enabled) TextWritter(outfp, lnbuf, replacedPrefix, prefix);*/
+	    if (enabled) fputs(lnbuf, outfp);
 	    continue;
 	}
 	fputs(lnbuf, outfp);
@@ -320,13 +323,15 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self, const char * tempPath,
 }
 
 CcsBool_t
-CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self)
+CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self, const char * atgname)
 {
+    int cntUpdate; char * atgname0;
     const char * prefix, * updatePath; CcArgumentsIter_t iter;
     const char * updateDir; CcArrayListIter_t iter0;
     const CcArrayList_t * updates = &self->globals->updates;
     const CcString_t * updateFile; char updatePath0[PATH_MAX];
 
+    cntUpdate = 0;
     prefix = CcArguments_First(self->arguments, "prefix", &iter);
     for (updatePath = CcArguments_First(self->arguments, "u", &iter);
 	 updatePath; updatePath = CcArguments_Next(self->arguments, &iter))
@@ -340,5 +345,16 @@ CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self)
 	    if (!CcOutputScheme_ApplyTemplate(self, updatePath0, updatePath0, prefix))
 		return FALSE;
 	}
+    if (cntUpdate == 0) {
+	atgname0 = CcStrdup(atgname);
+	updateDir = dirname(atgname0);
+	for (updateFile = (const CcString_t *)CcArrayList_FirstC(updates, &iter0);
+	     updateFile; updateFile = (const CcString_t *)CcArrayList_NextC(updates, &iter0)) {
+	    MakePath(updatePath0, sizeof(updatePath0), updateDir, updateFile->value);
+	    if (!CcOutputScheme_ApplyTemplate(self, updatePath0, updatePath0, prefix))
+		return FALSE;
+	}
+	CcFree(atgname0);
+    }
     return TRUE;
 }

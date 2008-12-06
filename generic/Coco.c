@@ -31,15 +31,21 @@
 static const char * usage_format =
     "Usage: %s Grammar.atg {{Option}}\n"
     "Options:\n"
-    "  -lang    <LANGUAGE>\n"
     "  -scheme  <SCHEME>\n"
     "  -u       <UPDATED-FILE>\n"
     "  -ud      <UPDATED-DIR>\n"
     "\n"
-    "The possible value of LANGUAGE is 'xml', which is used for CocoXml.atg. But default, Coco.atg is used.\n"
     "The possible value of SCHEME is 'c' or 'dump', 'c' is default.\n"
     "Multiple UPDATE-FILEs are possible, they specifies all of the files which should be updated.\n"
     "Multiple UPDATE-DIRs are permitted, all atg specified files in UPDATE-DIRs are updated.\n";
+
+static CcsBool_t
+CmpExtension(const char * fname, const char * ext)
+{
+    int lf = strlen(fname), le = strlen(ext);
+    if (lf < le) return FALSE;
+    return !strcmp(fname + (lf - le), ext);
+}
 
 int
 main(int argc, char * argv[])
@@ -52,7 +58,6 @@ main(int argc, char * argv[])
     } u;
     CcsParser_t * parser;
     CcsXmlParser_t * xmlparser;
-    const char * lang;
     const char * atgName, * schemeName;
     CcOutputScheme_t * scheme;
 
@@ -63,16 +68,19 @@ main(int argc, char * argv[])
 	printf(usage_format, argv[0]);
 	return 0;
     }
+
     parser = NULL; xmlparser = NULL;
-    lang = CcArguments_First(&arguments, "lang", &iter);
-    if (lang != NULL && !strcmp(lang, "xml")) {
+    if (CmpExtension(atgName, ".atg")) {
+	if (!(parser = CcsParser(&u.parser, atgName, stderr))) goto errquit0;
+	CcsParser_Parse(parser);
+	if (!CcsParser_Finish(parser)) goto errquit1;
+    } else if (CmpExtension(atgName, ".xatg")) {
 	if (!(xmlparser = CcsXmlParser(&u.xmlparser, atgName, stderr))) goto errquit0;
 	CcsXmlParser_Parse(xmlparser);
 	if (!CcsXmlParser_Finish(xmlparser)) goto errquit1;
     } else {
-	if (!(parser = CcsParser(&u.parser, atgName, stderr))) goto errquit0;
-	CcsParser_Parse(parser);
-	if (!CcsParser_Finish(parser)) goto errquit1;
+	fprintf(stderr, "The supported extension are: *.atg, *.xatg.");
+	goto errquit0;
     }
 
     schemeName = CcArguments_First(&arguments, "scheme", &iter);
@@ -94,7 +102,7 @@ main(int argc, char * argv[])
     }
     if (scheme) {
 	printf("scheme '%s' is used.\n", schemeName);
-	if (!CcOutputScheme_GenerateOutputs(scheme)) goto errquit2;
+	if (!CcOutputScheme_GenerateOutputs(scheme, atgName)) goto errquit2;
 	CcObject_VDestruct((CcObject_t *)scheme);
     }
     if (parser) CcsParser_Destruct(parser);
