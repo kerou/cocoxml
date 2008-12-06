@@ -15,15 +15,13 @@
  with this program; if not, write to the Free Software Foundation, Inc., 
  59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
-#include  "c/XmlScanner.h"
+#include  "c/XmlScanOper.h"
 #include  "c/Token.h"
-#include  "c/CGlobals.h"
-#include  "c/ErrorPool.h"
 
 static const char nsSep = '@';
 
 static CcsToken_t *
-CXS_GetLastToken(CcsXmlScanner_t * self)
+CXS_GetLastToken(CcxScanOper_t * self)
 {
     CcsToken_t * cur;
     if (self->tokens == NULL) return NULL;
@@ -32,7 +30,7 @@ CXS_GetLastToken(CcsXmlScanner_t * self)
 }
 
 static CcsToken_t *
-CXS_Append(CcsXmlScanner_t * self, CcsToken_t * last,
+CXS_Append(CcxScanOper_t * self, CcsToken_t * last,
 	   int kind, const char * val, size_t vallen)
 {
     CcsToken_t * token;
@@ -55,7 +53,7 @@ static int
 cmpXmlSpec(const void * name, const void * spec)
 {
     const char * localname = strchr(name, nsSep);
-    const CcsXmlSpec_t * ccspec = (const CcsXmlSpec_t *)spec;
+    const CcxSpec_t * ccspec = (const CcxSpec_t *)spec;
     return localname == NULL ? strcmp("", ccspec->nsURI) :
 	strncmp(name, ccspec->nsURI, localname - (const char *)name);
 }
@@ -63,39 +61,39 @@ cmpXmlSpec(const void * name, const void * spec)
 static int
 cmpXmlTag(const void * localname, const void * tag)
 {
-    const CcsXmlTag_t * cctag = (const CcsXmlTag_t *)tag;
+    const CcxTag_t * cctag = (const CcxTag_t *)tag;
     return strcmp(localname, cctag->name);
 }
 static int
 casecmpXmlTag(const void * localname, const void * tag)
 {
-    const CcsXmlTag_t * cctag = (const CcsXmlTag_t *)tag;
+    const CcxTag_t * cctag = (const CcxTag_t *)tag;
     return strcasecmp(localname, cctag->name);
 }
 
 static int
 cmpXmlAttr(const void * localname, const void * attr)
 {
-    const CcsXmlAttr_t * ccattr = (const CcsXmlAttr_t *)attr;
+    const CcxAttr_t * ccattr = (const CcxAttr_t *)attr;
     return strcmp(localname, ccattr->name);
 }
 static int
 casecmpXmlAttr(const void * localname, const void * attr)
 {
-    const CcsXmlAttr_t * ccattr = (const CcsXmlAttr_t *)attr;
+    const CcxAttr_t * ccattr = (const CcxAttr_t *)attr;
     return strcasecmp(localname, ccattr->name);
 }
 
 static int
 cmpXmlPI(const void * localname, const void * pi)
 {
-    const CcsXmlPInstruction_t * ccpi = (const CcsXmlPInstruction_t *)pi;
+    const CcxPInstruction_t * ccpi = (const CcxPInstruction_t *)pi;
     return strcmp(localname, ccpi->name);
 }
 static int
 casecmpXmlPI(const void * localname, const void * pi)
 {
-    const CcsXmlPInstruction_t * ccpi = (const CcsXmlPInstruction_t *)pi;
+    const CcxPInstruction_t * ccpi = (const CcxPInstruction_t *)pi;
     return strcasecmp(localname, ccpi->name);
 }
 
@@ -103,19 +101,19 @@ static void
 CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
 {
     const XML_Char ** curattr;
-    const CcsXmlSpec_t * tagSpec, * attrSpec;
-    const CcsXmlTag_t * tag; const CcsXmlAttr_t * attr;
-    CcsXmlScanner_t * ccself = (CcsXmlScanner_t *)self;
+    const CcxSpec_t * tagSpec, * attrSpec;
+    const CcxTag_t * tag; const CcxAttr_t * attr;
+    CcxScanOper_t * ccself = (CcxScanOper_t *)self;
     CcsToken_t * last = CXS_GetLastToken(ccself);
     const char * localname = strchr(name, nsSep);
 
     localname = localname ? localname + 1 : name;
-    if (!(tagSpec = (const CcsXmlSpec_t *)
-	  bsearch(name, firstXmlSpec, numXmlSpecs,
-		  sizeof(CcsXmlSpec_t), cmpXmlSpec))) {
-	last = CXS_Append(ccself, last, kindUnknownNS, NULL, 0);
-    } else if (!(tag = (const CcsXmlTag_t *)
-		 bsearch(localname, tagSpec->firstTag, tagSpec->numTags, sizeof(CcsXmlTag_t),
+    if (!(tagSpec = (const CcxSpec_t *)
+	  bsearch(name, ccself->firstXmlSpec, ccself->numXmlSpecs,
+		  sizeof(CcxSpec_t), cmpXmlSpec))) {
+	last = CXS_Append(ccself, last, ccself->kindUnknownNS, NULL, 0);
+    } else if (!(tag = (const CcxTag_t *)
+		 bsearch(localname, tagSpec->firstTag, tagSpec->numTags, sizeof(CcxTag_t),
 			 tagSpec->caseSensitive ? cmpXmlTag : casecmpXmlTag))) {
 	last = CXS_Append(ccself, last,
 			     tagSpec->kinds[XSO_UnknownTag], NULL, 0);
@@ -136,15 +134,15 @@ CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
 	localname = strchr(curattr[0], nsSep);
 	if (localname == NULL) { attrSpec = tagSpec; localname = curattr[0]; }
 	else {
-	    attrSpec = (const CcsXmlSpec_t *)
-		bsearch(curattr[0], firstXmlSpec, numXmlSpecs,
-			sizeof(CcsXmlSpec_t), cmpXmlSpec);
+	    attrSpec = (const CcxSpec_t *)
+		bsearch(curattr[0], ccself->firstXmlSpec, ccself->numXmlSpecs,
+			sizeof(CcxSpec_t), cmpXmlSpec);
 	    ++localname;
 	}
 	if (!attrSpec) {
-	    last = CXS_Append(ccself, last, kindUnknownNS, NULL, 0);
-	} else if (!(attr = (const CcsXmlAttr_t *)
-		     bsearch(localname, attrSpec->firstAttr, attrSpec->numAttrs, sizeof(CcsXmlAttr_t),
+	    last = CXS_Append(ccself, last, ccself->kindUnknownNS, NULL, 0);
+	} else if (!(attr = (const CcxAttr_t *)
+		     bsearch(localname, attrSpec->firstAttr, attrSpec->numAttrs, sizeof(CcxAttr_t),
 			     attrSpec->caseSensitive ? cmpXmlAttr : casecmpXmlAttr))) {
 	    last = CXS_Append(ccself, last,
 				 attrSpec->kinds[XSO_UnknownAttr],
@@ -159,19 +157,19 @@ CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
 static void
 CXS_EndElement(void * self, const XML_Char * name)
 {
-    const CcsXmlSpec_t * tagSpec;
-    const CcsXmlTag_t * tag;
-    CcsXmlScanner_t * ccself = (CcsXmlScanner_t *)self;
+    const CcxSpec_t * tagSpec;
+    const CcxTag_t * tag;
+    CcxScanOper_t * ccself = (CcxScanOper_t *)self;
     CcsToken_t * last = CXS_GetLastToken(ccself);
     const char * localname = strchr(name, nsSep);
 
     localname = localname ? localname + 1 : name;
-    if (!(tagSpec = (const CcsXmlSpec_t *)
-	  bsearch(name, firstXmlSpec, numXmlSpecs,
-		  sizeof(CcsXmlSpec_t), cmpXmlSpec))) {
-	CXS_Append(ccself, last, kindUnknownNS, NULL, 0);
-    } else if (!(tag = (const CcsXmlTag_t *)
-		 bsearch(localname, tagSpec->firstTag, tagSpec->numTags, sizeof(CcsXmlTag_t),
+    if (!(tagSpec = (const CcxSpec_t *)
+	  bsearch(name, ccself->firstXmlSpec, ccself->numXmlSpecs,
+		  sizeof(CcxSpec_t), cmpXmlSpec))) {
+	CXS_Append(ccself, last, ccself->kindUnknownNS, NULL, 0);
+    } else if (!(tag = (const CcxTag_t *)
+		 bsearch(localname, tagSpec->firstTag, tagSpec->numTags, sizeof(CcxTag_t),
 			 tagSpec->caseSensitive ? cmpXmlTag : casecmpXmlTag))) {
 	CXS_Append(ccself, last, tagSpec->kinds[XSO_UnknownTagEnd], NULL, 0);
     } else {
@@ -201,8 +199,8 @@ CXS_Comment(void * self, const XML_Char * data)
 }
 
 static const char * dummyval = "dummy";
-CcsXmlScanner_t *
-CcsXmlScanner(CcsXmlScanner_t * self, CcsGlobals_t * globals,
+CcxScanOper_t *
+CcxScanOper(CcxScanOper_t * self, CcsGlobals_t * globals,
 	      const char * filename)
 {
     self->globals = globals;
@@ -222,7 +220,7 @@ CcsXmlScanner(CcsXmlScanner_t * self, CcsGlobals_t * globals,
     if (!(self->dummy = CcsToken(0, 0, 0, 0, dummyval, strlen(dummyval))))
 	goto errquit1;
     self->tokens = self->peek = NULL;
-    CcsXmlScanner_IncRef(self, self->dummy);
+    CcxScanOper_IncRef(self, self->dummy);
     self->curSpecStack = self->specStack;
     return self;
  errquit1:
@@ -233,28 +231,28 @@ CcsXmlScanner(CcsXmlScanner_t * self, CcsGlobals_t * globals,
 }
 
 void
-CcsXmlScanner_Destruct(CcsXmlScanner_t * self)
+CcxScanOper_Destruct(CcxScanOper_t * self)
 {
     CcsToken_t * cur, * next;
 
     for (cur = self->tokens; cur; cur = next) {
 	next = cur->next;
-	CcsXmlScanner_DecRef(self, cur);
+	CcxScanOper_DecRef(self, cur);
     }
-    CcsXmlScanner_DecRef(self, self->dummy);
+    CcxScanOper_DecRef(self, self->dummy);
     fclose(self->fp);
     XML_ParserFree(self->parser);
 }
 
 CcsToken_t *
-CcsXmlScanner_GetDummy(CcsXmlScanner_t * self)
+CcxScanOper_GetDummy(CcxScanOper_t * self)
 {
-    CcsXmlScanner_IncRef(self, self->dummy);
+    CcxScanOper_IncRef(self, self->dummy);
     return self->dummy;
 }
 
 static CcsBool_t
-CcsXmlScanner_Parse(CcsXmlScanner_t * self)
+CcxScanOper_Parse(CcxScanOper_t * self)
 {
     char buf[4096]; int rc;
     enum XML_Status status;
@@ -278,11 +276,11 @@ CcsXmlScanner_Parse(CcsXmlScanner_t * self)
 }
 
 CcsToken_t *
-CcsXmlScanner_Scan(CcsXmlScanner_t * self)
+CcxScanOper_Scan(CcxScanOper_t * self)
 {
     CcsToken_t * token;
     while (self->tokens == NULL)
-	if (!CcsXmlScanner_Parse(self)) break;
+	if (!CcxScanOper_Parse(self)) break;
     token = self->tokens;
     if (token) {
 	if (self->peek == self->tokens)
@@ -294,33 +292,33 @@ CcsXmlScanner_Scan(CcsXmlScanner_t * self)
 }
 
 CcsToken_t *
-CcsXmlScanner_Peek(CcsXmlScanner_t * self)
+CcxScanOper_Peek(CcxScanOper_t * self)
 {
     CcsToken_t * token;
     while (self->peek == NULL)
-	if (!CcsXmlScanner_Parse(self)) return NULL;
+	if (!CcxScanOper_Parse(self)) return NULL;
     token = self->peek;
     if (token) {
 	self->peek = self->peek->next;
-	CcsXmlScanner_IncRef(self, token);
+	CcxScanOper_IncRef(self, token);
     }
     return token;
 }
 
 void
-CcsXmlScanner_ResetPeek(CcsXmlScanner_t * self)
+CcxScanOper_ResetPeek(CcxScanOper_t * self)
 {
     self->peek = self->tokens;
 }
 
 void
-CcsXmlScanner_IncRef(CcsXmlScanner_t * self, CcsToken_t * token)
+CcxScanOper_IncRef(CcxScanOper_t * self, CcsToken_t * token)
 {
     ++token->refcnt;
 }
 
 void
-CcsXmlScanner_DecRef(CcsXmlScanner_t * self, CcsToken_t * token)
+CcxScanOper_DecRef(CcxScanOper_t * self, CcsToken_t * token)
 {
     if (--token->refcnt > 0) return;
     CcsToken_Destruct(token);

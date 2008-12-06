@@ -15,8 +15,8 @@
  with this program; if not, write to the Free Software Foundation, Inc., 
  59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
-#ifndef  COCO_XMLSCANNER_H
-#define  COCO_XMLSCANNER_H
+#ifndef  COCO_XMLSCANOPER_H
+#define  COCO_XMLSCANOPER_H
 
 #ifndef  COCO_CDEFS_H
 #include "c/CDefs.h"
@@ -30,40 +30,36 @@ typedef struct {
     const char * name;
     int kind;
     int kindEnd;
-} CcsXmlTag_t;
+} CcxTag_t;
 
 typedef struct {
     const char * name;
     int kind;
-} CcsXmlAttr_t;
+} CcxAttr_t;
 
 typedef struct {
     const char * name;
     int kind;
-} CcsXmlPInstruction_t;
+} CcxPInstruction_t;
 
 typedef struct {
     const char * nsURI;
     CcsBool_t caseSensitive;
     int kinds[XSO_SIZE];
-    const CcsXmlTag_t * firstTag;  /* The sorted tag list. */
+    const CcxTag_t * firstTag;  /* The sorted tag list. */
     size_t numTags;
-    const CcsXmlAttr_t * firstAttr; /* The sorted attr list. */
+    const CcxAttr_t * firstAttr; /* The sorted attr list. */
     size_t numAttrs;
-    const CcsXmlPInstruction_t * firstPInstruction; /* The sorted PI list. */
+    const CcxPInstruction_t * firstPInstruction; /* The sorted PI list. */
     size_t numPInstructions;
-} CcsXmlSpec_t;
-
-extern const int kindUnknownNS;
-extern const CcsXmlSpec_t firstXmlSpec[];
-extern const size_t numXmlSpecs;
+} CcxSpec_t;
 
 #define  SZ_SPECSTACK  256
 
-typedef int (* CcsXmlCmpFunc_t)(const void *, const void *);
-
-struct CcsXmlScanner_s {
-    CcsGlobals_t * globals;
+typedef struct {
+    int kindUnknownNS;
+    const CcxSpec_t * firstXmlSpec;
+    size_t numXmlSpecs;
 
     XML_Parser parser;
     FILE * fp;
@@ -72,21 +68,19 @@ struct CcsXmlScanner_s {
     CcsToken_t * tokens;
     CcsToken_t * peek;
 
-    const CcsXmlSpec_t * specStack[SZ_SPECSTACK];
-    const CcsXmlSpec_t ** curSpecStack;
-};
+    const CcxSpec_t * specStack[SZ_SPECSTACK];
+    const CcxSpec_t ** curSpecStack;
+}  CcxScanOper_t;
 
-CcsXmlScanner_t *
-CcsXmlScanner(CcsXmlScanner_t * self, CcsGlobals_t * globals,
-	      const char * filename);
+CcxScanOper_t * CcxScanOper(CcxScanOper_t * self, const char * filename);
 
-void CcsXmlScanner_Destruct(CcsXmlScanner_t * self);
-CcsToken_t * CcsXmlScanner_GetDummy(CcsXmlScanner_t * self);
-CcsToken_t * CcsXmlScanner_Scan(CcsXmlScanner_t * self);
-CcsToken_t * CcsXmlScanner_Peek(CcsXmlScanner_t * self);
-void CcsXmlScanner_ResetPeek(CcsXmlScanner_t * self);
-void CcsXmlScanner_IncRef(CcsXmlScanner_t * self, CcsToken_t * token);
-void CcsXmlScanner_DecRef(CcsXmlScanner_t * self, CcsToken_t * token);
+void CcxScanOper_Destruct(CcxScanOper_t * self);
+CcsToken_t * CcxScanOper_GetDummy(CcxScanOper_t * self);
+CcsToken_t * CcxScanOper_Scan(CcxScanOper_t * self);
+CcsToken_t * CcxScanOper_Peek(CcxScanOper_t * self);
+void CcxScanOper_ResetPeek(CcxScanOper_t * self);
+void CcxScanOper_IncRef(CcxScanOper_t * self, CcsToken_t * token);
+void CcxScanOper_DecRef(CcxScanOper_t * self, CcsToken_t * token);
 
 EXTC_END
 
