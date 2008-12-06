@@ -66,13 +66,13 @@ main(int argc, char * argv[])
     parser = NULL; xmlparser = NULL;
     lang = CcArguments_First(&arguments, "lang", &iter);
     if (lang != NULL && !strcmp(lang, "xml")) {
-	if (!(parser = CcsParser(&u.parser, atgName, stderr))) goto errquit0;
-	CcsParser_Parse(parser);
-	if (!CcsParser_Finish(parser)) goto errquit1;
-    } else {
 	if (!(xmlparser = CcsXmlParser(&u.xmlparser, atgName, stderr))) goto errquit0;
 	CcsXmlParser_Parse(xmlparser);
 	if (!CcsXmlParser_Finish(xmlparser)) goto errquit1;
+    } else {
+	if (!(parser = CcsParser(&u.parser, atgName, stderr))) goto errquit0;
+	CcsParser_Parse(parser);
+	if (!CcsParser_Finish(parser)) goto errquit1;
     }
 
     schemeName = CcArguments_First(&arguments, "scheme", &iter);
