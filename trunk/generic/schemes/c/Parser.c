@@ -245,7 +245,7 @@ CcsParser_Coco(CcsParser_t * self)
 	    CcsParser_Get(self);
 	}
 	self->constructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
-			  CcsScanner_DecRef(&self->scanner, beg); 
+	CcsScanner_DecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 9) {
 	CcsParser_Get(self);
@@ -254,7 +254,7 @@ CcsParser_Coco(CcsParser_t * self)
 	    CcsParser_Get(self);
 	}
 	self->destructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
-			  CcsScanner_DecRef(&self->scanner, beg); 
+	CcsScanner_DecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 10) {
 	CcsParser_Get(self);

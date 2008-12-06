@@ -324,7 +324,11 @@ CcsScanner_GetCh(CcsScanner_t * self)
 	    else {
 		++self->line; self->col = 0;
 	    }
+	} else if (self->ch == '\t') {
+	    self->col += 8 - self->col % 8;
 	} else {
+	    /* FIX ME: May be the width of some specical character
+	     * is NOT self->chBytes. */
 	    self->col += self->chBytes;
 	}
 	self->ch = CcsBuffer_Read(&self->buffer, &self->chBytes);
