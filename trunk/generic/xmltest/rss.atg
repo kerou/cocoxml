@@ -77,87 +77,86 @@ ATTRS
 /*-------------------------------------------------------------------------*/
 PRODUCTIONS
 
-Rss = (. Channel channel; rss = new Rss(); .)
-	RSS {
-	Channel<out channel> (. rss.AddChannel(channel); .)
+Rss = (. CcChannel_t * channel; rss = CcRss(); .)
+	RSS { Channel<&channel> (. CcRss_AddChannel(rss, channel); .)
 	} END_RSS.
 
-Channel<out Channel channel> = (. channel = new Channel(); .)
-	CHANNEL { ChannelProperty<channel> } END_CHANNEL.
+Channel<CcChannel_t ** channel> = (. *channel = CcChannel(); .)
+	CHANNEL { ChannelProperty<*channel> } END_CHANNEL.
 
-ChannelProperty<Channel channel>  (. char * value;
-			             Cloud cloud;
-				     Image image;
-				     TextInput textInput;
-				     Item item; .) =
-	Title<&value>            (. channel.title = value; .)
-	| Link<&value>           (. channel.link = value; .)
-	| Description<&value>    (. channel.description = value; .)
-	| Language<&value>       (. channel.language = value; .)
-	| Copyright<&value>      (. channel.copyright = value; .)
-	| ManagingEditor<&value> (. channel.managingEditor = value; .)
-	| WebMaster<&value>      (. channel.webMaster = value; .)
-	| PubDate<&value>        (. channel.pubDate = value; .)
-	| LastBuildDate<&value>  (. channel.lastBuildDate = value; .)
-	| Category<&value>       (. channel.category = value; .)
-	| Generator<&value>      (. channel.generator = value; .)
-	| Docs<&value>           (. channel.docs = value; .)
-	| Cloud<out cloud>          (. channel.cloud = cloud; .)
-	| Ttl<&value>            (. channel.ttl = value; .)
-	| Image<out image>          (. channel.image = image; .)
-	| Rating<&value>         (. channel.rating = value; .)
-	| TextInput<out textInput>  (. channel.textInput = textInput; .)
-	| SkipHours<&value>      (. channel.skipHours = value; .)
-	| SkipDays<&value>       (. channel.skipDays = value; .)
-        | Item<out item>            (. channel.AddItem(item); .)
+ChannelProperty<CcChannel_t * channel>  (. char * value;
+			                   CcCloud_t * cloud;
+				           CcImage_t * image;
+				           CcTextInput_t * textInput;
+				           CcItem_t * item; .) =
+	Title<&value>            (. channel->title = value; .)
+	| Link<&value>           (. channel->link = value; .)
+	| Description<&value>    (. channel->description = value; .)
+	| Language<&value>       (. channel->language = value; .)
+	| Copyright<&value>      (. channel->copyright = value; .)
+	| ManagingEditor<&value> (. channel->managingEditor = value; .)
+	| WebMaster<&value>      (. channel->webMaster = value; .)
+	| PubDate<&value>        (. channel->pubDate = value; .)
+	| LastBuildDate<&value>  (. channel->lastBuildDate = value; .)
+	| Category<&value>       (. channel->category = value; .)
+	| Generator<&value>      (. channel->generator = value; .)
+	| Docs<&value>           (. channel->docs = value; .)
+	| Cloud<&cloud>          (. channel->cloud = cloud; .)
+	| Ttl<&value>            (. channel->ttl = value; .)
+	| Image<&image>          (. channel->image = image; .)
+	| Rating<&value>         (. channel->rating = value; .)
+	| TextInput<&textInput>  (. channel->textInput = textInput; .)
+	| SkipHours<&value>      (. channel->skipHours = value; .)
+	| SkipDays<&value>       (. channel->skipDays = value; .)
+        | Item<&item>            (. CcChannel_AddItem(channel, item); .)
 .
 
-Cloud<out Cloud cloud> = (. cloud = new Cloud(); .)
+Cloud<CcCloud_t ** cloud> = (. *cloud = CcCloud(); .)
 	CLOUD
-	{ ATTR_DOMAIN              (. cloud.domain = t.val; .)
-	| ATTR_PORT                (. cloud.port = t.val; .)
-	| ATTR_PATH                (. cloud.path = t.val; .)
-	| ATTR_REGISTER_PROCEDURE  (. cloud.registerProcedure = t.val; .)
-	| ATTR_PROTOCOL            (. cloud.protocol = t.val; .)
+	{ ATTR_DOMAIN              (. cloud->domain = CcStrdup(self->t->val); .)
+	| ATTR_PORT                (. cloud->port = CcStrdup(self->t->val); .)
+	| ATTR_PATH                (. cloud->path = CcStrdup(self->t->val); .)
+	| ATTR_REGISTER_PROCEDURE  (. cloud->registerProcedure = CcStrdup(self->t->val); .)
+	| ATTR_PROTOCOL            (. cloud->protocol = CcStrdup(self->t->val); .)
 	} END_CLOUD
 .
 
-Image<out Image image> = (. image = new Image(); .)
-	IMAGE { ImageProperty<image> } END_IMAGE.
+Image<CcImage_t ** image> = (. *image = CcImage(); .)
+	IMAGE { ImageProperty<*image> } END_IMAGE.
 
-ImageProperty<Image image>  (. char * value; .) =
-	Url<&value>      (. image.url = value; .)
-	| Title<&value>  (. image.title = value; .)
-	| Link<&value>   (. image.link = value; .)
-	| Width<&value>  (. image.width = value; .)
-	| Height<&value> (. image.height = value; .)
+ImageProperty<CcImage_t * image>  (. char * value; .) =
+	Url<&value>      (. image->url = value; .)
+	| Title<&value>  (. image->title = value; .)
+	| Link<&value>   (. image->link = value; .)
+	| Width<&value>  (. image->width = value; .)
+	| Height<&value> (. image->height = value; .)
 .
 
-TextInput<out TextInput textInput> = (. textInput = new TextInput(); .)
-	TEXT_INPUT { TextInputProperty<textInput> } END_TEXT_INPUT.
+TextInput<CcTextInput_t ** textInput> = (. *textInput = CcTextInput(); .)
+	TEXT_INPUT { TextInputProperty<*textInput> } END_TEXT_INPUT.
 
-TextInputProperty<TextInput textInput> (. char * value; .) =
-	Title<&value>         (. textInput.title = value; .)
-	| Description<&value> (. textInput.description = value; .)
-	| Name<&value>        (. textInput.name = value; .)
-	| Link<&value>        (. textInput.link = value; .)
+TextInputProperty<CcTextInput_t * textInput> (. char * value; .) =
+	Title<&value>         (. textInput->title = value; .)
+	| Description<&value> (. textInput->description = value; .)
+	| Name<&value>        (. textInput->name = value; .)
+	| Link<&value>        (. textInput->link = value; .)
 .
 
-Item<out Item item> = (. item = new Item(); .)
-	ITEM { ItemProperty<item> } END_ITEM.
+Item<CcItem_t ** item> = (. *item = CcItem(); .)
+	ITEM { ItemProperty<*item> } END_ITEM.
 
-ItemProperty<Item item> (. char * value; Image image; .) =
-	Title<&value>          (. item.title = value; .)
-	| Link<&value>         (. item.link = value; .)
-	| Description<&value>  (. item.description = value; .)
-	| Author<&value>       (. item.author = value; .)
-	| Category<&value>     (. item.category = value; .)
-	| Comments<&value>     (. item.comments = value; .)
-	| Enclosure<&value>    (. item.enclosure = value; .)
-	| Guid<&value>         (. item.guid = value; .)
-	| PubDate<&value>      (. item.pubdate = value; .)
-	| Source<&value>       (. item.source = value; .)
-	| Image<out image>        (. item.image = image; .)
+ItemProperty<CcItem_t * item> (. char * value; CcImage_t * image; .) =
+	Title<&value>          (. item->title = value; .)
+	| Link<&value>         (. item->link = value; .)
+	| Description<&value>  (. item->description = value; .)
+	| Author<&value>       (. item->author = value; .)
+	| Category<&value>     (. item->category = value; .)
+	| Comments<&value>     (. item->comments = value; .)
+	| Enclosure<&value>    (. item->enclosure = value; .)
+	| Guid<&value>         (. item->guid = value; .)
+	| PubDate<&value>      (. item->pubdate = value; .)
+	| Source<&value>       (. item->source = value; .)
+	| Image<&image>        (. item->image = image; .)
 .
 
 

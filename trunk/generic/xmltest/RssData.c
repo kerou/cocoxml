@@ -154,3 +154,29 @@ CcChannel(void)
     CcArrayList(&self->itemList);
     return self;
 }
+
+void
+CcChannel_AddItem(CcChannel_t * self, CcItem_t * item)
+{
+    CcArrayList_New(&self->itemList, (CcObject_t *)item);
+}
+
+/*---------- CcRss ----------*/
+CcRss_t *
+CcRss(CcRss_t * self)
+{
+    CcArrayList(&self->channelList);
+    return self;
+}
+
+void
+CcRss_AddChannel(CcRss_t * self, CcChannel_t * channel)
+{
+    CcArrayList_New(&self->channelList, (CcObject_t *)channel);
+}
+
+void
+CcRss_Destruct(CcRss_t * self)
+{
+    CcArrayList_Destruct(&self->channelList);
+}

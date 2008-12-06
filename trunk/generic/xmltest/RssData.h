@@ -102,6 +102,15 @@ typedef struct {
 }  CcChannel_t;
 
 CcChannel_t * CcChannel(void);
+void CcChannel_AddItem(CcChannel_t * self, CcItem_t * item);
+
+typedef struct {
+    CcArrayList_t channelList;
+} CcRss_t;
+
+CcRss_t * CcRss(CcRss_t * self);
+void CcRss_AddChannel(CcRss_t * self, CcChannel_t * channel);
+void CcRss_Destruct(CcRss_t * self);
 
 EXTC_END
 
