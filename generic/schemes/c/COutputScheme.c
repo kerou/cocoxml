@@ -224,8 +224,8 @@ static CcsBool_t
 COS_KindUnknownNS(CcCOutputScheme_t * self, CcOutput_t * output)
 {
     CcsAssert(self->base.globals->xmlspecmap);
-    CcPrintfI(output, "int kindUnknownNS = %d;\n",
-	      self->base.globals->xmlspecmap);
+    CcPrintfI(output, "self->base.kindUnknownNS = %d;\n",
+	      self->base.globals->xmlspecmap->kindUnknownNS);
     return TRUE;
 }
 
@@ -236,7 +236,7 @@ cmpSpecKey(const void * cs0, const void * cs1)
 }
 
 static CcsBool_t
-COS_XmlSpecSubList(CcCOutputScheme_t * self, CcOutput_t * output)
+COS_XmlSpecSubLists(CcCOutputScheme_t * self, CcOutput_t * output)
 {
     int count; CcHTIterator_t iter;
     const char ** keylist, ** curkey;
@@ -252,7 +252,7 @@ COS_XmlSpecSubList(CcCOutputScheme_t * self, CcOutput_t * output)
     CcsAssert(curkey - keylist == count);
     qsort(keylist, count, sizeof(const char *), cmpSpecKey);
 
-    CcPrintfI(output, "static const CcsXmlTag_t XmlTags[] = {\n");
+    CcPrintfI(output, "static const CcxTag_t XmlTags[] = {\n");
     for (curkey = keylist; curkey - keylist < count; ++curkey) {
 	spec = (const CcXmlSpec_t *)CcHashTable_Get(&map->map, *curkey);
 	CcsAssert(spec != NULL);
@@ -266,11 +266,12 @@ COS_XmlSpecSubList(CcCOutputScheme_t * self, CcOutput_t * output)
 		      tmp, datacur->kind0, datacur->kind1);
 	    CcFree(tmp);
 	}
+	output->indent -= 4;
 	CcXmlSpecData_Destruct(datalist, datanum);
     }
     CcPrintf(output, "};\n");
 
-    CcPrintfI(output, "static const CcsXmlAttr_t XmlAttrs[] = {\n");
+    CcPrintfI(output, "static const CcxAttr_t XmlAttrs[] = {\n");
     for (curkey = keylist; curkey - keylist < count; ++curkey) {
 	spec = (const CcXmlSpec_t *)CcHashTable_Get(&map->map, *curkey);
 	CcsAssert(spec != NULL);
@@ -283,11 +284,12 @@ COS_XmlSpecSubList(CcCOutputScheme_t * self, CcOutput_t * output)
 	    CcPrintfI(output, "{ %s, %d },\n", tmp, datacur->kind0);
 	    CcFree(tmp);
 	}
+	output->indent -= 4;
 	CcXmlSpecData_Destruct(datalist, datanum);
     }
     CcPrintf(output, "};\n");
 
-    CcPrintfI(output, "static const CcsXmlPInstruction_t XmlPIs[] = {\n");
+    CcPrintfI(output, "static const CcxPInstruction_t XmlPIs[] = {\n");
     for (curkey = keylist; curkey - keylist < count; ++curkey) {
 	spec = (const CcXmlSpec_t *)CcHashTable_Get(&map->map, *curkey);
 	CcsAssert(spec != NULL);
@@ -300,6 +302,7 @@ COS_XmlSpecSubList(CcCOutputScheme_t * self, CcOutput_t * output)
 	    CcPrintfI(output, "{ %s, %d },\n", tmp, datacur->kind0);
 	    CcFree(tmp);
 	}
+	output->indent -= 4;
 	CcXmlSpecData_Destruct(datalist, datanum);
     }
     CcPrintf(output, "};\n");
@@ -776,8 +779,8 @@ CcCOutputScheme_write(CcOutputScheme_t * self, CcOutput_t * output,
 	return COS_Scan3(ccself, output);
     } else if (!strcmp(func, "kindUnknownNS")) {
 	return COS_KindUnknownNS(ccself, output);
-    } else if (!strcmp(func, "XmlSpecSubList")) {
-	return COS_XmlSpecSubList(ccself, output);
+    } else if (!strcmp(func, "XmlSpecSubLists")) {
+	return COS_XmlSpecSubLists(ccself, output);
     } else if (!strcmp(func, "XmlSpecList")) {
 	return COS_XmlSpecList(ccself, output);
     } else if (!strcmp(func, "members")) {
