@@ -568,9 +568,8 @@ CcsXmlParser_Factor(CcsXmlParser_t * self, CcGraph_t ** g)
 	CcsXmlParser_Sym(self, &name);
 	CcSymbol_t * sym = CcSymbolTable_FindSym(self->symtab, name);
 	CcsBool_t undef = (sym == NULL);
-	if (undef) {
-	     CcsXmlParser_SemErrT(self, "undefined token in production");
-	     sym = self->syntax->eofSy;  /* dummy */
+	if (undef) { /* forward nt */
+	     sym = CcSymbolTable_NewNonTerminal(self->symtab, name, 0);
 	}
 	CcFree(name);
 	if (sym->base.type != symbol_t && sym->base.type != symbol_nt)
