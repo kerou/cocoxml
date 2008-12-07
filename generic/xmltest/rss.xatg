@@ -27,9 +27,22 @@ END.
 SCHEME c Rss
 UPDATES "Parser4Xml.h" "Parser4Xml.c" "Data4Xml.c" END.
 
+SECTION hIncludes
+#ifndef  COCO_RSSDATA_H
+#include  "RssData.h"
+#endif
+END.
+
 COMPILER Rss
 
-	 public Rss rss;
+MEMBERS
+    CcRss_t rss;
+
+CONSTRUCTOR
+    if (!CcRss(&self->rss)) goto ERRQUIT;
+
+DESTRUCTOR
+    CcRss_Destruct(&self->rss);
 
 /*-------------------------------------------------------------------------*/
 OPTIONS TEXT
@@ -77,8 +90,8 @@ ATTRS
 /*-------------------------------------------------------------------------*/
 PRODUCTIONS
 
-Rss = (. CcChannel_t * channel; rss = CcRss(); .)
-	RSS { Channel<&channel> (. CcRss_AddChannel(rss, channel); .)
+Rss = (. CcChannel_t * channel; .)
+	RSS { Channel<&channel> (. CcRss_AddChannel(&self->rss, channel); .)
 	} END_RSS.
 
 Channel<CcChannel_t ** channel> = (. *channel = CcChannel(); .)
