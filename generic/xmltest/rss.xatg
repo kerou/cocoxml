@@ -1,21 +1,21 @@
 SECTION license
 /*-------------------------------------------------------------------------
-rss.atg -- RSS(Really Simple Syndication) Grammer
-Copyright (c) 2008 Charles Wang <charlesw123456@gmail.com>
+ rss.xatg -- RSS(Really Simple Syndication) Grammer
+ Copyright (c) 2008 Charles Wang <charlesw123456@gmail.com>
 
-This program is free software; you can redistribute it and/or modify it 
-under the terms of the GNU General Public License as published by the 
-Free Software Foundation; either version 2, or (at your option) any 
-later version.
+ This program is free software; you can redistribute it and/or modify it 
+ under the terms of the GNU General Public License as published by the 
+ Free Software Foundation; either version 2, or (at your option) any 
+ later version.
 
-This program is distributed in the hope that it will be useful, but 
-WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
-or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License 
-for more details.
+ This program is distributed in the hope that it will be useful, but 
+ WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License 
+ for more details.
 
-You should have received a copy of the GNU General Public License along 
-with this program; if not, write to the Free Software Foundation, Inc., 
-59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ You should have received a copy of the GNU General Public License along 
+ with this program; if not, write to the Free Software Foundation, Inc., 
+ 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
 END.
 
@@ -25,12 +25,15 @@ END.
 -------------------------------------------------------------------------*/
 
 SCHEME c Rss
-UPDATES "Parser4Xml.h" "Parser4Xml.c" "Data4Xml.c" END.
+UPDATES "Parser4Xml.h" "Parser4Xml.c" "Scanner4Xml.c" END.
 
 SECTION hIncludes
 #ifndef  COCO_RSSDATA_H
 #include  "RssData.h"
 #endif
+END.
+
+SECTION cIncludes
 END.
 
 COMPILER Rss
@@ -173,54 +176,54 @@ ItemProperty<CcItem_t * item> (. char * value; CcImage_t * image; .) =
 .
 
 
-Title<char ** value> = TITLE TEXT (. value = CcStrdup(self->t->val); .) END_TITLE.
+Title<char ** value> = TITLE TEXT (. *value = CcStrdup(self->t->val); .) END_TITLE.
 
-Link<char ** value> = LINK TEXT (. value = CcStrdup(self->t->val); .) END_LINK .
+Link<char ** value> = LINK TEXT (. *value = CcStrdup(self->t->val); .) END_LINK .
 
-Description<char ** value> = DESCRIPTION TEXT (. value = CcStrdup(self->t->val); .) END_DESCRIPTION .
+Description<char ** value> = DESCRIPTION TEXT (. *value = CcStrdup(self->t->val); .) END_DESCRIPTION .
 
-Language<char ** value> = LANGUAGE TEXT (. value = CcStrdup(self->t->val); .) END_LANGUAGE.
+Language<char ** value> = LANGUAGE TEXT (. *value = CcStrdup(self->t->val); .) END_LANGUAGE.
 
-Copyright<char ** value> = COPYRIGHT TEXT (. value = CcStrdup(self->t->val); .) END_COPYRIGHT.
+Copyright<char ** value> = COPYRIGHT TEXT (. *value = CcStrdup(self->t->val); .) END_COPYRIGHT.
 
-ManagingEditor<char ** value> = MANAGING_EDITOR TEXT (. value = CcStrdup(self->t->val); .) END_MANAGING_EDITOR.
+ManagingEditor<char ** value> = MANAGING_EDITOR TEXT (. *value = CcStrdup(self->t->val); .) END_MANAGING_EDITOR.
 
-WebMaster<char ** value> = WEB_MASTER TEXT (. value = CcStrdup(self->t->val); .) END_WEB_MASTER.
+WebMaster<char ** value> = WEB_MASTER TEXT (. *value = CcStrdup(self->t->val); .) END_WEB_MASTER.
 
-PubDate<char ** value> = PUB_DATE TEXT (. value = CcStrdup(self->t->val); .) END_PUB_DATE.
+PubDate<char ** value> = PUB_DATE TEXT (. *value = CcStrdup(self->t->val); .) END_PUB_DATE.
 
-LastBuildDate<char ** value> = LAST_BUILD_DATE TEXT (. value = CcStrdup(self->t->val); .) END_LAST_BUILD_DATE.
+LastBuildDate<char ** value> = LAST_BUILD_DATE TEXT (. *value = CcStrdup(self->t->val); .) END_LAST_BUILD_DATE.
 
-Category<char ** value> = CATEGORY TEXT (. value = CcStrdup(self->t->val); .) END_CATEGORY.
+Category<char ** value> = CATEGORY TEXT (. *value = CcStrdup(self->t->val); .) END_CATEGORY.
 
-Generator<char ** value> = GENERATOR TEXT (. value = CcStrdup(self->t->val); .) END_GENERATOR.
+Generator<char ** value> = GENERATOR TEXT (. *value = CcStrdup(self->t->val); .) END_GENERATOR.
 
-Docs<char ** value> = DOCS TEXT (. value = CcStrdup(self->t->val); .) END_DOCS.
+Docs<char ** value> = DOCS TEXT (. *value = CcStrdup(self->t->val); .) END_DOCS.
 
-Ttl<char ** value> = TTL TEXT (. value = CcStrdup(self->t->val); .) END_TTL.
+Ttl<char ** value> = TTL TEXT (. *value = CcStrdup(self->t->val); .) END_TTL.
 
-Url<char ** value> = URL TEXT (. value = CcStrdup(self->t->val); .) END_URL.
+Url<char ** value> = URL TEXT (. *value = CcStrdup(self->t->val); .) END_URL.
 
-Width<char ** value> = WIDTH TEXT (. value = CcStrdup(self->t->val); .) END_WIDTH.
+Width<char ** value> = WIDTH TEXT (. *value = CcStrdup(self->t->val); .) END_WIDTH.
 
-Height<char ** value> = HEIGHT TEXT (. value = CcStrdup(self->t->val); .) END_HEIGHT.
+Height<char ** value> = HEIGHT TEXT (. *value = CcStrdup(self->t->val); .) END_HEIGHT.
 
-Rating<char ** value> = RATING TEXT (. value = CcStrdup(self->t->val); .) END_RATING.
+Rating<char ** value> = RATING TEXT (. *value = CcStrdup(self->t->val); .) END_RATING.
 
-Name<char ** value> = NAME TEXT (. value = CcStrdup(self->t->val); .) END_NAME.
+Name<char ** value> = NAME TEXT (. *value = CcStrdup(self->t->val); .) END_NAME.
 
-SkipHours<char ** value> = SKIP_HOURS TEXT (. value = CcStrdup(self->t->val); .) END_SKIP_HOURS.
+SkipHours<char ** value> = SKIP_HOURS TEXT (. *value = CcStrdup(self->t->val); .) END_SKIP_HOURS.
 
-SkipDays<char ** value> = SKIP_DAYS TEXT (. value = CcStrdup(self->t->val); .) END_SKIP_DAYS.
+SkipDays<char ** value> = SKIP_DAYS TEXT (. *value = CcStrdup(self->t->val); .) END_SKIP_DAYS.
 
-Author<char ** value> = AUTHOR TEXT (. value = CcStrdup(self->t->val); .) END_AUTHOR.
+Author<char ** value> = AUTHOR TEXT (. *value = CcStrdup(self->t->val); .) END_AUTHOR.
 
-Comments<char ** value> = COMMENTS TEXT (. value = CcStrdup(self->t->val); .) END_COMMENTS.
+Comments<char ** value> = COMMENTS TEXT (. *value = CcStrdup(self->t->val); .) END_COMMENTS.
 
-Enclosure<char ** value> = ENCLOSURE TEXT (. value = CcStrdup(self->t->val); .) END_ENCLOSURE.
+Enclosure<char ** value> = ENCLOSURE TEXT (. *value = CcStrdup(self->t->val); .) END_ENCLOSURE.
 
-Guid<char ** value> = GUID TEXT (. value = CcStrdup(self->t->val); .) END_GUID.
+Guid<char ** value> = GUID TEXT (. *value = CcStrdup(self->t->val); .) END_GUID.
 
-Source<char ** value> = SOURCE TEXT (. value = CcStrdup(self->t->val); .) END_SOURCE.
+Source<char ** value> = SOURCE TEXT (. *value = CcStrdup(self->t->val); .) END_SOURCE.
 
 END Rss.
