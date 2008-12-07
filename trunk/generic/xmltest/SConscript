@@ -5,4 +5,5 @@
 Import('env', 'lib')
 
 env.Program('TestRss', ['TestRss.c', 'RssData.c',
-                        'Scanner4Xml.c', 'Parser4Xml.c', lib])
+                        'Scanner4Xml.c', 'Parser4Xml.c', lib],
+            LIBS = ['expat'])
