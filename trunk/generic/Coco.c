@@ -29,7 +29,7 @@
 #include  "dump/DumpOutputScheme.h"
 
 static const char * usage_format =
-    "Usage: %s Grammar.atg {{Option}}\n"
+    "Usage: %s Grammar.atg/Grammer.xatg {{Option}}\n"
     "Options:\n"
     "  -scheme  <SCHEME>\n"
     "  -u       <UPDATED-FILE>\n"
