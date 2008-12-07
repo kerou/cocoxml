@@ -101,7 +101,8 @@ CcHashTable_Get(CcHashTable_t * self, const char * key)
 CcHTIterator_t *
 CcHashTable_GetIterator(const CcHashTable_t * self, CcHTIterator_t * iter)
 {
-    iter->cur = self->first;
+    iter->first = self->first;
+    iter->cur = NULL;
     iter->last = self->last;
     return iter;
 }
@@ -109,9 +110,12 @@ CcHashTable_GetIterator(const CcHashTable_t * self, CcHTIterator_t * iter)
 CcsBool_t
 CcHTIterator_Forward(CcHTIterator_t * self)
 {
-    while (self->cur < self->last)
-	if (*self->cur) return TRUE;
+    while (self->cur == NULL || self->cur < self->last) {
+	if (self->cur == NULL) self->cur = self->first;
 	else ++self->cur;
+	if (self->cur >= self->last) return FALSE;
+	if (*self->cur) return TRUE;
+    }
     return FALSE;
 }
 

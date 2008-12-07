@@ -33,7 +33,7 @@ EXTC_BEGIN
 typedef struct CcHTEntry_s CcHTEntry_t;
 
 typedef struct {
-    CcHTEntry_t ** cur, ** last;
+    CcHTEntry_t ** first, ** cur, ** last;
 } CcHTIterator_t;
 
 struct CcHashTable_s {
