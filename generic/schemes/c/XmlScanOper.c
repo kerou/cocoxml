@@ -17,6 +17,7 @@
 -------------------------------------------------------------------------*/
 #include  "c/XmlScanOper.h"
 #include  "c/Token.h"
+#include  "c/ErrorPool.h"
 
 static const char nsSep = '@';
 
@@ -123,7 +124,7 @@ CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
     if (ccself->curSpecStack - ccself->specStack < SZ_SPECSTACK) {
 	*ccself->curSpecStack = tagSpec;
     } else {
-	CcsErrorPool_Error(&ccself->globals->error,
+	CcsErrorPool_Error(ccself->errpool,
 			   XML_GetCurrentLineNumber(ccself->parser),
 			   XML_GetCurrentColumnNumber(ccself->parser),
 			   "XML Tag too deep(limit = %d)", SZ_SPECSTACK);
@@ -200,10 +201,10 @@ CXS_Comment(void * self, const XML_Char * data)
 
 static const char * dummyval = "dummy";
 CcxScanOper_t *
-CcxScanOper(CcxScanOper_t * self, CcsGlobals_t * globals,
-	      const char * filename)
+CcxScanOper(CcxScanOper_t * self, CcsErrorPool_t * errpool,
+	    const char * filename)
 {
-    self->globals = globals;
+    self->errpool = errpool;
     self->parser = XML_ParserCreateNS(NULL, nsSep);
     CcsAssert(self->parser);
 
