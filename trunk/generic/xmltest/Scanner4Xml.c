@@ -24,10 +24,58 @@
 #include  "Scanner4Xml.h"
 
 /*---- XmlSpecSubLists ----*/
+static const CcxTag_t XmlTags[] = {
+    { "author", 53, 54 },
+    { "category", 25, 26 },
+    { "channel", 3, 4 },
+    { "cloud", 31, 32 },
+    { "comments", 55, 56 },
+    { "copyright", 15, 16 },
+    { "description", 11, 12 },
+    { "docs", 29, 30 },
+    { "enclosure", 57, 58 },
+    { "generator", 27, 28 },
+    { "guid", 59, 60 },
+    { "height", 51, 52 },
+    { "image", 35, 36 },
+    { "item", 5, 6 },
+    { "language", 13, 14 },
+    { "lastBuildDate", 23, 24 },
+    { "link", 9, 10 },
+    { "managingEditor", 17, 18 },
+    { "name", 41, 42 },
+    { "pubDate", 21, 22 },
+    { "rating", 37, 38 },
+    { "rss", 1, 2 },
+    { "skipDays", 45, 46 },
+    { "skipHours", 43, 44 },
+    { "source", 61, 62 },
+    { "textInput", 39, 40 },
+    { "title", 7, 8 },
+    { "ttl", 33, 34 },
+    { "url", 47, 48 },
+    { "webMaster", 19, 20 },
+    { "width", 49, 50 },
+};
+static const CcxAttr_t XmlAttrs[] = {
+    { "domain", 63 },
+    { "path", 65 },
+    { "port", 64 },
+    { "protocol", 67 },
+    { "registerProcedure", 66 },
+};
+static const CcxPInstruction_t XmlPIs[] = {
+};
 /*---- enable ----*/
 
 static const CcxSpec_t XmlSpecList[] = {
     /*---- XmlSpecList ----*/
+    { "", TRUE,
+	{ -1, -1, -1, -1, 72, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
+	XmlTags + 0, 31,
+	XmlAttrs + 0, 5,
+	NULL, 0, /* Processing Instructions */
+    },
     /*---- enable ----*/
 };
 
