@@ -57,9 +57,7 @@ typedef struct {
 #define  SZ_SPECSTACK  256
 
 typedef struct {
-    int kindUnknownNS;
-    const CcxSpec_t * firstXmlSpec;
-    size_t numXmlSpecs;
+    CcsErrorPool_t * errpool;
 
     XML_Parser parser;
     FILE * fp;
@@ -70,9 +68,15 @@ typedef struct {
 
     const CcxSpec_t * specStack[SZ_SPECSTACK];
     const CcxSpec_t ** curSpecStack;
+
+    /* Set by CcxScanner */
+    int kindUnknownNS;
+    const CcxSpec_t * firstXmlSpec;
+    size_t numXmlSpecs;
 }  CcxScanOper_t;
 
-CcxScanOper_t * CcxScanOper(CcxScanOper_t * self, const char * filename);
+CcxScanOper_t * CcxScanOper(CcxScanOper_t * self, CcsErrorPool_t * errpool,
+			    const char * filename);
 
 void CcxScanOper_Destruct(CcxScanOper_t * self);
 CcsToken_t * CcxScanOper_GetDummy(CcxScanOper_t * self);
