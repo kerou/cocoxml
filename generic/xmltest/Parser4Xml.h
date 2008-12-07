@@ -46,22 +46,22 @@ EXTC_BEGIN
 
 typedef struct {
     CcsErrorPool_t    errpool;
-    CcxScanner_t      scanner;
+    RssScanner_t      scanner;
     CcsToken_t      * t;
     CcsToken_t      * la;
     int               maxT;
     /*---- members ----*/
     /*---- enable ----*/
-}  CcxParser_t;
+}  RssParser_t;
 
-CcxParser_t * CcxParser(CcxParser_t * self, const char * fname, FILE * errfp);
-void CcxParser_Destruct(CcxParser_t * self);
-void CcxParser_Parse(CcxParser_t * self);
-CcsBool_t CcxParser_Finish(CcxParser_t * self);
+RssParser_t * RssParser(RssParser_t * self, const char * fname, FILE * errfp);
+void RssParser_Destruct(RssParser_t * self);
+void RssParser_Parse(RssParser_t * self);
+CcsBool_t RssParser_Finish(RssParser_t * self);
 
-void CcxParser_SemErr(CcxParser_t * self, const CcsToken_t * token,
+void RssParser_SemErr(RssParser_t * self, const CcsToken_t * token,
 		      const char * format, ...);
-void CcxParser_SemErrT(CcxParser_t * self, const char * format, ...);
+void RssParser_SemErrT(RssParser_t * self, const char * format, ...);
 
 EXTC_END
 

@@ -31,8 +31,8 @@ static const CcxSpec_t XmlSpecList[] = {
     /*---- enable ----*/
 };
 
-CcxScanner_t *
-CcxScanner(CcxScanner_t * self, CcsErrorPool_t * errpool,
+RssScanner_t *
+RssScanner(RssScanner_t * self, CcsErrorPool_t * errpool,
 	   const char * filename)
 {
     /*---- kindUnknownNS ----*/
@@ -40,11 +40,11 @@ CcxScanner(CcxScanner_t * self, CcsErrorPool_t * errpool,
     /*---- enable ----*/
     self->base.firstXmlSpec = XmlSpecList;
     self->base.numXmlSpecs = sizeof(XmlSpecList) / sizeof(XmlSpecList[0]);
-    return (CcxScanner_t *)CcxScanOper(&self->base, errpool, filename);
+    return (RssScanner_t *)CcxScanOper(&self->base, errpool, filename);
 }
 
 void
-CcxScanner_Destruct(CcxScanner_t * self)
+RssScanner_Destruct(RssScanner_t * self)
 {
     CcxScanOper_Destruct(&self->base);
 }
