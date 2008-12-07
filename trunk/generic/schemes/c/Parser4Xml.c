@@ -42,7 +42,7 @@ CcxParser_Get(CcxParser_t * self)
 {
     for (;;) {
 	self->t = self->la;
-	self->la = CcxScanner_Scan(&self->scanner);
+	self->la = CcxScanOper_Scan(&self->scanner.base);
 	if (self->la->kind <= self->maxT) { /*++self->errDist;*/ break; }
 	/*---- Pragmas ----*/
 	/*---- enable ----*/
@@ -93,7 +93,7 @@ void
 CcxParser_Parse(CcxParser_t * self)
 {
     self->t = NULL;
-    self->la = CcxScanner_GetDummy(&self->scanner);
+    self->la = CcxScanOper_GetDummy(&self->scanner.base);
     CcxParser_Get(self);
     /*---- ParseRoot ----*/
     /*---- enable ----*/
