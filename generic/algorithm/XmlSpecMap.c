@@ -78,7 +78,6 @@ CcXmlSpecMap_MakeTerminals(const CcXmlSpecMap_t * self, CcGlobals_t * globals)
 CcsBool_t
 CcXmlSpecMap_Finish(CcXmlSpecMap_t * self)
 {
-    CcXmlSpecMap_MakeTerminals(self, self->globals);
     return TRUE;
 }
 
