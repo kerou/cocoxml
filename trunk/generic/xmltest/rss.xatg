@@ -129,11 +129,11 @@ ChannelProperty<CcChannel_t * channel>  (. char * value;
 
 Cloud<CcCloud_t ** cloud> = (. *cloud = CcCloud(); .)
 	CLOUD
-	{ ATTR_DOMAIN              (. cloud->domain = CcStrdup(self->t->val); .)
-	| ATTR_PORT                (. cloud->port = CcStrdup(self->t->val); .)
-	| ATTR_PATH                (. cloud->path = CcStrdup(self->t->val); .)
-	| ATTR_REGISTER_PROCEDURE  (. cloud->registerProcedure = CcStrdup(self->t->val); .)
-	| ATTR_PROTOCOL            (. cloud->protocol = CcStrdup(self->t->val); .)
+	{ ATTR_DOMAIN              (. (*cloud)->domain = CcStrdup(self->t->val); .)
+	| ATTR_PORT                (. (*cloud)->port = CcStrdup(self->t->val); .)
+	| ATTR_PATH                (. (*cloud)->path = CcStrdup(self->t->val); .)
+	| ATTR_REGISTER_PROCEDURE  (. (*cloud)->registerProcedure = CcStrdup(self->t->val); .)
+	| ATTR_PROTOCOL            (. (*cloud)->protocol = CcStrdup(self->t->val); .)
 	} END_CLOUD
 .
 
