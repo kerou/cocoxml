@@ -18,6 +18,7 @@
 #include  "c/XmlScanOper.h"
 #include  "c/Token.h"
 #include  "c/ErrorPool.h"
+#include  <ctype.h>
 
 static const char nsSep = '@';
 
@@ -187,6 +188,47 @@ CXS_EndElement(void * self, const XML_Char * name)
 static void
 CXS_CharacterData(void * self, const XML_Char * s, int len)
 {
+    CcsBool_t SpecFound, InUnknownNS;
+    const CcxSpec_t ** spec;
+    int kindText, kindWhitespace;
+    CcsToken_t * last;
+    const char * s0, * s1, * s2;
+    CcxScanOper_t * ccself = (CcxScanOper_t *)self;
+
+    SpecFound = FALSE; InUnknownNS = FALSE;
+    spec = ccself->curSpecStack;
+    while (spec > ccself->specStack) {
+	--spec;
+	if (*spec) {
+	    SpecFound = TRUE;
+	    if (InUnknownNS) {
+		kindText = (*spec)->kinds[XSO_UNS_Text];
+		kindWhitespace = (*spec)->kinds[XSO_UNS_Whitespace];
+	    } else {
+		kindText = (*spec)->kinds[XSO_Text];
+		kindWhitespace = (*spec)->kinds[XSO_Whitespace];
+	    }
+	    break;
+	}
+	InUnknownNS = TRUE;
+    }
+    if (!SpecFound) return;
+    last = CXS_GetLastToken(ccself);
+    s0 = s;
+    /* For leading space. */
+    for (s2 = s0; s2 - s < len; ++s2)
+	if (!isspace(*s2)) break;
+    if (s0 < s2) {
+	last = CXS_Append(ccself, last, kindWhitespace, s0, s2 - s0);
+	s0 = s2;
+    }
+    s1 = s0;
+    for (s2 = s0; s2 - s < len; ++s2)
+	if (!isspace(*s2)) s1 = s2 + 1;
+    /* For text. */
+    if (s0 < s1) last = CXS_Append(ccself, last, kindText, s0, s1 - s0);
+    /* For tailing space. */
+    if (s1 < s2) last = CXS_Append(ccself, last, kindWhitespace, s1, s2 - s1);
 }
 
 static void
