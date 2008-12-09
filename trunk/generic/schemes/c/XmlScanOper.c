@@ -420,6 +420,7 @@ CXS_AppendText(CcxScanOper_t * self, const char * text, size_t len)
     CcsToken_t * lastT;
     const char * cur, * last = text + len;
 
+    if (len == 0) return;
     if (self->kindText < 0 && self->kindWhitespace < 0) return;
     lastT = CXS_GetLastToken(self);
     if (self->textStart == self->textUsed || isspace(*self->textStart)) {
@@ -428,7 +429,8 @@ CXS_AppendText(CcxScanOper_t * self, const char * text, size_t len)
 	 * text ~ last. And append kindWhitespace if required. */
 	for (cur = text; cur < last; ++cur)
 	    if (!isspace(*cur)) break;
-	if (cur < last) { /* Whitespace can be generated. */
+	if (cur < last) {
+	    /* Not all characters are space, Whitespace can be generated. */
 	    if (self->textStart == self->textUsed) {
 		if (text == cur) {
 		    /* Do nothing. */
@@ -456,10 +458,12 @@ CXS_AppendText(CcxScanOper_t * self, const char * text, size_t len)
 		}
 		self->textUsed = self->textStart;
 	    }
+	} else {
+	    /* All characters in text is space. */
+	    if (self->kindWhitespace < 0) return;
 	}
     }
-    if (text == last) return;
-    if (self->kindWhitespace < 0 && isspace(*text)) return;
+    CcsAssert(text < last);
     if (!CXS_EnsureTextSpace(self, last - text, 0)) goto nomem;
     memcpy(self->textUsed, text, last - text);
     self->textUsed += last - text;
