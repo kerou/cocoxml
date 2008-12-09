@@ -22,6 +22,8 @@
 #include "c/CDefs.h"
 #endif
 
+/* This is an expat version, we can implement other version for different
+ * SAX parser. */
 #include  <expat.h>
 
 EXTC_BEGIN
@@ -54,7 +56,15 @@ typedef struct {
     size_t numPInstructions;
 } CcxSpec_t;
 
-#define  SZ_SPECSTACK  256
+/* SZ_TEXTBUF is the initialize size, it may be extended
+ * automatically if required. */
+#define  SZ_TEXTBUF    256
+#define  SZ_STACK      256
+
+typedef struct {
+    const CcxSpec_t * spec;
+    const CcxTag_t * tag;
+}  CcxScanStack_t;
 
 typedef struct {
     CcsErrorPool_t * errpool;
@@ -62,12 +72,22 @@ typedef struct {
     XML_Parser parser;
     FILE * fp;
 
+    CcsBool_t EOFGenerated;
+
     CcsToken_t * dummy;
     CcsToken_t * tokens;
     CcsToken_t * peek;
 
-    const CcxSpec_t * specStack[SZ_SPECSTACK];
-    const CcxSpec_t ** curSpecStack;
+    char * textStart;
+    char * textUsed;
+    size_t textSpace;
+
+    int kindText;
+    int kindWhitespace;
+    int kindComment;
+    CcxScanStack_t stack[SZ_STACK];
+    CcxScanStack_t * effect;
+    CcxScanStack_t * cur;
 
     /* Set by CcxScanner */
     int kindUnknownNS;
