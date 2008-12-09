@@ -71,7 +71,7 @@ static const CcxPInstruction_t XmlPIs[] = {
 static const CcxSpec_t XmlSpecList[] = {
     /*---- XmlSpecList ----*/
     { "", TRUE,
-	{ -1, -1, -1, -1, 72, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
+	{ -1, -1, -1, -1, 68, -1, -1, -1, -1, -1, -1, -1, -1, },
 	XmlTags + 0, 31,
 	XmlAttrs + 0, 5,
 	NULL, 0, /* Processing Instructions */
