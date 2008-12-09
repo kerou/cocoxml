@@ -49,8 +49,8 @@ static const char * set[];
 static void
 CcsParser_Get(CcsParser_t * self)
 {
+    self->t = self->la;
     for (;;) {
-	self->t = self->la;
 	self->la = CcsScanner_Scan(&self->scanner);
 	if (self->la->kind <= self->maxT) { /*++self->errDist;*/ break; }
 	/*---- Pragmas ----*/
@@ -58,7 +58,6 @@ CcsParser_Get(CcsParser_t * self)
 	    
 	}
 	/*---- enable ----*/
-	self->la = self->t;
     }
 }
 
