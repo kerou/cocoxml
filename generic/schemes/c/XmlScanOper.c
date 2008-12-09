@@ -59,14 +59,15 @@ static int casecmpXmlPI(const void * name, const void * pi);
 static void
 CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
 {
+    CcsToken_t * last;
     const XML_Char ** curattr;
     const CcxSpec_t * tagSpec, * attrSpec;
     const CcxTag_t * tag; const CcxAttr_t * attr;
     CcxScanOper_t * ccself = (CcxScanOper_t *)self;
-    CcsToken_t * last = CXS_GetLastToken(ccself);
     const char * localname = strchr(name, nsSep);
 
     CXS_Text2Tokens(ccself);
+    last = CXS_GetLastToken(ccself);
     localname = localname ? localname + 1 : name;
     if (!(tagSpec = (const CcxSpec_t *)
 	  bsearch(name, ccself->firstXmlSpec, ccself->numXmlSpecs,
@@ -109,13 +110,14 @@ CXS_StartElement(void * self, const XML_Char * name, const XML_Char ** attrs)
 static void
 CXS_EndElement(void * self, const XML_Char * name)
 {
+    CcsToken_t * last;
     const CcxSpec_t * tagSpec;
     const CcxTag_t * tag;
     CcxScanOper_t * ccself = (CcxScanOper_t *)self;
-    CcsToken_t * last = CXS_GetLastToken(ccself);
     const char * localname = strchr(name, nsSep);
 
     CXS_Text2Tokens(ccself);
+    last = CXS_GetLastToken(ccself);
     localname = localname ? localname + 1 : name;
     if (!(tagSpec = (const CcxSpec_t *)
 	  bsearch(name, ccself->firstXmlSpec, ccself->numXmlSpecs,
@@ -384,7 +386,7 @@ CXS_PopSpec(CcxScanOper_t * self, const CcxSpec_t * spec, const CcxTag_t * tag)
     const CcxScanStack_t * last = self->stack + SZ_STACK;
     if (self->cur < last) {
 	CcsAssert(self->cur->spec == spec);
-	CcsAssert(self->cur->tag == tag);
+	CcsAssert(spec == NULL || self->cur->tag == tag);
 	if (self->cur == self->effect)
 	    for (--self->effect; !self->effect->spec; --self->effect);
 	CXS_UpdateKinds(self);
