@@ -61,9 +61,9 @@ typedef struct CcsParser_s CcsParser_t;
 typedef enum {
     XSO_UnknownTag, XSO_UnknownTagEnd,
     XSO_UnknownAttr, XSO_UnknownProcessingInstruction,
-    XSO_Text, XSO_CData, XSO_Comment, XSO_Whitespace,
-    XSO_UT_Text, XSO_UT_CData, XSO_UT_Comment, XSO_UT_Whitespace,
-    XSO_UNS_Text, XSO_UNS_CData, XSO_UNS_Comment, XSO_UNS_Whitespace,
+    XSO_Text, XSO_Whitespace, XSO_Comment,
+    XSO_UT_Text, XSO_UT_Whitespace, XSO_UT_Comment,
+    XSO_UNS_Text, XSO_UNS_Whitespace, XSO_UNS_Comment,
     XSO_SIZE
 }  CcsXmlSpecOption_t;
 extern const char * CcsXmlSpecOptionNames[];

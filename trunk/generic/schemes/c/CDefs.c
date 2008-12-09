@@ -31,10 +31,11 @@ _CcsAssertFailed_(const char * vstr, const char * fname, int line)
 }
 
 const char * CcsXmlSpecOptionNames[] = {
-    "UNKNOWN_TAG", "END_UNKNOWN_TAG", "UNKNOWN_ATTR", "UNKNOWN_PROCESSING_INSTRUCTION",
-    "TEXT", "CDATA", "COMMENT", "WHITESPACE",
-    "UT_TEXT", "UT_CDATA", "UT_COMMENT", "UT_WHITESPACE",
-    "UNS_TEXT", "UNS_CDATA", "UNS_COMMENT", "UNS_WHITESPACE"
+    "UNKNOWN_TAG", "END_UNKNOWN_TAG",
+    "UNKNOWN_ATTR", "UNKNOWN_PROCESSING_INSTRUCTION",
+    "TEXT", "WHITESPACE", "COMMENT",
+    "UT_TEXT", "UT_WHITESPACE", "UT_COMMENT",
+    "UNS_TEXT", "UNS_WHITESPACE", "UNS_COMMENT"
 };
 
 void *
