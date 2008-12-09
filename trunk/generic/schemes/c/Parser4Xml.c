@@ -40,13 +40,13 @@ static const char * set[];
 static void
 CcxParser_Get(CcxParser_t * self)
 {
+    if (self->t) CcxScanOper_DecRef(&self->scanner.base, self->t);
+    self->t = self->la;
     for (;;) {
-	self->t = self->la;
 	self->la = CcxScanOper_Scan(&self->scanner.base);
 	if (self->la->kind <= self->maxT) { /*++self->errDist;*/ break; }
 	/*---- Pragmas ----*/
 	/*---- enable ----*/
-	self->la = self->t;
     }
 }
 
@@ -148,6 +148,8 @@ CcxParser_Destruct(CcxParser_t * self)
 {
     /*---- destructor ----*/
     /*---- enable ----*/
+    if (self->t) CcxScanOper_DecRef(&self->scanner.base, self->t);
+    if (self->la) CcxScanOper_DecRef(&self->scanner.base, self->la);
     CcxScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }

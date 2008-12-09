@@ -30,13 +30,13 @@ static const char * set[];
 static void
 RssParser_Get(RssParser_t * self)
 {
+    if (self->t) CcxScanOper_DecRef(&self->scanner.base, self->t);
+    self->t = self->la;
     for (;;) {
-	self->t = self->la;
 	self->la = CcxScanOper_Scan(&self->scanner.base);
 	if (self->la->kind <= self->maxT) { /*++self->errDist;*/ break; }
 	/*---- Pragmas ----*/
 	/*---- enable ----*/
-	self->la = self->t;
     }
 }
 
@@ -178,6 +178,8 @@ RssParser_Destruct(RssParser_t * self)
     CcRss_Destruct(&self->rss);
     /*-------------------------------------------------------------------------*/
     /*---- enable ----*/
+    if (self->t) CcxScanOper_DecRef(&self->scanner.base, self->t);
+    if (self->la) CcxScanOper_DecRef(&self->scanner.base, self->la);
     RssScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }
