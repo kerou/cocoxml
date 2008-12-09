@@ -160,7 +160,7 @@ RssParser(RssParser_t * self, const char * fname, FILE * errfp)
     if (!RssScanner(&self->scanner, &self->errpool, fname)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
-    self->maxT = 84;
+    self->maxT = 69;
     if (!CcRss(&self->rss)) goto ERRQUIT;
     /*---- enable ----*/
     return self;
@@ -315,7 +315,7 @@ RssParser_ChannelProperty(RssParser_t * self, CcChannel_t * channel)
 	CcChannel_AddItem(channel, item); 
 	break;
     }
-    default: RssParser_SynErr(self, 85); break;
+    default: RssParser_SynErr(self, 70); break;
     }
 }
 
@@ -323,7 +323,7 @@ static void
 RssParser_Title(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 7);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 8);
 }
@@ -332,7 +332,7 @@ static void
 RssParser_Link(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 9);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 10);
 }
@@ -341,7 +341,7 @@ static void
 RssParser_Description(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 11);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 12);
 }
@@ -350,7 +350,7 @@ static void
 RssParser_Language(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 13);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 14);
 }
@@ -359,7 +359,7 @@ static void
 RssParser_Copyright(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 15);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 16);
 }
@@ -368,7 +368,7 @@ static void
 RssParser_ManagingEditor(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 17);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 18);
 }
@@ -377,7 +377,7 @@ static void
 RssParser_WebMaster(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 19);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 20);
 }
@@ -386,7 +386,7 @@ static void
 RssParser_PubDate(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 21);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 22);
 }
@@ -395,7 +395,7 @@ static void
 RssParser_LastBuildDate(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 23);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 24);
 }
@@ -404,7 +404,7 @@ static void
 RssParser_Category(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 25);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 26);
 }
@@ -413,7 +413,7 @@ static void
 RssParser_Generator(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 27);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 28);
 }
@@ -422,7 +422,7 @@ static void
 RssParser_Docs(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 29);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 30);
 }
@@ -457,7 +457,7 @@ static void
 RssParser_Ttl(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 33);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 34);
 }
@@ -477,7 +477,7 @@ static void
 RssParser_Rating(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 37);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 38);
 }
@@ -497,7 +497,7 @@ static void
 RssParser_SkipHours(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 43);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 44);
 }
@@ -506,7 +506,7 @@ static void
 RssParser_SkipDays(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 45);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 46);
 }
@@ -541,14 +541,14 @@ RssParser_ImageProperty(RssParser_t * self, CcImage_t * image)
     } else if (self->la->kind == 51) {
 	RssParser_Height(self, &value);
 	image->height = value; 
-    } else RssParser_SynErr(self, 86);
+    } else RssParser_SynErr(self, 71);
 }
 
 static void
 RssParser_Url(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 47);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 48);
 }
@@ -557,7 +557,7 @@ static void
 RssParser_Width(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 49);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 50);
 }
@@ -566,7 +566,7 @@ static void
 RssParser_Height(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 51);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 52);
 }
@@ -587,14 +587,14 @@ RssParser_TextInputProperty(RssParser_t * self, CcTextInput_t * textInput)
     } else if (self->la->kind == 9) {
 	RssParser_Link(self, &value);
 	textInput->link = value; 
-    } else RssParser_SynErr(self, 87);
+    } else RssParser_SynErr(self, 72);
 }
 
 static void
 RssParser_Name(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 41);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 42);
 }
@@ -659,7 +659,7 @@ RssParser_ItemProperty(RssParser_t * self, CcItem_t * item)
 	item->image = image; 
 	break;
     }
-    default: RssParser_SynErr(self, 88); break;
+    default: RssParser_SynErr(self, 73); break;
     }
 }
 
@@ -667,7 +667,7 @@ static void
 RssParser_Author(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 53);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 54);
 }
@@ -676,7 +676,7 @@ static void
 RssParser_Comments(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 55);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 56);
 }
@@ -685,7 +685,7 @@ static void
 RssParser_Enclosure(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 57);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 58);
 }
@@ -694,7 +694,7 @@ static void
 RssParser_Guid(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 59);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 60);
 }
@@ -703,7 +703,7 @@ static void
 RssParser_Source(RssParser_t * self, char ** value)
 {
     RssParser_Expect(self, 61);
-    RssParser_Expect(self, 72);
+    RssParser_Expect(self, 68);
     *value = CcStrdup(self->t->val); 
     RssParser_Expect(self, 62);
 }
@@ -784,27 +784,12 @@ RssParser_SynErr(RssParser_t * self, int n)
     case 65: s = "\"" "ATTR_PATH" "\" expected"; break;
     case 66: s = "\"" "ATTR_REGISTER_PROCEDURE" "\" expected"; break;
     case 67: s = "\"" "ATTR_PROTOCOL" "\" expected"; break;
-    case 68: s = "\"" "UNKNOWN_TAG" "\" expected"; break;
-    case 69: s = "\"" "END_UNKNOWN_TAG" "\" expected"; break;
-    case 70: s = "\"" "UNKNOWN_ATTR" "\" expected"; break;
-    case 71: s = "\"" "UNKNOWN_PROCESSING_INSTRUCTION" "\" expected"; break;
-    case 72: s = "\"" "TEXT" "\" expected"; break;
-    case 73: s = "\"" "CDATA" "\" expected"; break;
-    case 74: s = "\"" "COMMENT" "\" expected"; break;
-    case 75: s = "\"" "WHITESPACE" "\" expected"; break;
-    case 76: s = "\"" "UNS_TEXT" "\" expected"; break;
-    case 77: s = "\"" "UNS_CDATA" "\" expected"; break;
-    case 78: s = "\"" "UNS_COMMENT" "\" expected"; break;
-    case 79: s = "\"" "UNS_WHITESPACE" "\" expected"; break;
-    case 80: s = "\"" "UT_TEXT" "\" expected"; break;
-    case 81: s = "\"" "UT_CDATA" "\" expected"; break;
-    case 82: s = "\"" "UT_COMMENT" "\" expected"; break;
-    case 83: s = "\"" "UT_WHITESPACE" "\" expected"; break;
-    case 84: s = "\"" "???" "\" expected"; break;
-    case 85: s = "this symbol not expected in \"" "ChannelProperty" "\""; break;
-    case 86: s = "this symbol not expected in \"" "ImageProperty" "\""; break;
-    case 87: s = "this symbol not expected in \"" "TextInputProperty" "\""; break;
-    case 88: s = "this symbol not expected in \"" "ItemProperty" "\""; break;
+    case 68: s = "\"" "TEXT" "\" expected"; break;
+    case 69: s = "\"" "???" "\" expected"; break;
+    case 70: s = "this symbol not expected in \"" "ChannelProperty" "\""; break;
+    case 71: s = "this symbol not expected in \"" "ImageProperty" "\""; break;
+    case 72: s = "this symbol not expected in \"" "TextInputProperty" "\""; break;
+    case 73: s = "this symbol not expected in \"" "ItemProperty" "\""; break;
     /*---- enable ----*/
     default:
 	snprintf(format, sizeof(format), "error %d", n);
@@ -816,12 +801,12 @@ RssParser_SynErr(RssParser_t * self, int n)
 
 static const char * set[] = {
     /*---- InitSet ----*/
-    /*    5    0    5    0    5    0    5    0    5    0    5    0    5    0    5    0     */
-    "*.....................................................................................", /* 0 */
-    ".....*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*...*.*........................................", /* 1 */
-    "...............................................................*****..................", /* 2 */
-    ".......*.*.....................................*.*.*..................................", /* 3 */
-    ".......*.*.*.............................*............................................", /* 4 */
-    ".......*.*.*.........*...*.........*.................*.*.*.*.*........................"  /* 5 */
+    /*    5    0    5    0    5    0    5    0    5    0    5    0    5     */
+    "*......................................................................", /* 0 */
+    ".....*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*...*.*.........................", /* 1 */
+    "...............................................................*****...", /* 2 */
+    ".......*.*.....................................*.*.*...................", /* 3 */
+    ".......*.*.*.............................*.............................", /* 4 */
+    ".......*.*.*.........*...*.........*.................*.*.*.*.*........."  /* 5 */
     /*---- enable ----*/
 };

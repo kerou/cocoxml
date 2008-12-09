@@ -68,10 +68,12 @@ CcXmlSpecMap_MakeTerminals(const CcXmlSpecMap_t * self, CcGlobals_t * globals)
 	CcXmlSpec_MakeTerminals(xmlspec, globals);
 	CcBitArray_Or(&options, &xmlspec->options);
     }
-    for (option = XSO_UnknownTag; option < XSO_SIZE; ++option)
+    for (option = XSO_UnknownTag; option < XSO_SIZE; ++option) {
+	if (!CcBitArray_Get(&options, option)) continue;
 	if (!CcSymbolTable_NewTerminalWithCheck(symtab, CcsXmlSpecOptionNames[option], 0))
 	    CcsErrorPool_Error(globals->errpool, 0, 0,
 			       "Symbol %s is defined twice.\n", CcsXmlSpecOptionNames[option]);
+    }
     CcBitArray_Destruct(&options);
 }
 
