@@ -18,13 +18,13 @@ parse complex XML structure easily.
 
 Then CocoXml-0.9.0.tar.gz is released.
 
-After that, I realized that if I provide CocoXml as the Coco/R way, the core
-algorithm has to be implemented in all supported languages. This is not
-necessitation. And I also need a stronger implement of Coco/R in C, so I can
-use it to generate various parser in C.
+After that, it is realized that if CocoXml is provided in the Coco/R way, the
+core algorithm has to be implemented in all supported languages again and again.
+This is not a necessitation. And I also need a stronger implement of Coco/R in
+C, so it can be used to generate various parsers in C.
 
-So I decide to re-implement Coco/R in pure-C and split the output scheme from
-algorithm completely. And when I want to support a new programming language,
+So I decide to re-implement Coco/R in pure-C and split the output schemes from
+algorithm completely. And when a new programming language support is required,
 define a new output scheme is enough.
 
 Another advantage of C implemented Coco/R is there are least dependencies, so
@@ -37,12 +37,15 @@ original Coco. If the extension of the input is .xatg, it is treated as a
 syntax of CocoXml.
 
 Some more improvements are introduced too. For the details, please refer to
-the homepage of CocoXml: http://code.google.com/p/cocoxml.
+the homepage of CocoXml: http://code.google.com/p/cocoxml. The documents can be
+accessed in http://code.google.com/p/cocoxml/w/list .
 
 The source of CocoXml can be checkout with the following command:
+{{{
 svn checkout http://cocoxml.googlecode.com/svn/trunk cocoxml-read-only.
-
+}}}
 The referenced Coco/R code are committed into svn too, so my modifications can
 be show easily. :)
 
 Charles Wang <charlesw123456@gmail.com>
+
