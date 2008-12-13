@@ -1,2 +1,3 @@
-For C# version, run "scons" in csharp.
-For java version, run "ant" in java.
+./configure.py --prefix=/usr
+scons
+./install.py [DESTDIR=destdir]
