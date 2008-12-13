@@ -18,6 +18,7 @@
 import glob
 import os.path
 import shutil
+import string
 import sys
 
 cfgfile = open('config.status')
@@ -41,6 +42,13 @@ def execname(name):
     if cfgmap['program-suffix']: bname = bname + cfgmap['program-suffix']
     return os.path.join(os.path.dirname(name), bname)
 
+def install_lines(tgtfile, lines):
+    tgtdir = os.path.dirname(tgtfile)
+    if not os.path.isdir(tgtdir): os.makedirs(tgtdir)
+    tgtf = open(tgtfile, 'w')
+    tgtf.write(string.join(lines, '\n'))
+    tgtf.close()
+
 def install(tgtdir, srcfile):
     if not os.path.isdir(tgtdir): os.makedirs(tgtdir)
     tgtfile = os.path.join(tgtdir, os.path.basename(srcfile))
@@ -50,7 +58,8 @@ def install(tgtdir, srcfile):
 # Real installations.
 install(cfgmap['bindir'], execname('Coco'))
 install(cfgmap['bindir'], execname('CocoInit'))
-tempdir = os.path.join(cfgmap['datadir'], 'templates')
+
+tempdir = os.path.join(cfgmap['datadir'])
 
 tgtdir = os.path.join(tempdir, 'dump')
 for f in glob.glob(os.path.join('schemes', 'dump', '*.html')):
@@ -61,8 +70,10 @@ for f in ['Buffer', 'CDefs', 'ErrorPool', 'Position', 'Token',
           'Scanner', 'Parser']:
     install(tgtdir, os.path.join('schemes', 'c', f + '.h'))
     install(tgtdir, os.path.join('schemes', 'c', f + '.c'))
+install_lines(os.path.join(tgtdir, 'PREFIX'), ['Ccs'])
 
 tgtdir = os.path.join(tempdir, 'cxml')
 for f in ['CDefs', 'ErrorPool', 'Token', 'Scanner4Xml', 'Parser4Xml']:
     install(tgtdir, os.path.join('schemes', 'c', f + '.h'))
     install(tgtdir, os.path.join('schemes', 'c', f + '.c'))
+install_lines(os.path.join(tgtdir, 'PREFIX'), ['Ccx'])
