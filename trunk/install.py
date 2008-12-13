@@ -59,7 +59,7 @@ def install(tgtdir, srcfile):
 install(cfgmap['bindir'], execname('Coco'))
 install(cfgmap['bindir'], execname('CocoInit'))
 
-tempdir = os.path.join(cfgmap['datadir'])
+tempdir = os.path.join(cfgmap['datadir'], 'Coco')
 
 tgtdir = os.path.join(tempdir, 'dump')
 for f in glob.glob(os.path.join('schemes', 'dump', '*.html')):
