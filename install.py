@@ -59,6 +59,8 @@ def install(tgtdir, srcfile):
 install(cfgmap['bindir'], execname('Coco'))
 install(cfgmap['bindir'], execname('CocoInit'))
 
+install(cfgmap['docdir'], 'README')
+
 tempdir = os.path.join(cfgmap['datadir'], 'Coco')
 
 tgtdir = os.path.join(tempdir, 'dump')
