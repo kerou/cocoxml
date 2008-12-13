@@ -113,6 +113,7 @@ output = open('config.h', 'w')
 output.write('#ifndef CONFIG_H\n')
 output.write('#define CONFIG_H\n')
 output.write('\n')
+output.write('#define PACKAGE "%s"\n' % (package))
 for arg in arglist:
     value = valuemap[arg[0]]
     if value is None: value = ''
