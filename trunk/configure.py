@@ -21,32 +21,69 @@ import sys
 package = 'Coco'
 default_prefix = '/usr'
 
-argmap = { 'prefix' : [default_prefix],
-           'exec-prefix' : ['@prefix'],
-           'bindir' : ['@exec-prefix', 'bin'],
-           'sbindir' : ['@exec-prefix', 'sbin'],
-           'libexecdir' : ['@exec-prefix', 'libexec'],
-           'sysconfdir' : ['@prefix', 'etc'],
-           'sharedstatedir' : ['@prefix', 'com'],
-           'localstatedir' : ['@prefix', 'var'],
-           'libdir' : ['@exec-prefix', 'lib'],
-           'includedir' : ['@prefix', 'include'],
-           'datarootdir' : ['@prefix', 'share'],
-           'datadir' : ['@datarootdir'],
-           'infodir' : ['@datarootdir', 'info'],
-           'localedir' : ['@datarootdir', 'locale'],
-           'mandir' : ['@datarootdir', 'man'],
-           'docdir' : ['@datarootdir', 'doc', package],
-           'htmldir' : ['@docdir'],
-           'dvidir' : ['@docdir'],
-           'pdfdir' : ['@docdir'],
-           'psdir' : ['@docdir'],
-           'program-prefix' : None,
-           'program-suffix' : None }
+arglist = [('prefix', [default_prefix], 'PREFIX',
+            'install architecture-independent files in PREFIX [%s]' % default_prefix),
+           ('exec-prefix', ['@prefix'], 'EXEC_PREFIX',
+            'install architecture-dependent files in EPREFIX [PREFIX]'),
+           ('bindir', ['@exec-prefix', 'bin'], 'BINDIR',
+            'user executables [EPREFIX/bin]'),
+           ('sbindir', ['@exec-prefix', 'sbin'], 'SBINDIR',
+            'system admin executables [EPREFIX/sbin]'),
+           ('libexecdir', ['@exec-prefix', 'libexec'], 'LIBEXECDIR',
+            'program executables [EPREFIX/libexec]'),
+           ('sysconfdir', ['@prefix', 'etc'], 'SYSCONFDIR',
+            'read-only single-machine data [PREFIX/etc]'),
+           ('sharedstatedir', ['@prefix', 'com'], 'SHAREDSTATEDIR',
+            'modifiable architecture-independent data [PREFIX/com]'),
+           ('localstatedir', ['@prefix', 'var'], 'LOCALSTATEDIR',
+            'modifiable single-machine data [PREFIX/var]'),
+           ('libdir', ['@exec-prefix', 'lib'], 'LIBDIR',
+            'object code libraries [EPREFIX/lib]'),
+           ('includedir', ['@prefix', 'include'], 'INCLUDEDIR',
+            'C header files [PREFIX/include]'),
+           ('datarootdir', ['@prefix', 'share'], 'DATAROOTDIR',
+            'read-only arch-independent data root [PREFIX/share]'),
+           ('datadir', ['@datarootdir'], 'DATADIR',
+            'read-only architecture-independent data root [DATAROOTDIR]'),
+           ('infodir', ['@datarootdir', 'info'], 'INFODIR',
+            'info documentation [DATAROOTDIR/info]'),
+           ('localedir', ['@datarootdir', 'locale'], 'LOCALEDIR',
+            'locale-dependent data [DATAROOTDIR/locale]'),
+           ('mandir', ['@datarootdir', 'man'], 'MANDIR',
+            'man documentation [DATAROOTDIR/man]'),
+           ('docdir', ['@datarootdir', 'doc', package], 'DOCDIR',
+            'documentation root [DATAROOTDIR/doc/PACKAGE]'),
+           ('htmldir', ['@docdir'], 'HTMLDIR', 'html documentation [DOCDIR]'),
+           ('dvidir', ['@docdir'], 'DVIDIR', 'dvi documentation [DOCDIR]'),
+           ('pdfdir', ['@docdir'], 'PDFDIR', 'pdf documentation [PDFDIR]'),
+           ('psdir', ['@docdir'], 'PSDIR', 'ps documentation [PSDIR]'),
+           ('program-prefix', None, 'PROGRAM_PREFIX',
+            'prepend to installed program names'),
+           ('program-suffix', None, 'PROGRAM_SUFFIX',
+            'append to installed program names')]
+
+argmap = {}
+for v in arglist:
+    argmap[v[0]] = v[1]
 
 valuemap = {}
 
+def show_helpmsg():
+    print 'Possible options:'
+    for v in arglist:
+        if v[0] == 'prefix': value = 'PREFIX'
+        elif v[0] == 'exec-prefix': value = 'EPREFIX'
+        elif v[0] == 'program-prefix': value = 'PREFIX'
+        elif v[0] == 'program-suffix': value = 'SUFFIX'
+        else: value = 'DIR'
+        value = '  --%s=%s' % (v[0], value)
+        while len(value) < 28: value = value + ' '
+        print '%s%s' % (value, v[3])
+
 for arg in sys.argv:
+    if arg == '--help':
+        show_helpmsg()
+        sys.exit(0)
     if arg[:2] != '--': continue
     argsplit = arg[2:].split('=')
     if len(argsplit) != 2: continue
@@ -71,3 +108,14 @@ for arg in argmap.keys():
 output = open('config.status', 'w')
 output.write(repr(valuemap))
 output.close()
+
+output = open('config.h', 'w')
+output.write('#ifndef CONFIG_H\n')
+output.write('#define CONFIG_H\n')
+output.write('\n')
+for arg in arglist:
+    value = valuemap[arg[0]]
+    if value is None: value = ''
+    output.write('#define %s "%s"\n' % (arg[2], value))
+output.write('\n')
+output.write('#endif\n')
