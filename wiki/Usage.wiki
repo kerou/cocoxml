@@ -1,0 +1,42 @@
+Because Coco is a source code generater, you should choose the programming
+language and the atg grammer you want. In CocoXml, it is treated as scheme.
+
+Now CocoXml implement three scheme:
+ * dump: Dump symbol table, EBNF nodes, lexical states.
+     Used to debug the generated scanner/parser.
+ * c: Original C Coco. Can be used to generate scanner, parser in C.
+     These scanner & parser can be used to parse common text sources, such as C#,
+     Java and so on.
+ * cxml: Work like CocoXml-0.9.0. Can be used to generate scanner, parser in C.
+     These scanner & parser are based on expat and can be used to parse the
+     structure of various XML elements, such as tags, attributes. For example,
+     the scanner/parser can be generated for XSLT, RSS and so on.
+
+To integrate multiple generated scanner/parser into one binary, prefix
+replacement has to be supported.
+
+So CocoXml provide 'CocoInit' which can generate required sources from
+pre-installed templates.
+
+The first argument of 'CocoInit' is the name of scheme, now 'dump', 'c', 'cxml'
+are supported. The second argument of 'CocoInit' is the prefix of generated
+scanner/parser. For example, the following command will
+{{{
+$ CocoInit cxml Rss
+}}}
+generate sources: Parser4Xml.h, Parser4Xml.c, Scanner4Xml.h, Scanner4Xml.c and
+some other support C sources. In all these sources, Scanner and Parser are
+prefixed with Rss.
+
+Then xatg(atg if you choose scheme 'c') has to be written. For example, please refer to
+rss.xatg provided in xmltest directory.
+
+After rss.xatg is ready, just run:
+{{{
+Coco rss.xatg
+}}}
+So the previous generated Scanner4Xml.c, Parser4Xml.h, Parser4Xml.c are updated
+and useful.
+
+Then, when you update your atg or xatg, just use 'Coco' to update your sources and
+re-compile.
