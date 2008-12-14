@@ -1,3 +1,5 @@
+# What features have been done and what features shall be added.
+
 * 0.9.0:
   * Implement XML structure scanner/parser generation for C#, Java and C++ in the original Coco way.
 
