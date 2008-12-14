@@ -1,3 +1,5 @@
+#summary How to generate the sources you need.
+
 Because Coco is a source code generater, you should choose the programming
 language and the atg grammer you want. In CocoXml, it is treated as scheme.
 
