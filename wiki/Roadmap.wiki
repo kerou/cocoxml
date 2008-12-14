@@ -1,0 +1,18 @@
+* 0.9.0:
+  * Implement XML structure scanner/parser generation for C#, Java and C++ in the original Coco way.
+
+* 0.9.1:
+  * Re-implement all Coco algorithm in C.
+  * Split output generation from algorithm completely.
+  * Integrate original Coco with CocoXml into one binary: 'Coco'.
+  * The combined binary distinguish input grammers by extension.
+  * 'CocoInit' is added to generate sources for user.
+  * Work in sources update way.
+  * Output scheme 'dump', 'c', 'cxml' are supported now.
+
+* Planning:
+  * Add more output schemes for different languages, such as 'csharp', 'java', csharpxml' and so on.
+  * Add more output schemes for different XML SAX parser, such as 'clibxml'.
+  * Define one more atg grammer which can parse complex binary data structure. It will be named as 'CocoBin.atg', and use extension '.batg' for distinguish.
+  * Provide real atg for real programming language, such as atg to parser C#, java sources.
+  * Provide real xatg for various XML language, such as XSLT, XML scheme.
