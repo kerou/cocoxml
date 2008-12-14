@@ -11,8 +11,10 @@
   * 'CocoInit' is added to generate sources for user.
   * Work in sources update way.
   * Output scheme 'dump', 'c', 'cxml' are supported now.
+  * ebuild is added for the gentoo user.
 
 * Planning:
+  * Add spec for rpm user and the related files for deb user.
   * Add more output schemes for different languages, such as 'csharp', 'java', csharpxml' and so on.
   * Add more output schemes for different XML SAX parser, such as 'clibxml'.
   * Define one more atg grammer which can parse complex binary data structure. It will be named as 'CocoBin.atg', and use extension '.batg' for distinguish.
