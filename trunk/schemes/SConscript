@@ -11,4 +11,5 @@ libobjs.extend(map(lambda src: env.Object(src),
                    ['OutputScheme.c']))
 
 SConscript(os.path.join('c', 'SConscript'))
+SConscript(os.path.join('csharp', 'SConscript'))
 SConscript(os.path.join('dump', 'SConscript'))
