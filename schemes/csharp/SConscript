@@ -2,8 +2,12 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: GPLv2
 
+import os.path
+
 Import('env')
 Import('libobjs')
 
 libobjs.extend(map(lambda src: env.Object(src),
                    ['CSharpOutputScheme.c']))
+
+SConscript(os.path.join('test', 'SConscript'))
