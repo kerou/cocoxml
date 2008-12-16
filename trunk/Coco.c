@@ -79,7 +79,7 @@ main(int argc, char * argv[])
 	CcsXmlParser_Parse(xmlparser);
 	if (!CcsXmlParser_Finish(xmlparser)) goto errquit1;
     } else {
-	fprintf(stderr, "The supported extension are: *.atg, *.xatg.");
+	fprintf(stderr, "The supported extension are: *.atg, *.xatg.\n");
 	goto errquit0;
     }
 
