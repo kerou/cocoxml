@@ -362,7 +362,6 @@ CcsScanner_ResetCh(CcsScanner_t * self, SLock_t * slock)
     self->chBytes = slock->chBytes;
     self->pos = slock->pos;
     self->line = slock->line;
-    self->line = slock->line;
     CcsBuffer_LockReset(&self->buffer);
 }
 
@@ -446,8 +445,7 @@ CcsScanner_NextToken(CcsScanner_t * self)
 	for (curComment = comments; curComment < commentsLast; ++curComment)
 	    if (self->ch == curComment->start[0] &&
 		CcsScanner_Comment(self, curComment)) break;
-	if (curComment < commentsLast) continue;
-	break;
+	if (curComment >= commentsLast) break;
     }
     pos = self->pos; line = self->line; col = self->col;
     CcsBuffer_Lock(&self->buffer);
