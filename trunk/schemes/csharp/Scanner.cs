@@ -52,7 +52,7 @@ public class CcsScanner_t {
     bool           oldEolsEOL;
     CcsBuffer_t    buffer;
 
-    CcsScanner_t(CcsErrorPool_t errpool, string filename)
+    public CcsScanner_t(CcsErrorPool_t errpool, string filename)
     {
 	Stream stream;
 	this.errpool = errpool;
@@ -85,12 +85,12 @@ public class CcsScanner_t {
     {
     }    
 
-    CcsToken_t GetDummy()
+    public CcsToken_t GetDummy()
     {
 	return dummyToken;
     }
 
-    CcsToken_t Scan()
+    public CcsToken_t Scan()
     {
 	CcsToken_t cur;
 	if (curToken == null) {
@@ -104,7 +104,7 @@ public class CcsScanner_t {
 	return cur;
     }
 
-    CcsToken_t Peek()
+    public CcsToken_t Peek()
     {
 	CcsToken_t cur;
 	do {
@@ -120,17 +120,17 @@ public class CcsScanner_t {
 	return cur;
     }
 
-    void ResetPeek()
+    public void ResetPeek()
     {
 	peekToken = curToken;
     }
 
-    void IncRef(CcsToken_t token)
+    public void IncRef(CcsToken_t token)
     {
 	++token.refcnt;
     }
 
-    void DecRef(CcsToken_t token)
+    public void DecRef(CcsToken_t token)
     {
 	CcsToken_t prevToken, curToken;
 	if (token == dummyToken) return;
@@ -150,14 +150,14 @@ public class CcsScanner_t {
 	}
     }
 
-    CcsPosition_t GetPosition(CcsToken_t begin, CcsToken_t end)
+    public CcsPosition_t GetPosition(CcsToken_t begin, CcsToken_t end)
     {
 	int len = (int)(end.pos - begin.pos);
 	return new CcsPosition_t(begin.pos, len, begin.col,
 				 buffer.GetString(begin.pos, len));
     }
 
-    CcsPosition_t GetPositionBetween(CcsToken_t begin, CcsToken_t end)
+    public CcsPosition_t GetPositionBetween(CcsToken_t begin, CcsToken_t end)
     {
 	long begpos = begin.pos + begin.val.Length;
 	int len = (int)(end.pos - begpos);

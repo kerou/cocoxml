@@ -29,7 +29,7 @@ public class CcsErrorPool_t {
     int warningCount;
     int errorCount;
 
-    CcsErrorPool_t(TextWriter writer)
+    public CcsErrorPool_t(TextWriter writer)
     {
 	this.writer = writer;
 	warningCount = 0;
@@ -40,24 +40,24 @@ public class CcsErrorPool_t {
     {
     }
 
-    void Info(string s)
+    public void Info(string s)
     {
 	writer.WriteLine(s);
     }
 
-    void Warning(int line, int col, string s)
+    public void Warning(int line, int col, string s)
     {
 	writer.WriteLine("Warning({0}, {1}): {2}", line, col, s);
 	++warningCount;
     }
 
-    void Error(int line, int col, string s)
+    public void Error(int line, int col, string s)
     {
 	writer.WriteLine("Error({0}, {1}): {2}", line, col, s);
 	++errorCount;
     }
 
-    void Fatal(int line, int col, string s)
+    public void Fatal(int line, int col, string s)
     {
 	writer.WriteLine("Fatal Error({0}, {1}): {2}", line, col, s);
 	Environment.Exit(-1);
