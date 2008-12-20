@@ -179,7 +179,7 @@ CSOS_WriteState(CcCSharpOutputScheme_t * self, CcOutput_t * output,
 	CcPrintf(output, ") {\n");
 	output->indent += 4;
 	CcPrintfI(output, "GetCh(); goto case_%d;\n",
-		  self->prefix, action->target->state->base.index);
+		  action->target->state->base.index);
 	output->indent -= 4;
 	CcCharSet_Destruct(s);
     }
@@ -191,9 +191,8 @@ CSOS_WriteState(CcCSharpOutputScheme_t * self, CcOutput_t * output,
     } else if (CcSymbol_GetTokenKind(state->endOf) != symbol_classLitToken) {
 	CcPrintf(output, "kind = %d;", state->endOf->kind);
     } else {
-	CcPrintf(output,
-		 "kind = GetKWKind(pos, this.pos, %d);",
-		 self->prefix, state->endOf->kind);
+	CcPrintf(output, "kind = GetKWKind(pos, this.pos, %d);",
+		 state->endOf->kind);
     }
     CcPrintf(output, " break; }\n");
     output->indent -= 4;
@@ -419,7 +418,7 @@ CSOS_Pragmas(CcCSharpOutputScheme_t * self, CcOutput_t * output)
 
     for (sym = sym1 = (const CcSymbolPR_t *)CcArrayList_FirstC(pragmas, &iter);
 	 sym; sym = (const CcSymbolPR_t *)CcArrayList_NextC(pragmas, &iter)) {
-	CcPrintfI(output, "%sif (self->la->kind == %d) {\n",
+	CcPrintfI(output, "%sif (la.kind == %d) {\n",
 		  (sym == sym1) ? "" : "} else ", sym->base.kind);
 	if (sym->semPos) {
 	    output->indent += 4;
@@ -432,32 +431,9 @@ CSOS_Pragmas(CcCSharpOutputScheme_t * self, CcOutput_t * output)
 }
 
 static CcsBool_t
-CSOS_ProductionsHeader(CcCSharpOutputScheme_t * self, CcOutput_t * output)
-{
-    CcArrayListIter_t iter;
-    const CcSymbolNT_t * sym;
-    const CcArrayList_t * nonterminals =
-	&self->base.globals->symtab.nonterminals;
-
-    for (sym = (const CcSymbolNT_t *)CcArrayList_FirstC(nonterminals, &iter);
-	 sym;
-	 sym = (const CcSymbolNT_t *)CcArrayList_NextC(nonterminals, &iter))
-	if (sym->attrPos)
-	    CcPrintfI(output,
-		      "static void %sParser_%s(%sParser_t * self, %s);\n",
-		      self->prefix, sym->base.name,
-		      self->prefix, sym->attrPos->text);
-	else
-	    CcPrintfI(output, "static void %sParser_%s(%sParser_t * self);\n",
-		      self->prefix, sym->base.name, self->prefix);
-    return TRUE;
-}
-
-static CcsBool_t
 CSOS_ParseRoot(CcCSharpOutputScheme_t * self, CcOutput_t * output)
 {
-    CcPrintfI(output, "%sParser_%s(self);\n", self->prefix,
-	      self->base.globals->syntax.gramSy->name);
+    CcPrintfI(output, "%s();\n", self->base.globals->syntax.gramSy->name);
     return TRUE;
 }
 
@@ -474,21 +450,20 @@ SCSOS_GenCond(CcCSharpOutputScheme_t * self, CcOutput_t * output,
 	prslv = (CcNodeRSLV_t *)p;
 	CcPrintfI(output, "%s%s%s\n", prefix, prslv->pos->text, suffix);
     } else if ((n = CcBitArray_Elements(s)) == 0) {
-	CcPrintfI(output, "%s%s%s\n", prefix, "FALSE", suffix);
+	CcPrintfI(output, "%s%s%s\n", prefix, "false", suffix);
     } else if (n <= maxTerm) {
 	CcPrintfI(output, "%s", prefix);
 	terminals = &self->base.globals->symtab.terminals;
 	for (sym = (const CcSymbol_t *)CcArrayList_FirstC(terminals, &iter);
 	     sym; sym = (const CcSymbol_t *)CcArrayList_NextC(terminals, &iter))
 	    if (CcBitArray_Get(s, sym->kind)) {
-		CcPrintf(output, "self->la->kind == %d", sym->kind);
+		CcPrintf(output, "la.kind == %d", sym->kind);
 		if (--n > 0) CcPrintf(output, " || ");
 	    }
 	CcPrintf(output, "%s\n", suffix);
     } else {
-	CcPrintfI(output, "%s%sParser_StartOf(self, %d)%s\n",
-		  prefix, self->prefix,
-		  CcSyntaxSymSet_New(&self->symSet, s), suffix);
+	CcPrintfI(output, "%sStartOf(%d)%s\n",
+		  prefix, CcSyntaxSymSet_New(&self->symSet, s), suffix);
     }
 }
 
@@ -536,29 +511,25 @@ SCSOS_GenCode(CcCSharpOutputScheme_t * self, CcOutput_t * output,
 	if (p->base.type == node_nt) {
 	    pnt = (CcNodeNT_t *)p;
 	    if (pnt->pos) {
-		CcPrintfI(output, "%sParser_%s(self, %s);\n",
-			  self->prefix, pnt->sym->name, pnt->pos->text);
+		CcPrintfI(output, "%s(%s);\n", pnt->sym->name, pnt->pos->text);
 	    } else {
-		CcPrintfI(output, "%sParser_%s(self);\n",
-			  self->prefix, pnt->sym->name);
+		CcPrintfI(output, "%s();\n", pnt->sym->name);
 	    }
 	} else if (p->base.type == node_t) {
 	    pt = (CcNodeT_t *)p;
 	    if (CcBitArray_Get(&isChecked, pt->sym->kind))
-		CcPrintfI(output, "%sParser_Get(self);\n", self->prefix);
+		CcPrintfI(output, "Get();\n");
 	    else
-		CcPrintfI(output, "%sParser_Expect(self, %d);\n",
-			  self->prefix, pt->sym->kind);
+		CcPrintfI(output, "Expect(%d);\n", pt->sym->kind);
 	} else if (p->base.type == node_wt) {
 	    pwt = (CcNodeWT_t *)p;
 	    CcSyntax_Expected(syntax, &s1, p->next, self->curSy);
 	    CcBitArray_Or(&s1, syntax->allSyncSets);
-	    CcPrintfI(output, "%sParser_ExpectWeak(self, %d, %d);\n",
-		      self->prefix, pwt->sym->kind,
-		      CcSyntaxSymSet_New(&self->symSet, &s1));
+	    CcPrintfI(output, "ExpectWeak(%d, %d);\n",
+		      pwt->sym->kind, CcSyntaxSymSet_New(&self->symSet, &s1));
 	    CcBitArray_Destruct(&s1);
 	} else if (p->base.type == node_any) {
-	    CcPrintfI(output, "%sParser_Get(self);\n", self->prefix);
+	    CcPrintfI(output, "Get();\n");
 	} else if (p->base.type == node_eps) {
 	} else if (p->base.type == node_rslv) {
 	} else if (p->base.type == node_sem) {
@@ -570,9 +541,7 @@ SCSOS_GenCode(CcCSharpOutputScheme_t * self, CcOutput_t * output,
 	    CcBitArray_Clone(&s1, psync->set);
 	    SCSOS_GenCond(self, output, "while (!(", ")) {", &s1, p);
 	    output->indent += 4;
-	    CcPrintfI(output,
-		      "%sParser_SynErr(self, %d); %sParser_Get(self);\n",
-		      self->prefix, err, self->prefix);
+	    CcPrintfI(output, "SynErr(%d); Get();\n", err);
 	    output->indent -= 4;
 	    CcPrintfI(output, "}\n");
 	    CcBitArray_Destruct(&s1);
@@ -582,7 +551,7 @@ SCSOS_GenCode(CcCSharpOutputScheme_t * self, CcOutput_t * output,
 	    CcBitArray_Destruct(&s1);
 	    useSwitch = SCSOS_UseSwitch(self, p);
 	    if (useSwitch)
-		CcPrintfI(output, "switch (self->la->kind) {\n");
+		CcPrintfI(output, "switch (la.kind) {\n");
 	    p2 = p;
 	    while (p2 != NULL) {
 		CcSyntax_Expected(syntax, &s1, p2->sub, self->curSy);
@@ -614,13 +583,10 @@ SCSOS_GenCode(CcCSharpOutputScheme_t * self, CcOutput_t * output,
 	    } else {
 		err = CcSyntax_AltError(syntax, self->curSy);
 		if (useSwitch) {
-		    CcPrintfI(output,
-			      "default: %sParser_SynErr(self, %d); break;\n",
-			      self->prefix, err);
+		    CcPrintfI(output, "default: SynErr(%d); break;\n", err);
 		    CcPrintfI(output, "}\n");
 		} else {
-		    CcPrintfI(output, "} else %sParser_SynErr(self, %d);\n",
-			      self->prefix, err);
+		    CcPrintfI(output, "} else SynErr(%d);\n", err);
 		}
 	    }
 	} else if (p->base.type == node_iter) {
@@ -629,8 +595,8 @@ SCSOS_GenCode(CcCSharpOutputScheme_t * self, CcOutput_t * output,
 		CcSyntax_Expected(syntax, &s1, p2->next, self->curSy);
 		CcSyntax_Expected(syntax, &s2, p->next, self->curSy);
 		CcPrintfI(output,
-			  "while (%sParser_WeakSeparator(self, %d, %d, %d)) {\n",
-			  self->prefix, ((CcNodeWT_t *)p2)->sym->kind,
+			  "while (WeakSeparator(%d, %d, %d)) {\n",
+			  ((CcNodeWT_t *)p2)->sym->kind,
 			  CcSyntaxSymSet_New(&self->symSet, &s1),
 			  CcSyntaxSymSet_New(&self->symSet, &s2));
 		CcBitArray_Destruct(&s1); CcBitArray_Destruct(&s2);
@@ -664,7 +630,7 @@ SCSOS_GenCode(CcCSharpOutputScheme_t * self, CcOutput_t * output,
 }
 
 static CcsBool_t
-CSOS_ProductionsBody(CcCSharpOutputScheme_t * self, CcOutput_t * output)
+CSOS_Productions(CcCSharpOutputScheme_t * self, CcOutput_t * output)
 {
     CcBitArray_t isChecked;
     CcArrayListIter_t iter;
@@ -678,15 +644,10 @@ CSOS_ProductionsBody(CcCSharpOutputScheme_t * self, CcOutput_t * output)
 	 sym = (const CcSymbolNT_t *)CcArrayList_NextC(nonterminals, &iter)) {
 	self->curSy = (const CcSymbol_t *)sym;
 	if (sym->attrPos == NULL) {
-	    CcPrintfI(output, "static void\n");
-	    CcPrintfI(output, "%sParser_%s(%sParser_t * self)\n",
-		      self->prefix, sym->base.name,
-		      self->prefix);
+	    CcPrintfI(output, "private void %s()\n", sym->base.name);
 	} else {
-	    CcPrintfI(output, "static void\n");
-	    CcPrintfI(output, "%sParser_%s(%sParser_t * self, %s)\n",
-		      self->prefix, sym->base.name,
-		      self->prefix, sym->attrPos->text);
+	    CcPrintfI(output, "private void %s(%s)\n",
+		      sym->base.name, sym->attrPos->text);
 	}
 	CcPrintfI(output, "{\n");
 	output->indent += 4;
@@ -712,14 +673,14 @@ CSOS_SynErrors(CcCSharpOutputScheme_t * self, CcOutput_t * output)
 	str = CcEscape(synerr->sym->name);
 	switch (synerr->type) {
 	case cet_t:
-	    CcPrintf(output, "\\\"\" %s \"\\\" expected", str);
+	    CcPrintf(output, "\\\"\" + %s + \"\\\" expected", str);
 	    break;
 	case cet_alt:
 	    CcPrintf(output,
-		     "this symbol not expected in \\\"\" %s \"\\\"", str);
+		     "this symbol not expected in \\\"\" + %s + \"\\\"", str);
 	    break;
 	case cet_sync:
-	    CcPrintf(output, "invalid \\\"\" %s \"\\\"", str);
+	    CcPrintf(output, "invalid \\\"\" + %s + \"\\\"", str);
 	    break;
 	}
 	CcFree(str);
@@ -786,12 +747,10 @@ CcCSharpOutputScheme_write(CcOutputScheme_t * self, CcOutput_t * output,
 	return CSOS_Destructor(ccself, output);
     } else if (!strcmp(func, "Pragmas")) {
 	return CSOS_Pragmas(ccself, output);
-    } else if (!strcmp(func, "ProductionsHeader")) {
-	return CSOS_ProductionsHeader(ccself, output);
+    } else if (!strcmp(func, "Productions")) {
+	return CSOS_Productions(ccself, output);
     } else if (!strcmp(func, "ParseRoot")) {
 	return CSOS_ParseRoot(ccself, output);
-    } else if (!strcmp(func, "ProductionsBody")) {
-	return CSOS_ProductionsBody(ccself, output);
     } else if (!strcmp(func, "SynErrors")) {
 	return CSOS_SynErrors(ccself, output);
     } else if (!strcmp(func, "InitSet")) {
