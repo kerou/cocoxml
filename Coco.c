@@ -26,6 +26,7 @@
 #include  "c/Parser.h"
 #include  "c/XmlParser.h"
 #include  "c/COutputScheme.h"
+#include  "csharp/CSharpOutputScheme.h"
 #include  "dump/DumpOutputScheme.h"
 
 static const char * usage_format =
@@ -35,7 +36,7 @@ static const char * usage_format =
     "  -u       <UPDATED-FILE>\n"
     "  -ud      <UPDATED-DIR>\n"
     "\n"
-    "The possible value of SCHEME is 'c' or 'dump', 'c' is default.\n"
+    "The possible value of SCHEME is 'c', 'csharp' or 'dump', 'c' is default.\n"
     "Multiple UPDATE-FILEs are possible, they specifies all of the files which should be updated.\n"
     "Multiple UPDATE-DIRs are permitted, all atg specified files in UPDATE-DIRs are updated.\n";
 
@@ -92,6 +93,10 @@ main(int argc, char * argv[])
     if (!strcmp(schemeName, "c")) {
 	if (!(scheme = (CcOutputScheme_t *)
 	      CcCOutputScheme(parser, xmlparser, &arguments)))
+	    goto errquit1;
+    } else if (!strcmp(schemeName, "csharp")) {
+	if (!(scheme = (CcOutputScheme_t *)
+	      CcCSharpOutputScheme(parser, xmlparser, &arguments)))
 	    goto errquit1;
     } else if (!strcmp(schemeName, "dump")) {
 	if (!(scheme = (CcOutputScheme_t *)
