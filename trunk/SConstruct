@@ -43,7 +43,7 @@ Export('lib')
 
 SConscript(os.path.join('tests', 'SConscript'))
 
-env.Program('Coco', ['Coco.c', lib], LIBS=['expat'])
+env.Program('Coco', ['Coco.c', lib])
 env.Program('CocoInit', ['CocoInit.c'])
 
 SConscript(os.path.join('xmltest', 'SConscript'))

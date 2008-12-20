@@ -4,6 +4,6 @@
 
 Import('env', 'lib')
 
-env.Program('TestRss', ['TestRss.c', 'RssData.c',
-                        'Scanner4Xml.c', 'Parser4Xml.c', lib],
+env.Program('TestRss', ['TestRss.c', 'RssData.c', 'Scanner4Xml.c',
+                        'Parser4Xml.c', 'XmlScanOper.c', lib],
             LIBS = ['expat'])

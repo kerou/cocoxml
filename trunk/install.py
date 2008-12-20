@@ -75,7 +75,8 @@ for f in ['Buffer', 'CDefs', 'ErrorPool', 'Position', 'Token',
 install_lines(os.path.join(tgtdir, 'PREFIX'), ['Ccs'])
 
 tgtdir = os.path.join(tempdir, 'cxml')
-for f in ['CDefs', 'ErrorPool', 'Token', 'Scanner4Xml', 'Parser4Xml']:
+for f in ['CDefs', 'ErrorPool', 'Token',
+          'Scanner4Xml', 'Parser4Xml', 'XmlScanOper']:
     install(tgtdir, os.path.join('schemes', 'c', f + '.h'))
     install(tgtdir, os.path.join('schemes', 'c', f + '.c'))
 install_lines(os.path.join(tgtdir, 'PREFIX'), ['Ccx'])
