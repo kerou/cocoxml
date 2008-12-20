@@ -28,4 +28,5 @@ csenv['CSCFLAGS'] = SCons.Util.CLVar('')
 csenv['CSCCOM'] = SCons.Action.Action(csccom)
 csenv['CSCLIBCOM'] = SCons.Action.Action(csclibcom)
 
-TestExe = csenv.CLIProgram('Test', ['ErrorPool.cs', 'Token.cs', 'Buffer.cs'])
+#TestExe = csenv.CLIProgram('Test', ['ErrorPool.cs', 'Token.cs', 'Buffer.cs',
+#                                    'Position.cs'])
