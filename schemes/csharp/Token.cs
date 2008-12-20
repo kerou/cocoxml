@@ -23,15 +23,18 @@
 -------------------------------------------------------------------------*/
 
 public class CcsToken_t {
-    CcsToken_t next;
-    int        kind;
-    int        pos;
-    int        col;
-    int        line;
-    string     val;
+    public CcsToken_t next;
+    public int        refcnt;
+    public int        kind;
+    public long       pos;
+    public int        col;
+    public int        line;
+    public string     val;
 
-    public CcsToken_t(int kind, int pos, int col, int line, string val)
+    public CcsToken_t(int kind, long pos, int col, int line, string val)
     {
+	this.next = null;
+	this.refcnt = 0;
 	this.kind = kind;
 	this.pos = pos;
 	this.col = col;

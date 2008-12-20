@@ -26,9 +26,9 @@ using System.Diagnostics;
 using System.IO;
 
 public class CcsBuffer_t {
-    const int EoF = -1;
-    const int ErrorChr = -2;
-    const int BUFSTEP = 4096;
+    public const int EoF = -1;
+    public const int ErrorChr = -2;
+    public const int BUFSTEP = 4096;
     Stream stream;
     bool eof;
     long start;

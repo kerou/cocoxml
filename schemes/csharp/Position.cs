@@ -23,12 +23,12 @@
 -------------------------------------------------------------------------*/
 
 public class CcsPosition_t {
-    int beg;
-    int len;
-    int col;
-    string text;
+    public long beg;
+    public int len;
+    public int col;
+    public string text;
 
-    CcsPosition_t(int beg, int len, int col, string text)
+    public CcsPosition_t(long beg, int len, int col, string text)
     {
 	this.beg = beg;
 	this.len = len;
@@ -40,7 +40,7 @@ public class CcsPosition_t {
     {
     }
 
-    CcsPosition_t Clone()
+    public CcsPosition_t Clone()
     {
 	return new CcsPosition_t(beg, len, col, text);
     }
