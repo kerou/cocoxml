@@ -67,21 +67,15 @@ CharRepr(char * buf, size_t szbuf, int ch)
 }
 
 static CcsBool_t
-CSOS_Defines(CcCSharpOutputScheme_t * self, CcOutput_t * output)
-{
-    if (!self->base.globals->lexical->ignoreCase)
-	CcPrintfI(output, "#define CASE_SENSITIVE\n");
-    return TRUE;
-}
-
-static CcsBool_t
 CSOS_Declarations(CcCSharpOutputScheme_t * self, CcOutput_t * output)
 {
-    CcPrintfI(output, "self->eofSym = %d;\n",
+    CcPrintfI(output, "caseSensitive = %s;\n",
+	      self->base.globals->lexical->ignoreCase ? "false" : "true");
+    CcPrintfI(output, "eofSym = %d;\n",
 	      self->base.globals->syntax.eofSy->kind);
-    CcPrintfI(output, "self->maxT = %d;\n",
+    CcPrintfI(output, "maxT = %d;\n",
 	      self->base.globals->symtab.terminals.Count - 1);
-    CcPrintfI(output, "self->noSym = %d;\n",
+    CcPrintfI(output, "noSym = %d;\n",
 	      self->base.globals->syntax.noSy->kind);
     return TRUE;
 }
@@ -92,10 +86,10 @@ CSOS_Chars2States(CcCSharpOutputScheme_t * self, CcOutput_t * output)
     int numEle;
     CcLexical_StartTab_t * table, * cur;
     char buf0[8], buf1[8];
-    CcPrintfI(output, "{ EoF, EoF, -1 },\n");
+    CcPrintfI(output, "new Char2State_t(CcsBuffer_t.EoF, CcsBuffer_t.EoF, -1),\n");
     table = CcLexical_GetStartTab(self->base.globals->lexical, &numEle);
     for (cur = table; cur - table < numEle; ++cur)
-	CcPrintfI(output, "{ %d, %d, %d },\t/* %s %s */\n",
+	CcPrintfI(output, "new Char2State_t(%d, %d, %d),\t/* %s %s */\n",
 		  cur->keyFrom, cur->keyTo, cur->state,
 		  CharRepr(buf0, sizeof(buf0), cur->keyFrom),
 		  CharRepr(buf1, sizeof(buf1), cur->keyTo));
@@ -112,7 +106,8 @@ CSOS_Identifiers2KeywordKinds(CcCSharpOutputScheme_t * self,
 
     list = CcLexical_GetIdentifiers(self->base.globals->lexical, &numEle);
     for (cur = list; cur - list < numEle; ++cur)
-	CcPrintfI(output, "{ %s, %d },\n", cur->name, cur->index);
+	CcPrintfI(output, "new Identifier2KWKind_t(%s, %d),\n",
+		  cur->name, cur->index);
     CcLexical_Identifiers_Destruct(list, numEle);
     return TRUE;
 }
@@ -124,12 +119,12 @@ CSOS_Comments(CcCSharpOutputScheme_t * self, CcOutput_t * output)
     char buf0[8], buf1[8], buf2[8], buf3[8];
     output->indent += 4;
     for (cur = self->base.globals->lexical->firstComment; cur; cur = cur->next)
-	CcPrintfI(output, "{ { %s, %s }, { %s, %s }, %s },\n",
+	CcPrintfI(output, "new CcsComment_t(%s, %s, %s, %s, %s),\n",
 		  CharRepr(buf0, sizeof(buf0), cur->start[0]),
 		  CharRepr(buf1, sizeof(buf1), cur->start[1]),
 		  CharRepr(buf2, sizeof(buf2), cur->stop[0]),
 		  CharRepr(buf3, sizeof(buf3), cur->stop[1]),
-		  cur->nested ? "TRUE" : "FALSE");
+		  cur->nested ? "true" : "false");
     output->indent -= 4;
     return TRUE;
 }
@@ -142,10 +137,10 @@ CSOS_Scan1(CcCSharpOutputScheme_t * self, CcOutput_t * output)
     for (curRange = self->base.globals->lexical->ignored->head;
 	 curRange; curRange = curRange->next) {
 	if (curRange->from == curRange->to)
-	    CcPrintfI(output, "|| self->ch == %s\n",
+	    CcPrintfI(output, "|| ch == %s\n",
 		      CharRepr(buf0 ,sizeof(buf0), curRange->from));
 	else
-	    CcPrintfI(output, "|| (self->ch >= %s && self->ch <= %s)\n",
+	    CcPrintfI(output, "|| (ch >= %s && ch <= %s)\n",
 		      CharRepr(buf0 ,sizeof(buf0), curRange->from),
 		      CharRepr(buf1 ,sizeof(buf1), curRange->to));
     }
@@ -173,17 +168,17 @@ CSOS_WriteState(CcCSharpOutputScheme_t * self, CcOutput_t * output,
 	for (curRange = s->head; curRange; curRange = curRange->next) {
 	    if (curRange != s->head) CcPrintfI(output, "    ");
 	    if (curRange->from == curRange->to)
-		CcPrintf(output,"self->ch == %s",
+		CcPrintf(output,"ch == %s",
 			CharRepr(buf0, sizeof(buf0), curRange->from));
 	    else
-		CcPrintf(output, "(self->ch >= %s && self->ch <= %s)",
+		CcPrintf(output, "(ch >= %s && ch <= %s)",
 			 CharRepr(buf0, sizeof(buf0), curRange->from),
 			 CharRepr(buf1, sizeof(buf1), curRange->to));
 	    if (curRange->next) CcPrintf(output, " ||\n");
 	}
 	CcPrintf(output, ") {\n");
 	output->indent += 4;
-	CcPrintfI(output, "%sScanner_GetCh(self); goto case_%d;\n",
+	CcPrintfI(output, "GetCh(); goto case_%d;\n",
 		  self->prefix, action->target->state->base.index);
 	output->indent -= 4;
 	CcCharSet_Destruct(s);
@@ -192,12 +187,12 @@ CSOS_WriteState(CcCSharpOutputScheme_t * self, CcOutput_t * output,
     if (state->firstAction == NULL) CcPrintfI(output, "{ ");
     else CcPrintfI(output, "} else { ");
     if (state->endOf == NULL) {
-	CcPrintf(output, "kind = self->noSym;");
+	CcPrintf(output, "kind = noSym;");
     } else if (CcSymbol_GetTokenKind(state->endOf) != symbol_classLitToken) {
 	CcPrintf(output, "kind = %d;", state->endOf->kind);
     } else {
 	CcPrintf(output,
-		 "kind = %sScanner_GetKWKind(self, pos, self->pos, %d);",
+		 "kind = GetKWKind(pos, this.pos, %d);",
 		 self->prefix, state->endOf->kind);
     }
     CcPrintf(output, " break; }\n");
@@ -765,9 +760,7 @@ CcCSharpOutputScheme_write(CcOutputScheme_t * self, CcOutput_t * output,
 {
     CcCSharpOutputScheme_t * ccself = (CcCSharpOutputScheme_t *)self;
 
-    if (!strcmp(func, "defines")) {
-	return CSOS_Defines(ccself, output);
-    } else if (!strcmp(func, "declarations")) {
+    if (!strcmp(func, "declarations")) {
 	return CSOS_Declarations(ccself, output);
     } else if (!strcmp(func, "chars2states")) {
 	return CSOS_Chars2States(ccself, output);

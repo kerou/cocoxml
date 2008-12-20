@@ -79,3 +79,8 @@ for f in ['CDefs', 'ErrorPool', 'Token', 'Scanner4Xml', 'Parser4Xml']:
     install(tgtdir, os.path.join('schemes', 'c', f + '.h'))
     install(tgtdir, os.path.join('schemes', 'c', f + '.c'))
 install_lines(os.path.join(tgtdir, 'PREFIX'), ['Ccx'])
+
+tgtdir = os.path.join(tempdir, 'csharp')
+for f in ['Buffer', 'ErrorPool', 'Position', 'Token', 'Scanner']:
+    install(tgtdir, os.path.join('schemes', 'csharp', f + '.cs'))
+install_lines(os.path.join(tgtdir, 'PREFIX'), ['Ccs'])
