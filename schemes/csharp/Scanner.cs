@@ -172,13 +172,20 @@ public class CcsScanner_t {
     }
 
     /* All the following things are used by CcsScanner_NextToken. */
-    private struct Char2State_t {
-	int keyFrom;
-	int keyTo;
-	int val;
+    private class Char2State_t {
+	private int keyFrom;
+	private int keyTo;
+	public  int val;
+
+	public int Compare(Char2State_t x, Char2State_t y)
+	{
+	    if (x.keyFrom < y.keyFrom) return -1;
+	    if (x.keyFrom > y.keyFrom) return 1;
+	    return 0;
+	}
     };
 
-    private const Char2State_t c2sArr[] = {
+    private const Char2State_t[] c2sArr = {
 	/*---- chars2states ----*/
 	{ CcsBuffer_t.EoF, CcsBuffer_t.EoF, -1 },
 	{ 34, 34, 11 },	/* '"' '"' */
@@ -206,14 +213,18 @@ public class CcsScanner_t {
 
     private int Char2State(int chr)
     {
-	Char2State_t * c2s;
-	c2s = bsearch(&chr, c2sArr, c2sNum, sizeof(Char2State_t), c2sCmp);
-	return c2s ? c2s->val : 0;
+	int index = Array.BinarySearch(c2sArr, chr);
+	return index >= 0 && index < c2sArr.Count ? c2sArr[index].val : 0;
     }
 
-    private struct Identifier2KWKind_t {
-	const char * key;
-	int val;
+    private clsss Identifier2KWKind_t {
+	private const string key;
+	public int val;
+
+	public int Compare(Identifier2KWKind_t x, Identifier2KWKind_t y)
+	{
+	    return Compare(x.key, y.key);
+	}
     };
 
     private const Identifier2KWKind_t i2kArr[] = {
@@ -244,29 +255,21 @@ public class CcsScanner_t {
 	/*---- enable ----*/
     };
 
-    private int Identifier2KWKind(const char * key, size_t keylen, int defaultVal)
+    private int Identifier2KWKind(string key, int defaultVal)
     {
-	char * keystr;
+	int index;
 #ifndef CASE_SENSITIVE
-	char * cur;
+	key = key.lower();
 #endif
-	Identifier2KWKind_t * i2k;
-
-	if (!(keystr = CcsMalloc(keylen + 1))) exit(-1);
-	memcpy(keystr, key, keylen);
-	keystr[keylen] = 0;
-#ifndef CASE_SENSITIVE
-	for (cur = keystr; *cur; ++cur) *cur = tolower(*cur);
-#endif
-	i2k = bsearch(keystr, i2kArr, i2kNum, sizeof(Identifier2KWKind_t), i2kCmp);
-	CcsFree(keystr);
-	return i2k ? i2k->val : defaultVal;
+	index = Array.BinarySearch(i2kArr, key);
+	return index >= 0 && index < i2kArr.Count ?
+	    i2kArr[index].val : defaultVal;
     }
 
     private int GetKWKind(int start, int end, int defaultVal)
     {
 	return Identifier2KWKind(buffer.GetString(start, end - start),
-				 end - start, defaultVal);
+				 defaultVal);
     }
 
     private void GetCh()
@@ -530,20 +533,3 @@ public class CcsScanner_t {
 	return t;
     }
 }
-
-static int
-c2sCmp(const void * key, const void * c2s)
-{
-    int keyval = *(const int *)key;
-    const Char2State_t * ccc2s = (const Char2State_t *)c2s;
-    if (keyval < ccc2s->keyFrom) return -1;
-    if (keyval > ccc2s->keyTo) return 1;
-    return 0;
-}
-
-static int
-i2kCmp(const void * key, const void * i2k)
-{
-    return strcmp((const char *)key, ((const Identifier2KWKind_t *)i2k)->key);
-}
-
