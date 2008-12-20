@@ -28,13 +28,13 @@
  Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
-
-/*---- defines ----*/
-#define CASE_SENSITIVE
-/*---- enable ----*/
+using System;
+using System.IO;
+using System.Diagnostics;
 
 public class CcsScanner_t {
     CcsErrorPool_t errpool;
+    bool           caseSensitive;
     int            eofSym;
     int            noSym;
     int            maxT;
@@ -45,26 +45,27 @@ public class CcsScanner_t {
 
     int            ch;
     int            chBytes;
-    int            pos;
+    long           pos;
     int            line;
     int            col;
     int            oldEols;
-    int            oldEolsEOL;
+    bool           oldEolsEOL;
     CcsBuffer_t    buffer;
 
     CcsScanner_t(CcsErrorPool_t errpool, string filename)
     {
 	Stream stream;
 	this.errpool = errpool;
-	stream = FileStream(filename, FileMode.Open);
-	dummyToken = CcsToken_t(0, 0, 0, 0, "dummy");
-	buffer = CcsBuffer_t(stream);
+	stream = new FileStream(filename, FileMode.Open);
+	dummyToken = new CcsToken_t(0, 0, 0, 0, "dummy");
+	buffer = new CcsBuffer_t(stream);
 	Init();
     }
 
     private void Init()
     {
 	/*---- declarations ----*/
+	caseSensitive = true;
 	eofSym = 0;
 	maxT = 47;
 	noSym = 47;
@@ -76,7 +77,7 @@ public class CcsScanner_t {
 
 	ch = 0; chBytes = 0;
 	pos = 0; line = 1; col = 0;
-	oldEols = 0; oldEolsEOL = 0;
+	oldEols = 0; oldEolsEOL = false;
 	GetCh();
     }
 
@@ -91,31 +92,31 @@ public class CcsScanner_t {
 
     CcsToken_t Scan()
     {
-	CcsToken_t * cur;
-	if (*self->curToken == NULL) {
-	    *self->curToken = CcsScanner_NextToken(self);
-	    if (self->curToken == &self->busyTokenList)
-		CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
+	CcsToken_t cur;
+	if (curToken == null) {
+	    curToken = NextToken();
+	    if (curToken == busyTokenList)
+		buffer.SetBusy(busyTokenList.pos);
 	}
-	cur = *self->curToken;
-	self->peekToken = self->curToken = &cur->next;
-	++cur->refcnt;
+	cur = curToken;
+	peekToken = curToken = cur.next;
+	++cur.refcnt;
 	return cur;
     }
 
     CcsToken_t Peek()
     {
-	CcsToken_t * cur;
+	CcsToken_t cur;
 	do {
-	    if (*self->peekToken == NULL) {
-		*self->peekToken = CcsScanner_NextToken(self);
-		if (self->peekToken == &self->busyTokenList)
-		    CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
+	    if (peekToken == null) {
+		peekToken = NextToken();
+		if (peekToken == busyTokenList)
+		    buffer.SetBusy(busyTokenList.pos);
 	    }
-	    cur = *self->peekToken;
-	    self->peekToken = &cur->next;
-	} while (cur->kind > self->maxT); /* Skip pragmas */
-	++cur->refcnt;
+	    cur = peekToken;
+	    peekToken = cur.next;
+	} while (cur.kind > maxT); /* Skip pragmas */
+	++cur.refcnt;
 	return cur;
     }
 
@@ -131,154 +132,165 @@ public class CcsScanner_t {
 
     void DecRef(CcsToken_t token)
     {
-	CcsToken_t ** curToken;
-	if (token == self->dummyToken) return;
-	if (--token->refcnt > 0) return;
-	CcsAssert(self->busyTokenList != NULL);
-	for (curToken = &self->busyTokenList;
-	     *curToken != token; curToken = &(*curToken)->next)
-	    CcsAssert(*curToken && curToken != self->curToken);
+	CcsToken_t prevToken, curToken;
+	if (token == dummyToken) return;
+	if (--token.refcnt > 0) return;
+	Debug.Assert(busyTokenList != null);
+	for (prevToken = null, curToken = busyTokenList;
+	     curToken != token; prevToken = curToken, curToken = curToken.next)
+	    Debug.Assert(curToken != null && curToken != this.curToken);
 	/* Found, *curToken == token, detach and destroy it. */
-	*curToken = (*curToken)->next;
-	CcsToken_Destruct(token);
+	if (prevToken == null) busyTokenList = curToken.next;
+	else prevToken.next = curToken.next;
+	token = null;
 	/* Adjust CcsBuffer busy pointer */
-	if (curToken == &self->busyTokenList) {
-	    if (self->busyTokenList) {
-		CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
-	    } else {
-		CcsBuffer_ClearBusy(&self->buffer);
-	    }
+	if (prevToken == null) {
+	    if (busyTokenList != null) buffer.SetBusy(busyTokenList.pos);
+	    else buffer.ClearBusy();
 	}
     }
 
-    CcsPosition_t GetPosition(const CcsToken_t begin, const CcsToken_t end)
+    CcsPosition_t GetPosition(CcsToken_t begin, CcsToken_t end)
     {
-	int len = end->pos - begin->pos;
-	return CcsPosition(begin->pos, len, begin->col,
-			   CcsBuffer_GetString(&self->buffer, begin->pos, len));
+	int len = (int)(end.pos - begin.pos);
+	return new CcsPosition_t(begin.pos, len, begin.col,
+				 buffer.GetString(begin.pos, len));
     }
 
-    CcsPosition_t GetPositionBetween(const CcsToken_t begin, const CcsToken_t end)
+    CcsPosition_t GetPositionBetween(CcsToken_t begin, CcsToken_t end)
     {
-	int begpos = begin->pos + strlen(begin->val);
-	int len = end->pos - begpos;
-	const char * start = CcsBuffer_GetString(&self->buffer, begpos, len);
-	const char * cur, * last = start + len;
+	long begpos = begin.pos + begin.val.Length;
+	int len = (int)(end.pos - begpos);
+	string str = buffer.GetString(begpos, len);
+	int cur;
 
 	/* Skip the leading spaces. */
-	for (cur = start; cur < last; ++cur)
-	    if (*cur != ' ' && *cur != '\t' && *cur != '\r' && *cur != '\n') break;
-	return CcsPosition(begpos + (cur - start), last - cur, 0, cur);
+	for (cur = 0; cur < len; ++cur)
+	    if (str[cur] != ' ' && str[cur] != '\t' &&
+		str[cur] != '\r' && str[cur] != '\n') break;
+	return new CcsPosition_t(begpos + cur, len - cur, 0,
+				 str.Substring(cur));
     }
 
     /* All the following things are used by CcsScanner_NextToken. */
     private class Char2State_t {
-	private int keyFrom;
-	private int keyTo;
-	public  int val;
+	public int keyFrom;
+	public int keyTo;
+	public int val;
 
-	public int Compare(Char2State_t x, Char2State_t y)
+	public Char2State_t(int keyFrom, int keyTo, int val)
 	{
-	    if (x.keyFrom < y.keyFrom) return -1;
-	    if (x.keyFrom > y.keyFrom) return 1;
-	    return 0;
+	    this.keyFrom = keyFrom;
+	    this.keyTo = keyTo;
+	    this.val = val;
 	}
     };
 
-    private const Char2State_t[] c2sArr = {
+    static readonly Char2State_t[] c2sArr = {
 	/*---- chars2states ----*/
-	{ CcsBuffer_t.EoF, CcsBuffer_t.EoF, -1 },
-	{ 34, 34, 11 },	/* '"' '"' */
-	{ 36, 36, 10 },	/* '$' '$' */
-	{ 39, 39, 5 },	/* '\'' '\'' */
-	{ 40, 40, 30 },	/* '(' '(' */
-	{ 41, 41, 21 },	/* ')' ')' */
-	{ 43, 43, 14 },	/* '+' '+' */
-	{ 45, 45, 15 },	/* '-' '-' */
-	{ 46, 46, 28 },	/* '.' '.' */
-	{ 48, 57, 2 },	/* '0' '9' */
-	{ 60, 60, 29 },	/* '<' '<' */
-	{ 61, 61, 13 },	/* '=' '=' */
-	{ 62, 62, 17 },	/* '>' '>' */
-	{ 65, 90, 1 },	/* 'A' 'Z' */
-	{ 91, 91, 22 },	/* '[' '[' */
-	{ 93, 93, 23 },	/* ']' ']' */
-	{ 95, 95, 1 },	/* '_' '_' */
-	{ 97, 122, 1 },	/* 'a' 'z' */
-	{ 123, 123, 24 },	/* '{' '{' */
-	{ 124, 124, 20 },	/* '|' '|' */
-	{ 125, 125, 25 },	/* '}' '}' */
+	new Char2State_t(CcsBuffer_t.EoF, CcsBuffer_t.EoF, -1),
+	new Char2State_t(34, 34, 11),	/* '"' '"' */
+	new Char2State_t(36, 36, 10),	/* '$' '$' */
+	new Char2State_t(39, 39, 5),	/* '\'' '\'' */
+	new Char2State_t(40, 40, 30),	/* '(' '(' */
+	new Char2State_t(41, 41, 21),	/* ')' ')' */
+	new Char2State_t(43, 43, 14),	/* '+' '+' */
+	new Char2State_t(45, 45, 15),	/* '-' '-' */
+	new Char2State_t(46, 46, 28),	/* '.' '.' */
+	new Char2State_t(48, 57, 2),	/* '0' '9' */
+	new Char2State_t(60, 60, 29),	/* '<' '<' */
+	new Char2State_t(61, 61, 13),	/* '=' '=' */
+	new Char2State_t(62, 62, 17),	/* '>' '>' */
+	new Char2State_t(65, 90, 1),	/* 'A' 'Z' */
+	new Char2State_t(91, 91, 22),	/* '[' '[' */
+	new Char2State_t(93, 93, 23),	/* ']' ']' */
+	new Char2State_t(95, 95, 1),	/* '_' '_' */
+	new Char2State_t(97, 122, 1),	/* 'a' 'z' */
+	new Char2State_t(123, 123, 24),	/* '{' '{' */
+	new Char2State_t(124, 124, 20),	/* '|' '|' */
+	new Char2State_t(125, 125, 25),	/* '}' '}' */
 	/*---- enable ----*/
     };
 
     private int Char2State(int chr)
     {
-	int index = Array.BinarySearch(c2sArr, chr);
-	return index >= 0 && index < c2sArr.Count ? c2sArr[index].val : 0;
+	int m, b = 0, e = c2sArr.Length;
+	while (b < e) {
+	    m = (b + e) / 2;
+	    if (chr < c2sArr[m].keyFrom) e = m;
+	    else if (chr > c2sArr[m].keyTo) b = m + 1;
+	    else return c2sArr[m].val;
+	}
+	return 0;
     }
 
-    private clsss Identifier2KWKind_t {
-	private const string key;
+    private class Identifier2KWKind_t {
+	public string key;
 	public int val;
 
-	public int Compare(Identifier2KWKind_t x, Identifier2KWKind_t y)
+	public Identifier2KWKind_t(string key, int val)
 	{
-	    return Compare(x.key, y.key);
+	    this.key = key;
+	    this.val = val;
 	}
     };
 
-    private const Identifier2KWKind_t i2kArr[] = {
+    static readonly Identifier2KWKind_t[] i2kArr = {
 	/*---- identifiers2keywordkinds ----*/
-	{ "ANY", 29 },
-	{ "CHARACTERS", 11 },
-	{ "COMMENTS", 14 },
-	{ "COMPILER", 6 },
-	{ "CONSTRUCTOR", 8 },
-	{ "CONTEXT", 44 },
-	{ "DESTRUCTOR", 9 },
-	{ "END", 22 },
-	{ "FROM", 15 },
-	{ "IF", 43 },
-	{ "IGNORE", 18 },
-	{ "IGNORECASE", 10 },
-	{ "MEMBERS", 7 },
-	{ "NESTED", 17 },
-	{ "PRAGMAS", 13 },
-	{ "PRODUCTIONS", 19 },
-	{ "SCHEME", 23 },
-	{ "SECTION", 24 },
-	{ "SYNC", 42 },
-	{ "TO", 16 },
-	{ "TOKENS", 12 },
-	{ "UPDATES", 25 },
-	{ "WEAK", 35 },
+	new Identifier2KWKind_t("ANY", 29),
+	new Identifier2KWKind_t("CHARACTERS", 11),
+	new Identifier2KWKind_t("COMMENTS", 14),
+	new Identifier2KWKind_t("COMPILER", 6),
+	new Identifier2KWKind_t("CONSTRUCTOR", 8),
+	new Identifier2KWKind_t("CONTEXT", 44),
+	new Identifier2KWKind_t("DESTRUCTOR", 9),
+	new Identifier2KWKind_t("END", 22),
+	new Identifier2KWKind_t("FROM", 15),
+	new Identifier2KWKind_t("IF", 43),
+	new Identifier2KWKind_t("IGNORE", 18),
+	new Identifier2KWKind_t("IGNORECASE", 10),
+	new Identifier2KWKind_t("MEMBERS", 7),
+	new Identifier2KWKind_t("NESTED", 17),
+	new Identifier2KWKind_t("PRAGMAS", 13),
+	new Identifier2KWKind_t("PRODUCTIONS", 19),
+	new Identifier2KWKind_t("SCHEME", 23),
+	new Identifier2KWKind_t("SECTION", 24),
+	new Identifier2KWKind_t("SYNC", 42),
+	new Identifier2KWKind_t("TO", 16),
+	new Identifier2KWKind_t("TOKENS", 12),
+	new Identifier2KWKind_t("UPDATES", 25),
+	new Identifier2KWKind_t("WEAK", 35),
 	/*---- enable ----*/
     };
 
     private int Identifier2KWKind(string key, int defaultVal)
     {
-	int index;
-#ifndef CASE_SENSITIVE
-	key = key.lower();
-#endif
-	index = Array.BinarySearch(i2kArr, key);
-	return index >= 0 && index < i2kArr.Count ?
-	    i2kArr[index].val : defaultVal;
+	int rc, m, b = 0, e = i2kArr.Length;
+
+	if (!caseSensitive) key = key.ToLower();
+	while (b < e) {
+	    m = (b + e) / 2;
+	    rc = String.Compare(key, i2kArr[m].key);
+	    if (rc < 0) e = m;
+	    else if (rc > 0) b = m + 1;
+	    else return i2kArr[m].val;
+	}
+	return defaultVal;
     }
 
-    private int GetKWKind(int start, int end, int defaultVal)
+    private int GetKWKind(long start, long end, int defaultVal)
     {
-	return Identifier2KWKind(buffer.GetString(start, end - start),
+	return Identifier2KWKind(buffer.GetString(start, (int)(end - start)),
 				 defaultVal);
     }
 
     private void GetCh()
     {
 	if (oldEols > 0) {
-	    ch = '\n'; --oldEols; oldEolsEOL= 1;
+	    ch = '\n'; --oldEols; oldEolsEOL= true;
 	} else {
 	    if (ch == '\n') {
-		if (oldEolsEOL) oldEolsEOL = 0;
+		if (oldEolsEOL) oldEolsEOL = false;
 		else {
 		    ++line; col = 0;
 		}
@@ -289,24 +301,27 @@ public class CcsScanner_t {
 		 * is NOT self->chBytes. */
 		col += chBytes;
 	    }
-	    ch = buffer.Read(chBytes);
+	    ch = buffer.Read(out chBytes);
 	    pos = buffer.GetPos();
 	}
     }
 
-    private struct SLock_t {
-	int ch, chBytes;
-	int pos, line, col;
+    private class SLock_t {
+	public int ch, chBytes;
+	public long pos;
+	public int line, col;
     };
 
-    private void LockCh(SLock_t slock)
+    private SLock_t LockCh()
     {
+	SLock_t slock = new SLock_t();
 	slock.ch = ch;
 	slock.chBytes = chBytes;
 	slock.pos = pos;
 	slock.line = line;
 	slock.col = col;
 	buffer.Lock();
+	return slock;
     }
 
     private void UnlockCh(SLock_t slock)
@@ -314,7 +329,7 @@ public class CcsScanner_t {
 	buffer.Unlock();
     }
 
-    priate void ResetCh(SLock_t * slock)
+    private void ResetCh(SLock_t slock)
     {
 	ch = slock.ch;
 	chBytes = slock.chBytes;
@@ -323,72 +338,80 @@ public class CcsScanner_t {
 	buffer.LockReset();
     }
 
-    private struct CcsComment_t {
-	int start[2];
-	int end[2];
-	bool nested;
-    }
+    private class CcsComment_t {
+	public int[] start;
+	public int[] end;
+	public bool nested;
 
-    private const CcsComment_t comments[] = {
+	public CcsComment_t(int start0, int start1,
+			    int end0, int end1, bool nested)
+	{
+	    start = new int[2] { start0, start1 };
+	    end = new int[2] { end0, end1 };
+	    this.nested = nested;
+	}
+    }
+    static readonly CcsComment_t[] comments = {
 	/*---- comments ----*/
-	{ { '/', '/' }, { '\n', 0 }, FALSE },
-	{ { '/', '*' }, { '*', '/' }, TRUE },
+	new CcsComment_t('/', '/', '\n', 0, false),
+	new CcsComment_t('/', '*', '*', '/', true),
 	/*---- enable ----*/
     };
 
-    private bool Comment(const CcsComment_t c)
+    private bool Comment(CcsComment_t c)
     {
-	SLock_t slock;
+	SLock_t slock = null;
 	int level = 1, line0 = line;
 
-	if (c->start[1]) {
-	    CcsScanner_LockCh(self, &slock); GetCh();
-	    if (self->ch != c->start[1]) {
-		CcsScanner_ResetCh(self, &slock);
-		return FALSE;
+	if (c.start[1] != 0) {
+	    slock = LockCh(); GetCh();
+	    if (ch != c.start[1]) {
+		ResetCh(slock);
+		return false;
 	    }
-	    CcsScanner_UnlockCh(self, &slock);
+	    UnlockCh(slock);
 	}
 	GetCh();
 	for (;;) {
-	    if (self->ch == c->end[0]) {
-		if (c->end[1] == 0) {
+	    if (ch == c.end[0]) {
+		if (c.end[1] == 0) {
 		    if (--level == 0) break;
 		} else {
-		    CcsScanner_LockCh(self, &slock); GetCh();
-		    if (self->ch == c->end[1]) {
-			CcsScanner_UnlockCh(self, &slock);
+		    slock = LockCh(); GetCh();
+		    if (ch == c.end[1]) {
+			UnlockCh(slock);
 			if (--level == 0) break;
 		    } else {
-			CcsScanner_ResetCh(self, &slock);
+			ResetCh(slock);
 		    }
 		}
-	    } else if (c->nested && self->ch == c->start[0]) {
-		if (c->start[1] == 0) {
+	    } else if (c.nested && ch == c.start[0]) {
+		if (c.start[1] == 0) {
 		    ++level;
 		} else {
-		    CcsScanner_LockCh(self, &slock); GetCh();
-		    if (self->ch == c->start[1]) {
-			CcsScanner_UnlockCh(self, &slock);
+		    slock = LockCh(); GetCh();
+		    if (ch == c.start[1]) {
+			UnlockCh(slock);
 			++level;
 		    } else {
-			CcsScanner_ResetCh(self, &slock);
+			ResetCh(slock);
 		    }
 		}
-	    } else if (self->ch == EoF) {
-		return TRUE;
+	    } else if (ch == CcsBuffer_t.EoF) {
+		return true;
 	    }
 	    GetCh();
 	}
-	self->oldEols = self->line - line0;
+	oldEols = line - line0;
 	GetCh();
-	return TRUE;
+	return true;
     }
 
     public CcsToken_t NextToken()
     {
-	int pos, line, col, state, kind; CcsToken_t t;
-	const CcsComment_t curComment;
+	long pos;
+	int line, col, state, kind; CcsToken_t t;
+	int curComment;
 	for (;;) {
 	    while (ch == ' '
 		   /*---- scan1 ----*/
@@ -396,29 +419,29 @@ public class CcsScanner_t {
 		   || ch == '\r'
 		   /*---- enable ----*/
 		   ) GetCh();
-	    for (curComment = comments; curComment < commentsLast; ++curComment)
-		if (ch == curComment.start[0] &&
-		    CcsScanner_Comment(self, curComment)) break;
-	    if (curComment < commentsLast) continue;
-	    break;
+	    for (curComment = 0; curComment < comments.Length; ++curComment)
+		if (ch == comments[curComment].start[0] &&
+		    Comment(comments[curComment])) break;
+	    if (curComment >= comments.Length) break;
 	}
-	pos = self->pos; line = self->line; col = self->col;
-	CcsBuffer_Lock(&self->buffer);
-	state = Char2State(self->ch);
+	pos = this.pos; line = this.line; col = this.col;
+	buffer.Lock();
+	state = Char2State(ch);
 	GetCh();
+	kind = noSym;
 	switch (state) {
-	case -1: kind = self->eofSym; break;
-	case 0: kind = self->noSym; break;
+	case -1: kind = eofSym; break;
+	case 0: kind = noSym; break;
 	    /*---- scan3 ----*/
 	case 1: case_1:
-	    if ((self->ch >= '0' && self->ch <= '9') ||
-		(self->ch >= 'A' && self->ch <= 'Z') ||
-		self->ch == '_' ||
-		(self->ch >= 'a' && self->ch <= 'z')) {
+	    if ((ch >= '0' && ch <= '9') ||
+		(ch >= 'A' && ch <= 'Z') ||
+		ch == '_' ||
+		(ch >= 'a' && ch <= 'z')) {
 		GetCh(); goto case_1;
-	    } else { kind = CcsScanner_GetKWKind(self, pos, self->pos, 1); break; }
+	    } else { kind = GetKWKind(pos, this.pos, 1); break; }
 	case 2: case_2:
-	    if ((self->ch >= '0' && self->ch <= '9')) {
+	    if ((ch >= '0' && ch <= '9')) {
 		GetCh(); goto case_2;
 	    } else { kind = 2; break; }
 	case 3: case_3:
@@ -426,58 +449,58 @@ public class CcsScanner_t {
 	case 4: case_4:
 	    { kind = 4; break; }
 	case 5:
-	    if ((self->ch >= 0 && self->ch <= '\t') ||
-		(self->ch >= '\v' && self->ch <= '\f') ||
-		(self->ch >= 14 && self->ch <= '&') ||
-		(self->ch >= '(' && self->ch <= '[') ||
-		(self->ch >= ']' && self->ch <= 65535)) {
+	    if ((ch >= 0 && ch <= '\t') ||
+		(ch >= '\v' && ch <= '\f') ||
+		(ch >= 14 && ch <= '&') ||
+		(ch >= '(' && ch <= '[') ||
+		(ch >= ']' && ch <= 65535)) {
 		GetCh(); goto case_6;
-	    } else if (self->ch == '\\') {
+	    } else if (ch == '\\') {
 		GetCh(); goto case_7;
-	    } else { kind = self->noSym; break; }
+	    } else { kind = noSym; break; }
 	case 6: case_6:
-	    if (self->ch == '\'') {
+	    if (ch == '\'') {
 		GetCh(); goto case_9;
-	    } else { kind = self->noSym; break; }
+	    } else { kind = noSym; break; }
 	case 7: case_7:
-	    if ((self->ch >= ' ' && self->ch <= '~')) {
+	    if ((ch >= ' ' && ch <= '~')) {
 		GetCh(); goto case_8;
-	    } else { kind = self->noSym; break; }
+	    } else { kind = noSym; break; }
 	case 8: case_8:
-	    if ((self->ch >= '0' && self->ch <= '9') ||
-		(self->ch >= 'a' && self->ch <= 'f')) {
+	    if ((ch >= '0' && ch <= '9') ||
+		(ch >= 'a' && ch <= 'f')) {
 		GetCh(); goto case_8;
-	} else if (self->ch == '\'') {
+	} else if (ch == '\'') {
 		GetCh(); goto case_9;
-	    } else { kind = self->noSym; break; }
+	    } else { kind = noSym; break; }
 	case 9: case_9:
 	    { kind = 5; break; }
 	case 10: case_10:
-	    if ((self->ch >= '0' && self->ch <= '9') ||
-		(self->ch >= 'A' && self->ch <= 'Z') ||
-		self->ch == '_' ||
-		(self->ch >= 'a' && self->ch <= 'z')) {
+	    if ((ch >= '0' && ch <= '9') ||
+		(ch >= 'A' && ch <= 'Z') ||
+		ch == '_' ||
+		(ch >= 'a' && ch <= 'z')) {
 		GetCh(); goto case_10;
 	    } else { kind = 48; break; }
 	case 11: case_11:
-	    if ((self->ch >= 0 && self->ch <= '\t') ||
-		(self->ch >= '\v' && self->ch <= '\f') ||
-		(self->ch >= 14 && self->ch <= '!') ||
-		(self->ch >= '#' && self->ch <= '[') ||
-		(self->ch >= ']' && self->ch <= 65535)) {
+	    if ((ch >= 0 && ch <= '\t') ||
+		(ch >= '\v' && ch <= '\f') ||
+		(ch >= 14 && ch <= '!') ||
+		(ch >= '#' && ch <= '[') ||
+		(ch >= ']' && ch <= 65535)) {
 		GetCh(); goto case_11;
-	    } else if (self->ch == '"') {
+	    } else if (ch == '"') {
 		GetCh(); goto case_3;
-	    } else if (self->ch == '\\') {
+	    } else if (ch == '\\') {
 		GetCh(); goto case_12;
-	    } else if (self->ch == '\n' ||
-		       self->ch == '\r') {
+	    } else if (ch == '\n' ||
+		       ch == '\r') {
 		GetCh(); goto case_4;
-	    } else { kind = self->noSym; break; }
+	    } else { kind = noSym; break; }
 	case 12: case_12:
-	    if ((self->ch >= ' ' && self->ch <= '~')) {
+	    if ((ch >= ' ' && ch <= '~')) {
 		GetCh(); goto case_11;
-	    } else { kind = self->noSym; break; }
+	    } else { kind = noSym; break; }
 	case 13:
 	    { kind = 20; break; }
 	case 14:
@@ -509,26 +532,25 @@ public class CcsScanner_t {
 	case 27: case_27:
 	    { kind = 46; break; }
 	case 28:
-	    if (self->ch == '.') {
+	    if (ch == '.') {
 		GetCh(); goto case_16;
-	    } else if (self->ch == '>') {
+	    } else if (ch == '>') {
 		GetCh(); goto case_19;
-	    } else if (self->ch == ')') {
+	    } else if (ch == ')') {
 		GetCh(); goto case_27;
 	    } else { kind = 21; break; }
 	case 29:
-	    if (self->ch == '.') {
+	    if (ch == '.') {
 		GetCh(); goto case_18;
 	    } else { kind = 30; break; }
 	case 30:
-	    if (self->ch == '.') {
+	    if (ch == '.') {
 		GetCh(); goto case_26;
 	    } else { kind = 36; break; }
 	    /*---- enable ----*/
 	}
-	t = CcsToken(kind, pos, col, line,
-		     buffer.GetString(pos, this.pos - pos),
-		     this.pos - pos);
+	t = new CcsToken_t(kind, pos, col, line,
+			   buffer.GetString(pos, (int)(this.pos - pos)));
 	buffer.Unlock();
 	return t;
     }
