@@ -133,7 +133,10 @@ main(int argc, char * argv[])
     int rc;
     const char * scheme, * srcprefix, * tgtprefix, * cur;
     char tempdpath[PATH_MAX], * tempfnstart;
-    DIR * tempd; struct dirent entry, * result;
+    DIR * tempd; struct dirent * result;
+#ifdef HAVE_READDIR_R
+    struct dirent entry;
+#endif
 
     if (argc == 2) {
 	scheme = argv[1]; tgtprefix = NULL;
@@ -171,27 +174,32 @@ main(int argc, char * argv[])
 
     rc = 0;
     for (;;) {
+#ifdef HAVE_READDIR_R
 	if (readdir_r(tempd, &entry, &result) < 0) {
 	    fprintf(stderr, "Read directory %s failed: %d(%s).\n",
 		    tempdpath, errno, strerror(errno));
 	    return -1;
 	}
+#else
+	result = readdir(tempd);
+#endif
 	if (result == NULL) break;
-	if (!strcmp(entry.d_name, ".")) continue;
-	if (!strcmp(entry.d_name, "..")) continue;
-	if (!strcmp(entry.d_name, "PREFIX")) continue;
+	if (!strcmp(result->d_name, ".")) continue;
+	if (!strcmp(result->d_name, "..")) continue;
+	if (!strcmp(result->d_name, "PREFIX")) continue;
 	snprintf(tempfnstart, sizeof(tempdpath) - (tempfnstart - tempdpath),
-		 "/%s", entry.d_name);
+		 "/%s", result->d_name);
 	if (srcprefix != NULL) {
-	    if (CocoConvert(srcprefix, tgtprefix, tempdpath, entry.d_name) < 0)
+	    if (CocoConvert(srcprefix, tgtprefix,
+			    tempdpath, result->d_name) < 0)
 		rc = -1;
 	    else
-		printf("%s to %s converted.\n", tempdpath, entry.d_name);
+		printf("%s to %s converted.\n", tempdpath, result->d_name);
 	} else {
-	    if (CocoCopy(tempdpath, entry.d_name) < 0)
+	    if (CocoCopy(tempdpath, result->d_name) < 0)
 		rc = -1;
 	    else
-		printf("%s to %s copied.\n", tempdpath, entry.d_name);
+		printf("%s to %s copied.\n", tempdpath, result->d_name);
 	}
 	*tempfnstart = 0;
     }

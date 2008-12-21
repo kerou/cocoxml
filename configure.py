@@ -110,13 +110,19 @@ output.write(repr(valuemap))
 output.close()
 
 output = open('config.h', 'w')
-output.write('#ifndef CONFIG_H\n')
-output.write('#define CONFIG_H\n')
-output.write('\n')
-output.write('#define PACKAGE "%s"\n' % (package))
+output.write("""#ifndef CONFIG_H
+#define CONFIG_H
+
+#ifndef ACCONFIG_H_SEEN
+#include "acconfig.h"
+#endif
+
+#define PACKAGE "%s"
+""" % (package))
 for arg in arglist:
     value = valuemap[arg[0]]
     if value is None: value = ''
     output.write('#define %s "%s"\n' % (arg[2], value))
-output.write('\n')
-output.write('#endif\n')
+output.write("""
+#endif
+""")
