@@ -122,7 +122,7 @@ output.write("""#ifndef CONFIG_H
 for arg in arglist:
     value = valuemap[arg[0]]
     if value is None: value = ''
-    output.write('#define %s "%s"\n' % (arg[2], value))
+    output.write('#define %s "%s"\n' % (arg[2], repr(value)[1:-1]))
 output.write("""
 #endif
 """)
