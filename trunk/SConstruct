@@ -30,7 +30,7 @@ elif sys.platform == 'linux2':
 
 def CheckFunc0(context, func_call, headers):
     context.Message('Checking for %s ...' % func_call)
-    ret = context.TryCompile("""%s
+    ret = context.TryLink("""%s
 int main(void) { %s; return 0; }
 """ % (headers, func_call), '.c')
     context.Result(ret)
