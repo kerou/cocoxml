@@ -38,8 +38,8 @@
 
 EXTC_BEGIN
 
-typedef struct CcsScanner_s CcsScanner_t;
-struct CcsScanner_s {
+typedef struct KcScanner_s KcScanner_t;
+struct KcScanner_s {
     CcsErrorPool_t * errpool;
 
     int            eofSym;
@@ -63,22 +63,22 @@ struct CcsScanner_s {
     CcsBuffer_t    buffer;
 };
 
-CcsScanner_t *
-CcsScanner(CcsScanner_t * self, CcsErrorPool_t * errpool,
+KcScanner_t *
+KcScanner(KcScanner_t * self, CcsErrorPool_t * errpool,
 	   const char * filename);
-void CcsScanner_Destruct(CcsScanner_t * self);
-CcsToken_t * CcsScanner_GetDummy(CcsScanner_t * self);
-CcsToken_t * CcsScanner_Scan(CcsScanner_t * self);
-CcsToken_t * CcsScanner_Peek(CcsScanner_t * self);
-void CcsScanner_ResetPeek(CcsScanner_t * self);
-void CcsScanner_IncRef(CcsScanner_t * self, CcsToken_t * token);
-void CcsScanner_DecRef(CcsScanner_t * self, CcsToken_t * token);
+void KcScanner_Destruct(KcScanner_t * self);
+CcsToken_t * KcScanner_GetDummy(KcScanner_t * self);
+CcsToken_t * KcScanner_Scan(KcScanner_t * self);
+CcsToken_t * KcScanner_Peek(KcScanner_t * self);
+void KcScanner_ResetPeek(KcScanner_t * self);
+void KcScanner_IncRef(KcScanner_t * self, CcsToken_t * token);
+void KcScanner_DecRef(KcScanner_t * self, CcsToken_t * token);
 
 CcsPosition_t *
-CcsScanner_GetPosition(CcsScanner_t * self, const CcsToken_t * begin,
+KcScanner_GetPosition(KcScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end);
 CcsPosition_t *
-CcsScanner_GetPositionBetween(CcsScanner_t * self, const CcsToken_t * begin,
+KcScanner_GetPositionBetween(KcScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end);
 
 EXTC_END

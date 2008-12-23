@@ -47,10 +47,10 @@
 
 EXTC_BEGIN
 
-typedef struct CcsParser_s CcsParser_t;
-struct CcsParser_s {
+typedef struct KcParser_s KcParser_t;
+struct KcParser_s {
     CcsErrorPool_t    errpool;
-    CcsScanner_t      scanner;
+    KcScanner_t      scanner;
     CcsToken_t      * t;
     CcsToken_t      * la;
     int               maxT;
@@ -70,14 +70,14 @@ struct CcsParser_s {
     /*---- enable ----*/
 };
 
-CcsParser_t * CcsParser(CcsParser_t * self, const char * fname, FILE * errfp);
-void CcsParser_Destruct(CcsParser_t * self);
-void CcsParser_Parse(CcsParser_t * self);
-CcsBool_t CcsParser_Finish(CcsParser_t * self);
+KcParser_t * KcParser(KcParser_t * self, const char * fname, FILE * errfp);
+void KcParser_Destruct(KcParser_t * self);
+void KcParser_Parse(KcParser_t * self);
+CcsBool_t KcParser_Finish(KcParser_t * self);
 
-void CcsParser_SemErr(CcsParser_t * self, const CcsToken_t * token,
+void KcParser_SemErr(KcParser_t * self, const CcsToken_t * token,
 		      const char * format, ...);
-void CcsParser_SemErrT(CcsParser_t * self, const char * format, ...);
+void KcParser_SemErrT(KcParser_t * self, const char * format, ...);
 
 EXTC_END
 

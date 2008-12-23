@@ -28,6 +28,10 @@
 #include "OutputScheme.h"
 #endif
 
+#ifndef  COCO_PARSER_H
+#include "c/Parser.h"
+#endif
+
 EXTC_BEGIN
 
 typedef struct {
