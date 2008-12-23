@@ -48,7 +48,7 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/cocoxml.
-	./install.py DESTDIR=$(CURDIR)/debian/cocoxml install
+	./install.py DESTROOT=$(CURDIR)/debian/cocoxml install
 
 
 # Build architecture-independent files here.

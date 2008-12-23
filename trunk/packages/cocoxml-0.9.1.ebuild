@@ -24,5 +24,5 @@ src_compile() {
 }
 
 src_install() {
-  ./install.py DESTDIR=${D} install || die
+  ./install.py DESTROOT=${D} install || die
 }
