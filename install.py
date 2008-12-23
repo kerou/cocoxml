@@ -25,16 +25,9 @@ cfgfile = open('config.status')
 cfgmap = eval(cfgfile.read())
 cfgfile.close()
 
-destdir = ''
+destroot = ''
 for arg in sys.argv:
-    if arg[:8] == 'DESTDIR=': destdir = arg[8:]
-
-if destdir != '':
-    for k in cfgmap.keys():
-        if cfgmap[k] is None: continue
-        if k[-6:] != 'prefix' and k[-3:] != 'dir': continue
-        if cfgmap[k][0] == '/': cfgmap[k] = cfgmap[k][1:]
-        cfgmap[k] = os.path.join(destdir, cfgmap[k])
+    if arg[:9] == 'DESTROOT=': destroot = arg[9:]
 
 def execname(name):
     bname = os.path.basename(name)
@@ -42,45 +35,69 @@ def execname(name):
     if cfgmap['program-suffix']: bname = bname + cfgmap['program-suffix']
     return os.path.join(os.path.dirname(name), bname)
 
-def install_lines(tgtfile, lines):
+def rootjoin(destroot, destpath):
+    if destroot == '': return destpath
+    if destpath[0] == '/': destpath = destpath[1:]
+    return os.path.join(destroot, destpath)
+
+def install_lines(destroot, tgtfile, lines):
+    tgtfile = rootjoin(destroot, tgtfile)
     tgtdir = os.path.dirname(tgtfile)
     if not os.path.isdir(tgtdir): os.makedirs(tgtdir)
     tgtf = open(tgtfile, 'w')
     tgtf.write(string.join(lines, '\n'))
     tgtf.close()
 
-def install(tgtdir, srcfile):
+def install(destroot, tgtdir, srcfile):
+    tgtdir = rootjoin(destroot, tgtdir)
     if not os.path.isdir(tgtdir): os.makedirs(tgtdir)
     tgtfile = os.path.join(tgtdir, os.path.basename(srcfile))
     shutil.copyfile(srcfile, tgtfile)
     shutil.copystat(srcfile, tgtfile)
 
 # Real installations.
-install(cfgmap['bindir'], execname('Coco'))
-install(cfgmap['bindir'], execname('CocoInit'))
-install(cfgmap['libdir'], 'libcoco.a')
+install(destroot, cfgmap['bindir'], execname('Coco'))
+install(destroot, cfgmap['bindir'], execname('CocoInit'))
+install(destroot, cfgmap['libdir'], 'libcoco.a')
+for hdr in ['Buffer.h', 'CDefs.h', 'ErrorPool.h', 'Position.h',
+            'Token.h', 'XmlScanOper.h']:
+    install(destroot,
+            os.path.join(cfgmap['includedir'], 'Coco', 'c'),
+            os.path.join('schemes', 'c', hdr))
+pclines = []
+pclines.append('prefix=%s' % cfgmap['prefix'])
+pclines.append('includedir=%s' % cfgmap['includedir'])
+pclines.append('')
+pclines.append('Name: CocoXml')
+pclines.append('Description: Coco/R & CocoXml in C.')
+pclines.append('Version: 0.9.1')
+pclines.append('Libs: -lcoco')
+pclines.append('Cflags: -I${includedir}/Coco')
+install_lines(destroot,
+              os.path.join(cfgmap['libdir'], 'pkgconfig', 'cocoxml.pc'),
+              pclines)
 
-install(cfgmap['docdir'], 'README')
+install(destroot, cfgmap['docdir'], 'README')
 
 tempdir = os.path.join(cfgmap['datadir'], 'Coco')
 
 tgtdir = os.path.join(tempdir, 'dump')
 for f in glob.glob(os.path.join('schemes', 'dump', '*.html')):
-    install(tgtdir, f)
+    install(destroot, tgtdir, f)
 
 tgtdir = os.path.join(tempdir, 'c')
 for f in ['Scanner', 'Parser']:
-    install(tgtdir, os.path.join('schemes', 'c', f + '.h'))
-    install(tgtdir, os.path.join('schemes', 'c', f + '.c'))
-install_lines(os.path.join(tgtdir, 'PREFIX'), ['Ccs'])
+    install(destroot, tgtdir, os.path.join('schemes', 'c', f + '.h'))
+    install(destroot, tgtdir, os.path.join('schemes', 'c', f + '.c'))
+install_lines(destroot, os.path.join(tgtdir, 'PREFIX'), ['Ccs'])
 
 tgtdir = os.path.join(tempdir, 'cxml')
 for f in ['Scanner4Xml', 'Parser4Xml']:
-    install(tgtdir, os.path.join('schemes', 'c', f + '.h'))
-    install(tgtdir, os.path.join('schemes', 'c', f + '.c'))
-install_lines(os.path.join(tgtdir, 'PREFIX'), ['Ccx'])
+    install(destroot, tgtdir, os.path.join('schemes', 'c', f + '.h'))
+    install(destroot, tgtdir, os.path.join('schemes', 'c', f + '.c'))
+install_lines(destroot, os.path.join(tgtdir, 'PREFIX'), ['Ccx'])
 
 tgtdir = os.path.join(tempdir, 'csharp')
 for f in ['Buffer', 'ErrorPool', 'Position', 'Token', 'Scanner', 'Parser']:
-    install(tgtdir, os.path.join('schemes', 'csharp', f + '.cs'))
-install_lines(os.path.join(tgtdir, 'PREFIX'), ['Ccs'])
+    install(destroot, tgtdir, os.path.join('schemes', 'csharp', f + '.cs'))
+install_lines(destroot, os.path.join(tgtdir, 'PREFIX'), ['Ccs'])
