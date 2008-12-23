@@ -74,11 +74,11 @@ main(int argc, char * argv[])
     if (CmpExtension(atgName, ".atg")) {
 	if (!(parser = CcsParser(&u.parser, atgName, stderr))) goto errquit0;
 	CcsParser_Parse(parser);
-	if (!CcsParser_Finish(parser)) goto errquit1;
+	if (!CcGlobals_Finish(&parser->globals)) goto errquit1;
     } else if (CmpExtension(atgName, ".xatg")) {
 	if (!(xmlparser = CcsXmlParser(&u.xmlparser, atgName, stderr))) goto errquit0;
 	CcsXmlParser_Parse(xmlparser);
-	if (!CcsXmlParser_Finish(xmlparser)) goto errquit1;
+	if (!CcGlobals_Finish(&xmlparser->globals)) goto errquit1;
     } else {
 	fprintf(stderr, "The supported extension are: *.atg, *.xatg.\n");
 	goto errquit0;

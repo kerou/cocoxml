@@ -122,12 +122,6 @@ CcsXmlParser_Parse(CcsXmlParser_t * self)
     CcsXmlParser_Expect(self, 0);
 }
 
-CcsBool_t
-CcsXmlParser_Finish(CcsXmlParser_t * self)
-{
-    return CcGlobals_Finish(&self->globals);
-}
-
 void
 CcsXmlParser_SemErr(CcsXmlParser_t * self, const CcsToken_t * token,
 		    const char * format, ...)
