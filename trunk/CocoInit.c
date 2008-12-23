@@ -131,6 +131,7 @@ int
 main(int argc, char * argv[])
 {
     int rc;
+    const char * envroot;
     const char * scheme, * srcprefix, * tgtprefix, * cur;
     char tempdpath[PATH_MAX], * tempfnstart;
     DIR * tempd; struct dirent * result;
@@ -160,9 +161,15 @@ main(int argc, char * argv[])
 	    }
     }
 
-    tempfnstart = tempdpath +
-	snprintf(tempdpath, sizeof(tempdpath), "%s/%s/%s",
-		 DATADIR, PACKAGE, scheme);
+    if ((envroot = getenv("COCO_ROOT"))) {
+	tempfnstart = tempdpath +
+	    snprintf(tempdpath, sizeof(tempdpath), "%s/%s",
+		     envroot, scheme);
+    } else {
+	tempfnstart = tempdpath +
+	    snprintf(tempdpath, sizeof(tempdpath), "%s/%s/%s",
+		     DATADIR, PACKAGE, scheme);
+    }
     tempd = opendir(tempdpath);
     if (tempd == NULL) {
 	fprintf(stderr, "Open directory %s failed: %d(%s).\n",
