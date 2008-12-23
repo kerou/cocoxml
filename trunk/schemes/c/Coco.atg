@@ -30,7 +30,7 @@ SECTION license
 END.
 
 SCHEME c Ccs
-UPDATES "Scanner.c" "Parser.h" "Parser.c" END.
+UPDATES "Scanner.h" "Scanner.c" "Parser.h" "Parser.c" END.
 
 SECTION hIncludes
 #ifndef  COCO_GLOBALS_H
