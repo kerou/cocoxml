@@ -2,10 +2,7 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: GPLv2
 
-Import('env', 'lib', 'cocosrc_lib')
+import os.path
 
-env.Program('AutoTests', ['AutoTests.c', 'TestBitArray.c', 'TestCharSet.c',
-                          cocosrc_lib, lib])
-env.Program('TestScanner', ['TestScanner.c', cocosrc_lib, lib])
-env.Program('TestXmlScanner', ['TestXmlScanner.c', cocosrc_lib, lib],
-            LIBS=['expat'])
+SConscript(os.path.join('basic', 'SConscript'))
+SConscript(os.path.join('rss', 'SConscript'))
