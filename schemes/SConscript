@@ -5,10 +5,10 @@
 import os.path
 
 Import('env')
-Import('libobjs')
+Import('cocosrc_libobjs')
 
-libobjs.extend(map(lambda src: env.Object(src),
-                   ['OutputScheme.c']))
+cocosrc_libobjs.extend(map(lambda src: env.Object(src),
+                           ['OutputScheme.c']))
 
 SConscript(os.path.join('c', 'SConscript'))
 SConscript(os.path.join('csharp', 'SConscript'))

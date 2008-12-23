@@ -3,6 +3,7 @@
 # License: GPLv2
 
 Import('env')
-Import('libobjs')
+Import('cocosrc_libobjs')
 
-libobjs.extend(map(lambda src: env.Object(src), ['DumpOutputScheme.c']))
+cocosrc_libobjs.extend(map(lambda src: env.Object(src),
+                           ['DumpOutputScheme.c']))

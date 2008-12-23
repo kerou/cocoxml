@@ -46,7 +46,8 @@ env = conf.Finish()
 Export('env')
 
 libobjs = []
-Export('libobjs')
+cocosrc_libobjs = []
+Export('libobjs', 'cocosrc_libobjs')
 
 Export('env')
 SConscript(os.path.join('core', 'SConscript'))
@@ -54,11 +55,12 @@ SConscript(os.path.join('algorithm', 'SConscript'))
 SConscript(os.path.join('schemes', 'SConscript'))
 
 lib = env.Library('coco', libobjs)
-Export('lib')
+cocosrc_lib = env.Library('cocosrc', cocosrc_libobjs)
+Export('lib', 'cocosrc_lib')
 
 SConscript(os.path.join('tests', 'SConscript'))
 
-env.Program('Coco', ['Coco.c', lib])
+env.Program('Coco', ['Coco.c', cocosrc_lib, lib])
 env.Program('CocoInit', ['CocoInit.c'])
 
 SConscript(os.path.join('xmltest', 'SConscript'))
