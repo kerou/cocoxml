@@ -31,10 +31,6 @@
 #include  <ctype.h>
 #include  "Scanner.h"
 
-/*---- defines ----*/
-#define CASE_SENSITIVE
-/*---- enable ----*/
-
 static int Char2State(int chr);
 static int Identifier2KWKind(const char * key, size_t keylen, int defaultVal);
 static void CcsScanner_Init(CcsScanner_t * self);
@@ -55,8 +51,20 @@ CcsScanner(CcsScanner_t * self, CcsErrorPool_t * errpool,
     if (!(self->dummyToken = CcsToken(0, 0, 0, 0, dummyval, strlen(dummyval))))
 	goto errquit1;
     if (CcsBuffer(&self->buffer, fp) == NULL) goto errquit2;
+#ifdef COCO_INDENTATION
+    self->lineStart = True;
+    if (!(self->indent = CcsMalloc(sizeof(int) * COCO_INDENT_START)))
+	goto errquit3;
+    self->indentUsed = self->indent;
+    self->indentLast = self->indent + COCO_INDENT_START;
+    *self->indentUsed++ = 0;
+#endif
     CcsScanner_Init(self);
     return self;
+#ifdef COCO_INDENTATION
+ errquit3:
+    CcsBuffer_Destruct(&self->buffer);
+#endif
  errquit2:
     fclose(fp);
  errquit1:
@@ -88,6 +96,10 @@ void
 CcsScanner_Destruct(CcsScanner_t * self)
 {
     CcsToken_t * cur, * next;
+
+#ifdef COCO_INDENTATION
+    CcsFree(self->indent);
+#endif
     for (cur = self->busyTokenList; cur; cur = next) {
 	next = cur->next;
 	CcsToken_Destruct(cur);
@@ -289,7 +301,7 @@ static int
 Identifier2KWKind(const char * key, size_t keylen, int defaultVal)
 {
     char * keystr;
-#ifndef CASE_SENSITIVE
+#ifndef COCO_CASE_SENSITIVE
     char * cur;
 #endif
     Identifier2KWKind_t * i2k;
@@ -297,7 +309,7 @@ Identifier2KWKind(const char * key, size_t keylen, int defaultVal)
     if (!(keystr = CcsMalloc(keylen + 1))) exit(-1);
     memcpy(keystr, key, keylen);
     keystr[keylen] = 0;
-#ifndef CASE_SENSITIVE
+#ifndef COCO_CASE_SENSITIVE
     for (cur = keystr; *cur; ++cur) *cur = tolower(*cur);
 #endif
     i2k = bsearch(keystr, i2kArr, i2kNum, sizeof(Identifier2KWKind_t), i2kCmp);
@@ -317,13 +329,16 @@ static void
 CcsScanner_GetCh(CcsScanner_t * self)
 {
     if (self->oldEols > 0) {
-	self->ch = '\n'; --self->oldEols; self->oldEolsEOL= 1;
+	self->ch = '\n'; --self->oldEols; self->oldEolsEOL = 1;
     } else {
 	if (self->ch == '\n') {
 	    if (self->oldEolsEOL) self->oldEolsEOL = 0;
 	    else {
 		++self->line; self->col = 0;
 	    }
+#ifdef COCO_INDENTATION
+	    self->lineStart = TRUE;
+#endif
 	} else if (self->ch == '\t') {
 	    self->col += 8 - self->col % 8;
 	} else {
@@ -442,6 +457,37 @@ CcsScanner_NextToken(CcsScanner_t * self)
 	       || self->ch == '\r'
 	       /*---- enable ----*/
 	       ) CcsScanner_GetCh(self);
+#ifdef COCO_INDENTATION
+	if (self->lineStart) {
+	    CcsAssert(self->indent < self->indentUsed);
+	    self->lineStart = FALSE;
+	    if (self->col > self->indentUsed[-1]) {
+		if (self->indentUsed == self->indentLast) {
+		    int newLen = (self->indentLast - self->indent) + COCO_INDENT_START;
+		    int * newIndent = CcRealloc(self->indent, sizeof(int) * newLen);
+		    if (!newIndent) return NULL;
+		    self->indentUsed = newIndent + (self->indentUsed - self->indent);
+		    self->indentLast = newIndent + newLen;
+		    self->indent = newIndent;
+		}
+		CcsAssert(self->indentUsed < self->indentLast);
+		*self->indentUsed++ = self->col;
+		/* Use -3 for indent in */
+		return CcsToken(-3, self->pos, self->col, self->line, NULL, 0);
+	    } else if (self->col < self->indentUsed[-1]) {
+		CcsToken_t * cur;
+		t = NULL;
+		while (self->col < self->indentUsed[-1]) {
+		    /* Use -2 for indent out */
+		    cur = CcsToken(-2, self->pos, self->col, self->line, NULL, 0);
+		    cur->next = t; t = cur;
+		}
+		if (self->col > self->indentUsed[-1])
+		    t->kind = -4; /* Use -4 for indent error */
+		return t;
+	    }
+	}
+#endif
 	for (curComment = comments; curComment < commentsLast; ++curComment)
 	    if (self->ch == curComment->start[0] &&
 		CcsScanner_Comment(self, curComment)) break;
