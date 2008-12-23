@@ -1,0 +1,7 @@
+# -*- python -*-
+# Author: Charles Wang <charlesw123456@gmail.com>
+# License: GPLv2
+
+Import('env', 'lib')
+
+env.Program('TestKconfig', ['main.c', 'Parser.c', 'Scanner.c', lib])

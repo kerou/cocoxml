@@ -29,7 +29,11 @@
 #endif
 
 #ifndef  COCO_SYNTAX_H
-#incldue "Syntax.h"
+#include "Syntax.h"
+#endif
+
+#ifndef  COCO_PARSER_H
+#include "c/Parser.h"
 #endif
 
 EXTC_BEGIN
