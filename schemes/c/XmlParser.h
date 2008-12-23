@@ -71,7 +71,6 @@ CcsXmlParser_t *
 CcsXmlParser(CcsXmlParser_t * self, const char * fname, FILE * errfp);
 void CcsXmlParser_Destruct(CcsXmlParser_t * self);
 void CcsXmlParser_Parse(CcsXmlParser_t * self);
-CcsBool_t CcsXmlParser_Finish(CcsXmlParser_t * self);
 
 void
 CcsXmlParser_SemErr(CcsXmlParser_t * self, const CcsToken_t * token,

@@ -71,12 +71,6 @@ KcParser_Parse(KcParser_t * self)
     KcParser_Expect(self, 0);
 }
 
-CcsBool_t
-KcParser_Finish(KcParser_t * self)
-{
-    return CcGlobals_Finish(&self->globals);
-}
-
 void
 KcParser_SemErr(KcParser_t * self, const CcsToken_t * token,
 		 const char * format, ...)
