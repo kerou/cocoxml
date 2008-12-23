@@ -63,4 +63,3 @@ env.Program('CocoInit', ['CocoInit.c'])
 
 SConscript(os.path.join('applications', 'SConscript'))
 SConscript(os.path.join('tests', 'SConscript'))
-SConscript(os.path.join('xmltest', 'SConscript'))
