@@ -58,6 +58,7 @@ def install(tgtdir, srcfile):
 # Real installations.
 install(cfgmap['bindir'], execname('Coco'))
 install(cfgmap['bindir'], execname('CocoInit'))
+install(cfgmap['libdir'], 'libcoco.a')
 
 install(cfgmap['docdir'], 'README')
 
@@ -68,15 +69,13 @@ for f in glob.glob(os.path.join('schemes', 'dump', '*.html')):
     install(tgtdir, f)
 
 tgtdir = os.path.join(tempdir, 'c')
-for f in ['Buffer', 'CDefs', 'ErrorPool', 'Position', 'Token',
-          'Scanner', 'Parser']:
+for f in ['Scanner', 'Parser']:
     install(tgtdir, os.path.join('schemes', 'c', f + '.h'))
     install(tgtdir, os.path.join('schemes', 'c', f + '.c'))
 install_lines(os.path.join(tgtdir, 'PREFIX'), ['Ccs'])
 
 tgtdir = os.path.join(tempdir, 'cxml')
-for f in ['CDefs', 'ErrorPool', 'Token',
-          'Scanner4Xml', 'Parser4Xml', 'XmlScanOper']:
+for f in ['Scanner4Xml', 'Parser4Xml']:
     install(tgtdir, os.path.join('schemes', 'c', f + '.h'))
     install(tgtdir, os.path.join('schemes', 'c', f + '.c'))
 install_lines(os.path.join(tgtdir, 'PREFIX'), ['Ccx'])

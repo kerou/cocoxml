@@ -4,8 +4,11 @@
 
 Import('env')
 Import('libobjs')
+Import('cocosrc_libobjs')
 
 libobjs.extend(map(lambda src: env.Object(src),
                    ['CDefs.c', 'ErrorPool.c', 'Buffer.c', 'Token.c',
-                    'Position.c', 'Scanner.c', 'Parser.c', 'XmlScanner.c',
-                    'XmlParser.c', 'COutputScheme.c']))
+                    'Position.c', 'XmlScanOper.c']))
+cocosrc_libobjs.extend(map(lambda src: env.Object(src),
+                           ['Scanner.c', 'Parser.c', 'XmlScanner.c',
+                            'XmlParser.c', 'COutputScheme.c']))

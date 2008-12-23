@@ -2,8 +2,8 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: GPLv2
 
-Import('env', 'lib')
+Import('env', 'lib', 'cocosrc_lib')
 
 env.Program('TestRss', ['TestRss.c', 'RssData.c', 'Scanner4Xml.c',
-                        'Parser4Xml.c', 'XmlScanOper.c', lib],
+                        'Parser4Xml.c', cocosrc_lib, lib],
             LIBS = ['expat'])

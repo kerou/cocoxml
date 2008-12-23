@@ -2,9 +2,10 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: GPLv2
 
-Import('env', 'lib')
+Import('env', 'lib', 'cocosrc_lib')
 
 env.Program('AutoTests', ['AutoTests.c', 'TestBitArray.c', 'TestCharSet.c',
-                          lib])
-env.Program('TestScanner', ['TestScanner.c', lib])
-env.Program('TestXmlScanner', ['TestXmlScanner.c', lib], LIBS=['expat'])
+                          cocosrc_lib, lib])
+env.Program('TestScanner', ['TestScanner.c', cocosrc_lib, lib])
+env.Program('TestXmlScanner', ['TestXmlScanner.c', cocosrc_lib, lib],
+            LIBS=['expat'])
