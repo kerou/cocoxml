@@ -59,6 +59,7 @@ CcLexical(CcLexical_t * self, CcGlobals_t * globals)
 
     self->ignored = CcCharSet();
     self->ignoreCase = FALSE;
+    self->indentUsed = FALSE;
     CcArrayList(&self->states);
     CcArrayList(&self->classes);
     CcHashTable(&self->literals, SZ_LITERALS);

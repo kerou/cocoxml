@@ -44,6 +44,10 @@ struct CcLexical_s {
 
     CcCharSet_t   * ignored;
     CcsBool_t       ignoreCase;
+    CcsBool_t       indentUsed;
+    int             indentIn;
+    int             indentOut;
+    int             indentErr;
     CcArrayList_t   states;
     CcArrayList_t   classes;
     CcHashTable_t   literals;
