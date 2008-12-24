@@ -54,7 +54,7 @@ CcsParser_Get(CcsParser_t * self)
 	self->la = CcsScanner_Scan(&self->scanner);
 	if (self->la->kind <= self->maxT) { /*++self->errDist;*/ break; }
 	/*---- Pragmas ----*/
-	if (self->la->kind == 48) {
+	if (self->la->kind == 49) {
 	    
 	}
 	/*---- enable ----*/
@@ -161,7 +161,7 @@ CcsParser(CcsParser_t * self, const char * fname, FILE * errfp)
     if (!CcsScanner(&self->scanner, &self->errpool, fname)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
-    self->maxT = 47;
+    self->maxT = 48;
     if (!CcGlobals(&self->globals, &self->errpool)) goto ERRQUIT;
     self->tokenString = NULL;
     self->genScanner = FALSE;
@@ -209,10 +209,10 @@ CcsParser_Coco(CcsParser_t * self)
     CcCharSet_t * s; 
     CcsToken_t  * beg;
     self->tokenString = NULL; 
-    while (self->la->kind == 23 || self->la->kind == 24 || self->la->kind == 25) {
-	if (self->la->kind == 23) {
+    while (self->la->kind == 24 || self->la->kind == 25 || self->la->kind == 26) {
+	if (self->la->kind == 24) {
 	    CcsParser_SchemeDecl(self);
-	} else if (self->la->kind == 24) {
+	} else if (self->la->kind == 25) {
 	    CcsParser_SectionDecl(self);
 	} else {
 	    CcsParser_UpdateDecl(self);
@@ -255,30 +255,40 @@ CcsParser_Coco(CcsParser_t * self)
     }
     if (self->la->kind == 11) {
 	CcsParser_Get(self);
-	while (self->la->kind == 1) {
-	    CcsParser_SetDecl(self);
-	}
+	self->lexical->indentUsed = TRUE;
+	sym = CcSymbolTable_NewTerminal(self->symtab, "IndentIn", 0);
+	self->lexical->indentIn = sym->kind;
+	sym = CcSymbolTable_NewTerminal(self->symtab, "IndentOut", 0);
+	self->lexical->indentOut = sym->kind;
+	sym = CcSymbolTable_NewTerminal(self->symtab, "IndentErr", 0);
+	self->lexical->indentErr = sym->kind; 
     }
     if (self->la->kind == 12) {
 	CcsParser_Get(self);
-	while (self->la->kind == 1 || self->la->kind == 3 || self->la->kind == 5) {
-	    CcsParser_TokenDecl(self, symbol_t);
+	while (self->la->kind == 1) {
+	    CcsParser_SetDecl(self);
 	}
     }
     if (self->la->kind == 13) {
 	CcsParser_Get(self);
 	while (self->la->kind == 1 || self->la->kind == 3 || self->la->kind == 5) {
+	    CcsParser_TokenDecl(self, symbol_t);
+	}
+    }
+    if (self->la->kind == 14) {
+	CcsParser_Get(self);
+	while (self->la->kind == 1 || self->la->kind == 3 || self->la->kind == 5) {
 	    CcsParser_TokenDecl(self, symbol_pr);
 	}
     }
-    while (self->la->kind == 14) {
+    while (self->la->kind == 15) {
 	CcsParser_Get(self);
 	CcsBool_t nested = FALSE; 
-	CcsParser_Expect(self, 15);
-	CcsParser_TokenExpr(self, &g1);
 	CcsParser_Expect(self, 16);
+	CcsParser_TokenExpr(self, &g1);
+	CcsParser_Expect(self, 17);
 	CcsParser_TokenExpr(self, &g2);
-	if (self->la->kind == 17) {
+	if (self->la->kind == 18) {
 	    CcsParser_Get(self);
 	    nested = TRUE; 
 	}
@@ -286,16 +296,16 @@ CcsParser_Coco(CcsParser_t * self)
 			     g1->head, g2->head, nested);
 	CcGraph_Destruct(g1); CcGraph_Destruct(g2); 
     }
-    while (self->la->kind == 18) {
+    while (self->la->kind == 19) {
 	CcsParser_Get(self);
 	CcsParser_Set(self, &s);
 	CcCharSet_Or(self->lexical->ignored, s);
 	CcCharSet_Destruct(s); 
     }
-    while (!(self->la->kind == 0 || self->la->kind == 19)) {
-	CcsParser_SynErr(self, 48); CcsParser_Get(self);
+    while (!(self->la->kind == 0 || self->la->kind == 20)) {
+	CcsParser_SynErr(self, 49); CcsParser_Get(self);
     }
-    CcsParser_Expect(self, 19);
+    CcsParser_Expect(self, 20);
     if (self->genScanner) CcLexical_MakeDeterministic(self->lexical);
     CcEBNF_Clear(&self->lexical->base);
     CcEBNF_Clear(&self->syntax->base); 
@@ -321,22 +331,22 @@ CcsParser_Coco(CcsParser_t * self)
 	    CcsPosition_Destruct(((CcSymbolNT_t *)sym)->attrPos);
 	    ((CcSymbolNT_t *)sym)->attrPos = NULL; 
 	} 
-	if (self->la->kind == 30 || self->la->kind == 32) {
+	if (self->la->kind == 31 || self->la->kind == 33) {
 	    CcsParser_AttrDecl(self, (CcSymbolNT_t *)sym);
 	}
 	if (!undef && noAttrs != (((CcSymbolNT_t *)sym)->attrPos == NULL))
 	    CcsParser_SemErrT(self, "attribute mismatch between declaration and use of this symbol"); 
-	if (self->la->kind == 45) {
+	if (self->la->kind == 46) {
 	    CcsParser_SemText(self, &((CcSymbolNT_t *)sym)->semPos);
 	}
-	CcsParser_ExpectWeak(self, 20, 4);
+	CcsParser_ExpectWeak(self, 21, 4);
 	CcsParser_Expression(self, &g);
 	((CcSymbolNT_t *)sym)->graph = g->head;
 	CcGraph_Finish(g);
 	CcGraph_Destruct(g); 
-	CcsParser_ExpectWeak(self, 21, 5);
+	CcsParser_ExpectWeak(self, 22, 5);
     }
-    CcsParser_Expect(self, 22);
+    CcsParser_Expect(self, 23);
     CcsParser_Expect(self, 1);
     if (strcmp(gramName, self->t->val))
 	CcsParser_SemErrT(self, "name does not match grammar name");
@@ -352,13 +362,13 @@ CcsParser_Coco(CcsParser_t * self)
     /* noSym gets highest number */
     self->syntax->noSy = CcSymbolTable_NewTerminal(self->symtab, "???", 0);
     CcSyntax_SetupAnys(self->syntax); 
-    CcsParser_Expect(self, 21);
+    CcsParser_Expect(self, 22);
 }
 
 static void
 CcsParser_SchemeDecl(CcsParser_t * self)
 {
-    CcsParser_Expect(self, 23);
+    CcsParser_Expect(self, 24);
     CcsParser_Expect(self, 1);
     if (self->schemeName) CcFree(self->schemeName);
     self->schemeName = CcStrdup(self->t->val); 
@@ -371,7 +381,7 @@ static void
 CcsParser_SectionDecl(CcsParser_t * self)
 {
     char * secname; CcsToken_t * beg; 
-    CcsParser_Expect(self, 24);
+    CcsParser_Expect(self, 25);
     CcsParser_Expect(self, 1);
     secname = CcStrdup(self->t->val);
     CcsScanner_IncRef(&self->scanner, beg = self->t); 
@@ -382,20 +392,20 @@ CcsParser_SectionDecl(CcsParser_t * self)
 			 CcsScanner_GetPositionBetween(&self->scanner, beg, self->la));
     CcsScanner_DecRef(&self->scanner, beg);
     CcFree(secname); 
+    CcsParser_Expect(self, 23);
     CcsParser_Expect(self, 22);
-    CcsParser_Expect(self, 21);
 }
 
 static void
 CcsParser_UpdateDecl(CcsParser_t * self)
 {
-    CcsParser_Expect(self, 25);
+    CcsParser_Expect(self, 26);
     while (self->la->kind == 3) {
 	CcsParser_Get(self);
 	CcGlobals_AddUpdate(&self->globals, self->t->val); 
     }
+    CcsParser_Expect(self, 23);
     CcsParser_Expect(self, 22);
-    CcsParser_Expect(self, 21);
 }
 
 static void
@@ -407,12 +417,12 @@ CcsParser_SetDecl(CcsParser_t * self)
     CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, name);
     if (c != NULL)
 	CcsParser_SemErrT(self, "name '%s' declared twice", name); 
-    CcsParser_Expect(self, 20);
+    CcsParser_Expect(self, 21);
     CcsParser_Set(self, &s);
     if (CcCharSet_Elements(s) == 0)
 	CcsParser_SemErrT(self, "character set must not be empty");
     CcLexical_NewCharClass(self->lexical, name, s); 
-    CcsParser_Expect(self, 21);
+    CcsParser_Expect(self, 22);
 }
 
 static void
@@ -436,12 +446,12 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ)
     self->tokenString = NULL;
     CcFree(name); 
     while (!(CcsParser_StartOf(self, 0))) {
-	CcsParser_SynErr(self, 49); CcsParser_Get(self);
+	CcsParser_SynErr(self, 50); CcsParser_Get(self);
     }
-    if (self->la->kind == 20) {
+    if (self->la->kind == 21) {
 	CcsParser_Get(self);
 	CcsParser_TokenExpr(self, &g);
-	CcsParser_Expect(self, 21);
+	CcsParser_Expect(self, 22);
 	if (kind == CcsParser_str)
 	    CcsParser_SemErrT(self, "a literal must not be declared with a structure");
 	CcGraph_Finish(g);
@@ -462,8 +472,8 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ)
     } else if (CcsParser_StartOf(self, 7)) {
 	if (kind == CcsParser_id) self->genScanner = FALSE;
 	else CcLexical_MatchLiteral(self->lexical, self->t, sym->name, sym); 
-    } else CcsParser_SynErr(self, 50);
-    if (self->la->kind == 45) {
+    } else CcsParser_SynErr(self, 51);
+    if (self->la->kind == 46) {
 	CcsParser_SemText(self, &((CcSymbolPR_t *)sym)->semPos);
 	if (typ != symbol_pr)
 	    CcsParser_SemErrT(self, "semantic action not allowed here"); 
@@ -476,7 +486,7 @@ CcsParser_TokenExpr(CcsParser_t * self, CcGraph_t ** g)
     CcGraph_t * g2; 
     CcsParser_TokenTerm(self, g);
     CcsBool_t first = TRUE; 
-    while (CcsParser_WeakSeparator(self, 34, 9, 8)) {
+    while (CcsParser_WeakSeparator(self, 35, 9, 8)) {
 	CcsParser_TokenTerm(self, &g2);
 	if (first) { CcEBNF_MakeFirstAlt(&self->lexical->base, *g); first = FALSE; }
 	CcEBNF_MakeAlternative(&self->lexical->base, *g, g2);
@@ -489,8 +499,8 @@ CcsParser_Set(CcsParser_t * self, CcCharSet_t ** s)
 {
     CcCharSet_t * s2; 
     CcsParser_SimSet(self, s);
-    while (self->la->kind == 26 || self->la->kind == 27) {
-	if (self->la->kind == 26) {
+    while (self->la->kind == 27 || self->la->kind == 28) {
+	if (self->la->kind == 27) {
 	    CcsParser_Get(self);
 	    CcsParser_SimSet(self, &s2);
 	    CcCharSet_Or(*s, s2);
@@ -507,7 +517,7 @@ CcsParser_Set(CcsParser_t * self, CcCharSet_t ** s)
 static void
 CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym)
 {
-    if (self->la->kind == 30) {
+    if (self->la->kind == 31) {
 	CcsParser_Get(self);
 	CcsToken_t * beg;
 	CcsScanner_IncRef(&self->scanner, beg = self->la); 
@@ -519,10 +529,10 @@ CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym)
 		CcsParser_SemErrT(self, "bad string in attributes"); 
 	    }
 	}
-	CcsParser_Expect(self, 31);
+	CcsParser_Expect(self, 32);
 	sym->attrPos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
 	CcsScanner_DecRef(&self->scanner, beg); 
-    } else if (self->la->kind == 32) {
+    } else if (self->la->kind == 33) {
 	CcsParser_Get(self);
 	CcsToken_t * beg;
 	CcsScanner_IncRef(&self->scanner, beg = self->la); 
@@ -534,16 +544,16 @@ CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym)
 		CcsParser_SemErrT(self, "bad string in attributes"); 
 	    }
 	}
-	CcsParser_Expect(self, 33);
+	CcsParser_Expect(self, 34);
 	sym->attrPos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
 	CcsScanner_DecRef(&self->scanner, beg); 
-    } else CcsParser_SynErr(self, 51);
+    } else CcsParser_SynErr(self, 52);
 }
 
 static void
 CcsParser_SemText(CcsParser_t * self, CcsPosition_t ** pos)
 {
-    CcsParser_Expect(self, 45);
+    CcsParser_Expect(self, 46);
     CcsToken_t * beg;
     CcsScanner_IncRef(&self->scanner, beg = self->la); 
     while (CcsParser_StartOf(self, 14)) {
@@ -557,7 +567,7 @@ CcsParser_SemText(CcsParser_t * self, CcsPosition_t ** pos)
 	    CcsParser_SemErrT(self, "missing end of previous semantic action"); 
 	}
     }
-    CcsParser_Expect(self, 46);
+    CcsParser_Expect(self, 47);
     *pos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
     CcsScanner_DecRef(&self->scanner, beg); 
 }
@@ -568,7 +578,7 @@ CcsParser_Expression(CcsParser_t * self, CcGraph_t ** g)
     CcGraph_t * g2; 
     CcsParser_Term(self, g);
     CcsBool_t first = TRUE; 
-    while (CcsParser_WeakSeparator(self, 34, 17, 16)) {
+    while (CcsParser_WeakSeparator(self, 35, 17, 16)) {
 	CcsParser_Term(self, &g2);
 	if (first) { CcEBNF_MakeFirstAlt(&self->syntax->base, *g); first = FALSE; }
 	CcEBNF_MakeAlternative(&self->syntax->base, *g, g2);
@@ -603,16 +613,16 @@ CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s)
     } else if (self->la->kind == 5) {
 	CcsParser_Char(self, &n1);
 	CcCharSet_Set(*s, n1); 
-	if (self->la->kind == 28) {
+	if (self->la->kind == 29) {
 	    CcsParser_Get(self);
 	    CcsParser_Char(self, &n2);
 	    int idx;
 	    for (idx = n1; idx <= n2; ++idx) CcCharSet_Set(*s, idx); 
 	}
-    } else if (self->la->kind == 29) {
+    } else if (self->la->kind == 30) {
 	CcsParser_Get(self);
 	CcCharSet_Fill(*s, COCO_WCHAR_MAX); 
-    } else CcsParser_SynErr(self, 52);
+    } else CcsParser_SynErr(self, 53);
 }
 
 static void
@@ -651,7 +661,7 @@ CcsParser_Sym(CcsParser_t * self, char ** name, int * kind)
 	}
 	if (strchr(*name, ' '))
 	    CcsParser_SemErrT(self, "literal tokens \"%s\" can not contain blanks", *name); 
-    } else CcsParser_SynErr(self, 53);
+    } else CcsParser_SynErr(self, 54);
 }
 
 static void
@@ -660,7 +670,7 @@ CcsParser_Term(CcsParser_t * self, CcGraph_t ** g)
     CcGraph_t * g2; CcsPosition_t * pos; CcNode_t * rslv = NULL;
     *g = NULL; 
     if (CcsParser_StartOf(self, 18)) {
-	if (self->la->kind == 43) {
+	if (self->la->kind == 44) {
 	    CcsParser_Resolver(self, &pos);
 	    rslv = CcEBNF_NewNode(&self->syntax->base,
 				  CcNodeRslvP(self->la->line, pos));
@@ -679,7 +689,7 @@ CcsParser_Term(CcsParser_t * self, CcGraph_t ** g)
 	}
     } else if (CcsParser_StartOf(self, 20)) {
 	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, CcNodeEps(0))); 
-    } else CcsParser_SynErr(self, 54);
+    } else CcsParser_SynErr(self, 55);
     if (*g == NULL) /* invalid start of Term */
 	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, CcNodeEps(0))); 
 }
@@ -687,8 +697,8 @@ CcsParser_Term(CcsParser_t * self, CcGraph_t ** g)
 static void
 CcsParser_Resolver(CcsParser_t * self, CcsPosition_t ** pos)
 {
-    CcsParser_Expect(self, 43);
-    CcsParser_Expect(self, 36);
+    CcsParser_Expect(self, 44);
+    CcsParser_Expect(self, 37);
     CcsToken_t * beg;
     CcsScanner_IncRef(&self->scanner, beg = self->la); 
     CcsParser_Condition(self);
@@ -702,8 +712,8 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
     char * name = NULL; int kind; CcsPosition_t * pos; CcsBool_t weak = FALSE; 
     *g = NULL; 
     switch (self->la->kind) {
-    case 1: case 3: case 5: case 35: {
-	if (self->la->kind == 35) {
+    case 1: case 3: case 5: case 36: {
+	if (self->la->kind == 36) {
 	    CcsParser_Get(self);
 	    weak = TRUE; 
 	}
@@ -733,7 +743,7 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
 	}
 	CcNode_t * p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->line, weak);
 	*g = CcGraphP(p); 
-	if (self->la->kind == 30 || self->la->kind == 32) {
+	if (self->la->kind == 31 || self->la->kind == 33) {
 	    CcsParser_Attribs(self, p);
 	    if (kind != CcsParser_id)
 		CcsParser_SemErrT(self, "a literal must not have attributes"); 
@@ -747,46 +757,46 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
 	    CcsParser_SemErrT(self, "attribute mismatch between declaration and use of this symbol"); 
 	break;
     }
-    case 36: {
+    case 37: {
 	CcsParser_Get(self);
 	CcsParser_Expression(self, g);
-	CcsParser_Expect(self, 37);
+	CcsParser_Expect(self, 38);
 	break;
     }
-    case 38: {
+    case 39: {
 	CcsParser_Get(self);
 	CcsParser_Expression(self, g);
-	CcsParser_Expect(self, 39);
+	CcsParser_Expect(self, 40);
 	CcEBNF_MakeOption(&self->syntax->base, *g); 
 	break;
     }
-    case 40: {
+    case 41: {
 	CcsParser_Get(self);
 	CcsParser_Expression(self, g);
-	CcsParser_Expect(self, 41);
+	CcsParser_Expect(self, 42);
 	CcEBNF_MakeIteration(&self->syntax->base, *g); 
 	break;
     }
-    case 45: {
+    case 46: {
 	CcsParser_SemText(self, &pos);
 	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeSem(0));
 	((CcNodeSEM_t *)p)->pos = pos;
 	*g = CcGraphP(p); 
 	break;
     }
-    case 29: {
+    case 30: {
 	CcsParser_Get(self);
 	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeAny(0));
 	*g = CcGraphP(p); 
 	break;
     }
-    case 42: {
+    case 43: {
 	CcsParser_Get(self);
 	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeSync(0));
 	*g = CcGraphP(p);
 	break;
     }
-    default: CcsParser_SynErr(self, 55); break;
+    default: CcsParser_SynErr(self, 56); break;
     }
     if (*g == NULL) /* invalid start of Factor */
 	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, CcNodeEps(0))); 
@@ -795,7 +805,7 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
 static void
 CcsParser_Attribs(CcsParser_t * self, CcNode_t * p)
 {
-    if (self->la->kind == 30) {
+    if (self->la->kind == 31) {
 	CcsParser_Get(self);
 	CcsToken_t * beg;
 	CcsScanner_IncRef(&self->scanner, beg = self->la); 
@@ -807,11 +817,11 @@ CcsParser_Attribs(CcsParser_t * self, CcNode_t * p)
 		CcsParser_SemErrT(self, "bad string in attributes"); 
 	    }
 	}
-	CcsParser_Expect(self, 31);
+	CcsParser_Expect(self, 32);
 	CcNode_SetPosition(p, CcsScanner_GetPosition(&self->scanner,
 						     beg, self->t));
 	CcsScanner_DecRef(&self->scanner, beg); 
-    } else if (self->la->kind == 32) {
+    } else if (self->la->kind == 33) {
 	CcsParser_Get(self);
 	CcsToken_t * beg;
 	CcsScanner_IncRef(&self->scanner, beg = self->la); 
@@ -823,25 +833,25 @@ CcsParser_Attribs(CcsParser_t * self, CcNode_t * p)
 		CcsParser_SemErrT(self, "bad string in attributes"); 
 	    }
 	}
-	CcsParser_Expect(self, 33);
+	CcsParser_Expect(self, 34);
 	CcNode_SetPosition(p, CcsScanner_GetPosition(&self->scanner,
 						     beg, self->t));
 	CcsScanner_DecRef(&self->scanner, beg); 
-    } else CcsParser_SynErr(self, 56);
+    } else CcsParser_SynErr(self, 57);
 }
 
 static void
 CcsParser_Condition(CcsParser_t * self)
 {
     while (CcsParser_StartOf(self, 21)) {
-	if (self->la->kind == 36) {
+	if (self->la->kind == 37) {
 	    CcsParser_Get(self);
 	    CcsParser_Condition(self);
 	} else {
 	    CcsParser_Get(self);
 	}
     }
-    CcsParser_Expect(self, 37);
+    CcsParser_Expect(self, 38);
 }
 
 static void
@@ -854,14 +864,14 @@ CcsParser_TokenTerm(CcsParser_t * self, CcGraph_t ** g)
 	CcEBNF_MakeSequence(&self->lexical->base, *g, g2);
 	CcGraph_Destruct(g2); 
     }
-    if (self->la->kind == 44) {
+    if (self->la->kind == 45) {
 	CcsParser_Get(self);
-	CcsParser_Expect(self, 36);
+	CcsParser_Expect(self, 37);
 	CcsParser_TokenExpr(self, &g2);
 	CcLexical_SetContextTrans(self->lexical, g2->head);
 	self->lexical->hasCtxMoves = TRUE;
 	CcEBNF_MakeSequence(&self->lexical->base, *g, g2); 
-	CcsParser_Expect(self, 37);
+	CcsParser_Expect(self, 38);
     }
 }
 
@@ -895,21 +905,21 @@ CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g)
 	    }
 	}
 	CcFree(name); 
-    } else if (self->la->kind == 36) {
+    } else if (self->la->kind == 37) {
 	CcsParser_Get(self);
 	CcsParser_TokenExpr(self, g);
-	CcsParser_Expect(self, 37);
-    } else if (self->la->kind == 38) {
+	CcsParser_Expect(self, 38);
+    } else if (self->la->kind == 39) {
 	CcsParser_Get(self);
 	CcsParser_TokenExpr(self, g);
-	CcsParser_Expect(self, 39);
+	CcsParser_Expect(self, 40);
 	CcEBNF_MakeOption(&self->lexical->base, *g); 
-    } else if (self->la->kind == 40) {
+    } else if (self->la->kind == 41) {
 	CcsParser_Get(self);
 	CcsParser_TokenExpr(self, g);
-	CcsParser_Expect(self, 41);
+	CcsParser_Expect(self, 42);
 	CcEBNF_MakeIteration(&self->lexical->base, *g); 
-    } else CcsParser_SynErr(self, 57);
+    } else CcsParser_SynErr(self, 58);
     if (*g == NULL) /* invalid start of TokenFactor */
       *g = CcGraphP(CcEBNF_NewNode(&self->lexical->base, CcNodeEps(0))); 
 }
@@ -933,53 +943,54 @@ CcsParser_SynErr(CcsParser_t * self, int n)
     case 8: s = "\"" "CONSTRUCTOR" "\" expected"; break;
     case 9: s = "\"" "DESTRUCTOR" "\" expected"; break;
     case 10: s = "\"" "IGNORECASE" "\" expected"; break;
-    case 11: s = "\"" "CHARACTERS" "\" expected"; break;
-    case 12: s = "\"" "TOKENS" "\" expected"; break;
-    case 13: s = "\"" "PRAGMAS" "\" expected"; break;
-    case 14: s = "\"" "COMMENTS" "\" expected"; break;
-    case 15: s = "\"" "FROM" "\" expected"; break;
-    case 16: s = "\"" "TO" "\" expected"; break;
-    case 17: s = "\"" "NESTED" "\" expected"; break;
-    case 18: s = "\"" "IGNORE" "\" expected"; break;
-    case 19: s = "\"" "PRODUCTIONS" "\" expected"; break;
-    case 20: s = "\"" "=" "\" expected"; break;
-    case 21: s = "\"" "." "\" expected"; break;
-    case 22: s = "\"" "END" "\" expected"; break;
-    case 23: s = "\"" "SCHEME" "\" expected"; break;
-    case 24: s = "\"" "SECTION" "\" expected"; break;
-    case 25: s = "\"" "UPDATES" "\" expected"; break;
-    case 26: s = "\"" "+" "\" expected"; break;
-    case 27: s = "\"" "-" "\" expected"; break;
-    case 28: s = "\"" ".." "\" expected"; break;
-    case 29: s = "\"" "ANY" "\" expected"; break;
-    case 30: s = "\"" "<" "\" expected"; break;
-    case 31: s = "\"" ">" "\" expected"; break;
-    case 32: s = "\"" "<." "\" expected"; break;
-    case 33: s = "\"" ".>" "\" expected"; break;
-    case 34: s = "\"" "|" "\" expected"; break;
-    case 35: s = "\"" "WEAK" "\" expected"; break;
-    case 36: s = "\"" "(" "\" expected"; break;
-    case 37: s = "\"" ")" "\" expected"; break;
-    case 38: s = "\"" "[" "\" expected"; break;
-    case 39: s = "\"" "]" "\" expected"; break;
-    case 40: s = "\"" "{" "\" expected"; break;
-    case 41: s = "\"" "}" "\" expected"; break;
-    case 42: s = "\"" "SYNC" "\" expected"; break;
-    case 43: s = "\"" "IF" "\" expected"; break;
-    case 44: s = "\"" "CONTEXT" "\" expected"; break;
-    case 45: s = "\"" "(." "\" expected"; break;
-    case 46: s = "\"" ".)" "\" expected"; break;
-    case 47: s = "\"" "???" "\" expected"; break;
-    case 48: s = "invalid \"" "Coco" "\""; break;
-    case 49: s = "invalid \"" "TokenDecl" "\""; break;
-    case 50: s = "this symbol not expected in \"" "TokenDecl" "\""; break;
-    case 51: s = "this symbol not expected in \"" "AttrDecl" "\""; break;
-    case 52: s = "this symbol not expected in \"" "SimSet" "\""; break;
-    case 53: s = "this symbol not expected in \"" "Sym" "\""; break;
-    case 54: s = "this symbol not expected in \"" "Term" "\""; break;
-    case 55: s = "this symbol not expected in \"" "Factor" "\""; break;
-    case 56: s = "this symbol not expected in \"" "Attribs" "\""; break;
-    case 57: s = "this symbol not expected in \"" "TokenFactor" "\""; break;
+    case 11: s = "\"" "INDENTATIONS" "\" expected"; break;
+    case 12: s = "\"" "CHARACTERS" "\" expected"; break;
+    case 13: s = "\"" "TOKENS" "\" expected"; break;
+    case 14: s = "\"" "PRAGMAS" "\" expected"; break;
+    case 15: s = "\"" "COMMENTS" "\" expected"; break;
+    case 16: s = "\"" "FROM" "\" expected"; break;
+    case 17: s = "\"" "TO" "\" expected"; break;
+    case 18: s = "\"" "NESTED" "\" expected"; break;
+    case 19: s = "\"" "IGNORE" "\" expected"; break;
+    case 20: s = "\"" "PRODUCTIONS" "\" expected"; break;
+    case 21: s = "\"" "=" "\" expected"; break;
+    case 22: s = "\"" "." "\" expected"; break;
+    case 23: s = "\"" "END" "\" expected"; break;
+    case 24: s = "\"" "SCHEME" "\" expected"; break;
+    case 25: s = "\"" "SECTION" "\" expected"; break;
+    case 26: s = "\"" "UPDATES" "\" expected"; break;
+    case 27: s = "\"" "+" "\" expected"; break;
+    case 28: s = "\"" "-" "\" expected"; break;
+    case 29: s = "\"" ".." "\" expected"; break;
+    case 30: s = "\"" "ANY" "\" expected"; break;
+    case 31: s = "\"" "<" "\" expected"; break;
+    case 32: s = "\"" ">" "\" expected"; break;
+    case 33: s = "\"" "<." "\" expected"; break;
+    case 34: s = "\"" ".>" "\" expected"; break;
+    case 35: s = "\"" "|" "\" expected"; break;
+    case 36: s = "\"" "WEAK" "\" expected"; break;
+    case 37: s = "\"" "(" "\" expected"; break;
+    case 38: s = "\"" ")" "\" expected"; break;
+    case 39: s = "\"" "[" "\" expected"; break;
+    case 40: s = "\"" "]" "\" expected"; break;
+    case 41: s = "\"" "{" "\" expected"; break;
+    case 42: s = "\"" "}" "\" expected"; break;
+    case 43: s = "\"" "SYNC" "\" expected"; break;
+    case 44: s = "\"" "IF" "\" expected"; break;
+    case 45: s = "\"" "CONTEXT" "\" expected"; break;
+    case 46: s = "\"" "(." "\" expected"; break;
+    case 47: s = "\"" ".)" "\" expected"; break;
+    case 48: s = "\"" "???" "\" expected"; break;
+    case 49: s = "invalid \"" "Coco" "\""; break;
+    case 50: s = "invalid \"" "TokenDecl" "\""; break;
+    case 51: s = "this symbol not expected in \"" "TokenDecl" "\""; break;
+    case 52: s = "this symbol not expected in \"" "AttrDecl" "\""; break;
+    case 53: s = "this symbol not expected in \"" "SimSet" "\""; break;
+    case 54: s = "this symbol not expected in \"" "Sym" "\""; break;
+    case 55: s = "this symbol not expected in \"" "Term" "\""; break;
+    case 56: s = "this symbol not expected in \"" "Factor" "\""; break;
+    case 57: s = "this symbol not expected in \"" "Attribs" "\""; break;
+    case 58: s = "this symbol not expected in \"" "TokenFactor" "\""; break;
     /*---- enable ----*/
     default:
 	snprintf(format, sizeof(format), "error %d", n);
@@ -991,28 +1002,28 @@ CcsParser_SynErr(CcsParser_t * self, int n)
 
 static const char * set[] = {
     /*---- InitSet ----*/
-    /*    5    0    5    0    5    0    5    0    5   */
-    "**.*.*.......**...***........................*...", /* 0 */
-    ".*******.......***..****************************.", /* 1 */
-    ".********......***..****************************.", /* 2 */
-    ".*********.....***..****************************.", /* 3 */
-    "**.*.*.......**...****.......*....***.*.*.**.*...", /* 4 */
-    "**.*.*.......**...***.*......................*...", /* 5 */
-    ".*********************.*************************.", /* 6 */
-    ".*.*.*.......**...**.........................*...", /* 7 */
-    "..............*.****.*...............*.*.*.......", /* 8 */
-    ".*.*.*..............................*.*.*........", /* 9 */
-    ".******************************.****************.", /* 10 */
-    ".***.**************************.****************.", /* 11 */
-    ".********************************.**************.", /* 12 */
-    ".***.****************************.**************.", /* 13 */
-    ".*********************************************.*.", /* 14 */
-    ".***.****************************************..*.", /* 15 */
-    ".....................*...............*.*.*.......", /* 16 */
-    ".*.*.*...............*.......*....**********.*...", /* 17 */
-    ".*.*.*.......................*.....**.*.*.**.*...", /* 18 */
-    ".*.*.*.......................*.....**.*.*.*..*...", /* 19 */
-    ".....................*............*..*.*.*.......", /* 20 */
-    ".************************************.**********."  /* 21 */
+    /*    5    0    5    0    5    0    5    0    5    */
+    "**.*.*........**...***........................*...", /* 0 */
+    ".*******........***..****************************.", /* 1 */
+    ".********.......***..****************************.", /* 2 */
+    ".*********......***..****************************.", /* 3 */
+    "**.*.*........**...****.......*....***.*.*.**.*...", /* 4 */
+    "**.*.*........**...***.*......................*...", /* 5 */
+    ".**********************.*************************.", /* 6 */
+    ".*.*.*........**...**.........................*...", /* 7 */
+    "...............*.****.*...............*.*.*.......", /* 8 */
+    ".*.*.*...............................*.*.*........", /* 9 */
+    ".*******************************.****************.", /* 10 */
+    ".***.***************************.****************.", /* 11 */
+    ".*********************************.**************.", /* 12 */
+    ".***.*****************************.**************.", /* 13 */
+    ".**********************************************.*.", /* 14 */
+    ".***.*****************************************..*.", /* 15 */
+    "......................*...............*.*.*.......", /* 16 */
+    ".*.*.*................*.......*....**********.*...", /* 17 */
+    ".*.*.*........................*.....**.*.*.**.*...", /* 18 */
+    ".*.*.*........................*.....**.*.*.*..*...", /* 19 */
+    "......................*............*..*.*.*.......", /* 20 */
+    ".*************************************.**********."  /* 21 */
     /*---- enable ----*/
 };

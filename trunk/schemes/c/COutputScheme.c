@@ -70,7 +70,17 @@ static CcsBool_t
 COS_Defines(CcCOutputScheme_t * self, CcOutput_t * output)
 {
     if (!self->base.globals->lexical->ignoreCase)
-	CcPrintfI(output, "#define CASE_SENSITIVE\n");
+	CcPrintfI(output, "#define COCO_CASE_SENSITIVE\n");
+    if (self->base.globals->lexical->indentUsed) {
+	CcPrintfI(output, "#define COCO_INDENTATION\n");
+	CcPrintfI(output, "#define COCO_INDENT_START %d\n", 32);
+	CcPrintfI(output, "#define COCO_INDENT_IN %d\n",
+		  self->base.globals->lexical->indentIn);
+	CcPrintfI(output, "#define COCO_INDENT_OUT %d\n",
+		  self->base.globals->lexical->indentOut);
+	CcPrintfI(output, "#define COCO_INDENT_ERR %d\n",
+		  self->base.globals->lexical->indentErr);
+    }
     return TRUE;
 }
 
