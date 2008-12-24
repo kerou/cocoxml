@@ -52,7 +52,7 @@ CcsScanner(CcsScanner_t * self, CcsErrorPool_t * errpool,
 	goto errquit1;
     if (CcsBuffer(&self->buffer, fp) == NULL) goto errquit2;
 #ifdef COCO_INDENTATION
-    self->lineStart = True;
+    self->lineStart = TRUE;
     if (!(self->indent = CcsMalloc(sizeof(int) * COCO_INDENT_START)))
 	goto errquit3;
     self->indentUsed = self->indent;
@@ -78,8 +78,8 @@ CcsScanner_Init(CcsScanner_t * self)
 {
     /*---- declarations ----*/
     self->eofSym = 0;
-    self->maxT = 47;
-    self->noSym = 47;
+    self->maxT = 48;
+    self->noSym = 48;
     /*---- enable ----*/
 
     self->busyTokenList = NULL;
@@ -264,29 +264,30 @@ typedef struct {
 
 static const Identifier2KWKind_t i2kArr[] = {
     /*---- identifiers2keywordkinds ----*/
-    { "ANY", 29 },
-    { "CHARACTERS", 11 },
-    { "COMMENTS", 14 },
+    { "ANY", 30 },
+    { "CHARACTERS", 12 },
+    { "COMMENTS", 15 },
     { "COMPILER", 6 },
     { "CONSTRUCTOR", 8 },
-    { "CONTEXT", 44 },
+    { "CONTEXT", 45 },
     { "DESTRUCTOR", 9 },
-    { "END", 22 },
-    { "FROM", 15 },
-    { "IF", 43 },
-    { "IGNORE", 18 },
+    { "END", 23 },
+    { "FROM", 16 },
+    { "IF", 44 },
+    { "IGNORE", 19 },
     { "IGNORECASE", 10 },
+    { "INDENTATIONS", 11 },
     { "MEMBERS", 7 },
-    { "NESTED", 17 },
-    { "PRAGMAS", 13 },
-    { "PRODUCTIONS", 19 },
-    { "SCHEME", 23 },
-    { "SECTION", 24 },
-    { "SYNC", 42 },
-    { "TO", 16 },
-    { "TOKENS", 12 },
-    { "UPDATES", 25 },
-    { "WEAK", 35 },
+    { "NESTED", 18 },
+    { "PRAGMAS", 14 },
+    { "PRODUCTIONS", 20 },
+    { "SCHEME", 24 },
+    { "SECTION", 25 },
+    { "SYNC", 43 },
+    { "TO", 17 },
+    { "TOKENS", 13 },
+    { "UPDATES", 26 },
+    { "WEAK", 36 },
     /*---- enable ----*/
 };
 static const int i2kNum = sizeof(i2kArr) / sizeof(i2kArr[0]);
@@ -445,7 +446,46 @@ CcsScanner_Comment(CcsScanner_t * self, const CcsComment_t * c)
     return TRUE;
 }
 
-CcsToken_t *
+#ifdef COCO_INDENTATION
+static CcsToken_t *
+CcsScanner_IndentGenerator(CcsScanner_t * self)
+{
+    int newLen; int * newIndent, * curIndent;
+    CcsToken_t * head, * cur;
+
+    if (!self->lineStart) return NULL;
+    CcsAssert(self->indent < self->indentUsed);
+    self->lineStart = FALSE;
+    if (self->col > self->indentUsed[-1]) {
+	if (self->indentUsed == self->indentLast) {
+	    newLen = (self->indentLast - self->indent) + COCO_INDENT_START;
+	    newIndent = CcRealloc(self->indent, sizeof(int) * newLen);
+	    if (!newIndent) return NULL;
+	    self->indentUsed = newIndent + (self->indentUsed - self->indent);
+	    self->indentLast = newIndent + newLen;
+	    self->indent = newIndent;
+	}
+	CcsAssert(self->indentUsed < self->indentLast);
+	*self->indentUsed++ = self->col;
+	return CcsToken(COCO_INDENT_IN, self->pos,
+			self->col, self->line, NULL, 0);
+    }
+    for (curIndent = self->indentUsed - 1; self->col < *curIndent; --curIndent);
+    if (self->col > *curIndent)
+	return CcsToken(COCO_INDENT_ERR, self->pos,
+			self->col, self->line, NULL, 0);
+    head = NULL;
+    while (curIndent < self->indentUsed - 1) {
+	cur = CcsToken(COCO_INDENT_OUT, self->pos,
+		       self->col, self->line, NULL, 0);
+	cur->next = head; head = cur;
+	--self->indentUsed;
+    }
+    return head;
+}
+#endif
+
+static CcsToken_t *
 CcsScanner_NextToken(CcsScanner_t * self)
 {
     int pos, line, col, state, kind; CcsToken_t * t;
@@ -458,35 +498,7 @@ CcsScanner_NextToken(CcsScanner_t * self)
 	       /*---- enable ----*/
 	       ) CcsScanner_GetCh(self);
 #ifdef COCO_INDENTATION
-	if (self->lineStart) {
-	    CcsAssert(self->indent < self->indentUsed);
-	    self->lineStart = FALSE;
-	    if (self->col > self->indentUsed[-1]) {
-		if (self->indentUsed == self->indentLast) {
-		    int newLen = (self->indentLast - self->indent) + COCO_INDENT_START;
-		    int * newIndent = CcRealloc(self->indent, sizeof(int) * newLen);
-		    if (!newIndent) return NULL;
-		    self->indentUsed = newIndent + (self->indentUsed - self->indent);
-		    self->indentLast = newIndent + newLen;
-		    self->indent = newIndent;
-		}
-		CcsAssert(self->indentUsed < self->indentLast);
-		*self->indentUsed++ = self->col;
-		/* Use -3 for indent in */
-		return CcsToken(-3, self->pos, self->col, self->line, NULL, 0);
-	    } else if (self->col < self->indentUsed[-1]) {
-		CcsToken_t * cur;
-		t = NULL;
-		while (self->col < self->indentUsed[-1]) {
-		    /* Use -2 for indent out */
-		    cur = CcsToken(-2, self->pos, self->col, self->line, NULL, 0);
-		    cur->next = t; t = cur;
-		}
-		if (self->col > self->indentUsed[-1])
-		    t->kind = -4; /* Use -4 for indent error */
-		return t;
-	    }
-	}
+	if ((t = CcsScanner_IndentGenerator(self))) return t;
 #endif
 	for (curComment = comments; curComment < commentsLast; ++curComment)
 	    if (self->ch == curComment->start[0] &&
@@ -549,7 +561,7 @@ CcsScanner_NextToken(CcsScanner_t * self)
 	    self->ch == '_' ||
 	    (self->ch >= 'a' && self->ch <= 'z')) {
 	    CcsScanner_GetCh(self); goto case_10;
-	} else { kind = 48; break; }
+	} else { kind = 49; break; }
     case 11: case_11:
 	if ((self->ch >= 0 && self->ch <= '\t') ||
 	    (self->ch >= '\v' && self->ch <= '\f') ||
@@ -570,35 +582,35 @@ CcsScanner_NextToken(CcsScanner_t * self)
 	    CcsScanner_GetCh(self); goto case_11;
 	} else { kind = self->noSym; break; }
     case 13:
-	{ kind = 20; break; }
+	{ kind = 21; break; }
     case 14:
-	{ kind = 26; break; }
-    case 15:
 	{ kind = 27; break; }
-    case 16: case_16:
+    case 15:
 	{ kind = 28; break; }
+    case 16: case_16:
+	{ kind = 29; break; }
     case 17:
-	{ kind = 31; break; }
-    case 18: case_18:
 	{ kind = 32; break; }
-    case 19: case_19:
+    case 18: case_18:
 	{ kind = 33; break; }
-    case 20:
+    case 19: case_19:
 	{ kind = 34; break; }
+    case 20:
+	{ kind = 35; break; }
     case 21:
-	{ kind = 37; break; }
-    case 22:
 	{ kind = 38; break; }
-    case 23:
+    case 22:
 	{ kind = 39; break; }
-    case 24:
+    case 23:
 	{ kind = 40; break; }
-    case 25:
+    case 24:
 	{ kind = 41; break; }
+    case 25:
+	{ kind = 42; break; }
     case 26: case_26:
-	{ kind = 45; break; }
-    case 27: case_27:
 	{ kind = 46; break; }
+    case 27: case_27:
+	{ kind = 47; break; }
     case 28:
 	if (self->ch == '.') {
 	    CcsScanner_GetCh(self); goto case_16;
@@ -606,15 +618,15 @@ CcsScanner_NextToken(CcsScanner_t * self)
 	    CcsScanner_GetCh(self); goto case_19;
 	} else if (self->ch == ')') {
 	    CcsScanner_GetCh(self); goto case_27;
-	} else { kind = 21; break; }
+	} else { kind = 22; break; }
     case 29:
 	if (self->ch == '.') {
 	    CcsScanner_GetCh(self); goto case_18;
-	} else { kind = 30; break; }
+	} else { kind = 31; break; }
     case 30:
 	if (self->ch == '.') {
 	    CcsScanner_GetCh(self); goto case_26;
-	} else { kind = 36; break; }
+	} else { kind = 37; break; }
     /*---- enable ----*/
     }
     t = CcsToken(kind, pos, col, line,
