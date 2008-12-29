@@ -9,5 +9,3 @@ Import('cocosrc_libobjs')
 
 cocosrc_libobjs.extend(map(lambda src: env.Object(src),
                            ['CSharpOutputScheme.c']))
-
-SConscript(os.path.join('test', 'SConscript'))
