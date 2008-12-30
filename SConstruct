@@ -5,6 +5,7 @@
 import os
 import os.path
 import sys
+from CocoCustomTests import CocoCustomTests, CocoConfigure
 
 topsrc = os.getcwd()
 cpppath = [topsrc] + map(lambda subdir: os.path.join(topsrc, subdir),
@@ -28,19 +29,8 @@ elif sys.platform == 'linux2':
 #print "env['TOOLS'] =", env['TOOLS']
 #print "env['CCFLAGS'] =", env['CCFLAGS']
 
-def CheckFunc0(context, func_call, headers):
-    context.Message('Checking for %s ...' % func_call)
-    ret = context.TryLink("""%s
-int main(void) { %s; return 0; }
-""" % (headers, func_call), '.c')
-    context.Result(ret)
-    return ret
-
-conf = Configure(env, config_h = 'acconfig.h',
-                 custom_tests = { 'CheckFunc0' : CheckFunc0 })
-if conf.CheckFunc0('readdir_r((void *)0, (void *)0, (void *)0)',
-                   '#include <dirent.h>'):
-    conf.Define('HAVE_READDIR_R', 1)
+conf = Configure(env, config_h = 'acconfig.h', custom_tests = CocoCustomTests)
+CocoConfigure(conf)
 env = conf.Finish()
 
 Export('env')
