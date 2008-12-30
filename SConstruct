@@ -2,36 +2,14 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: GPLv2
 
-import os
 import os.path
-import sys
-from CocoCustomTests import CocoCustomTests, CocoConfigure
+from CocoEnvironment import CocoEnvironment
 
 topsrc = os.getcwd()
 cpppath = [topsrc] + map(lambda subdir: os.path.join(topsrc, subdir),
                          ['core', 'algorithm', 'schemes'])
 
-if sys.platform == 'win32':
-    # The following Environment setup is used with MSVC in Win32.
-    env = Environment(ENV = os.environ,
-#                      CCFLAGS = ['-g', '-Wall'],
-                      CPPPATH = cpppath)
-    # The following Environment setup is used with gcc in Win32.
-    #env = Environment(ENV = os.environ,
-    #                  tools = ['gcc', 'g++', 'gnulink', 'gas', 'ar'],
-    #                  CCFLAGS = ['-g', '-Wall'],
-    #                  CPPPATH = cpppath)
-elif sys.platform == 'linux2':
-    # The following Environemtn setup is used in Linux.
-    env = Environment(CCFLAGS = ['-g', '-Wall'],
-                      CPPPATH = cpppath)
-#
-#print "env['TOOLS'] =", env['TOOLS']
-#print "env['CCFLAGS'] =", env['CCFLAGS']
-
-conf = Configure(env, config_h = 'acconfig.h', custom_tests = CocoCustomTests)
-CocoConfigure(conf)
-env = conf.Finish()
+env = CocoEnvironment(CPPPATH = cpppath, config_h = 'acconfig.h')
 
 Export('env')
 

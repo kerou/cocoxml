@@ -4,6 +4,7 @@
 
 Import('env', 'lib', 'cocosrc_lib')
 
-env.Program('TestRss', ['TestRss.c', 'RssData.c', 'Scanner4Xml.c',
-                        'Parser4Xml.c', cocosrc_lib, lib],
-            LIBS = ['expat'])
+if 'expat' in env['COCO_FEATURES']:
+    env.Program('TestRss', ['TestRss.c', 'RssData.c', 'Scanner4Xml.c',
+                            'Parser4Xml.c', cocosrc_lib, lib],
+                LIBS = ['expat'])
