@@ -7,5 +7,6 @@ Import('env', 'lib', 'cocosrc_lib')
 env.Program('AutoTests', ['AutoTests.c', 'TestBitArray.c', 'TestCharSet.c',
                           cocosrc_lib, lib])
 env.Program('TestScanner', ['TestScanner.c', cocosrc_lib, lib])
-env.Program('TestXmlScanner', ['TestXmlScanner.c', cocosrc_lib, lib],
-            LIBS=['expat'])
+if 'expat' in env['COCO_FEATURES']:
+    env.Program('TestXmlScanner', ['TestXmlScanner.c', cocosrc_lib, lib],
+                LIBS=['expat'])
