@@ -8,7 +8,9 @@ Import('cocosrc_libobjs')
 
 libobjs.extend(map(lambda src: env.Object(src),
                    ['CDefs.c', 'ErrorPool.c', 'Buffer.c', 'Token.c',
-                    'Position.c', 'XmlScanOper.c']))
+                    'Position.c']))
+if  'expat' in env['COCO_FEATURES']:
+    libobjs.extend(map(lambda src: env.Object(src), ['XmlScanOper.c']))
 cocosrc_libobjs.extend(map(lambda src: env.Object(src),
                            ['Scanner.c', 'Parser.c', 'XmlScanner.c',
                             'XmlParser.c', 'COutputScheme.c']))
