@@ -17,6 +17,17 @@ int main(void) { %s; return 0; }
     context.Result(ret)
     return ret
 
+def CheckJava(context):
+    context.Message('Checking for java ...')
+    ret = context.TryBuild(context.env.Jar,
+                           """import java.io.File;
+class conftest_2 {
+    public static void main(String args[]) { System.out.println("hello"); }
+}
+""", '.java')
+    context.Result(ret)
+    return ret
+
 def CheckMono(context):
     context.Message('Checking for mono ...')
     ret = context.TryBuild(context.env.CLIProgram,
@@ -60,6 +71,7 @@ def CocoEnvironment(**kwargs):
     MonoSetup(env)
     conf = env.Configure(config_h = env['config_h'],
                          custom_tests = { 'CheckFunc0' : CheckFunc0,
+                                          'CheckJava' : CheckJava,
                                           'CheckMono' : CheckMono })
     conf.env['COCO_FEATURES'] = []
     if conf.CheckFunc0('readdir_r((void *)0, (void *)0, (void *)0)',
@@ -69,6 +81,8 @@ def CocoEnvironment(**kwargs):
                                'XML_ParserCreate(NULL);', autoadd=0):
         conf.Define('HAVE_EXPAT_H', 1)
         conf.env['COCO_FEATURES'].append('expat')
+    if conf.CheckJava():
+        conf.env['COCO_FEATURES'].append('java')
     if conf.CheckMono():
         conf.env['COCO_FEATURES'].append('mono')
     env = conf.Finish()
