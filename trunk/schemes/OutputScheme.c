@@ -60,6 +60,16 @@ CcPrintf(CcOutput_t * self, const char * format, ...)
     va_end(ap);
 }
 void
+CcPrintfL(CcOutput_t * self, const char * format, ...)
+{
+    va_list ap;
+    va_start(ap, format);
+    vfprintf(self->outfp, format, ap); 
+    va_end(ap);
+    if (self->EOL[0]) fputs(self->EOL, self->outfp);
+    else fputc('\n', self->outfp);
+}
+void
 CcPrintfI(CcOutput_t * self, const char * format, ...)
 {
     va_list ap;
@@ -67,6 +77,17 @@ CcPrintfI(CcOutput_t * self, const char * format, ...)
     va_start(ap, format);
     vfprintf(self->outfp, format, ap); 
     va_end(ap);
+}
+void
+CcPrintfIL(CcOutput_t * self, const char * format, ...)
+{
+    va_list ap;
+    WriteSpaces(self->outfp, self->indent);
+    va_start(ap, format);
+    vfprintf(self->outfp, format, ap); 
+    va_end(ap);
+    if (self->EOL[0]) fputs(self->EOL, self->outfp);
+    else fputc('\n', self->outfp);
 }
 
 static const char *
@@ -111,6 +132,7 @@ CcSource(CcOutput_t * self, const CcsPosition_t * pos)
     if (!isBlank && !hasEOL) {
 	/* There is no EOL in the last line, add it */
 	if (eol[0]) fwrite(eol, strlen(eol), 1, self->outfp);
+	else if (self->EOL[0]) fwrite(self->EOL, strlen(self->EOL), 1, self->outfp);
 	else fputc('\n', self->outfp);
     }
 }
@@ -250,8 +272,8 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self,
 {
     FILE * srcfp, * tgtfp;
     char tgtOutPath[PATH_MAX];
-    char lnbuf[4096]; CcsBool_t enabled;
-    char Command[128], ParamStr[128], replacedPrefix[128];
+    char lnbuf[4096], * eol; CcsBool_t enabled;
+    char Command[128], ParamStr[128];
     CcOutput_t output;
     const CcsPosition_t * pos;
     const CommentMark_t * srcCM = Path2CommentMark(srcPath);
@@ -277,9 +299,19 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self,
     }
 
     printf("Updating %s to %s.....\n", srcPath, tgtPath);
-    output.outfp = tgtfp;
-    enabled = TRUE; replacedPrefix[0] = 0;
+    output.outfp = tgtfp; output.EOL[0] = 0;
+    enabled = TRUE;
     while (fgets(lnbuf, sizeof(lnbuf), srcfp)) {
+	if (output.EOL[0] == 0 && strlen(lnbuf) > 0) {
+	    eol = lnbuf + strlen(lnbuf) - 1;
+	    for (;;) {
+		if (*eol != '\r' && *eol != '\n') { ++eol; break; }
+		if (eol == lnbuf) break;
+		--eol;
+	    }
+	    CcsAssert(strlen(eol) <= 2);
+	    if (*eol) strcpy(output.EOL, eol);
+	}
 	if (!CheckMark(lnbuf, srcCM->start, srcCM->end, &output.indent,
 		       Command, sizeof(Command), ParamStr, sizeof(ParamStr))) {
 	    /* Common line */

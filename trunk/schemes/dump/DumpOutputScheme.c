@@ -69,14 +69,14 @@ DumpEBNF(CcOutput_t * output, const CcEBNF_t * ebnf)
 
     for (node = (const CcNode_t *)CcArrayList_FirstC(&ebnf->nodes, &iter);
 	 node; node = (const CcNode_t *)CcArrayList_NextC(&ebnf->nodes, &iter))
-	CcPrintfI(output, "<tr><td>%d</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%s</td><td>%d</td></tr>\n",
-		  node->base.index,
-		  node->base.type->name,
-		  node->next ? node->next->base.index : -1,
-		  node->down ? node->down->base.index : -1,
-		  node->sub ? node->sub->base.index : -1,
-		  node->up ? "TRUE" : "FALSE",
-		  node->line);
+	CcPrintfIL(output, "<tr><td>%d</td><td>%s</td><td>%d</td><td>%d</td><td>%d</td><td>%s</td><td>%d</td></tr>",
+		   node->base.index,
+		   node->base.type->name,
+		   node->next ? node->next->base.index : -1,
+		   node->down ? node->down->base.index : -1,
+		   node->sub ? node->sub->base.index : -1,
+		   node->up ? "TRUE" : "FALSE",
+		   node->line);
     return TRUE;
 }
 
@@ -100,13 +100,13 @@ DOS_Terminals(CcOutputScheme_t * self, CcOutput_t * output)
 
     for (sym = (const CcSymbolT_t *)CcArrayList_First(terminals, &iter);
 	 sym; sym = (const CcSymbolT_t *)CcArrayList_Next(terminals, &iter))
-	CcPrintfI(output, "<tr><td>%d</td><td>%s</td><td>%s</td></tr>\n",
-		  sym->base.base.index, sym->base.name,
-		  sym->tokenKind == symbol_fixedToken ? "fixed" :
-		  sym->tokenKind == symbol_classToken ? "class" :
-		  sym->tokenKind == symbol_litToken ? "lit" :
-		  sym->tokenKind == symbol_classLitToken ? "classLit" :
-		  "???");
+	CcPrintfIL(output, "<tr><td>%d</td><td>%s</td><td>%s</td></tr>",
+		   sym->base.base.index, sym->base.name,
+		   sym->tokenKind == symbol_fixedToken ? "fixed" :
+		   sym->tokenKind == symbol_classToken ? "class" :
+		   sym->tokenKind == symbol_litToken ? "lit" :
+		   sym->tokenKind == symbol_classLitToken ? "classLit" :
+		   "???");
     return TRUE;
 }
 
@@ -118,13 +118,13 @@ DOS_Pragmas(CcOutputScheme_t * self, CcOutput_t * output)
 
     for (sym = (const CcSymbolPR_t *)CcArrayList_First(pragmas, &iter);
 	 sym; sym = (const CcSymbolPR_t *)CcArrayList_Next(pragmas, &iter))
-	CcPrintfI(output, "<tr><td>%d</td><td>%s</td><td>%s</td></tr>\n",
-		  sym->base.base.index, sym->base.name,
-		  sym->tokenKind == symbol_fixedToken ? "fixed" :
-		  sym->tokenKind == symbol_classToken ? "class" :
-		  sym->tokenKind == symbol_litToken ? "lit" :
-		  sym->tokenKind == symbol_classLitToken ? "classLit" :
-		  "???");
+	CcPrintfIL(output, "<tr><td>%d</td><td>%s</td><td>%s</td></tr>",
+		   sym->base.base.index, sym->base.name,
+		   sym->tokenKind == symbol_fixedToken ? "fixed" :
+		   sym->tokenKind == symbol_classToken ? "class" :
+		   sym->tokenKind == symbol_litToken ? "lit" :
+		   sym->tokenKind == symbol_classLitToken ? "classLit" :
+		   "???");
     return TRUE;
 }
 
@@ -150,11 +150,11 @@ DOS_NonTerminals(CcOutputScheme_t * self, CcOutput_t * output)
 	CcsAssert(nonterminals->Count == CcBitArray_getCount(sym->nts));
 	for (index = 0; index < nonterminals->Count; ++index)
 	    ntsStr[index] = CcBitArray_Get(sym->nts, index) ? '*' : '.';
-	CcPrintfI(output, "<tr><td>%d</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>\n",
-		  sym->base.base.index, sym->base.name,
-		  sym->deletable ? "TRUE" : "FALSE",
-		  sym->graph->base.index,
-		  firstStr, followStr, ntsStr);
+	CcPrintfIL(output, "<tr><td>%d</td><td>%s</td><td>%s</td><td>%d</td><td>%s</td><td>%s</td><td>%s</td></tr>",
+		   sym->base.base.index, sym->base.name,
+		   sym->deletable ? "TRUE" : "FALSE",
+		   sym->graph->base.index,
+		   firstStr, followStr, ntsStr);
     }
     CcFree(ntsStr); CcFree(followStr); CcFree(firstStr);
     return TRUE;
@@ -174,10 +174,10 @@ DOS_States(CcOutputScheme_t * self, CcOutput_t * output)
 
     for (state = (const CcState_t *)CcArrayList_FirstC(states, &iter);
 	 state; state = (const CcState_t *)CcArrayList_NextC(states, &iter)) {
-	CcPrintfI(output, "<tr><td>%d</td><td>%s</td><td>%s</td></tr>\n",
-		  state->base.index,
-		  state->endOf ? state->endOf->name : "(null)",
-		  state->ctx ? "TRUE" : "FALSE");
+	CcPrintfIL(output, "<tr><td>%d</td><td>%s</td><td>%s</td></tr>",
+		   state->base.index,
+		   state->endOf ? state->endOf->name : "(null)",
+		   state->ctx ? "TRUE" : "FALSE");
 	for (action = state->firstAction; action; action = action->next) {
 	    CcPrintfI(output, "<tr><td></td><td>");
 	    s = CcAction_GetShift(action);
@@ -198,7 +198,7 @@ DOS_States(CcOutputScheme_t * self, CcOutput_t * output)
 		CcPrintf(output, "%d", target->state->base.index);
 		if (target->next) CcPrintf(output, ",");
 	    }
-	    CcPrintf(output, "</td></tr>\n");
+	    CcPrintfL(output, "</td></tr>");
 	}
     }
     return TRUE;
