@@ -364,7 +364,8 @@ CcLexical_ConvertToStates(CcLexical_t * self, CcNode_t * p, CcSymbol_t * sym)
     CcsAssert(sym->base.type == symbol_t || sym->base.type == symbol_pr);
     self->curSy = sym;
     if (CcNode_DelGraph(p))
-	CcsErrorPool_Error(self->globals->errpool, 0, 0, "token might be empty");
+	CcsErrorPool_Error(self->globals->errpool, 0, 0,
+			   "token '%s' might be empty", sym->name);
     firstState = (CcState_t *)CcArrayList_Get(&self->states, 0);
     CcLexical_NumberNodes(self, p, firstState, TRUE);
 
@@ -565,7 +566,7 @@ CcLexical_GetTargetStates(CcLexical_t * self, CcAction_t * a,
 		*endOf = t->state->endOf;
 	    else {
 		CcsErrorPool_Error(self->globals->errpool, 0, 0,
-				   "Tokens %s and %s cannot be distinguished\n",
+				   "Tokens '%s' and '%s' cannot be distinguished\n",
 				   (*endOf)->name,
 				   t->state->endOf->name);
 	    }
