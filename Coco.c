@@ -24,7 +24,7 @@
 #include  "Arguments.h"
 #include  "OutputScheme.h"
 #include  "c/Parser.h"
-#include  "c/XmlParser.h"
+#include  "c/xml/Parser.h"
 #include  "c/COutputScheme.h"
 #include  "csharp/CSharpOutputScheme.h"
 #include  "dump/DumpOutputScheme.h"

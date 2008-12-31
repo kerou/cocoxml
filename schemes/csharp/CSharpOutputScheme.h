@@ -32,12 +32,12 @@
 #include "Syntax.h"
 #endif
 
-#ifndef  COCO_PARSER_H
+#ifndef  COCO_CcsParser_H
 #include "c/Parser.h"
 #endif
 
-#ifndef  COCO_XMLPARSER_H
-#include "c/XmlParser.h"
+#ifndef  COCO_CcsXmlParser_H
+#include "c/xml/Parser.h"
 #endif
 
 EXTC_BEGIN

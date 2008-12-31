@@ -28,7 +28,7 @@
  Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
-#include  "XmlParser.h"
+#include  "Parser.h"
 #include  "c/Token.h"
 
 /*---- cIncludes ----*/

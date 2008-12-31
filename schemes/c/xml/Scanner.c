@@ -29,7 +29,7 @@
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
 #include  <ctype.h>
-#include  "XmlScanner.h"
+#include  "Scanner.h"
 
 static int Char2State(int chr);
 static int Identifier2KWKind(const char * key, size_t keylen, int defaultVal);

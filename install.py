@@ -122,18 +122,10 @@ for f in glob.glob(os.path.join('schemes', 'dump', '*.html')):
     install_temp(destroot, tgtdir, f, '<!---- ', ' ---->')
 
 tgtdir = os.path.join(tempdir, 'c')
-for f in ['Scanner', 'Parser']:
+for f in ['Scanner', 'Parser', 'Scanner4Xml', 'Parser4Xml']:
     install_temp(destroot, tgtdir, os.path.join('schemes', 'c', f + '.h'))
     install_temp(destroot, tgtdir, os.path.join('schemes', 'c', f + '.c'))
-install_lines(destroot, os.path.join(tgtdir, 'PREFIX'), ['Ccs'])
-
-tgtdir = os.path.join(tempdir, 'cxml')
-for f in ['Scanner4Xml', 'Parser4Xml']:
-    install_temp(destroot, tgtdir, os.path.join('schemes', 'c', f + '.h'))
-    install_temp(destroot, tgtdir, os.path.join('schemes', 'c', f + '.c'))
-install_lines(destroot, os.path.join(tgtdir, 'PREFIX'), ['Ccx'])
 
 tgtdir = os.path.join(tempdir, 'csharp')
 for f in ['Buffer', 'ErrorPool', 'Position', 'Token', 'Scanner', 'Parser']:
     install_temp(destroot, tgtdir, os.path.join('schemes', 'csharp', f + '.cs'))
-install_lines(destroot, os.path.join(tgtdir, 'PREFIX'), ['Ccs'])
