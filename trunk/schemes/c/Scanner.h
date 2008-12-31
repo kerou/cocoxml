@@ -28,8 +28,8 @@
  Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
-#ifndef COCO_SCANNER_H
-#define COCO_SCANNER_H
+#ifndef COCO_CcsScanner_H
+#define COCO_CcsScanner_H
 
 #ifndef  COCO_TOKEN_H
 #include "c/Token.h"

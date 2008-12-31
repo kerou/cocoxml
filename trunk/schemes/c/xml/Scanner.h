@@ -28,8 +28,8 @@
  Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
-#ifndef COCO_XMLSCANNER_H
-#define COCO_XMLSCANNER_H
+#ifndef COCO_SCANNER_H
+#define COCO_SCANNER_H
 
 #ifndef  COCO_TOKEN_H
 #include "c/Token.h"
@@ -100,4 +100,4 @@ CcsXmlScanner_GetPositionBetween(CcsXmlScanner_t * self, const CcsToken_t * begi
 
 EXTC_END
 
-#endif  /* COCO_XMLSCANNER_H */
+#endif  /* COCO_SCANNER_H */

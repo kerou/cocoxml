@@ -28,15 +28,15 @@
  Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
-#ifndef  COCO_XMLPARSER_H
-#define  COCO_XMLPARSER_H
+#ifndef  COCO_PARSER_H
+#define  COCO_PARSER_H
 
 #ifndef  COCO_ERRORPOOL_H
 #include "c/ErrorPool.h"
 #endif
 
-#ifndef  COCO_XMLSCANNER_H
-#include "XmlScanner.h"
+#ifndef  COCO_SCANNER_H
+#include "Scanner.h"
 #endif
 
 /*---- hIncludes ----*/
@@ -50,7 +50,7 @@ EXTC_BEGIN
 typedef struct CcsXmlParser_s CcsXmlParser_t;
 struct CcsXmlParser_s {
     CcsErrorPool_t    errpool;
-    CcsXmlScanner_t   scanner;
+    CcsXmlScanner_t      scanner;
     CcsToken_t      * t;
     CcsToken_t      * la;
     int               maxT;
@@ -76,4 +76,4 @@ void CcsXmlParser_SemErrT(CcsXmlParser_t * self, const char * format, ...);
 
 EXTC_END
 
-#endif /* COCO_XMLPARSER_H */
+#endif /* COCO_PARSER_H */
