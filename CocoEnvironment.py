@@ -19,12 +19,19 @@ int main(void) { %s; return 0; }
 
 def CheckJava(context):
     context.Message('Checking for java ...')
-    ret = context.TryBuild(context.env.Jar,
-                           """import java.io.File;
-class conftest_2 {
-    public static void main(String args[]) { System.out.println("hello"); }
-}
-""", '.java')
+    # Dirty hack, context.env.Jar shall not present
+    # when the jre is not present ...
+    ret = 1
+    try:
+        jar = context.env.Jar
+    except AttributeError:
+        ret = 0
+#    ret = context.TryBuild(context.env.Java,
+#                           """import java.io.File;
+#class conftest_2 {
+#    public static void main(String args[]) { System.out.println("hello"); }
+#}
+#""", '.java')
     context.Result(ret)
     return ret
 
