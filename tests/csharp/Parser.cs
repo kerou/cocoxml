@@ -161,7 +161,7 @@ public class CcsParser_t {
 	scanner = new CcsScanner_t(errpool, fname);
 	t = la = null;
 	/*---- constructor ----*/
-	self->maxT = 12;
+	maxT = 12;
 	/*---- enable ----*/
     }
 

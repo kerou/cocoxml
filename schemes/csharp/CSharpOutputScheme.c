@@ -390,7 +390,7 @@ CSOS_Members(CcCSharpOutputScheme_t * self, CcOutput_t * output)
 static CcsBool_t
 CSOS_Constructor(CcCSharpOutputScheme_t * self, CcOutput_t * output)
 {
-    CcPrintfI(output, "self->maxT = %d;\n",
+    CcPrintfI(output, "maxT = %d;\n",
 	      self->base.globals->symtab.terminals.Count - 1);
     if (self->parser && self->parser->constructor)
 	CcSource(output, self->parser->constructor);
