@@ -42,6 +42,8 @@ struct CcSyntax_s {
     CcEBNF_t       base;
     CcGlobals_t  * globals;
 
+    char         * schemeName;
+    char         * grammarPrefix;
     CcSymbol_t   * gramSy;
     CcSymbol_t   * eofSy;
     CcSymbol_t   * noSy;

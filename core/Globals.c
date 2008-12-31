@@ -29,6 +29,7 @@ CcGlobals_t *
 CcGlobals(CcGlobals_t * self, CcsErrorPool_t * errpool)
 {
     self->errpool = errpool;
+    self->templatePrefix = "Ccs";
     if (!CcSymbolTable(&self->symtab)) goto errquit1;
     if (!(self->lexical = CcLexical(&self->u.lexicalSpace, self)))
 	goto errquit2;
@@ -53,6 +54,7 @@ CcGlobals_t *
 CcGlobalsXml(CcGlobals_t * self, CcsErrorPool_t * errpool)
 {
     self->errpool = errpool;
+    self->templatePrefix = "CcsXml";
     if (!CcSymbolTable(&self->symtab)) goto errquit1;
     self->lexical = NULL;
     if (!(self->xmlspecmap = CcXmlSpecMap(&self->u.xmlspecmapSpace, self)))

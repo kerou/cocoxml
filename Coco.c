@@ -33,12 +33,14 @@ static const char * usage_format =
     "Usage: %s Grammar.atg/Grammer.xatg {{Option}}\n"
     "Options:\n"
     "  -scheme  <SCHEME>\n"
-    "  -u       <UPDATED-FILE>\n"
-    "  -ud      <UPDATED-DIR>\n"
+    "  -output  <OUTPUT-METHOD>\n"
+    "  -dir     <OUTPUT-DIR>\n"
+    "  -tempdir <TEMPLATE-DIR>\n"
     "\n"
-    "The possible value of SCHEME is 'c', 'csharp' or 'dump', 'c' is default.\n"
-    "Multiple UPDATE-FILEs are possible, they specifies all of the files which should be updated.\n"
-    "Multiple UPDATE-DIRs are permitted, all atg specified files in UPDATE-DIRs are updated.\n";
+    "The possible value of SCHEME are 'dump', SCHEME is fetched from atg/xatg if this argument not present.\n"
+    "The possible value of OUTPUT-METHOD are 'auto', 'generate', 'update', 'auto' is default.\n"
+    "The value of OUTPUT-DIR is the directory where the outputs are located.\n"
+    "The value of TEMPLATE-DIR is the directory where the templates for various schemes are located.\n";
 
 static CcsBool_t
 CmpExtension(const char * fname, const char * ext)
@@ -86,8 +88,8 @@ main(int argc, char * argv[])
 
     schemeName = CcArguments_First(&arguments, "scheme", &iter);
     if (schemeName == NULL) {
-	if (parser) schemeName = parser->schemeName;
-	else if (xmlparser) schemeName = xmlparser->schemeName;
+	if (parser) schemeName = parser->syntax->schemeName;
+	else if (xmlparser) schemeName = xmlparser->syntax->schemeName;
 	if (schemeName == NULL) schemeName = "dump";
     }
     if (!strcmp(schemeName, "c")) {
@@ -107,7 +109,8 @@ main(int argc, char * argv[])
     }
     if (scheme) {
 	printf("scheme '%s' is used.\n", schemeName);
-	if (!CcOutputScheme_GenerateOutputs(scheme, atgName)) goto errquit2;
+	if (!CcOutputScheme_GenerateOutputs(scheme, schemeName, atgName))
+	    goto errquit2;
 	CcObject_VDestruct((CcObject_t *)scheme);
     }
     if (parser) CcsParser_Destruct(parser);
