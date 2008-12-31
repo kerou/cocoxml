@@ -39,6 +39,7 @@
 EXTC_BEGIN
 
 struct CcArguments_s {
+    const char * selfpath;
     CcArrayList_t storage;
     CcHashTable_t map;
 };

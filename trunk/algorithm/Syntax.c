@@ -31,6 +31,8 @@ CcSyntax(CcSyntax_t * self, CcGlobals_t * globals)
 {
     CcEBNF(&self->base);
     self->globals = globals;
+    self->schemeName = NULL;
+    self->grammarPrefix = NULL;
     self->gramSy = NULL;
     self->eofSy = CcSymbolTable_NewTerminal(&self->globals->symtab, "EOF", 0);
     self->noSy = NULL;
@@ -47,6 +49,8 @@ CcSyntax_Destruct(CcSyntax_t * self)
     CcArrayList_Destruct(&self->errors);
     if (self->allSyncSets) CcBitArray_Destruct(self->allSyncSets);
     if (self->visited) CcBitArray_Destruct(self->visited);
+    if (self->grammarPrefix) CcFree(self->grammarPrefix);
+    if (self->schemeName) CcFree(self->schemeName);
     CcEBNF_Destruct(&self->base);
 }
 

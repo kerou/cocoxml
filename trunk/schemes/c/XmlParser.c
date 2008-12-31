@@ -152,8 +152,6 @@ CcsXmlParser(CcsXmlParser_t * self, const char * fname, FILE * errfp)
     /*---- constructor ----*/
     self->maxT = 40;
     if (!CcGlobalsXml(&self->globals, &self->errpool)) goto ERRQUIT;
-    self->schemeName = NULL;
-    self->prefix = NULL;
     self->members = NULL;
     self->constructor = NULL;
     self->destructor = NULL;
@@ -176,8 +174,6 @@ CcsXmlParser_Destruct(CcsXmlParser_t * self)
     if (self->destructor) CcsPosition_Destruct(self->destructor);
     if (self->constructor) CcsPosition_Destruct(self->constructor);
     if (self->members) CcsPosition_Destruct(self->members);
-    if (self->prefix) CcFree(self->prefix);
-    if (self->schemeName) CcFree(self->schemeName);
     CcGlobals_Destruct(&self->globals);
     /*---- enable ----*/
     CcsXmlScanner_Destruct(&self->scanner);
@@ -304,11 +300,11 @@ CcsXmlParser_SchemeDecl(CcsXmlParser_t * self)
 {
     CcsXmlParser_Expect(self, 14);
     CcsXmlParser_Expect(self, 1);
-    if (self->schemeName) CcFree(self->schemeName);
-    self->schemeName = CcStrdup(self->t->val); 
+    if (self->syntax->schemeName) CcFree(self->syntax->schemeName);
+    self->syntax->schemeName = CcStrdup(self->t->val); 
     CcsXmlParser_Expect(self, 1);
-    if (self->prefix) CcFree(self->prefix);
-    self->prefix = CcStrdup(self->t->val); 
+    if (self->syntax->grammarPrefix) CcFree(self->syntax->grammarPrefix);
+    self->syntax->grammarPrefix = CcStrdup(self->t->val); 
 }
 
 static void

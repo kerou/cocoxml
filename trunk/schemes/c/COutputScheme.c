@@ -839,8 +839,8 @@ CcCOutputScheme(CcsParser_t * parser, CcsXmlParser_t * xmlparser,
 		       xmlparser ? &xmlparser->globals : NULL, arguments);
     self->parser = parser;
     self->xmlparser = xmlparser;
-    if (parser) self->prefix = parser->prefix;
-    else if (xmlparser) self->prefix = xmlparser->prefix;
+    if (parser) self->prefix = parser->syntax->grammarPrefix;
+    else if (xmlparser) self->prefix = xmlparser->syntax->grammarPrefix;
     else { CcsAssert(0); }
     if (self->prefix == NULL) self->prefix = "";
     CcSyntaxSymSet(&self->symSet);

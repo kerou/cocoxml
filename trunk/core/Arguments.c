@@ -53,6 +53,7 @@ CcArguments_t *
 CcArguments(CcArguments_t * self, int argc, char * argv[])
 {
     int index;
+    self->selfpath = argv[0];
     CcArrayList(&self->storage);
     CcHashTable(&self->map, 127);
     for (index = 1; index < argc; ++index) {

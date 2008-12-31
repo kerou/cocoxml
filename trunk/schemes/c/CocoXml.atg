@@ -48,8 +48,6 @@ COMPILER CocoXml
 
 MEMBERS
     CcGlobals_t       globals;
-    char            * schemeName;
-    char            * prefix;
     CcsPosition_t   * members;
     CcsPosition_t   * constructor;
     CcsPosition_t   * destructor;
@@ -61,8 +59,6 @@ MEMBERS
 
 CONSTRUCTOR
     if (!CcGlobalsXml(&self->globals, &self->errpool)) goto ERRQUIT;
-    self->schemeName = NULL;
-    self->prefix = NULL;
     self->members = NULL;
     self->constructor = NULL;
     self->destructor = NULL;
@@ -74,8 +70,6 @@ DESTRUCTOR
     if (self->destructor) CcsPosition_Destruct(self->destructor);
     if (self->constructor) CcsPosition_Destruct(self->constructor);
     if (self->members) CcsPosition_Destruct(self->members);
-    if (self->prefix) CcFree(self->prefix);
-    if (self->schemeName) CcFree(self->schemeName);
     CcGlobals_Destruct(&self->globals);
 
 CHARACTERS
@@ -186,10 +180,10 @@ CocoXml                         (. CcSymbol_t  * sym;
 
 SchemeDecl
 =
-  "SCHEME" ident  (. if (self->schemeName) CcFree(self->schemeName);
-  	   	     self->schemeName = CcStrdup(self->t->val); .)
-  ident           (. if (self->prefix) CcFree(self->prefix);
-  		     self->prefix = CcStrdup(self->t->val); .)
+  "SCHEME" ident  (. if (self->grammar->schemeName) CcFree(self->grammar->schemeName);
+  	   	     self->grammar->schemeName = CcStrdup(self->t->val); .)
+  ident           (. if (self->syntax->grammarPrefix) CcFree(self->syntax->grammarPrefix);
+  		     self->syntax->grammarPrefix = CcStrdup(self->t->val); .)
 .
 
 /*------------------------------------------------------------------------------------*/

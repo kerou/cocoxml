@@ -44,6 +44,7 @@ EXTC_BEGIN
 
 struct CcGlobals_s {
     CcsErrorPool_t  * errpool;
+    const char      * templatePrefix;
     CcSymbolTable_t   symtab;
     CcLexical_t     * lexical;
     CcXmlSpecMap_t  * xmlspecmap;

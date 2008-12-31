@@ -55,8 +55,6 @@ struct CcsXmlParser_s {
     int               maxT;
     /*---- members ----*/
     CcGlobals_t       globals;
-    char            * schemeName;
-    char            * prefix;
     CcsPosition_t   * members;
     CcsPosition_t   * constructor;
     CcsPosition_t   * destructor;
