@@ -55,6 +55,44 @@ def install(destroot, tgtdir, srcfile):
     shutil.copyfile(srcfile, tgtfile)
     shutil.copystat(srcfile, tgtfile)
 
+def install_temp(destroot, tgtdir, srcfile,
+                 prefix = '/*---- ', suffix = ' ----*/'):
+    def get_command(ln, prefix, suffix):
+        b = 0; e = len(ln) - 1
+        while b <= e:
+            if ln[b].isspace(): b = b + 1
+            elif ln[e].isspace(): e = e - 1
+            else: break
+        if b > e: return False
+        if e - b < len(prefix) + len(suffix): return False
+        e = e + 1
+        return ln[b:b+len(prefix)] == prefix and \
+            ln[e-len(suffix):e] == suffix
+    tgtdir = rootjoin(destroot, tgtdir)
+    if not os.path.isdir(tgtdir): os.makedirs(tgtdir)
+    tgtfile = os.path.join(tgtdir, os.path.basename(srcfile))
+    srcf = open(srcfile, 'r')
+    tgtf = open(tgtfile, 'w')
+    print 'srcf =', srcf, 'tgtf =', tgtf, repr(prefix), repr(suffix)
+    ln = srcf.readline()
+    dump = True
+    while ln:
+        if dump:
+            tgtf.write(ln)
+            cmd = get_command(ln, prefix, suffix)
+            if cmd:
+                dump = False
+        else:
+            print 'ZZZZ', ln
+            cmd = get_command(ln, prefix, suffix)
+            if cmd:
+                dump = True
+                tgtf.write(ln)
+        ln = srcf.readline()
+    tgtf.close()
+    srcf.close()
+    shutil.copystat(srcfile, tgtfile)
+
 # Real installations.
 install(destroot, cfgmap['bindir'], execname('Coco'))
 install(destroot, cfgmap['bindir'], execname('CocoInit'))
@@ -83,21 +121,21 @@ tempdir = os.path.join(cfgmap['datadir'], 'Coco')
 
 tgtdir = os.path.join(tempdir, 'dump')
 for f in glob.glob(os.path.join('schemes', 'dump', '*.html')):
-    install(destroot, tgtdir, f)
+    install_temp(destroot, tgtdir, f, '<!---- ', ' ---->')
 
 tgtdir = os.path.join(tempdir, 'c')
 for f in ['Scanner', 'Parser']:
-    install(destroot, tgtdir, os.path.join('schemes', 'c', f + '.h'))
-    install(destroot, tgtdir, os.path.join('schemes', 'c', f + '.c'))
+    install_temp(destroot, tgtdir, os.path.join('schemes', 'c', f + '.h'))
+    install_temp(destroot, tgtdir, os.path.join('schemes', 'c', f + '.c'))
 install_lines(destroot, os.path.join(tgtdir, 'PREFIX'), ['Ccs'])
 
 tgtdir = os.path.join(tempdir, 'cxml')
 for f in ['Scanner4Xml', 'Parser4Xml']:
-    install(destroot, tgtdir, os.path.join('schemes', 'c', f + '.h'))
-    install(destroot, tgtdir, os.path.join('schemes', 'c', f + '.c'))
+    install_temp(destroot, tgtdir, os.path.join('schemes', 'c', f + '.h'))
+    install_temp(destroot, tgtdir, os.path.join('schemes', 'c', f + '.c'))
 install_lines(destroot, os.path.join(tgtdir, 'PREFIX'), ['Ccx'])
 
 tgtdir = os.path.join(tempdir, 'csharp')
 for f in ['Buffer', 'ErrorPool', 'Position', 'Token', 'Scanner', 'Parser']:
-    install(destroot, tgtdir, os.path.join('schemes', 'csharp', f + '.cs'))
+    install_temp(destroot, tgtdir, os.path.join('schemes', 'csharp', f + '.cs'))
 install_lines(destroot, os.path.join(tgtdir, 'PREFIX'), ['Ccs'])
