@@ -93,7 +93,6 @@ def install_temp(destroot, tgtdir, srcfile,
 
 # Real installations.
 install(destroot, cfgmap['bindir'], execname('Coco'))
-install(destroot, cfgmap['bindir'], execname('CocoInit'))
 install(destroot, cfgmap['libdir'], 'libcoco.a')
 for hdr in ['Buffer.h', 'CDefs.h', 'ErrorPool.h', 'Position.h',
             'Token.h', 'XmlScanOper.h']:
