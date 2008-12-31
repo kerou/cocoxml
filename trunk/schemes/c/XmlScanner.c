@@ -32,7 +32,7 @@
 #include  "XmlScanner.h"
 
 /*---- defines ----*/
-#define CASE_SENSITIVE
+#define COCO_CASE_SENSITIVE
 /*---- enable ----*/
 
 static int Char2State(int chr);
