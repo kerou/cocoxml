@@ -27,7 +27,6 @@ cocosrc_lib = env.Library('cocosrc', cocosrc_libobjs)
 Export('lib', 'cocosrc_lib')
 
 env.Program('Coco', ['Coco.c', cocosrc_lib, lib])
-env.Program('CocoInit', ['CocoInit.c'])
 
 SConscript(os.path.join('applications', 'SConscript'))
 SConscript(os.path.join('tests', 'SConscript'))
