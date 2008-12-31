@@ -77,9 +77,6 @@ static void
 PgnScanner_Init(PgnScanner_t * self)
 {
     /*---- declarations ----*/
-    self->eofSym = 0;
-    self->maxT = 48;
-    self->noSym = 48;
     /*---- enable ----*/
 
     self->busyTokenList = NULL;
@@ -389,8 +386,6 @@ typedef struct {
 
 static const CcsComment_t comments[] = {
 /*---- comments ----*/
-    { { '/', '/' }, { '\n', 0 }, FALSE },
-    { { '/', '*' }, { '*', '/' }, TRUE },
 /*---- enable ----*/
 };
 static const CcsComment_t * commentsLast =
@@ -493,8 +488,6 @@ PgnScanner_NextToken(PgnScanner_t * self)
     for (;;) {
 	while (self->ch == ' '
 	       /*---- scan1 ----*/
-	       || (self->ch >= '\t' && self->ch <= '\n')
-	       || self->ch == '\r'
 	       /*---- enable ----*/
 	       ) PgnScanner_GetCh(self);
 #ifdef COCO_INDENTATION

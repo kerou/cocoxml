@@ -46,7 +46,6 @@
 EXTC_BEGIN
 
 /*---- defines ----*/
-#define COCO_CASE_SENSITIVE
 /*---- enable ----*/
 
 typedef struct PgnScanner_s PgnScanner_t;
