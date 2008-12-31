@@ -64,8 +64,6 @@ typedef enum {
     XSO_SIZE
 }  CcsXmlSpecOption_t;
 extern const char * CcsXmlSpecOptionNames[];
-typedef struct CcsXmlScanner_s CcsXmlScanner_t;
-typedef struct CcsXmlParser_s CcsXmlParser_t;
 
 #define CcsMalloc(size)  _CcsMalloc_(size, __FILE__, __LINE__)
 void * _CcsMalloc_(size_t size, const char * fname, int line);

@@ -36,7 +36,7 @@
 #endif
 
 #ifndef  COCO_XMLSCANNER_H
-#include "c/XmlScanner.h"
+#include "XmlScanner.h"
 #endif
 
 /*---- hIncludes ----*/
@@ -47,6 +47,7 @@
 
 EXTC_BEGIN
 
+typedef struct CcsXmlParser_s CcsXmlParser_t;
 struct CcsXmlParser_s {
     CcsErrorPool_t    errpool;
     CcsXmlScanner_t   scanner;
@@ -65,16 +66,13 @@ struct CcsXmlParser_s {
     /*---- enable ----*/
 };
 
-CcsXmlParser_t *
-CcsXmlParser(CcsXmlParser_t * self, const char * fname, FILE * errfp);
+CcsXmlParser_t * CcsXmlParser(CcsXmlParser_t * self, const char * fname, FILE * errfp);
 void CcsXmlParser_Destruct(CcsXmlParser_t * self);
 void CcsXmlParser_Parse(CcsXmlParser_t * self);
 
-void
-CcsXmlParser_SemErr(CcsXmlParser_t * self, const CcsToken_t * token,
-		    const char * format, ...);
-void
-CcsXmlParser_SemErrT(CcsXmlParser_t * self, const char * format, ...);
+void CcsXmlParser_SemErr(CcsXmlParser_t * self, const CcsToken_t * token,
+		      const char * format, ...);
+void CcsXmlParser_SemErrT(CcsXmlParser_t * self, const char * format, ...);
 
 EXTC_END
 

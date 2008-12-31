@@ -22,8 +22,6 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "dump/DumpOutputScheme.h"
-#include  "c/Parser.h"
-#include  "c/XmlParser.h"
 #include  "lexical/State.h"
 #include  "lexical/Action.h"
 #include  "lexical/Target.h"

@@ -28,7 +28,7 @@
  Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
-#include  "c/XmlParser.h"
+#include  "XmlParser.h"
 #include  "c/Token.h"
 
 /*---- cIncludes ----*/
@@ -124,7 +124,7 @@ CcsXmlParser_Parse(CcsXmlParser_t * self)
 
 void
 CcsXmlParser_SemErr(CcsXmlParser_t * self, const CcsToken_t * token,
-		    const char * format, ...)
+		 const char * format, ...)
 {
     va_list ap;
     va_start(ap, format);

@@ -31,10 +31,6 @@
 #include  <ctype.h>
 #include  "XmlScanner.h"
 
-/*---- defines ----*/
-#define COCO_CASE_SENSITIVE
-/*---- enable ----*/
-
 static int Char2State(int chr);
 static int Identifier2KWKind(const char * key, size_t keylen, int defaultVal);
 static void CcsXmlScanner_Init(CcsXmlScanner_t * self);
@@ -44,7 +40,7 @@ static void CcsXmlScanner_GetCh(CcsXmlScanner_t * self);
 static const char * dummyval = "dummy";
 CcsXmlScanner_t *
 CcsXmlScanner(CcsXmlScanner_t * self, CcsErrorPool_t * errpool,
-	      const char * filename)
+	   const char * filename)
 {
     FILE * fp;
     self->errpool = errpool;
@@ -55,8 +51,20 @@ CcsXmlScanner(CcsXmlScanner_t * self, CcsErrorPool_t * errpool,
     if (!(self->dummyToken = CcsToken(0, 0, 0, 0, dummyval, strlen(dummyval))))
 	goto errquit1;
     if (CcsBuffer(&self->buffer, fp) == NULL) goto errquit2;
+#ifdef COCO_INDENTATION
+    self->lineStart = TRUE;
+    if (!(self->indent = CcsMalloc(sizeof(int) * COCO_INDENT_START)))
+	goto errquit3;
+    self->indentUsed = self->indent;
+    self->indentLast = self->indent + COCO_INDENT_START;
+    *self->indentUsed++ = 0;
+#endif
     CcsXmlScanner_Init(self);
     return self;
+#ifdef COCO_INDENTATION
+ errquit3:
+    CcsBuffer_Destruct(&self->buffer);
+#endif
  errquit2:
     fclose(fp);
  errquit1:
@@ -88,6 +96,10 @@ void
 CcsXmlScanner_Destruct(CcsXmlScanner_t * self)
 {
     CcsToken_t * cur, * next;
+
+#ifdef COCO_INDENTATION
+    CcsFree(self->indent);
+#endif
     for (cur = self->busyTokenList; cur; cur = next) {
 	next = cur->next;
 	CcsToken_Destruct(cur);
@@ -282,7 +294,7 @@ static int
 Identifier2KWKind(const char * key, size_t keylen, int defaultVal)
 {
     char * keystr;
-#ifndef CASE_SENSITIVE
+#ifndef COCO_CASE_SENSITIVE
     char * cur;
 #endif
     Identifier2KWKind_t * i2k;
@@ -290,7 +302,7 @@ Identifier2KWKind(const char * key, size_t keylen, int defaultVal)
     if (!(keystr = CcsMalloc(keylen + 1))) exit(-1);
     memcpy(keystr, key, keylen);
     keystr[keylen] = 0;
-#ifndef CASE_SENSITIVE
+#ifndef COCO_CASE_SENSITIVE
     for (cur = keystr; *cur; ++cur) *cur = tolower(*cur);
 #endif
     i2k = bsearch(keystr, i2kArr, i2kNum, sizeof(Identifier2KWKind_t), i2kCmp);
@@ -310,13 +322,16 @@ static void
 CcsXmlScanner_GetCh(CcsXmlScanner_t * self)
 {
     if (self->oldEols > 0) {
-	self->ch = '\n'; --self->oldEols; self->oldEolsEOL= 1;
+	self->ch = '\n'; --self->oldEols; self->oldEolsEOL = 1;
     } else {
 	if (self->ch == '\n') {
 	    if (self->oldEolsEOL) self->oldEolsEOL = 0;
 	    else {
 		++self->line; self->col = 0;
 	    }
+#ifdef COCO_INDENTATION
+	    self->lineStart = TRUE;
+#endif
 	} else if (self->ch == '\t') {
 	    self->col += 8 - self->col % 8;
 	} else {
@@ -354,7 +369,6 @@ CcsXmlScanner_ResetCh(CcsXmlScanner_t * self, SLock_t * slock)
     self->ch = slock->ch;
     self->chBytes = slock->chBytes;
     self->pos = slock->pos;
-    self->line = slock->line;
     self->line = slock->line;
     CcsBuffer_LockReset(&self->buffer);
 }
@@ -424,7 +438,46 @@ CcsXmlScanner_Comment(CcsXmlScanner_t * self, const CcsComment_t * c)
     return TRUE;
 }
 
-CcsToken_t *
+#ifdef COCO_INDENTATION
+static CcsToken_t *
+CcsXmlScanner_IndentGenerator(CcsXmlScanner_t * self)
+{
+    int newLen; int * newIndent, * curIndent;
+    CcsToken_t * head, * cur;
+
+    if (!self->lineStart) return NULL;
+    CcsAssert(self->indent < self->indentUsed);
+    self->lineStart = FALSE;
+    if (self->col > self->indentUsed[-1]) {
+	if (self->indentUsed == self->indentLast) {
+	    newLen = (self->indentLast - self->indent) + COCO_INDENT_START;
+	    newIndent = CcRealloc(self->indent, sizeof(int) * newLen);
+	    if (!newIndent) return NULL;
+	    self->indentUsed = newIndent + (self->indentUsed - self->indent);
+	    self->indentLast = newIndent + newLen;
+	    self->indent = newIndent;
+	}
+	CcsAssert(self->indentUsed < self->indentLast);
+	*self->indentUsed++ = self->col;
+	return CcsToken(COCO_INDENT_IN, self->pos,
+			self->col, self->line, NULL, 0);
+    }
+    for (curIndent = self->indentUsed - 1; self->col < *curIndent; --curIndent);
+    if (self->col > *curIndent)
+	return CcsToken(COCO_INDENT_ERR, self->pos,
+			self->col, self->line, NULL, 0);
+    head = NULL;
+    while (curIndent < self->indentUsed - 1) {
+	cur = CcsToken(COCO_INDENT_OUT, self->pos,
+		       self->col, self->line, NULL, 0);
+	cur->next = head; head = cur;
+	--self->indentUsed;
+    }
+    return head;
+}
+#endif
+
+static CcsToken_t *
 CcsXmlScanner_NextToken(CcsXmlScanner_t * self)
 {
     int pos, line, col, state, kind; CcsToken_t * t;
@@ -436,11 +489,13 @@ CcsXmlScanner_NextToken(CcsXmlScanner_t * self)
 	       || self->ch == '\r'
 	       /*---- enable ----*/
 	       ) CcsXmlScanner_GetCh(self);
+#ifdef COCO_INDENTATION
+	if ((t = CcsXmlScanner_IndentGenerator(self))) return t;
+#endif
 	for (curComment = comments; curComment < commentsLast; ++curComment)
 	    if (self->ch == curComment->start[0] &&
 		CcsXmlScanner_Comment(self, curComment)) break;
-	if (curComment < commentsLast) continue;
-	break;
+	if (curComment >= commentsLast) break;
     }
     pos = self->pos; line = self->line; col = self->col;
     CcsBuffer_Lock(&self->buffer);

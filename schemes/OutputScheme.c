@@ -375,6 +375,7 @@ CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self,
 	if (tempdir) { curpath->dir = tempdir; ++curpath; }
 	curpath->dir = dirname(selfpath0 =
 			       CcStrdup(self->arguments->selfpath));
+	curpath->dir1 = "schemes";
 	curpath->scheme = schemeName;
 	++curpath;
 	curpath->dir = DATADIR;
