@@ -18,14 +18,14 @@
  59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
-#ifndef  COCO_PARSER4XML_H
-#define  COCO_PARSER4XML_H
+#ifndef  COCO_RssParser_H
+#define  COCO_RssParser_H
 
 #ifndef  COCO_ERRORPOOL_H
 #include "c/ErrorPool.h"
 #endif
 
-#ifndef  COCO_SCANNER4XML_H
+#ifndef  COCO_RssScanner_H
 #include "Scanner4Xml.h"
 #endif
 
@@ -59,4 +59,4 @@ void RssParser_SemErrT(RssParser_t * self, const char * format, ...);
 
 EXTC_END
 
-#endif /* COCO_PARSER4XML_H */
+#endif /* COCO_RssParser_H */

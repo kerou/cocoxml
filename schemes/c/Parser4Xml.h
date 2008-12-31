@@ -36,7 +36,7 @@
 #endif
 
 #ifndef  COCO_CcxScanner_H
-#include "CcxScanner.h"
+#include "Scanner4Xml.h"
 #endif
 
 /*---- hIncludes ----*/
