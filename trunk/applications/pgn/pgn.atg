@@ -20,8 +20,8 @@ Author: Charles Wang <charlesw123456@gmail.com>
 -------------------------------------------------------------------------*/
 END.
 
-SCHEME csharp Pgn
-UPDATES "Scanner.cs" "Parser.cs" END.
+SCHEME c Pgn
+UPDATES "Scanner.h" "Scanner.c" "Parser.h" "Parser.c" END.
 
 COMPILER pgn
 
