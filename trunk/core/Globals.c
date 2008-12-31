@@ -54,7 +54,7 @@ CcGlobals_t *
 CcGlobalsXml(CcGlobals_t * self, CcsErrorPool_t * errpool)
 {
     self->errpool = errpool;
-    self->templatePrefix = "CcsXml";
+    self->templatePrefix = "Ccx";
     if (!CcSymbolTable(&self->symtab)) goto errquit1;
     self->lexical = NULL;
     if (!(self->xmlspecmap = CcXmlSpecMap(&self->u.xmlspecmapSpace, self)))
