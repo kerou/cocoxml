@@ -366,10 +366,12 @@ CcsParser_SchemeDecl(CcsParser_t * self)
 {
     CcsParser_Expect(self, 24);
     CcsParser_Expect(self, 1);
-    if (self->syntax->schemeName) CcFree(self->syntax->schemeName);
+    if (self->syntax->schemeName)
+	CcFree(self->syntax->schemeName);
     self->syntax->schemeName = CcStrdup(self->t->val); 
     CcsParser_Expect(self, 1);
-    if (self->syntax->grammarPrefix) CcFree(self->syntax->grammarPrefix);
+    if (self->syntax->grammarPrefix)
+	CcFree(self->syntax->grammarPrefix);
     self->syntax->grammarPrefix = CcStrdup(self->t->val); 
 }
 

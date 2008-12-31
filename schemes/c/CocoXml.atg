@@ -180,8 +180,8 @@ CocoXml                         (. CcSymbol_t  * sym;
 
 SchemeDecl
 =
-  "SCHEME" ident  (. if (self->grammar->schemeName) CcFree(self->grammar->schemeName);
-  	   	     self->grammar->schemeName = CcStrdup(self->t->val); .)
+  "SCHEME" ident  (. if (self->syntax->schemeName) CcFree(self->syntax->schemeName);
+  	   	     self->syntax->schemeName = CcStrdup(self->t->val); .)
   ident           (. if (self->syntax->grammarPrefix) CcFree(self->syntax->grammarPrefix);
   		     self->syntax->grammarPrefix = CcStrdup(self->t->val); .)
 .

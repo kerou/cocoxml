@@ -225,6 +225,7 @@ CcOutputScheme_Write(CcOutputScheme_t * self, char * lnbuf, FILE * outfp)
 
     start0 = lnbuf;
     if (tgtprefix) {
+	srcprefixlen = strlen(srcprefix);
 	start1 = lnbuf;
 	for (;;) {
 	    cur = strstr(start1, srcprefix);
