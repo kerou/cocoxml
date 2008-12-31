@@ -40,9 +40,6 @@
 #endif
 
 /*---- hIncludes ----*/
-#ifndef  COCO_GLOBALS_H
-#include  "Globals.h"
-#endif
 /*---- enable ----*/
 
 EXTC_BEGIN
@@ -55,18 +52,6 @@ struct PgnParser_s {
     CcsToken_t      * la;
     int               maxT;
     /*---- members ----*/
-    CcGlobals_t       globals;
-    char            * tokenString;
-    CcsBool_t         genScanner;
-    char            * schemeName;
-    char            * prefix;
-    CcsPosition_t   * members;
-    CcsPosition_t   * constructor;
-    CcsPosition_t   * destructor;
-    /* Shortcut pointers */
-    CcSymbolTable_t * symtab;
-    CcLexical_t     * lexical;
-    CcSyntax_t      * syntax;
     /*---- enable ----*/
 };
 

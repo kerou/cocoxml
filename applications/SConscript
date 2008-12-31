@@ -5,3 +5,4 @@
 import os.path
 
 SConscript(os.path.join('Kconfig', 'SConscript'))
+SConscript(os.path.join('pgn', 'SConscript'))
