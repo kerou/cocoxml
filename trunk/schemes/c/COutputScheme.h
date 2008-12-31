@@ -33,7 +33,11 @@
 #endif
 
 #ifndef  COCO_PARSER_H
-#include "c/Parser.h"
+#include "Parser.h"
+#endif
+
+#ifndef  COCO_XMLPARSER_H
+#include "XmlParser.h"
 #endif
 
 EXTC_BEGIN

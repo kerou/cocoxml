@@ -36,6 +36,10 @@
 #include "c/Parser.h"
 #endif
 
+#ifndef  COCO_XMLPARSER_H
+#include "c/XmlParser.h"
+#endif
+
 EXTC_BEGIN
 
 typedef struct {
