@@ -58,8 +58,8 @@ public class CcsScanner_t {
 	/*---- declarations ----*/
 	caseSensitive = true;
 	eofSym = 0;
-	maxT = 13;
-	noSym = 13;
+	maxT = 12;
+	noSym = 12;
 	/*---- enable ----*/
 
 	busyTokenList = null;
@@ -180,22 +180,18 @@ public class CcsScanner_t {
     static readonly Char2State_t[] c2sArr = {
 	/*---- chars2states ----*/
 	new Char2State_t(CcsBuffer_t.EoF, CcsBuffer_t.EoF, -1),
-	new Char2State_t(33, 33, 16),	/* '!' '!' */
 	new Char2State_t(34, 34, 4),	/* '"' '"' */
-	new Char2State_t(35, 35, 17),	/* '#' '#' */
-	new Char2State_t(43, 43, 14),	/* '+' '+' */
-	new Char2State_t(46, 46, 20),	/* '.' '.' */
-	new Char2State_t(48, 48, 35),	/* '0' '0' */
-	new Char2State_t(49, 49, 34),	/* '1' '1' */
+	new Char2State_t(46, 46, 33),	/* '.' '.' */
+	new Char2State_t(48, 48, 45),	/* '0' '0' */
+	new Char2State_t(49, 49, 44),	/* '1' '1' */
 	new Char2State_t(50, 57, 3),	/* '2' '9' */
-	new Char2State_t(63, 63, 15),	/* '?' '?' */
 	new Char2State_t(66, 66, 11),	/* 'B' 'B' */
 	new Char2State_t(75, 75, 11),	/* 'K' 'K' */
 	new Char2State_t(78, 78, 11),	/* 'N' 'N' */
-	new Char2State_t(79, 79, 33),	/* 'O' 'O' */
+	new Char2State_t(79, 79, 29),	/* 'O' 'O' */
 	new Char2State_t(81, 82, 11),	/* 'Q' 'R' */
 	new Char2State_t(91, 91, 1),	/* '[' '[' */
-	new Char2State_t(97, 104, 18),	/* 'a' 'h' */
+	new Char2State_t(97, 104, 28),	/* 'a' 'h' */
 	new Char2State_t(123, 123, 8),	/* '{' '{' */
 	/*---- enable ----*/
     };
@@ -462,103 +458,163 @@ public class CcsScanner_t {
 		    GetCh(); goto case_13;
 		} else { kind = noSym; break; }
 	    case 13: case_13:
-		{ kind = 5; break; }
+		if (ch == '#') {
+		    GetCh(); goto case_17;
+		} else if (ch == '+') {
+		    GetCh(); goto case_14;
+		} else if (ch == '?') {
+		    GetCh(); goto case_15;
+		} else if (ch == '!') {
+		    GetCh(); goto case_16;
+		} else { kind = 5; break; }
 	    case 14: case_14:
 		if (ch == '+') {
 		    GetCh(); goto case_14;
-		} else { kind = 6; break; }
+		} else { kind = 5; break; }
 	    case 15: case_15:
 		if (ch == '?') {
 		    GetCh(); goto case_15;
-		} else { kind = 6; break; }
+		} else { kind = 5; break; }
 	    case 16: case_16:
 		if (ch == '!') {
 		    GetCh(); goto case_16;
+		} else { kind = 5; break; }
+	    case 17: case_17:
+		{ kind = 5; break; }
+	    case 18: case_18:
+		if (ch == '+') {
+		    GetCh(); goto case_18;
 		} else { kind = 6; break; }
-	    case 17:
-		{ kind = 6; break; }
-	    case 18:
-		if ((ch >= '1' && ch <= '8')) {
+	    case 19: case_19:
+		if (ch == '?') {
 		    GetCh(); goto case_19;
+		} else { kind = 6; break; }
+	    case 20: case_20:
+		if (ch == '!') {
+		    GetCh(); goto case_20;
+		} else { kind = 6; break; }
+	    case 21: case_21:
+		{ kind = 6; break; }
+	    case 22: case_22:
+		if (ch == 'O') {
+		    GetCh(); goto case_23;
+		} else { kind = noSym; break; }
+	    case 23: case_23:
+		if (ch == '#') {
+		    GetCh(); goto case_27;
+		} else if (ch == '+') {
+		    GetCh(); goto case_24;
+		} else if (ch == '?') {
+		    GetCh(); goto case_25;
+		} else if (ch == '!') {
+		    GetCh(); goto case_26;
+		} else { kind = 7; break; }
+	    case 24: case_24:
+		if (ch == '+') {
+		    GetCh(); goto case_24;
+		} else { kind = 7; break; }
+	    case 25: case_25:
+		if (ch == '?') {
+		    GetCh(); goto case_25;
+		} else { kind = 7; break; }
+	    case 26: case_26:
+		if (ch == '!') {
+		    GetCh(); goto case_26;
+		} else { kind = 7; break; }
+	    case 27: case_27:
+		{ kind = 7; break; }
+	    case 28:
+		if ((ch >= '1' && ch <= '8')) {
+		    GetCh(); goto case_30;
 		} else if ((ch >= 'a' && ch <= 'h')) {
 		    GetCh(); goto case_12;
 		} else if (ch == 'x') {
 		    GetCh(); goto case_11;
 		} else { kind = noSym; break; }
-	    case 19: case_19:
+	    case 29:
+		if (ch == '-') {
+		    GetCh(); goto case_31;
+		} else { kind = noSym; break; }
+	    case 30: case_30:
 		if ((ch >= 'a' && ch <= 'h')) {
 		    GetCh(); goto case_12;
+		} else if (ch == '#') {
+		    GetCh(); goto case_17;
+		} else if (ch == '+') {
+		    GetCh(); goto case_14;
+		} else if (ch == '?') {
+		    GetCh(); goto case_15;
+		} else if (ch == '!') {
+		    GetCh(); goto case_16;
 		} else if (ch == 'x') {
 		    GetCh(); goto case_11;
 		} else { kind = 5; break; }
-	    case 20:
-		{ kind = 7; break; }
-	    case 21: case_21:
-		if (ch == 'O') {
-		    GetCh(); goto case_22;
-		} else { kind = noSym; break; }
-	    case 22: case_22:
-		{ kind = 9; break; }
-	    case 23: case_23:
-		if (ch == '0') {
-		    GetCh(); goto case_24;
-		} else { kind = noSym; break; }
-	    case 24: case_24:
-		{ kind = 10; break; }
-	    case 25: case_25:
-		if (ch == '1') {
-		    GetCh(); goto case_26;
-		} else { kind = noSym; break; }
-	    case 26: case_26:
-		{ kind = 11; break; }
-	    case 27: case_27:
-		if (ch == '2') {
-		    GetCh(); goto case_28;
-		} else { kind = noSym; break; }
-	    case 28: case_28:
-		if (ch == '-') {
-		    GetCh(); goto case_29;
-		} else { kind = noSym; break; }
-	    case 29: case_29:
-		if (ch == '1') {
-		    GetCh(); goto case_30;
-		} else { kind = noSym; break; }
-	    case 30: case_30:
-		if (ch == '/') {
-		    GetCh(); goto case_31;
-		} else { kind = noSym; break; }
 	    case 31: case_31:
-		if (ch == '2') {
+		if (ch == 'O') {
 		    GetCh(); goto case_32;
 		} else { kind = noSym; break; }
 	    case 32: case_32:
-		{ kind = 12; break; }
+		if (ch == '#') {
+		    GetCh(); goto case_21;
+		} else if (ch == '+') {
+		    GetCh(); goto case_18;
+		} else if (ch == '?') {
+		    GetCh(); goto case_19;
+		} else if (ch == '!') {
+		    GetCh(); goto case_20;
+		} else if (ch == '-') {
+		    GetCh(); goto case_22;
+		} else { kind = 6; break; }
 	    case 33:
-		if (ch == '-') {
-		    GetCh(); goto case_36;
+		{ kind = 8; break; }
+	    case 34: case_34:
+		if (ch == '0') {
+		    GetCh(); goto case_35;
 		} else { kind = noSym; break; }
-	    case 34:
-		if ((ch >= '0' && ch <= '9')) {
-		    GetCh(); goto case_3;
-		} else if (ch == '-') {
-		    GetCh(); goto case_23;
-		} else if (ch == '/') {
-		    GetCh(); goto case_27;
-		} else { kind = 2; break; }
-	    case 35:
-		if ((ch >= '0' && ch <= '9')) {
-		    GetCh(); goto case_3;
-		} else if (ch == '-') {
-		    GetCh(); goto case_25;
-		} else { kind = 2; break; }
+	    case 35: case_35:
+		{ kind = 9; break; }
 	    case 36: case_36:
-		if (ch == 'O') {
+		if (ch == '1') {
 		    GetCh(); goto case_37;
 		} else { kind = noSym; break; }
 	    case 37: case_37:
+		{ kind = 10; break; }
+	    case 38: case_38:
+		if (ch == '2') {
+		    GetCh(); goto case_39;
+		} else { kind = noSym; break; }
+	    case 39: case_39:
 		if (ch == '-') {
-		    GetCh(); goto case_21;
-		} else { kind = 8; break; }
+		    GetCh(); goto case_40;
+		} else { kind = noSym; break; }
+	    case 40: case_40:
+		if (ch == '1') {
+		    GetCh(); goto case_41;
+		} else { kind = noSym; break; }
+	    case 41: case_41:
+		if (ch == '/') {
+		    GetCh(); goto case_42;
+		} else { kind = noSym; break; }
+	    case 42: case_42:
+		if (ch == '2') {
+		    GetCh(); goto case_43;
+		} else { kind = noSym; break; }
+	    case 43: case_43:
+		{ kind = 11; break; }
+	    case 44:
+		if ((ch >= '0' && ch <= '9')) {
+		    GetCh(); goto case_3;
+		} else if (ch == '-') {
+		    GetCh(); goto case_34;
+		} else if (ch == '/') {
+		    GetCh(); goto case_38;
+		} else { kind = 2; break; }
+	    case 45:
+		if ((ch >= '0' && ch <= '9')) {
+		    GetCh(); goto case_3;
+		} else if (ch == '-') {
+		    GetCh(); goto case_36;
+		} else { kind = 2; break; }
 	    /*---- enable ----*/
 	}
 	t = new CcsToken_t(kind, pos, col, line,

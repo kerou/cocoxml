@@ -43,8 +43,9 @@ TOKENS
     number    = digit { digit }.
     string    = '"' { stringCh | '\\' printable } '"' ']'.
     result    = '{' { resultCh | '\\' printable } '}'.
-    basemove  = [piece | col [row] ['x']] col row.
-    suffix    = '#' | ('+' { '+' }) | ('?' { '?' }) | ('!' { '!' }).
+    basemove  = [piece | col [row] ['x']] col row ['#' | { '+' } | { '?' } | { '!' }].
+    castling  = "O-O" ['#' | { '+' } | { '?' } | { '!' }].
+    castlingL = "O-O-O" ['#' | { '+' } | { '?' } | { '!' }].
 
 IGNORE cr + lf + tab
 
@@ -58,7 +59,7 @@ info = ident string.
 
 round = number '.' move [ move ].
 
-move = ("O-O" | "O-O-O" | basemove) [suffix].
+move = basemove | castling | castlingL.
 
 resultnum = "1-0" | "0-1" | "1/2-1/2".
 
