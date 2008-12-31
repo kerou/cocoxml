@@ -37,10 +37,13 @@ EXTC_BEGIN
 typedef struct {
     FILE * outfp;
     int indent;
+    char EOL[3];
 }  CcOutput_t;
 
 void CcPrintf(CcOutput_t * self, const char * format, ...);
+void CcPrintfL(CcOutput_t * self, const char * format, ...);
 void CcPrintfI(CcOutput_t * self, const char * format, ...);
+void CcPrintfIL(CcOutput_t * self, const char * format, ...);
 void CcSource(CcOutput_t * self, const CcsPosition_t * pos);
 
 struct CcOutputSchemeType_s {
