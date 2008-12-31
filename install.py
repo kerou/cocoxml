@@ -73,7 +73,6 @@ def install_temp(destroot, tgtdir, srcfile,
     tgtfile = os.path.join(tgtdir, os.path.basename(srcfile))
     srcf = open(srcfile, 'r')
     tgtf = open(tgtfile, 'w')
-    print 'srcf =', srcf, 'tgtf =', tgtf, repr(prefix), repr(suffix)
     ln = srcf.readline()
     dump = True
     while ln:
@@ -83,7 +82,6 @@ def install_temp(destroot, tgtdir, srcfile,
             if cmd:
                 dump = False
         else:
-            print 'ZZZZ', ln
             cmd = get_command(ln, prefix, suffix)
             if cmd:
                 dump = True
