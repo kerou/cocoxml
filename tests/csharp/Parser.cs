@@ -103,36 +103,33 @@ public class CcsParser_t {
     private void round()
     {
 	Expect(2);
-	Expect(7);
+	Expect(8);
 	move();
-	if (la.kind == 5 || la.kind == 8 || la.kind == 9) {
+	if (la.kind == 5 || la.kind == 6 || la.kind == 7) {
 	    move();
 	}
     }
 
     private void resultnum()
     {
-	if (la.kind == 10) {
+	if (la.kind == 9) {
+	    Get();
+	} else if (la.kind == 10) {
 	    Get();
 	} else if (la.kind == 11) {
 	    Get();
-	} else if (la.kind == 12) {
-	    Get();
-	} else SynErr(14);
+	} else SynErr(13);
     }
 
     private void move()
     {
-	if (la.kind == 8) {
+	if (la.kind == 5) {
 	    Get();
-	} else if (la.kind == 9) {
+	} else if (la.kind == 6) {
 	    Get();
-	} else if (la.kind == 5) {
+	} else if (la.kind == 7) {
 	    Get();
-	} else SynErr(15);
-	if (la.kind == 6) {
-	    Get();
-	}
+	} else SynErr(14);
     }
 
     /*---- enable ----*/
@@ -164,7 +161,7 @@ public class CcsParser_t {
 	scanner = new CcsScanner_t(errpool, fname);
 	t = la = null;
 	/*---- constructor ----*/
-	self->maxT = 13;
+	self->maxT = 12;
 	/*---- enable ----*/
     }
 
@@ -187,16 +184,15 @@ public class CcsParser_t {
 	case 3: s = "\"" + "string" + "\" expected"; break;
 	case 4: s = "\"" + "result" + "\" expected"; break;
 	case 5: s = "\"" + "basemove" + "\" expected"; break;
-	case 6: s = "\"" + "suffix" + "\" expected"; break;
-	case 7: s = "\"" + "." + "\" expected"; break;
-	case 8: s = "\"" + "O-O" + "\" expected"; break;
-	case 9: s = "\"" + "O-O-O" + "\" expected"; break;
-	case 10: s = "\"" + "1-0" + "\" expected"; break;
-	case 11: s = "\"" + "0-1" + "\" expected"; break;
-	case 12: s = "\"" + "1/2-1/2" + "\" expected"; break;
-	case 13: s = "\"" + "???" + "\" expected"; break;
-	case 14: s = "this symbol not expected in \"" + "resultnum" + "\""; break;
-	case 15: s = "this symbol not expected in \"" + "move" + "\""; break;
+	case 6: s = "\"" + "castling" + "\" expected"; break;
+	case 7: s = "\"" + "castlingL" + "\" expected"; break;
+	case 8: s = "\"" + "." + "\" expected"; break;
+	case 9: s = "\"" + "1-0" + "\" expected"; break;
+	case 10: s = "\"" + "0-1" + "\" expected"; break;
+	case 11: s = "\"" + "1/2-1/2" + "\" expected"; break;
+	case 12: s = "\"" + "???" + "\" expected"; break;
+	case 13: s = "this symbol not expected in \"" + "resultnum" + "\""; break;
+	case 14: s = "this symbol not expected in \"" + "move" + "\""; break;
 	/*---- enable ----*/
 	default: s = "error " + n; break;
 	}
@@ -205,8 +201,8 @@ public class CcsParser_t {
 
     static readonly string[] set = {
 	/*---- InitSet ----*/
-	/*    5    0    */
-	"*.............."  /* 0 */
+	/*    5    0   */
+	"*............."  /* 0 */
 	/*---- enable ----*/
     };
 }
