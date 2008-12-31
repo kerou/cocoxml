@@ -15,9 +15,20 @@
   with this program; if not, write to the Free Software Foundation, Inc., 
   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
+#include  "Parser.h"
 
 int
 main(int argc, char * argv[])
 {
+    PgnParser_t parser;
+
+    if (argc != 2) {
+	fprintf(stderr, "%s PGN-FILENAME\n", argv[0]);
+	goto errquit0;
+    }
+    if (!PgnParser(&parser, argv[1], stderr)) goto errquit0;
+    PgnParser_Parse(&parser);
     return 0;
+ errquit0:
+    return -1;
 }
