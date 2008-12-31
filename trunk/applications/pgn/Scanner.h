@@ -19,8 +19,8 @@ Author: Charles Wang <charlesw123456@gmail.com>
  59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
-#ifndef COCO_SCANNER_H
-#define COCO_SCANNER_H
+#ifndef COCO_PgnScanner_H
+#define COCO_PgnScanner_H
 
 #ifndef  COCO_TOKEN_H
 #include "c/Token.h"

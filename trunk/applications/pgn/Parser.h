@@ -19,14 +19,14 @@ Author: Charles Wang <charlesw123456@gmail.com>
  59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
-#ifndef  COCO_PARSER_H
-#define  COCO_PARSER_H
+#ifndef  COCO_PgnParser_H
+#define  COCO_PgnParser_H
 
 #ifndef  COCO_ERRORPOOL_H
 #include "c/ErrorPool.h"
 #endif
 
-#ifndef  COCO_SCANNER_H
+#ifndef  COCO_PgnScanner_H
 #include "Scanner.h"
 #endif
 
