@@ -770,6 +770,9 @@ CcCSharpOutputScheme_Destruct(CcObject_t * self)
 static const CcOutputSchemeType_t CSharpOutputSchemeType = {
     { sizeof(CcCSharpOutputScheme_t), "CSharpOutputScheme",
       CcCSharpOutputScheme_Destruct },
+    /* If the following list are modified, modify install.py too. */
+    "Buffer.cs\0ErrorPool.cs\0Position.cs\0Token.cs\0Scanner.cs\0Parser.cs\0\0",
+    "\0",
     CcCSharpOutputScheme_write
 };
 

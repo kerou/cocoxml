@@ -386,13 +386,14 @@ CcsBool_t
 CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self,
 			       const char * schemeName, const char * atgname)
 {
-    CcArgumentsIter_t iter; CcArrayListIter_t iter0;
+    CcArgumentsIter_t iter;
     const char * output, * outdir, * tempdir;
     CcPathInfo_t pathes[5], * curpath;
-    const CcString_t * update;
     char srcPath[PATH_MAX], tgtPath[PATH_MAX];
     char * atgname0 = NULL, * selfpath0 = NULL;
-    const CcArrayList_t * updates = &self->globals->updates;
+    const char * update;
+    const CcOutputSchemeType_t * cctype =
+	(const CcOutputSchemeType_t *)self->base.type;
 
     output = CcArguments_First(self->arguments, "output", &iter);
     if (!output)  output = "auto";
@@ -421,25 +422,23 @@ CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self,
     CcsAssert(curpath - pathes < sizeof(pathes) / sizeof(pathes[0]));
     curpath->dir = NULL;
 
-    /* For all template files */
-    for (update = (const CcString_t *)CcArrayList_FirstC(updates, &iter0);
-	 update;
-	 update = (const CcString_t *)CcArrayList_NextC(updates, &iter0)) {
+    /* For all template/update files */
+    for (update = self->globals->lexical ? cctype->updates : cctype->xmlupdates;
+	 *update; update += strlen(update) + 1) {
 	for (curpath = pathes; curpath->dir; ++curpath) {
 	    PathJoin(srcPath, sizeof(srcPath), curpath->dir, curpath->dir1,
-		     curpath->scheme, update->value);
+		     curpath->scheme, update);
 	    if (CheckFile(srcPath)) break;
 	}
 	if (!curpath->dir) {
-	    fprintf(stderr,
-		    "Can not find any template file for %s.\n", update->value);
+	    fprintf(stderr, "Can not find any template file for %s.\n", update);
 	    break;
 	}
-	PathJoin(tgtPath, sizeof(tgtPath), outdir, NULL, NULL, update->value);
+	PathJoin(tgtPath, sizeof(tgtPath), outdir, NULL, NULL, update);
 	if (!CcOutputScheme_ApplyTemplate(self, srcPath, tgtPath)) break;
     }
 
     if (atgname0) CcFree(atgname0);
     if (selfpath0) CcFree(selfpath0);
-    return update == NULL;
+    return *update == 0;
 }
