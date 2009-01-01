@@ -55,7 +55,6 @@ struct CcGlobals_s {
     CcSyntax_t        syntax;
 
     CcArrayList_t     sections;
-    CcArrayList_t     updates;
 };
 
 CcGlobals_t * CcGlobals(CcGlobals_t * self, CcsErrorPool_t * errpool);
@@ -68,8 +67,6 @@ void CcGlobals_NewSection(CcGlobals_t * self, const char * secname,
 			  CcsPosition_t * pos);
 const CcsPosition_t *
 CcGlobals_GetSection(const CcGlobals_t * self, const char * secname);
-
-void CcGlobals_AddUpdate(CcGlobals_t * self, const char * update);
 
 EXTC_END
 

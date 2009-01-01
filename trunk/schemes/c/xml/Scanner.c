@@ -78,8 +78,8 @@ CcsXmlScanner_Init(CcsXmlScanner_t * self)
 {
     /*---- declarations ----*/
     self->eofSym = 0;
-    self->maxT = 40;
-    self->noSym = 40;
+    self->maxT = 39;
+    self->noSym = 39;
     /*---- enable ----*/
 
     self->busyTokenList = NULL;
@@ -270,25 +270,24 @@ typedef struct {
 
 static const Identifier2KWKind_t i2kArr[] = {
     /*---- identifiers2keywordkinds ----*/
-    { "ANY", 35 },
-    { "ATTRS", 21 },
+    { "ANY", 34 },
+    { "ATTRS", 20 },
     { "COMPILER", 6 },
     { "CONSTRUCTOR", 8 },
     { "DESTRUCTOR", 9 },
     { "END", 13 },
-    { "IF", 37 },
-    { "IGNORECASE", 18 },
+    { "IF", 36 },
+    { "IGNORECASE", 17 },
     { "MEMBERS", 7 },
-    { "NAMESPACE", 17 },
-    { "OPTIONS", 19 },
-    { "PROCESSING_INSTRUCTIONS", 22 },
+    { "NAMESPACE", 16 },
+    { "OPTIONS", 18 },
+    { "PROCESSING_INSTRUCTIONS", 21 },
     { "PRODUCTIONS", 10 },
     { "SCHEME", 14 },
     { "SECTION", 15 },
-    { "SYNC", 36 },
-    { "TAGS", 20 },
-    { "UPDATES", 16 },
-    { "WEAK", 28 },
+    { "SYNC", 35 },
+    { "TAGS", 19 },
+    { "WEAK", 27 },
     /*---- enable ----*/
 };
 static const int i2kNum = sizeof(i2kArr) / sizeof(i2kArr[0]);
@@ -577,27 +576,27 @@ CcsXmlScanner_NextToken(CcsXmlScanner_t * self)
     case 12:
 	{ kind = 11; break; }
     case 13:
-	{ kind = 24; break; }
+	{ kind = 23; break; }
     case 14: case_14:
-	{ kind = 25; break; }
+	{ kind = 24; break; }
     case 15: case_15:
-	{ kind = 26; break; }
+	{ kind = 25; break; }
     case 16:
-	{ kind = 27; break; }
+	{ kind = 26; break; }
     case 17:
-	{ kind = 30; break; }
+	{ kind = 29; break; }
     case 18:
-	{ kind = 31; break; }
+	{ kind = 30; break; }
     case 19:
-	{ kind = 32; break; }
+	{ kind = 31; break; }
     case 20:
-	{ kind = 33; break; }
+	{ kind = 32; break; }
     case 21:
-	{ kind = 34; break; }
+	{ kind = 33; break; }
     case 22: case_22:
-	{ kind = 38; break; }
+	{ kind = 37; break; }
     case 23: case_23:
-	{ kind = 39; break; }
+	{ kind = 38; break; }
     case 24:
 	if (self->ch == '>') {
 	    CcsXmlScanner_GetCh(self); goto case_15;
@@ -607,11 +606,11 @@ CcsXmlScanner_NextToken(CcsXmlScanner_t * self)
     case 25:
 	if (self->ch == '.') {
 	    CcsXmlScanner_GetCh(self); goto case_14;
-	} else { kind = 23; break; }
+	} else { kind = 22; break; }
     case 26:
 	if (self->ch == '.') {
 	    CcsXmlScanner_GetCh(self); goto case_22;
-	} else { kind = 29; break; }
+	} else { kind = 28; break; }
     /*---- enable ----*/
     }
     t = CcsToken(kind, pos, col, line,

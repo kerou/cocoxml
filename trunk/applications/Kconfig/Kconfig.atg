@@ -8,7 +8,6 @@ License: LGPLv2
 END.
 
 SCHEME c Kc
-UPDATES "Scanner.h" "Scanner.c" "Parser.h" "Parser.c" END.
 
 COMPILER Kconfig
 

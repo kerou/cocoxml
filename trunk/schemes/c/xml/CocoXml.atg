@@ -30,7 +30,6 @@ SECTION license
 END.
 
 SCHEME c CcsXml
-UPDATES "Scanner.h" "Scanner.c" "Parser.h" "Parser.c" END.
 
 SECTION hIncludes
 #ifndef  COCO_GLOBALS_H
@@ -107,7 +106,7 @@ CocoXml                         (. CcSymbol_t  * sym;
 				   CcXmlSpec_t * xsdef;
 				   CcsToken_t  * beg; .)
 =
-  { SchemeDecl | SectionDecl | UpdateDecl }
+  { SchemeDecl | SectionDecl }
   "COMPILER"
   ident                         (. gramName = CcStrdup(self->t->val); .)
   [ "MEMBERS"                   (. CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
@@ -196,14 +195,6 @@ SectionDecl       (. char * secname; CcsToken_t * beg; .)
     		     			  CcsXmlScanner_GetPositionBetween(&self->scanner, beg, self->la));
 		     CcsXmlScanner_DecRef(&self->scanner, beg);
 		     CcFree(secname); .)
-  "END" '.'
-.
-
-/*------------------------------------------------------------------------------------*/
-
-UpdateDecl
-=
-  "UPDATES" { string (. CcGlobals_AddUpdate(&self->globals, self->t->val); .) }
   "END" '.'
 .
 

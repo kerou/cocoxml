@@ -22,7 +22,6 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "Globals.h"
-#include  "BasicObjects.h"
 #include  "c/ErrorPool.h"
 
 CcGlobals_t *
@@ -36,10 +35,7 @@ CcGlobals(CcGlobals_t * self, CcsErrorPool_t * errpool)
     self->xmlspecmap = NULL;
     if (!CcSyntax(&self->syntax, self)) goto errquit3;
     if (!CcArrayList(&self->sections)) goto errquit4;
-    if (!CcArrayList(&self->updates)) goto errquit5;
     return self;
- errquit5:
-    CcArrayList_Destruct(&self->sections);
  errquit4:
     CcSyntax_Destruct(&self->syntax);
  errquit3:
@@ -61,10 +57,7 @@ CcGlobalsXml(CcGlobals_t * self, CcsErrorPool_t * errpool)
 	goto errquit2;
     if (!CcSyntax(&self->syntax, self)) goto errquit3;
     if (!CcArrayList(&self->sections)) goto errquit4;
-    if (!CcArrayList(&self->updates)) goto errquit5;
     return self;
- errquit5:
-    CcArrayList_Destruct(&self->sections);
  errquit4:
     CcSyntax_Destruct(&self->syntax);
  errquit3:
@@ -78,7 +71,6 @@ CcGlobalsXml(CcGlobals_t * self, CcsErrorPool_t * errpool)
 void
 CcGlobals_Destruct(CcGlobals_t * self)
 {
-    CcArrayList_Destruct(&self->updates);
     CcArrayList_Destruct(&self->sections);
     CcSyntax_Destruct(&self->syntax);
     if (self->lexical) CcLexical_Destruct(self->lexical);
@@ -138,12 +130,4 @@ CcGlobals_GetSection(const CcGlobals_t * self, const char * secname)
 	 section = (const CcSection_t *)CcArrayList_NextC(&self->sections, &iter))
 	if (!strcmp(section->name, secname)) return section->pos;
     return NULL;
-}
-
-void
-CcGlobals_AddUpdate(CcGlobals_t * self, const char * update)
-{
-    char * update0 = CcUnescape(update);
-    CcArrayList_New(&self->updates, (CcObject_t *)CcString(update0));
-    CcFree(update0);
 }

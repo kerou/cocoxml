@@ -95,7 +95,6 @@ CcsXmlParser_WeakSeparator(CcsXmlParser_t * self, int n, int syFol, int repFol)
 static void CcsXmlParser_CocoXml(CcsXmlParser_t * self);
 static void CcsXmlParser_SchemeDecl(CcsXmlParser_t * self);
 static void CcsXmlParser_SectionDecl(CcsXmlParser_t * self);
-static void CcsXmlParser_UpdateDecl(CcsXmlParser_t * self);
 static void CcsXmlParser_XmlSpecDecl(CcsXmlParser_t * self, CcXmlSpec_t ** xsdef);
 static void CcsXmlParser_XmlNamespaceDecl(CcsXmlParser_t * self);
 static void CcsXmlParser_AttrDecl(CcsXmlParser_t * self, CcSymbolNT_t * sym);
@@ -153,7 +152,7 @@ CcsXmlParser(CcsXmlParser_t * self, const char * fname, FILE * errfp)
     if (!CcsXmlScanner(&self->scanner, &self->errpool, fname)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
-    self->maxT = 40;
+    self->maxT = 39;
     if (!CcGlobalsXml(&self->globals, &self->errpool)) goto ERRQUIT;
     self->members = NULL;
     self->constructor = NULL;
@@ -194,13 +193,11 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
     char        * gramName = NULL;
     CcXmlSpec_t * xsdef;
     CcsToken_t  * beg; 
-    while (self->la->kind == 14 || self->la->kind == 15 || self->la->kind == 16) {
+    while (self->la->kind == 14 || self->la->kind == 15) {
 	if (self->la->kind == 14) {
 	    CcsXmlParser_SchemeDecl(self);
-	} else if (self->la->kind == 15) {
-	    CcsXmlParser_SectionDecl(self);
 	} else {
-	    CcsXmlParser_UpdateDecl(self);
+	    CcsXmlParser_SectionDecl(self);
 	}
     }
     CcsXmlParser_Expect(self, 6);
@@ -235,11 +232,11 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
     }
     CcsXmlParser_XmlSpecDecl(self, &xsdef);
     CcXmlSpecMap_Add(self->xmlspecmap, "", xsdef); 
-    while (self->la->kind == 17) {
+    while (self->la->kind == 16) {
 	CcsXmlParser_XmlNamespaceDecl(self);
     }
     while (!(self->la->kind == 0 || self->la->kind == 10)) {
-	CcsXmlParser_SynErr(self, 41); CcsXmlParser_Get(self);
+	CcsXmlParser_SynErr(self, 40); CcsXmlParser_Get(self);
     }
     CcsXmlParser_Expect(self, 10);
     CcXmlSpecMap_MakeTerminals(self->xmlspecmap, &self->globals);
@@ -266,12 +263,12 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
 	    CcsPosition_Destruct(((CcSymbolNT_t *)sym)->attrPos);
 	    ((CcSymbolNT_t *)sym)->attrPos = NULL; 
 	} 
-	if (self->la->kind == 23 || self->la->kind == 25) {
+	if (self->la->kind == 22 || self->la->kind == 24) {
 	    CcsXmlParser_AttrDecl(self, (CcSymbolNT_t *)sym);
 	}
 	if (!undef && noAttrs != (((CcSymbolNT_t *)sym)->attrPos == NULL))
 	    CcsXmlParser_SemErrT(self, "attribute mismatch between declaration and use of this symbol"); 
-	if (self->la->kind == 38) {
+	if (self->la->kind == 37) {
 	    CcsXmlParser_SemText(self, &((CcSymbolNT_t *)sym)->semPos);
 	}
 	CcsXmlParser_ExpectWeak(self, 11, 4);
@@ -332,44 +329,32 @@ CcsXmlParser_SectionDecl(CcsXmlParser_t * self)
 }
 
 static void
-CcsXmlParser_UpdateDecl(CcsXmlParser_t * self)
-{
-    CcsXmlParser_Expect(self, 16);
-    while (self->la->kind == 3) {
-	CcsXmlParser_Get(self);
-	CcGlobals_AddUpdate(&self->globals, self->t->val); 
-    }
-    CcsXmlParser_Expect(self, 13);
-    CcsXmlParser_Expect(self, 12);
-}
-
-static void
 CcsXmlParser_XmlSpecDecl(CcsXmlParser_t * self, CcXmlSpec_t ** xsdef)
 {
     *xsdef = CcXmlSpec(&self->globals); 
-    if (self->la->kind == 18) {
+    if (self->la->kind == 17) {
 	CcsXmlParser_Get(self);
 	CcXmlSpec_SetCaseSensitive(*xsdef, FALSE); 
     }
-    if (self->la->kind == 19) {
+    if (self->la->kind == 18) {
 	CcsXmlParser_Get(self);
 	while (self->la->kind == 1) {
 	    CcsXmlParser_OptionDecl(self, *xsdef);
 	}
     }
-    if (self->la->kind == 20) {
+    if (self->la->kind == 19) {
 	CcsXmlParser_Get(self);
 	while (self->la->kind == 1) {
 	    CcsXmlParser_XmlTagDecl(self, *xsdef);
 	}
     }
-    if (self->la->kind == 21) {
+    if (self->la->kind == 20) {
 	CcsXmlParser_Get(self);
 	while (self->la->kind == 1) {
 	    CcsXmlParser_XmlAttrDecl(self, *xsdef);
 	}
     }
-    if (self->la->kind == 22) {
+    if (self->la->kind == 21) {
 	CcsXmlParser_Get(self);
 	while (self->la->kind == 1) {
 	    CcsXmlParser_XmlPIDecl(self, *xsdef);
@@ -381,7 +366,7 @@ static void
 CcsXmlParser_XmlNamespaceDecl(CcsXmlParser_t * self)
 {
     char * nsURI; CcXmlSpec_t * xsdef; 
-    CcsXmlParser_Expect(self, 17);
+    CcsXmlParser_Expect(self, 16);
     CcsXmlParser_Expect(self, 3);
     nsURI = CcStrdup(self->t->val); 
     CcsXmlParser_XmlSpecDecl(self, &xsdef);
@@ -394,7 +379,7 @@ CcsXmlParser_XmlNamespaceDecl(CcsXmlParser_t * self)
 static void
 CcsXmlParser_AttrDecl(CcsXmlParser_t * self, CcSymbolNT_t * sym)
 {
-    if (self->la->kind == 23) {
+    if (self->la->kind == 22) {
 	CcsXmlParser_Get(self);
 	CcsToken_t * beg;
 	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
@@ -406,10 +391,10 @@ CcsXmlParser_AttrDecl(CcsXmlParser_t * self, CcSymbolNT_t * sym)
 		CcsXmlParser_SemErrT(self, "bad string in attributes"); 
 	    }
 	}
-	CcsXmlParser_Expect(self, 24);
+	CcsXmlParser_Expect(self, 23);
 	sym->attrPos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
 	CcsXmlScanner_DecRef(&self->scanner, beg); 
-    } else if (self->la->kind == 25) {
+    } else if (self->la->kind == 24) {
 	CcsXmlParser_Get(self);
 	CcsToken_t * beg;
 	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
@@ -421,16 +406,16 @@ CcsXmlParser_AttrDecl(CcsXmlParser_t * self, CcSymbolNT_t * sym)
 		CcsXmlParser_SemErrT(self, "bad string in attributes"); 
 	    }
 	}
-	CcsXmlParser_Expect(self, 26);
+	CcsXmlParser_Expect(self, 25);
 	sym->attrPos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
 	CcsXmlScanner_DecRef(&self->scanner, beg); 
-    } else CcsXmlParser_SynErr(self, 42);
+    } else CcsXmlParser_SynErr(self, 41);
 }
 
 static void
 CcsXmlParser_SemText(CcsXmlParser_t * self, CcsPosition_t ** pos)
 {
-    CcsXmlParser_Expect(self, 38);
+    CcsXmlParser_Expect(self, 37);
     CcsToken_t * beg;
     CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
     while (CcsXmlParser_StartOf(self, 11)) {
@@ -444,7 +429,7 @@ CcsXmlParser_SemText(CcsXmlParser_t * self, CcsPosition_t ** pos)
 	    CcsXmlParser_SemErrT(self, "missing end of previous semantic action"); 
 	}
     }
-    CcsXmlParser_Expect(self, 39);
+    CcsXmlParser_Expect(self, 38);
     *pos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
     CcsXmlScanner_DecRef(&self->scanner, beg); 
 }
@@ -455,7 +440,7 @@ CcsXmlParser_Expression(CcsXmlParser_t * self, CcGraph_t ** g)
     CcGraph_t * g2; 
     CcsXmlParser_Term(self, g);
     CcsBool_t first = TRUE; 
-    while (CcsXmlParser_WeakSeparator(self, 27, 14, 13)) {
+    while (CcsXmlParser_WeakSeparator(self, 26, 14, 13)) {
 	CcsXmlParser_Term(self, &g2);
 	if (first) { CcEBNF_MakeFirstAlt(&self->syntax->base, *g); first = FALSE; }
 	CcEBNF_MakeAlternative(&self->syntax->base, *g, g2);
@@ -512,7 +497,7 @@ CcsXmlParser_Term(CcsXmlParser_t * self, CcGraph_t ** g)
     CcGraph_t * g2; CcsPosition_t * pos; CcNode_t * rslv = NULL;
     *g = NULL; 
     if (CcsXmlParser_StartOf(self, 15)) {
-	if (self->la->kind == 37) {
+	if (self->la->kind == 36) {
 	    CcsXmlParser_Resolver(self, &pos);
 	    rslv = CcEBNF_NewNode(&self->syntax->base,
 				  CcNodeRslvP(self->la->line, pos));
@@ -531,7 +516,7 @@ CcsXmlParser_Term(CcsXmlParser_t * self, CcGraph_t ** g)
 	}
     } else if (CcsXmlParser_StartOf(self, 17)) {
 	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, CcNodeEps(0))); 
-    } else CcsXmlParser_SynErr(self, 43);
+    } else CcsXmlParser_SynErr(self, 42);
     if (*g == NULL) /* invalid start of Term */
 	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, CcNodeEps(0))); 
 }
@@ -539,8 +524,8 @@ CcsXmlParser_Term(CcsXmlParser_t * self, CcGraph_t ** g)
 static void
 CcsXmlParser_Resolver(CcsXmlParser_t * self, CcsPosition_t ** pos)
 {
-    CcsXmlParser_Expect(self, 37);
-    CcsXmlParser_Expect(self, 29);
+    CcsXmlParser_Expect(self, 36);
+    CcsXmlParser_Expect(self, 28);
     CcsToken_t * beg;
     CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
     CcsXmlParser_Condition(self);
@@ -554,8 +539,8 @@ CcsXmlParser_Factor(CcsXmlParser_t * self, CcGraph_t ** g)
     char * name = NULL; CcsPosition_t * pos; CcsBool_t weak = FALSE; 
     *g = NULL; 
     switch (self->la->kind) {
-    case 1: case 28: {
-	if (self->la->kind == 28) {
+    case 1: case 27: {
+	if (self->la->kind == 27) {
 	    CcsXmlParser_Get(self);
 	    weak = TRUE; 
 	}
@@ -574,7 +559,7 @@ CcsXmlParser_Factor(CcsXmlParser_t * self, CcGraph_t ** g)
 	}
 	CcNode_t * p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->line, weak);
 	*g = CcGraphP(p); 
-	if (self->la->kind == 23 || self->la->kind == 25) {
+	if (self->la->kind == 22 || self->la->kind == 24) {
 	    CcsXmlParser_Attribs(self, p);
 	}
 	if (undef) {
@@ -586,46 +571,46 @@ CcsXmlParser_Factor(CcsXmlParser_t * self, CcGraph_t ** g)
 	    CcsXmlParser_SemErrT(self, "attribute mismatch between declaration and use of this symbol"); 
 	break;
     }
-    case 29: {
+    case 28: {
 	CcsXmlParser_Get(self);
 	CcsXmlParser_Expression(self, g);
-	CcsXmlParser_Expect(self, 30);
+	CcsXmlParser_Expect(self, 29);
 	break;
     }
-    case 31: {
+    case 30: {
 	CcsXmlParser_Get(self);
 	CcsXmlParser_Expression(self, g);
-	CcsXmlParser_Expect(self, 32);
+	CcsXmlParser_Expect(self, 31);
 	CcEBNF_MakeOption(&self->syntax->base, *g); 
 	break;
     }
-    case 33: {
+    case 32: {
 	CcsXmlParser_Get(self);
 	CcsXmlParser_Expression(self, g);
-	CcsXmlParser_Expect(self, 34);
+	CcsXmlParser_Expect(self, 33);
 	CcEBNF_MakeIteration(&self->syntax->base, *g); 
 	break;
     }
-    case 38: {
+    case 37: {
 	CcsXmlParser_SemText(self, &pos);
 	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeSem(0));
 	((CcNodeSEM_t *)p)->pos = pos;
 	*g = CcGraphP(p); 
 	break;
     }
-    case 35: {
+    case 34: {
 	CcsXmlParser_Get(self);
 	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeAny(0));
 	*g = CcGraphP(p); 
 	break;
     }
-    case 36: {
+    case 35: {
 	CcsXmlParser_Get(self);
 	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeSync(0));
 	*g = CcGraphP(p);
 	break;
     }
-    default: CcsXmlParser_SynErr(self, 44); break;
+    default: CcsXmlParser_SynErr(self, 43); break;
     }
     if (*g == NULL) /* invalid start of Factor */
 	*g = CcGraphP(CcEBNF_NewNode(&self->syntax->base, CcNodeEps(0))); 
@@ -641,7 +626,7 @@ CcsXmlParser_Sym(CcsXmlParser_t * self, char ** name)
 static void
 CcsXmlParser_Attribs(CcsXmlParser_t * self, CcNode_t * p)
 {
-    if (self->la->kind == 23) {
+    if (self->la->kind == 22) {
 	CcsXmlParser_Get(self);
 	CcsToken_t * beg;
 	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
@@ -653,10 +638,10 @@ CcsXmlParser_Attribs(CcsXmlParser_t * self, CcNode_t * p)
 		CcsXmlParser_SemErrT(self, "bad string in attributes"); 
 	    }
 	}
-	CcsXmlParser_Expect(self, 24);
+	CcsXmlParser_Expect(self, 23);
 	CcNode_SetPosition(p, CcsXmlScanner_GetPosition(&self->scanner, beg, self->t));
 	CcsXmlScanner_DecRef(&self->scanner, beg); 
-    } else if (self->la->kind == 25) {
+    } else if (self->la->kind == 24) {
 	CcsXmlParser_Get(self);
 	CcsToken_t * beg;
 	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
@@ -668,25 +653,25 @@ CcsXmlParser_Attribs(CcsXmlParser_t * self, CcNode_t * p)
 		CcsXmlParser_SemErrT(self, "bad string in attributes"); 
 	    }
 	}
-	CcsXmlParser_Expect(self, 26);
+	CcsXmlParser_Expect(self, 25);
 	CcNode_SetPosition(p, CcsXmlScanner_GetPosition(&self->scanner,
 						     beg, self->t));
 	CcsXmlScanner_DecRef(&self->scanner, beg); 
-    } else CcsXmlParser_SynErr(self, 45);
+    } else CcsXmlParser_SynErr(self, 44);
 }
 
 static void
 CcsXmlParser_Condition(CcsXmlParser_t * self)
 {
     while (CcsXmlParser_StartOf(self, 18)) {
-	if (self->la->kind == 29) {
+	if (self->la->kind == 28) {
 	    CcsXmlParser_Get(self);
 	    CcsXmlParser_Condition(self);
 	} else {
 	    CcsXmlParser_Get(self);
 	}
     }
-    CcsXmlParser_Expect(self, 30);
+    CcsXmlParser_Expect(self, 29);
 }
 
 /*---- enable ----*/
@@ -713,36 +698,35 @@ CcsXmlParser_SynErr(CcsXmlParser_t * self, int n)
     case 13: s = "\"" "END" "\" expected"; break;
     case 14: s = "\"" "SCHEME" "\" expected"; break;
     case 15: s = "\"" "SECTION" "\" expected"; break;
-    case 16: s = "\"" "UPDATES" "\" expected"; break;
-    case 17: s = "\"" "NAMESPACE" "\" expected"; break;
-    case 18: s = "\"" "IGNORECASE" "\" expected"; break;
-    case 19: s = "\"" "OPTIONS" "\" expected"; break;
-    case 20: s = "\"" "TAGS" "\" expected"; break;
-    case 21: s = "\"" "ATTRS" "\" expected"; break;
-    case 22: s = "\"" "PROCESSING_INSTRUCTIONS" "\" expected"; break;
-    case 23: s = "\"" "<" "\" expected"; break;
-    case 24: s = "\"" ">" "\" expected"; break;
-    case 25: s = "\"" "<." "\" expected"; break;
-    case 26: s = "\"" ".>" "\" expected"; break;
-    case 27: s = "\"" "|" "\" expected"; break;
-    case 28: s = "\"" "WEAK" "\" expected"; break;
-    case 29: s = "\"" "(" "\" expected"; break;
-    case 30: s = "\"" ")" "\" expected"; break;
-    case 31: s = "\"" "[" "\" expected"; break;
-    case 32: s = "\"" "]" "\" expected"; break;
-    case 33: s = "\"" "{" "\" expected"; break;
-    case 34: s = "\"" "}" "\" expected"; break;
-    case 35: s = "\"" "ANY" "\" expected"; break;
-    case 36: s = "\"" "SYNC" "\" expected"; break;
-    case 37: s = "\"" "IF" "\" expected"; break;
-    case 38: s = "\"" "(." "\" expected"; break;
-    case 39: s = "\"" ".)" "\" expected"; break;
-    case 40: s = "\"" "???" "\" expected"; break;
-    case 41: s = "invalid \"" "CocoXml" "\""; break;
-    case 42: s = "this symbol not expected in \"" "AttrDecl" "\""; break;
-    case 43: s = "this symbol not expected in \"" "Term" "\""; break;
-    case 44: s = "this symbol not expected in \"" "Factor" "\""; break;
-    case 45: s = "this symbol not expected in \"" "Attribs" "\""; break;
+    case 16: s = "\"" "NAMESPACE" "\" expected"; break;
+    case 17: s = "\"" "IGNORECASE" "\" expected"; break;
+    case 18: s = "\"" "OPTIONS" "\" expected"; break;
+    case 19: s = "\"" "TAGS" "\" expected"; break;
+    case 20: s = "\"" "ATTRS" "\" expected"; break;
+    case 21: s = "\"" "PROCESSING_INSTRUCTIONS" "\" expected"; break;
+    case 22: s = "\"" "<" "\" expected"; break;
+    case 23: s = "\"" ">" "\" expected"; break;
+    case 24: s = "\"" "<." "\" expected"; break;
+    case 25: s = "\"" ".>" "\" expected"; break;
+    case 26: s = "\"" "|" "\" expected"; break;
+    case 27: s = "\"" "WEAK" "\" expected"; break;
+    case 28: s = "\"" "(" "\" expected"; break;
+    case 29: s = "\"" ")" "\" expected"; break;
+    case 30: s = "\"" "[" "\" expected"; break;
+    case 31: s = "\"" "]" "\" expected"; break;
+    case 32: s = "\"" "{" "\" expected"; break;
+    case 33: s = "\"" "}" "\" expected"; break;
+    case 34: s = "\"" "ANY" "\" expected"; break;
+    case 35: s = "\"" "SYNC" "\" expected"; break;
+    case 36: s = "\"" "IF" "\" expected"; break;
+    case 37: s = "\"" "(." "\" expected"; break;
+    case 38: s = "\"" ".)" "\" expected"; break;
+    case 39: s = "\"" "???" "\" expected"; break;
+    case 40: s = "invalid \"" "CocoXml" "\""; break;
+    case 41: s = "this symbol not expected in \"" "AttrDecl" "\""; break;
+    case 42: s = "this symbol not expected in \"" "Term" "\""; break;
+    case 43: s = "this symbol not expected in \"" "Factor" "\""; break;
+    case 44: s = "this symbol not expected in \"" "Attribs" "\""; break;
     /*---- enable ----*/
     default:
 	snprintf(format, sizeof(format), "error %d", n);
@@ -754,25 +738,25 @@ CcsXmlParser_SynErr(CcsXmlParser_t * self, int n)
 
 static const char * set[] = {
     /*---- InitSet ----*/
-    /*    5    0    5    0    5    0    5    0 */
-    "*.........*...............................", /* 0 */
-    ".*******...******......******************.", /* 1 */
-    ".********..******......******************.", /* 2 */
-    ".*********.******......******************.", /* 3 */
-    "**........*.*..............***.*.*.****...", /* 4 */
-    "**........*..*............................", /* 5 */
-    ".************.***************************.", /* 6 */
-    ".***********************.****************.", /* 7 */
-    ".***.*******************.****************.", /* 8 */
-    ".*************************.**************.", /* 9 */
-    ".***.*********************.**************.", /* 10 */
-    ".**************************************.*.", /* 11 */
-    ".***.*********************************..*.", /* 12 */
-    "............*.................*.*.*.......", /* 13 */
-    ".*..........*..............************...", /* 14 */
-    ".*..........................**.*.*.****...", /* 15 */
-    ".*..........................**.*.*.**.*...", /* 16 */
-    "............*..............*..*.*.*.......", /* 17 */
-    ".*****************************.**********."  /* 18 */
+    /*    5    0    5    0    5    0    5     */
+    "*.........*..............................", /* 0 */
+    ".*******...*****......******************.", /* 1 */
+    ".********..*****......******************.", /* 2 */
+    ".*********.*****......******************.", /* 3 */
+    "**........*.*.............***.*.*.****...", /* 4 */
+    "**........*..*...........................", /* 5 */
+    ".************.**************************.", /* 6 */
+    ".**********************.****************.", /* 7 */
+    ".***.******************.****************.", /* 8 */
+    ".************************.**************.", /* 9 */
+    ".***.********************.**************.", /* 10 */
+    ".*************************************.*.", /* 11 */
+    ".***.********************************..*.", /* 12 */
+    "............*................*.*.*.......", /* 13 */
+    ".*..........*.............************...", /* 14 */
+    ".*.........................**.*.*.****...", /* 15 */
+    ".*.........................**.*.*.**.*...", /* 16 */
+    "............*.............*..*.*.*.......", /* 17 */
+    ".****************************.**********."  /* 18 */
     /*---- enable ----*/
 };
