@@ -46,6 +46,7 @@
 EXTC_BEGIN
 
 /*---- defines ----*/
+#define COCO_MAX_KEYWORD_LEN 12
 #define COCO_CASE_SENSITIVE
 /*---- enable ----*/
 

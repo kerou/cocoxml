@@ -683,6 +683,23 @@ CcLexical_GetStartTab(const CcLexical_t * self, int * retNumEle)
     return table;
 }
 
+int
+CcLexical_GetMaxKeywordLength(const CcLexical_t * self)
+{
+    int maxlen, symlen;
+    const CcSymbolT_t * sym;
+    CcArrayListIter_t iter;
+    const CcArrayList_t * terminals = &self->globals->symtab.terminals;
+    maxlen = 0;
+    for (sym = (const CcSymbolT_t *)CcArrayList_FirstC(terminals, &iter);
+	 sym; sym = (const CcSymbolT_t *)CcArrayList_NextC(terminals, &iter)) {
+	if (sym->tokenKind != symbol_litToken) continue;
+	symlen = strlen(sym->base.name);
+	if (maxlen < symlen) maxlen = symlen;
+    }
+    return maxlen;
+}
+
 static int
 idCmp(const void * i0, const void * i1)
 {
@@ -694,18 +711,18 @@ idCmp(const void * i0, const void * i1)
 CcLexical_Identifier_t *
 CcLexical_GetIdentifiers(const CcLexical_t * self, int * retNumEle)
 {
-    CcSymbolT_t * sym;
+    const CcSymbolT_t * sym;
     CcArrayListIter_t iter;
     CcLexical_Identifier_t * list, * cur; char * curn;
-    CcArrayList_t * terminals = &self->globals->symtab.terminals;
+    const CcArrayList_t * terminals = &self->globals->symtab.terminals;
 
     *retNumEle = 0;
-    for (sym = (CcSymbolT_t *)CcArrayList_First(terminals, &iter);
-	 sym; sym = (CcSymbolT_t *)CcArrayList_Next(terminals, &iter))
+    for (sym = (const CcSymbolT_t *)CcArrayList_FirstC(terminals, &iter);
+	 sym; sym = (const CcSymbolT_t *)CcArrayList_NextC(terminals, &iter))
 	if (sym->tokenKind == symbol_litToken) ++*retNumEle;
     list = cur = CcMalloc(sizeof(CcLexical_Identifier_t) * (*retNumEle));
-    for (sym = (CcSymbolT_t *)CcArrayList_First(terminals, &iter);
-	 sym; sym = (CcSymbolT_t *)CcArrayList_Next(terminals, &iter)) {
+    for (sym = (const CcSymbolT_t *)CcArrayList_FirstC(terminals, &iter);
+	 sym; sym = (const CcSymbolT_t *)CcArrayList_NextC(terminals, &iter)) {
 	if (sym->tokenKind != symbol_litToken) continue;
 	cur->name = CcEscape(sym->base.name);
 	if (self->ignoreCase) {

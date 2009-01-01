@@ -28,8 +28,8 @@
  Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
-#ifndef COCO_SCANNER_H
-#define COCO_SCANNER_H
+#ifndef COCO_CcsXmlScanner_H
+#define COCO_CcsXmlScanner_H
 
 #ifndef  COCO_TOKEN_H
 #include "c/Token.h"
@@ -46,6 +46,7 @@
 EXTC_BEGIN
 
 /*---- defines ----*/
+#define COCO_MAX_KEYWORD_LEN 23
 #define COCO_CASE_SENSITIVE
 /*---- enable ----*/
 

@@ -263,20 +263,19 @@ i2kCmp(const void * key, const void * i2k)
 static int
 Identifier2KWKind(const char * key, size_t keylen, int defaultVal)
 {
-    char * keystr;
+    char keystr[COCO_MAX_KEYWORD_LEN + 1];
 #ifndef COCO_CASE_SENSITIVE
     char * cur;
 #endif
     Identifier2KWKind_t * i2k;
 
-    if (!(keystr = CcsMalloc(keylen + 1))) exit(-1);
+    if (keylen > COCO_MAX_KEYWORD_LEN) return defaultVal;
     memcpy(keystr, key, keylen);
     keystr[keylen] = 0;
 #ifndef COCO_CASE_SENSITIVE
     for (cur = keystr; *cur; ++cur) *cur = tolower(*cur);
 #endif
     i2k = bsearch(keystr, i2kArr, i2kNum, sizeof(Identifier2KWKind_t), i2kCmp);
-    CcsFree(keystr);
     return i2k ? i2k->val : defaultVal;
 }
 
