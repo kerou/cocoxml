@@ -2,6 +2,8 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: GPLv2
 
-Import('env', 'lib')
+Import('env', 'lib', 'cocoexe')
 
+env.Command(['Scanner.h', 'Scanner.c', 'Parser.h', 'Parser.c'],
+            'pgn.atg', '%s $SOURCES' % str(cocoexe[0]))
 env.Program('TestPgn', ['main.c', 'Parser.c', 'Scanner.c', lib])
