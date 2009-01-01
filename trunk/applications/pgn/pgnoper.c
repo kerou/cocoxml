@@ -141,6 +141,7 @@ PgnGame_AppendMove(PgnGame_t * self, PgnMove_t * move)
 	newMovesArr->next = NULL;
 	newMovesArr->cur = newMovesArr->moves;
 	self->movesArrLast->next = newMovesArr;
+	self->movesArrLast = newMovesArr;
     }
     *self->movesArrLast->cur++ = move;
     return TRUE;

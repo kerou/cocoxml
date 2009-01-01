@@ -28,6 +28,7 @@ main(int argc, char * argv[])
     }
     if (!PgnParser(&parser, argv[1], stderr)) goto errquit0;
     PgnParser_Parse(&parser);
+    PgnParser_Destruct(&parser);
     return 0;
  errquit0:
     return -1;
