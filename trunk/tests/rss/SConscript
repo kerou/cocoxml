@@ -2,9 +2,12 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: GPLv2
 
-Import('env', 'lib', 'cocosrc_lib')
+Import('env', 'lib', 'cocosrc_lib', 'cocoexe')
 
 if 'expat' in env['COCO_FEATURES']:
+    env.Command(['Scanner4Xml.h', 'Scanner4Xml.c',
+                 'Parser4Xml.h', 'Parser4Xml.c'],
+                'rss.xatg', '%s $SOURCES' % str(cocoexe[0]))
     env.Program('TestRss', ['TestRss.c', 'RssData.c', 'Scanner4Xml.c',
                             'Parser4Xml.c', cocosrc_lib, lib],
                 LIBS = ['expat'])
