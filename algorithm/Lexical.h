@@ -100,6 +100,8 @@ typedef struct {
 CcLexical_StartTab_t *
 CcLexical_GetStartTab(const CcLexical_t * self, int * retNumEle);
 
+int CcLexical_GetMaxKeywordLength(const CcLexical_t * self);
+
 typedef struct {
     char * name;
     int index;

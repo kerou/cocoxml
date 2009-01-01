@@ -67,6 +67,8 @@ CharRepr(char * buf, size_t szbuf, int ch)
 static CcsBool_t
 COS_Defines(CcCOutputScheme_t * self, CcOutput_t * output)
 {
+    CcPrintfIL(output, "#define COCO_MAX_KEYWORD_LEN %d",
+	       CcLexical_GetMaxKeywordLength(self->base.globals->lexical));
     if (!self->base.globals->lexical->ignoreCase)
 	CcPrintfIL(output, "#define COCO_CASE_SENSITIVE");
     if (self->base.globals->lexical->indentUsed) {

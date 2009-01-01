@@ -28,14 +28,14 @@
  Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
-#ifndef  COCO_PARSER_H
-#define  COCO_PARSER_H
+#ifndef  COCO_CcsXmlParser_H
+#define  COCO_CcsXmlParser_H
 
 #ifndef  COCO_ERRORPOOL_H
 #include "c/ErrorPool.h"
 #endif
 
-#ifndef  COCO_SCANNER_H
+#ifndef  COCO_CcsXmlScanner_H
 #include "Scanner.h"
 #endif
 

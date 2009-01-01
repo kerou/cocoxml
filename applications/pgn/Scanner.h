@@ -37,6 +37,7 @@ Author: Charles Wang <charlesw123456@gmail.com>
 EXTC_BEGIN
 
 /*---- defines ----*/
+#define COCO_MAX_KEYWORD_LEN 0
 #define COCO_CASE_SENSITIVE
 /*---- enable ----*/
 
