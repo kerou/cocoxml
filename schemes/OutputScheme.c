@@ -132,7 +132,8 @@ CcSource(CcOutput_t * self, const CcsPosition_t * pos)
     if (!isBlank && !hasEOL) {
 	/* There is no EOL in the last line, add it */
 	if (eol[0]) fwrite(eol, strlen(eol), 1, self->outfp);
-	else if (self->EOL[0]) fwrite(self->EOL, strlen(self->EOL), 1, self->outfp);
+	else if (self->EOL[0])
+	    fwrite(self->EOL, strlen(self->EOL), 1, self->outfp);
 	else fputc('\n', self->outfp);
     }
 }
@@ -309,8 +310,10 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self,
 		if (eol == lnbuf) break;
 		--eol;
 	    }
-	    CcsAssert(strlen(eol) <= 2);
-	    if (*eol) strcpy(output.EOL, eol);
+	    if (*eol) {
+		if (strlen(eol) <= 2) strcpy(output.EOL, eol);
+		else fprintf(stderr, "Invalid line terminator is found.\n");
+	    }
 	}
 	if (!CheckMark(lnbuf, srcCM->start, srcCM->end, &output.indent,
 		       Command, sizeof(Command), ParamStr, sizeof(ParamStr))) {
