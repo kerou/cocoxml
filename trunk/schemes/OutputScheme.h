@@ -49,6 +49,10 @@ void CcSource(CcOutput_t * self, const CcsPosition_t * pos);
 struct CcOutputSchemeType_s {
     CcObjectType_t base;
 
+    /* Separated by \0, terminated by blank update name .*/
+    const char * updates;
+    const char * xmlupdates;
+
     CcsBool_t (* write)(CcOutputScheme_t * self, CcOutput_t * output,
 			const char * func, const char * params);
 };
