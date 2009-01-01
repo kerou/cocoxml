@@ -31,6 +31,9 @@ Author: Charles Wang <charlesw123456@gmail.com>
 #endif
 
 /*---- hIncludes ----*/
+#ifndef   COCO_PGNOPER_H
+#include  "pgnoper.h"
+#endif
 /*---- enable ----*/
 
 EXTC_BEGIN
@@ -43,6 +46,8 @@ struct PgnParser_s {
     CcsToken_t      * la;
     int               maxT;
     /*---- members ----*/
+    PgnGame_t * firstGame;
+    PgnGame_t * lastGame;
     /*---- enable ----*/
 };
 
