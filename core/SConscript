@@ -6,6 +6,5 @@ Import('env')
 Import('cocosrc_libobjs')
 
 cocosrc_libobjs.extend(map(lambda src: env.Object(src),
-                           ['Defs.c', 'Object.c', 'BasicObjects.c',
-                            'ArrayList.c', 'BitArray.c', 'HashTable.c',
-                            'Globals.c', 'Arguments.c']))
+                           ['Defs.c', 'Object.c', 'ArrayList.c', 'BitArray.c',
+                            'HashTable.c', 'Globals.c', 'Arguments.c']))

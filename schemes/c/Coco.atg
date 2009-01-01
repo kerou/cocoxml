@@ -30,7 +30,6 @@ SECTION license
 END.
 
 SCHEME c Ccs
-UPDATES "Scanner.h" "Scanner.c" "Parser.h" "Parser.c" END.
 
 SECTION hIncludes
 #ifndef  COCO_GLOBALS_H
@@ -121,7 +120,7 @@ Coco                            (. CcSymbol_t  * sym;
 				   CcsToken_t  * beg;
 				   self->tokenString = NULL; .)
 =
-  { SchemeDecl | SectionDecl | UpdateDecl }
+  { SchemeDecl | SectionDecl }
   "COMPILER"                    (. self->genScanner = TRUE; .)
   ident                         (. gramName = CcStrdup(self->t->val); .)
   [ "MEMBERS"                   (. CcsScanner_IncRef(&self->scanner, beg = self->la); .)
@@ -232,14 +231,6 @@ SectionDecl       (. char * secname; CcsToken_t * beg; .)
     		     			  CcsScanner_GetPositionBetween(&self->scanner, beg, self->la));
 		     CcsScanner_DecRef(&self->scanner, beg);
 		     CcFree(secname); .)
-  "END" '.'
-.
-
-/*------------------------------------------------------------------------------------*/
-
-UpdateDecl
-=
-  "UPDATES" { string (. CcGlobals_AddUpdate(&self->globals, self->t->val); .) }
   "END" '.'
 .
 

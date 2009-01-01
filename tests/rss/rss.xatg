@@ -25,7 +25,6 @@ END.
 -------------------------------------------------------------------------*/
 
 SCHEME c Rss
-UPDATES "Scanner4Xml.h" "Scanner4Xml.c" "Parser4Xml.h" "Parser4Xml.c" END.
 
 SECTION hIncludes
 #ifndef  COCO_RSSDATA_H
