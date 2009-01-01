@@ -78,8 +78,7 @@ PgnParser_WeakSeparator(PgnParser_t * self, int n, int syFol, int repFol)
 
 /*---- ProductionsHeader ----*/
 static void PgnParser_pgn(PgnParser_t * self);
-static void PgnParser_game(PgnParser_t * self);
-static void PgnParser_info(PgnParser_t * self);
+static void PgnParser_game(PgnParser_t * self, PgnGame_t ** game);
 static void PgnParser_round(PgnParser_t * self);
 static void PgnParser_resultnum(PgnParser_t * self);
 static void PgnParser_move(PgnParser_t * self);
@@ -125,7 +124,8 @@ PgnParser(PgnParser_t * self, const char * fname, FILE * errfp)
     if (!PgnScanner(&self->scanner, &self->errpool, fname)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
-    self->maxT = 12;
+    self->maxT = 23;
+    self->firstGame = self->lastGame = NULL;
     /*---- enable ----*/
     return self;
  ERRQUIT:
@@ -139,6 +139,11 @@ void
 PgnParser_Destruct(PgnParser_t * self)
 {
     /*---- destructor ----*/
+    PgnGame_t * cur, * next;
+    for (cur = self->firstGame; cur; cur = next) {
+	next = cur->next;
+	PgnGame_Destruct(cur);
+    }
     /*---- enable ----*/
     PgnScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
@@ -148,38 +153,106 @@ PgnParser_Destruct(PgnParser_t * self)
 static void
 PgnParser_pgn(PgnParser_t * self)
 {
-    while (self->la->kind == 1 || self->la->kind == 2 || self->la->kind == 4) {
-	PgnParser_game(self);
+    PgnGame_t * game; 
+    while (self->la->kind == 1 || self->la->kind == 3 || self->la->kind == 7) {
+	PgnParser_game(self, &game);
+	if (self->lastGame) { self->lastGame->next = game; self->lastGame = game; }
+	else { self->firstGame = self->lastGame = game; } 
     }
 }
 
 static void
-PgnParser_game(PgnParser_t * self)
+PgnParser_game(PgnParser_t * self, PgnGame_t ** game)
 {
-    while (self->la->kind == 1) {
-	PgnParser_info(self);
+    char * Event = NULL;
+    char * Site = NULL;
+    char * Date = NULL;
+    char * Round = NULL;
+    char * White = NULL;
+    char * Black = NULL;
+    char * WhiteElo = NULL;
+    char * BlackElo = NULL;
+    char * TimeControl = NULL;
+    char * Result = NULL; 
+    while (self->la->kind == 7) {
+	if (self->la->kind == 7) {
+	    PgnParser_Get(self);
+	    PgnParser_Expect(self, 8);
+	    PgnParser_Expect(self, 2);
+	    if (!Event) Event = CcsStrdup(self->t->val); 
+	    PgnParser_Expect(self, 9);
+	} else if (self->la->kind == 7) {
+	    PgnParser_Get(self);
+	    PgnParser_Expect(self, 10);
+	    PgnParser_Expect(self, 2);
+	    if (!Site) Site = CcsStrdup(self->t->val); 
+	    PgnParser_Expect(self, 9);
+	} else if (self->la->kind == 7) {
+	    PgnParser_Get(self);
+	    PgnParser_Expect(self, 11);
+	    PgnParser_Expect(self, 2);
+	    if (!Date) Date = CcsStrdup(self->t->val); 
+	    PgnParser_Expect(self, 9);
+	} else if (self->la->kind == 7) {
+	    PgnParser_Get(self);
+	    PgnParser_Expect(self, 12);
+	    PgnParser_Expect(self, 2);
+	    if (!Round) Round = CcsStrdup(self->t->val); 
+	    PgnParser_Expect(self, 9);
+	} else if (self->la->kind == 7) {
+	    PgnParser_Get(self);
+	    PgnParser_Expect(self, 13);
+	    PgnParser_Expect(self, 2);
+	    if (!White) White = CcsStrdup(self->t->val); 
+	    PgnParser_Expect(self, 9);
+	} else if (self->la->kind == 7) {
+	    PgnParser_Get(self);
+	    PgnParser_Expect(self, 14);
+	    PgnParser_Expect(self, 2);
+	    if (!Black) Black = CcsStrdup(self->t->val); 
+	    PgnParser_Expect(self, 9);
+	} else if (self->la->kind == 7) {
+	    PgnParser_Get(self);
+	    PgnParser_Expect(self, 15);
+	    PgnParser_Expect(self, 2);
+	    if (!WhiteElo) WhiteElo = CcsStrdup(self->t->val); 
+	    PgnParser_Expect(self, 9);
+	} else if (self->la->kind == 7) {
+	    PgnParser_Get(self);
+	    PgnParser_Expect(self, 16);
+	    PgnParser_Expect(self, 2);
+	    if (!BlackElo) BlackElo = CcsStrdup(self->t->val); 
+	    PgnParser_Expect(self, 9);
+	} else if (self->la->kind == 7) {
+	    PgnParser_Get(self);
+	    PgnParser_Expect(self, 17);
+	    PgnParser_Expect(self, 2);
+	    if (!TimeControl) TimeControl = CcsStrdup(self->t->val); 
+	    PgnParser_Expect(self, 9);
+	} else {
+	    PgnParser_Get(self);
+	    PgnParser_Expect(self, 18);
+	    PgnParser_Expect(self, 2);
+	    if (!Result) Result = CcsStrdup(self->t->val); 
+	    PgnParser_Expect(self, 9);
+	}
     }
-    while (self->la->kind == 2) {
+    *game = PgnGame(Event, Site, Date, Round, White, Black,
+		    WhiteElo, BlackElo, TimeControl, Result); 
+    while (self->la->kind == 1) {
 	PgnParser_round(self);
     }
-    PgnParser_Expect(self, 4);
-    PgnParser_resultnum(self);
-}
-
-static void
-PgnParser_info(PgnParser_t * self)
-{
-    PgnParser_Expect(self, 1);
     PgnParser_Expect(self, 3);
+    PgnParser_resultnum(self);
 }
 
 static void
 PgnParser_round(PgnParser_t * self)
 {
-    PgnParser_Expect(self, 2);
-    PgnParser_Expect(self, 8);
+    PgnParser_Expect(self, 1);
+    PgnParser_Expect(self, 19);
     PgnParser_move(self);
-    if (self->la->kind == 5 || self->la->kind == 6 || self->la->kind == 7) {
+    if (self->la->kind == 4 || self->la->kind == 5 || self->la->kind == 6) {
 	PgnParser_move(self);
     }
 }
@@ -187,25 +260,25 @@ PgnParser_round(PgnParser_t * self)
 static void
 PgnParser_resultnum(PgnParser_t * self)
 {
-    if (self->la->kind == 9) {
+    if (self->la->kind == 20) {
 	PgnParser_Get(self);
-    } else if (self->la->kind == 10) {
+    } else if (self->la->kind == 21) {
 	PgnParser_Get(self);
-    } else if (self->la->kind == 11) {
+    } else if (self->la->kind == 22) {
 	PgnParser_Get(self);
-    } else PgnParser_SynErr(self, 13);
+    } else PgnParser_SynErr(self, 24);
 }
 
 static void
 PgnParser_move(PgnParser_t * self)
 {
-    if (self->la->kind == 5) {
+    if (self->la->kind == 4) {
+	PgnParser_Get(self);
+    } else if (self->la->kind == 5) {
 	PgnParser_Get(self);
     } else if (self->la->kind == 6) {
 	PgnParser_Get(self);
-    } else if (self->la->kind == 7) {
-	PgnParser_Get(self);
-    } else PgnParser_SynErr(self, 14);
+    } else PgnParser_SynErr(self, 25);
 }
 
 /*---- enable ----*/
@@ -217,20 +290,31 @@ PgnParser_SynErr(PgnParser_t * self, int n)
     switch (n) {
     /*---- SynErrors ----*/
     case 0: s = "\"" "EOF" "\" expected"; break;
-    case 1: s = "\"" "ident" "\" expected"; break;
-    case 2: s = "\"" "number" "\" expected"; break;
-    case 3: s = "\"" "string" "\" expected"; break;
-    case 4: s = "\"" "result" "\" expected"; break;
-    case 5: s = "\"" "basemove" "\" expected"; break;
-    case 6: s = "\"" "castling" "\" expected"; break;
-    case 7: s = "\"" "castlingL" "\" expected"; break;
-    case 8: s = "\"" "." "\" expected"; break;
-    case 9: s = "\"" "1-0" "\" expected"; break;
-    case 10: s = "\"" "0-1" "\" expected"; break;
-    case 11: s = "\"" "1/2-1/2" "\" expected"; break;
-    case 12: s = "\"" "???" "\" expected"; break;
-    case 13: s = "this symbol not expected in \"" "resultnum" "\""; break;
-    case 14: s = "this symbol not expected in \"" "move" "\""; break;
+    case 1: s = "\"" "number" "\" expected"; break;
+    case 2: s = "\"" "string" "\" expected"; break;
+    case 3: s = "\"" "result" "\" expected"; break;
+    case 4: s = "\"" "basemove" "\" expected"; break;
+    case 5: s = "\"" "castling" "\" expected"; break;
+    case 6: s = "\"" "castlingL" "\" expected"; break;
+    case 7: s = "\"" "[" "\" expected"; break;
+    case 8: s = "\"" "Event" "\" expected"; break;
+    case 9: s = "\"" "]" "\" expected"; break;
+    case 10: s = "\"" "Site" "\" expected"; break;
+    case 11: s = "\"" "Date" "\" expected"; break;
+    case 12: s = "\"" "Round" "\" expected"; break;
+    case 13: s = "\"" "White" "\" expected"; break;
+    case 14: s = "\"" "Black" "\" expected"; break;
+    case 15: s = "\"" "WhiteElo" "\" expected"; break;
+    case 16: s = "\"" "BlackElo" "\" expected"; break;
+    case 17: s = "\"" "TimeControl" "\" expected"; break;
+    case 18: s = "\"" "Result" "\" expected"; break;
+    case 19: s = "\"" "." "\" expected"; break;
+    case 20: s = "\"" "1-0" "\" expected"; break;
+    case 21: s = "\"" "0-1" "\" expected"; break;
+    case 22: s = "\"" "1/2-1/2" "\" expected"; break;
+    case 23: s = "\"" "???" "\" expected"; break;
+    case 24: s = "this symbol not expected in \"" "resultnum" "\""; break;
+    case 25: s = "this symbol not expected in \"" "move" "\""; break;
     /*---- enable ----*/
     default:
 	snprintf(format, sizeof(format), "error %d", n);
@@ -242,7 +326,7 @@ PgnParser_SynErr(PgnParser_t * self, int n)
 
 static const char * set[] = {
     /*---- InitSet ----*/
-    /*    5    0   */
-    "*............."  /* 0 */
+    /*    5    0    5    0    */
+    "*........................"  /* 0 */
     /*---- enable ----*/
 };

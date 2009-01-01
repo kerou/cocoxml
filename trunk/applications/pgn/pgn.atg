@@ -23,7 +23,27 @@ END.
 SCHEME c Pgn
 UPDATES "Scanner.h" "Scanner.c" "Parser.h" "Parser.c" END.
 
+SECTION hIncludes
+#ifndef   COCO_PGNOPER_H
+#include  "pgnoper.h"
+#endif
+END.
+
 COMPILER pgn
+
+MEMBERS
+    PgnGame_t * firstGame;
+    PgnGame_t * lastGame;
+
+CONSTRUCTOR
+    self->firstGame = self->lastGame = NULL;
+
+DESTRUCTOR
+    PgnGame_t * cur, * next;
+    for (cur = self->firstGame; cur; cur = next) {
+        next = cur->next;
+	PgnGame_Destruct(cur);
+    }
 
 CHARACTERS
     piece     = "KQRBN".
@@ -39,9 +59,8 @@ CHARACTERS
     printable =  '\x20' .. '\x7e'.
 
 TOKENS
-    ident     = '[' letter { letter | digit }.
     number    = digit { digit }.
-    string    = '"' { stringCh | '\\' printable } '"' ']'.
+    string    = '"' { stringCh | '\\' printable } '"'.
     result    = '{' { resultCh | '\\' printable } '}'.
     basemove  = [piece] [col] [row] ['x'] col row [ '=' piece ] ['#' | { '+' } | { '?' } | { '!' }].
     castling  = "O-O" ['#' | { '+' } | { '?' } | { '!' }].
@@ -51,11 +70,39 @@ IGNORE cr + lf + tab
 
 PRODUCTIONS
 
-pgn = { game }.
+pgn = (. PgnGame_t * game; .)
+  { game<&game> (. if (self->lastGame) { self->lastGame->next = game; self->lastGame = game; }
+                   else { self->firstGame = self->lastGame = game; } .)
+  }
+.
 
-game = { info } { round } result resultnum.
-
-info = ident string.
+game<PgnGame_t ** game> = (. char * Event = NULL;
+	       	  	     char * Site = NULL;
+			     char * Date = NULL;
+			     char * Round = NULL;
+			     char * White = NULL;
+			     char * Black = NULL;
+			     char * WhiteElo = NULL;
+			     char * BlackElo = NULL;
+			     char * TimeControl = NULL;
+			     char * Result = NULL; .)
+  { ( '[' "Event" string                 (. if (!Event) Event = CcsStrdup(self->t->val); .)
+      ']' ) | ( '[' "Site" string        (. if (!Site) Site = CcsStrdup(self->t->val); .)
+      ']' ) | ( '[' "Date" string        (. if (!Date) Date = CcsStrdup(self->t->val); .)
+      ']' ) | ( '[' "Round" string       (. if (!Round) Round = CcsStrdup(self->t->val); .)
+      ']' ) | ( '[' "White" string       (. if (!White) White = CcsStrdup(self->t->val); .)
+      ']' ) | ( '[' "Black" string       (. if (!Black) Black = CcsStrdup(self->t->val); .)
+      ']' ) | ( '[' "WhiteElo" string    (. if (!WhiteElo) WhiteElo = CcsStrdup(self->t->val); .)
+      ']' ) | ( '[' "BlackElo" string    (. if (!BlackElo) BlackElo = CcsStrdup(self->t->val); .)
+      ']' ) | ( '[' "TimeControl" string (. if (!TimeControl) TimeControl = CcsStrdup(self->t->val); .)
+      ']' ) | ( '[' "Result" string      (. if (!Result) Result = CcsStrdup(self->t->val); .)
+      ']' ) }
+  (. *game = PgnGame(Event, Site, Date, Round, White, Black,
+     	             WhiteElo, BlackElo, TimeControl, Result); .)
+ { round
+  } result
+    resultnum
+.
 
 round = number '.' move [ move ].
 
