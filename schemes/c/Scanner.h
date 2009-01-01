@@ -101,4 +101,4 @@ CcsScanner_GetPositionBetween(CcsScanner_t * self, const CcsToken_t * begin,
 
 EXTC_END
 
-#endif  /* COCO_SCANNER_H */
+#endif  /* COCO_CcsScanner_H */
