@@ -38,6 +38,14 @@
 
 EXTC_BEGIN
 
+typedef struct {
+    char         ch;
+    const char * key;
+    const char * promptValue; /* If it is NULL, this option do not accept any value. */
+    const char * defaultValue; /* Only-used when promptValue == NULL. */
+    const char * help;
+}  CcArgDesc_t;
+
 struct CcArguments_s {
     const char * selfpath;
     CcArrayList_t storage;
@@ -45,7 +53,9 @@ struct CcArguments_s {
 };
 
 CcArguments_t *
-CcArguments(CcArguments_t * self, int argc, char * argv[]);
+CcArguments(CcArguments_t * self,
+	    const CcArgDesc_t * desc, const CcArgDesc_t * descLast,
+	    int argc, char * argv[]);
 void CcArguments_Destruct(CcArguments_t * self);
 
 typedef struct {
@@ -55,6 +65,10 @@ typedef struct {
 const char * CcArguments_First(CcArguments_t * self, const char * key,
 			       CcArgumentsIter_t * iter);
 const char * CcArguments_Next(CcArguments_t * self, CcArgumentsIter_t * iter);
+
+void
+CcArguments_ShowHelp(FILE * outfp, const CcArgDesc_t * desc,
+		     const CcArgDesc_t * descLast);
 
 EXTC_END
 
