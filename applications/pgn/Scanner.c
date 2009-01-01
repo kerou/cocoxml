@@ -207,17 +207,19 @@ static const Char2State_t c2sArr[] = {
     /*---- chars2states ----*/
     { EoF, EoF, -1 },
     { 34, 34, 4 },	/* '"' '"' */
-    { 46, 46, 33 },	/* '.' '.' */
-    { 48, 48, 45 },	/* '0' '0' */
-    { 49, 49, 44 },	/* '1' '1' */
-    { 50, 57, 3 },	/* '2' '9' */
+    { 46, 46, 38 },	/* '.' '.' */
+    { 48, 48, 50 },	/* '0' '0' */
+    { 49, 49, 49 },	/* '1' '1' */
+    { 50, 56, 33 },	/* '2' '8' */
+    { 57, 57, 3 },	/* '9' '9' */
     { 66, 66, 11 },	/* 'B' 'B' */
     { 75, 75, 11 },	/* 'K' 'K' */
     { 78, 78, 11 },	/* 'N' 'N' */
-    { 79, 79, 29 },	/* 'O' 'O' */
+    { 79, 79, 34 },	/* 'O' 'O' */
     { 81, 82, 11 },	/* 'Q' 'R' */
     { 91, 91, 1 },	/* '[' '[' */
-    { 97, 104, 28 },	/* 'a' 'h' */
+    { 97, 104, 32 },	/* 'a' 'h' */
+    { 120, 120, 13 },	/* 'x' 'x' */
     { 123, 123, 8 },	/* '{' '{' */
     /*---- enable ----*/
 };
@@ -528,171 +530,218 @@ PgnScanner_NextToken(PgnScanner_t * self)
 	} else { kind = self->noSym; break; }
     case 10: case_10:
 	{ kind = 4; break; }
-    case 11: case_11:
+    case 11:
 	if ((self->ch >= 'a' && self->ch <= 'h')) {
+	    PgnScanner_GetCh(self); goto case_32;
+	} else if ((self->ch >= '1' && self->ch <= '8')) {
 	    PgnScanner_GetCh(self); goto case_12;
+	} else if (self->ch == 'x') {
+	    PgnScanner_GetCh(self); goto case_13;
 	} else { kind = self->noSym; break; }
     case 12: case_12:
-	if ((self->ch >= '1' && self->ch <= '8')) {
+	if ((self->ch >= 'a' && self->ch <= 'h')) {
+	    PgnScanner_GetCh(self); goto case_14;
+	} else if (self->ch == 'x') {
 	    PgnScanner_GetCh(self); goto case_13;
 	} else { kind = self->noSym; break; }
     case 13: case_13:
-	if (self->ch == '#') {
-	    PgnScanner_GetCh(self); goto case_17;
-	} else if (self->ch == '+') {
-	    PgnScanner_GetCh(self); goto case_14;
-	} else if (self->ch == '?') {
-	    PgnScanner_GetCh(self); goto case_15;
-	} else if (self->ch == '!') {
-	    PgnScanner_GetCh(self); goto case_16;
-	} else { kind = 5; break; }
-    case 14: case_14:
-	if (self->ch == '+') {
-	    PgnScanner_GetCh(self); goto case_14;
-	} else { kind = 5; break; }
-    case 15: case_15:
-	if (self->ch == '?') {
-	    PgnScanner_GetCh(self); goto case_15;
-	} else { kind = 5; break; }
-    case 16: case_16:
-	if (self->ch == '!') {
-	    PgnScanner_GetCh(self); goto case_16;
-	} else { kind = 5; break; }
-    case 17: case_17:
-	{ kind = 5; break; }
-    case 18: case_18:
-	if (self->ch == '+') {
-	    PgnScanner_GetCh(self); goto case_18;
-	} else { kind = 6; break; }
-    case 19: case_19:
-	if (self->ch == '?') {
-	    PgnScanner_GetCh(self); goto case_19;
-	} else { kind = 6; break; }
-    case 20: case_20:
-	if (self->ch == '!') {
-	    PgnScanner_GetCh(self); goto case_20;
-	} else { kind = 6; break; }
-    case 21: case_21:
-	{ kind = 6; break; }
-    case 22: case_22:
-	if (self->ch == 'O') {
-	    PgnScanner_GetCh(self); goto case_23;
-	} else { kind = self->noSym; break; }
-    case 23: case_23:
-	if (self->ch == '#') {
-	    PgnScanner_GetCh(self); goto case_27;
-	} else if (self->ch == '+') {
-	    PgnScanner_GetCh(self); goto case_24;
-	} else if (self->ch == '?') {
-	    PgnScanner_GetCh(self); goto case_25;
-	} else if (self->ch == '!') {
-	    PgnScanner_GetCh(self); goto case_26;
-	} else { kind = 7; break; }
-    case 24: case_24:
-	if (self->ch == '+') {
-	    PgnScanner_GetCh(self); goto case_24;
-	} else { kind = 7; break; }
-    case 25: case_25:
-	if (self->ch == '?') {
-	    PgnScanner_GetCh(self); goto case_25;
-	} else { kind = 7; break; }
-    case 26: case_26:
-	if (self->ch == '!') {
-	    PgnScanner_GetCh(self); goto case_26;
-	} else { kind = 7; break; }
-    case 27: case_27:
-	{ kind = 7; break; }
-    case 28:
-	if ((self->ch >= '1' && self->ch <= '8')) {
-	    PgnScanner_GetCh(self); goto case_30;
-	} else if ((self->ch >= 'a' && self->ch <= 'h')) {
-	    PgnScanner_GetCh(self); goto case_12;
-	} else if (self->ch == 'x') {
-	    PgnScanner_GetCh(self); goto case_11;
-	} else { kind = self->noSym; break; }
-    case 29:
-	if (self->ch == '-') {
-	    PgnScanner_GetCh(self); goto case_31;
-	} else { kind = self->noSym; break; }
-    case 30: case_30:
 	if ((self->ch >= 'a' && self->ch <= 'h')) {
-	    PgnScanner_GetCh(self); goto case_12;
-	} else if (self->ch == '#') {
-	    PgnScanner_GetCh(self); goto case_17;
-	} else if (self->ch == '+') {
 	    PgnScanner_GetCh(self); goto case_14;
-	} else if (self->ch == '?') {
-	    PgnScanner_GetCh(self); goto case_15;
-	} else if (self->ch == '!') {
-	    PgnScanner_GetCh(self); goto case_16;
-	} else if (self->ch == 'x') {
-	    PgnScanner_GetCh(self); goto case_11;
-	} else { kind = 5; break; }
-    case 31: case_31:
-	if (self->ch == 'O') {
-	    PgnScanner_GetCh(self); goto case_32;
 	} else { kind = self->noSym; break; }
-    case 32: case_32:
+    case 14: case_14:
+	if ((self->ch >= '1' && self->ch <= '8')) {
+	    PgnScanner_GetCh(self); goto case_15;
+	} else { kind = self->noSym; break; }
+    case 15: case_15:
 	if (self->ch == '#') {
 	    PgnScanner_GetCh(self); goto case_21;
 	} else if (self->ch == '+') {
-	    PgnScanner_GetCh(self); goto case_18;
+	    PgnScanner_GetCh(self); goto case_17;
 	} else if (self->ch == '?') {
-	    PgnScanner_GetCh(self); goto case_19;
+	    PgnScanner_GetCh(self); goto case_18;
 	} else if (self->ch == '!') {
+	    PgnScanner_GetCh(self); goto case_19;
+	} else if (self->ch == '=') {
 	    PgnScanner_GetCh(self); goto case_20;
-	} else if (self->ch == '-') {
+	} else { kind = 5; break; }
+    case 16: case_16:
+	if (self->ch == '#') {
+	    PgnScanner_GetCh(self); goto case_21;
+	} else if (self->ch == '+') {
+	    PgnScanner_GetCh(self); goto case_17;
+	} else if (self->ch == '?') {
+	    PgnScanner_GetCh(self); goto case_18;
+	} else if (self->ch == '!') {
+	    PgnScanner_GetCh(self); goto case_19;
+	} else { kind = 5; break; }
+    case 17: case_17:
+	if (self->ch == '+') {
+	    PgnScanner_GetCh(self); goto case_17;
+	} else { kind = 5; break; }
+    case 18: case_18:
+	if (self->ch == '?') {
+	    PgnScanner_GetCh(self); goto case_18;
+	} else { kind = 5; break; }
+    case 19: case_19:
+	if (self->ch == '!') {
+	    PgnScanner_GetCh(self); goto case_19;
+	} else { kind = 5; break; }
+    case 20: case_20:
+	if (self->ch == 'B' ||
+	    self->ch == 'K' ||
+	    self->ch == 'N' ||
+	    (self->ch >= 'Q' && self->ch <= 'R')) {
+	    PgnScanner_GetCh(self); goto case_16;
+	} else { kind = self->noSym; break; }
+    case 21: case_21:
+	{ kind = 5; break; }
+    case 22: case_22:
+	if (self->ch == '+') {
 	    PgnScanner_GetCh(self); goto case_22;
 	} else { kind = 6; break; }
-    case 33:
-	{ kind = 8; break; }
-    case 34: case_34:
-	if (self->ch == '0') {
+    case 23: case_23:
+	if (self->ch == '?') {
+	    PgnScanner_GetCh(self); goto case_23;
+	} else { kind = 6; break; }
+    case 24: case_24:
+	if (self->ch == '!') {
+	    PgnScanner_GetCh(self); goto case_24;
+	} else { kind = 6; break; }
+    case 25: case_25:
+	{ kind = 6; break; }
+    case 26: case_26:
+	if (self->ch == 'O') {
+	    PgnScanner_GetCh(self); goto case_27;
+	} else { kind = self->noSym; break; }
+    case 27: case_27:
+	if (self->ch == '#') {
+	    PgnScanner_GetCh(self); goto case_31;
+	} else if (self->ch == '+') {
+	    PgnScanner_GetCh(self); goto case_28;
+	} else if (self->ch == '?') {
+	    PgnScanner_GetCh(self); goto case_29;
+	} else if (self->ch == '!') {
+	    PgnScanner_GetCh(self); goto case_30;
+	} else { kind = 7; break; }
+    case 28: case_28:
+	if (self->ch == '+') {
+	    PgnScanner_GetCh(self); goto case_28;
+	} else { kind = 7; break; }
+    case 29: case_29:
+	if (self->ch == '?') {
+	    PgnScanner_GetCh(self); goto case_29;
+	} else { kind = 7; break; }
+    case 30: case_30:
+	if (self->ch == '!') {
+	    PgnScanner_GetCh(self); goto case_30;
+	} else { kind = 7; break; }
+    case 31: case_31:
+	{ kind = 7; break; }
+    case 32: case_32:
+	if ((self->ch >= 'a' && self->ch <= 'h')) {
+	    PgnScanner_GetCh(self); goto case_14;
+	} else if ((self->ch >= '1' && self->ch <= '8')) {
 	    PgnScanner_GetCh(self); goto case_35;
+	} else if (self->ch == 'x') {
+	    PgnScanner_GetCh(self); goto case_13;
+	} else { kind = self->noSym; break; }
+    case 33:
+	if ((self->ch >= '0' && self->ch <= '9')) {
+	    PgnScanner_GetCh(self); goto case_3;
+	} else if ((self->ch >= 'a' && self->ch <= 'h')) {
+	    PgnScanner_GetCh(self); goto case_14;
+	} else if (self->ch == 'x') {
+	    PgnScanner_GetCh(self); goto case_13;
+	} else { kind = 2; break; }
+    case 34:
+	if (self->ch == '-') {
+	    PgnScanner_GetCh(self); goto case_36;
 	} else { kind = self->noSym; break; }
     case 35: case_35:
-	{ kind = 9; break; }
+	if ((self->ch >= 'a' && self->ch <= 'h')) {
+	    PgnScanner_GetCh(self); goto case_14;
+	} else if (self->ch == 'x') {
+	    PgnScanner_GetCh(self); goto case_13;
+	} else if (self->ch == '#') {
+	    PgnScanner_GetCh(self); goto case_21;
+	} else if (self->ch == '+') {
+	    PgnScanner_GetCh(self); goto case_17;
+	} else if (self->ch == '?') {
+	    PgnScanner_GetCh(self); goto case_18;
+	} else if (self->ch == '!') {
+	    PgnScanner_GetCh(self); goto case_19;
+	} else if (self->ch == '=') {
+	    PgnScanner_GetCh(self); goto case_20;
+	} else { kind = 5; break; }
     case 36: case_36:
-	if (self->ch == '1') {
+	if (self->ch == 'O') {
 	    PgnScanner_GetCh(self); goto case_37;
 	} else { kind = self->noSym; break; }
     case 37: case_37:
-	{ kind = 10; break; }
-    case 38: case_38:
-	if (self->ch == '2') {
-	    PgnScanner_GetCh(self); goto case_39;
-	} else { kind = self->noSym; break; }
+	if (self->ch == '#') {
+	    PgnScanner_GetCh(self); goto case_25;
+	} else if (self->ch == '+') {
+	    PgnScanner_GetCh(self); goto case_22;
+	} else if (self->ch == '?') {
+	    PgnScanner_GetCh(self); goto case_23;
+	} else if (self->ch == '!') {
+	    PgnScanner_GetCh(self); goto case_24;
+	} else if (self->ch == '-') {
+	    PgnScanner_GetCh(self); goto case_26;
+	} else { kind = 6; break; }
+    case 38:
+	{ kind = 8; break; }
     case 39: case_39:
-	if (self->ch == '-') {
+	if (self->ch == '0') {
 	    PgnScanner_GetCh(self); goto case_40;
 	} else { kind = self->noSym; break; }
     case 40: case_40:
-	if (self->ch == '1') {
-	    PgnScanner_GetCh(self); goto case_41;
-	} else { kind = self->noSym; break; }
+	{ kind = 9; break; }
     case 41: case_41:
-	if (self->ch == '/') {
+	if (self->ch == '1') {
 	    PgnScanner_GetCh(self); goto case_42;
 	} else { kind = self->noSym; break; }
     case 42: case_42:
-	if (self->ch == '2') {
-	    PgnScanner_GetCh(self); goto case_43;
-	} else { kind = self->noSym; break; }
+	{ kind = 10; break; }
     case 43: case_43:
+	if (self->ch == '2') {
+	    PgnScanner_GetCh(self); goto case_44;
+	} else { kind = self->noSym; break; }
+    case 44: case_44:
+	if (self->ch == '-') {
+	    PgnScanner_GetCh(self); goto case_45;
+	} else { kind = self->noSym; break; }
+    case 45: case_45:
+	if (self->ch == '1') {
+	    PgnScanner_GetCh(self); goto case_46;
+	} else { kind = self->noSym; break; }
+    case 46: case_46:
+	if (self->ch == '/') {
+	    PgnScanner_GetCh(self); goto case_47;
+	} else { kind = self->noSym; break; }
+    case 47: case_47:
+	if (self->ch == '2') {
+	    PgnScanner_GetCh(self); goto case_48;
+	} else { kind = self->noSym; break; }
+    case 48: case_48:
 	{ kind = 11; break; }
-    case 44:
+    case 49:
 	if ((self->ch >= '0' && self->ch <= '9')) {
 	    PgnScanner_GetCh(self); goto case_3;
+	} else if ((self->ch >= 'a' && self->ch <= 'h')) {
+	    PgnScanner_GetCh(self); goto case_14;
+	} else if (self->ch == 'x') {
+	    PgnScanner_GetCh(self); goto case_13;
 	} else if (self->ch == '-') {
-	    PgnScanner_GetCh(self); goto case_34;
+	    PgnScanner_GetCh(self); goto case_39;
 	} else if (self->ch == '/') {
-	    PgnScanner_GetCh(self); goto case_38;
+	    PgnScanner_GetCh(self); goto case_43;
 	} else { kind = 2; break; }
-    case 45:
+    case 50:
 	if ((self->ch >= '0' && self->ch <= '9')) {
 	    PgnScanner_GetCh(self); goto case_3;
 	} else if (self->ch == '-') {
-	    PgnScanner_GetCh(self); goto case_36;
+	    PgnScanner_GetCh(self); goto case_41;
 	} else { kind = 2; break; }
     /*---- enable ----*/
     }
