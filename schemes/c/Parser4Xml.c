@@ -42,12 +42,7 @@ CcxParser_Get(CcxParser_t * self)
 {
     if (self->t) CcxScanOper_DecRef(&self->scanner.base, self->t);
     self->t = self->la;
-    for (;;) {
-	self->la = CcxScanOper_Scan(&self->scanner.base);
-	if (self->la->kind <= self->maxT) { /*++self->errDist;*/ break; }
-	/*---- Pragmas ----*/
-	/*---- enable ----*/
-    }
+    self->la = CcxScanOper_Scan(&self->scanner.base);
 }
 
 static CcsBool_t
