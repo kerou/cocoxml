@@ -68,6 +68,7 @@ CcsXmlParser_Expect(CcsXmlParser_t * self, int n)
     else CcsXmlParser_SynErr(self, n);
 }
 
+#ifdef CcsXmlParser_WEAK_USED
 static void
 CcsXmlParser_ExpectWeak(CcsXmlParser_t * self, int n, int follow)
 {
@@ -90,6 +91,7 @@ CcsXmlParser_WeakSeparator(CcsXmlParser_t * self, int n, int syFol, int repFol)
 	CcsXmlParser_Get(self);
     return CcsXmlParser_StartOf(self, syFol);
 }
+#endif
 
 /*---- ProductionsHeader ----*/
 static void CcsXmlParser_CocoXml(CcsXmlParser_t * self);

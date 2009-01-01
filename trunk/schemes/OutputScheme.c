@@ -419,7 +419,7 @@ CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self,
 	++curpath;
     }
     CcsAssert(curpath - pathes < sizeof(pathes) / sizeof(pathes[0]));
-    curpath->dir = NULL;
+    /* curpath->dir = NULL; */
 
     /* For all template/update files */
     for (update = self->globals->lexical ? cctype->updates : cctype->xmlupdates;

@@ -47,6 +47,10 @@
 
 EXTC_BEGIN
 
+/*---- SynDefines ----*/
+#define CcsXmlParser_WEAK_USED
+/*---- enable ----*/
+
 typedef struct CcsXmlParser_s CcsXmlParser_t;
 struct CcsXmlParser_s {
     CcsErrorPool_t    errpool;

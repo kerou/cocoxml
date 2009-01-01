@@ -47,6 +47,10 @@
 
 EXTC_BEGIN
 
+/*---- SynDefines ----*/
+#define CcsParser_WEAK_USED
+/*---- enable ----*/
+
 typedef struct CcsParser_s CcsParser_t;
 struct CcsParser_s {
     CcsErrorPool_t    errpool;
