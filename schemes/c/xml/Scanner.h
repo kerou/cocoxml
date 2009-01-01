@@ -48,7 +48,7 @@ EXTC_BEGIN
 /*---- defines ----*/
 #define CcsXmlScanner_MAX_KEYWORD_LEN 23
 #define CcsXmlScanner_CASE_SENSITIVE
-#define CcsXmlParser_KEYWORD_USED
+#define CcsXmlScanner_KEYWORD_USED
 /*---- enable ----*/
 
 typedef struct CcsXmlScanner_s CcsXmlScanner_t;
