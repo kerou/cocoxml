@@ -101,9 +101,13 @@ CcsXmlScanner_Destruct(CcsXmlScanner_t * self)
     CcsFree(self->indent);
 #endif
     for (cur = self->busyTokenList; cur; cur = next) {
+	/* May be trigged by .atg semantic code. */
+	CcsAssert(cur->refcnt == 1);
 	next = cur->next;
 	CcsToken_Destruct(cur);
     }
+    /* May be trigged by .atg semantic code. */
+    CcsAssert(self->dummyToken->refcnt == 1);
     CcsToken_Destruct(self->dummyToken);
     CcsBuffer_Destruct(&self->buffer);
 }
@@ -111,6 +115,7 @@ CcsXmlScanner_Destruct(CcsXmlScanner_t * self)
 CcsToken_t *
 CcsXmlScanner_GetDummy(CcsXmlScanner_t * self)
 {
+    CcsXmlScanner_IncRef(self, self->dummyToken);
     return self->dummyToken;
 }
 
@@ -149,7 +154,7 @@ CcsXmlScanner_Peek(CcsXmlScanner_t * self)
 void
 CcsXmlScanner_ResetPeek(CcsXmlScanner_t * self)
 {
-    *self->peekToken = *self->curToken;
+    self->peekToken = self->curToken;
 }
 
 void
@@ -161,23 +166,27 @@ CcsXmlScanner_IncRef(CcsXmlScanner_t * self, CcsToken_t * token)
 void
 CcsXmlScanner_DecRef(CcsXmlScanner_t * self, CcsToken_t * token)
 {
-    CcsToken_t ** curToken;
-    if (token == self->dummyToken) return;
-    if (--token->refcnt > 0) return;
-    CcsAssert(self->busyTokenList != NULL);
-    for (curToken = &self->busyTokenList;
-	 *curToken != token; curToken = &(*curToken)->next)
-	CcsAssert(*curToken && curToken != self->curToken);
-    /* Found, *curToken == token, detach and destroy it. */
-    *curToken = (*curToken)->next;
-    CcsToken_Destruct(token);
+    if (--token->refcnt > 1) return;
+    CcsAssert(token->refcnt == 1);
+    if (token != self->busyTokenList) return;
+    /* Detach all tokens which is refered by self->busyTokenList only. */
+    while (token && token->refcnt <= 1) {
+	CcsAssert(token->refcnt == 1);
+	/* Detach token. */
+	if (self->curToken == &token->next)
+	    self->curToken = &self->busyTokenList;
+	if (self->peekToken == &token->next)
+	    self->peekToken = &self->busyTokenList;
+	self->busyTokenList = token->next;
+	CcsToken_Destruct(token);
+	token = self->busyTokenList;
+    }
     /* Adjust CcsBuffer busy pointer */
-    if (curToken == &self->busyTokenList) {
-	if (self->busyTokenList) {
-	    CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
-	} else {
-	    CcsBuffer_ClearBusy(&self->buffer);
-	}
+    if (self->busyTokenList) {
+	CcsAssert(self->busyTokenList->refcnt > 1);
+	CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
+    } else {
+	CcsBuffer_ClearBusy(&self->buffer);
     }
 }
 
