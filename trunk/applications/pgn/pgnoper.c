@@ -54,9 +54,6 @@ PgnMove(CcsBool_t WhiteOrNot, const char * value)
     if (!(self = CcsMalloc(sizeof(PgnMove_t) + strlen(value) + 1)))
 	return NULL;
     self->WhiteOrNot = WhiteOrNot;
-    self->start = -1; /* FIX ME: */
-    self->end = -1; /* FIX ME: */
-    self->preferment = pgnBlank; /* FIX ME: */
     self->value = (char *)(self + 1);
     strcpy(self->value, value);
     return self;
@@ -77,23 +74,23 @@ static char * safe_append(char ** cur, const char * str)
     char * ret;
     if (!str) return NULL;
     ret = *cur;
-    strcpy(*cur, str); *cur += strlen(str);
+    strcpy(*cur, str); *cur += strlen(str) + 1;
     return ret;
 }
 
 PgnGame_t *
 PgnGame(const char * Event, const char * Site, const char * Date,
 	const char * Round, const char * White, const char * Black,
-	const char * WhiteElo, const char * BlackElo, const char * TimeControl,
-	const char * Result)
+	const char * WhiteElo, const char * BlackElo, const char * TimeControl)
 {
     PgnGame_t * self;
     char * cur;
     size_t len = safe_strlen(Event) + safe_strlen(Site) + safe_strlen(Date) +
 	safe_strlen(Round) + safe_strlen(White) + safe_strlen(Black) +
 	safe_strlen(WhiteElo) + safe_strlen(BlackElo) +
-	safe_strlen(TimeControl) + safe_strlen(Result);
+	safe_strlen(TimeControl);
     if (!(self = CcsMalloc(sizeof(PgnGame_t) + len))) goto errquit0;
+    self->next = NULL;
     if (!PgnBoard(&self->board)) goto errquit1;
     cur = (char *)(self + 1);
     self->Event = safe_append(&cur, Event);
@@ -105,7 +102,7 @@ PgnGame(const char * Event, const char * Site, const char * Date,
     self->WhiteElo = safe_append(&cur, WhiteElo);
     self->BlackElo = safe_append(&cur, BlackElo);
     self->TimeControl = safe_append(&cur, TimeControl);
-    self->Result = safe_append(&cur, Result);
+    self->Result = NULL;
     self->resultInfo = NULL;
     self->movesArr.next = NULL;
     self->movesArr.cur = self->movesArr.moves;
@@ -130,6 +127,7 @@ PgnGame_Destruct(PgnGame_t * self)
 	if (curarr != &self->movesArr) CcsFree(curarr);
     }
     if (self->resultInfo) CcsFree(self->resultInfo);
+    if (self->Result) CcsFree(self->Result);
     PgnBoard_Destruct(&self->board);
     CcsFree(self);
 }
