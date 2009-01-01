@@ -67,18 +67,19 @@ CharRepr(char * buf, size_t szbuf, int ch)
 static CcsBool_t
 COS_Defines(CcCOutputScheme_t * self, CcOutput_t * output)
 {
-    CcPrintfIL(output, "#define COCO_MAX_KEYWORD_LEN %d",
+    CcPrintfIL(output, "#define %sScanner_MAX_KEYWORD_LEN %d", self->prefix,
 	       CcLexical_GetMaxKeywordLength(self->base.globals->lexical));
     if (!self->base.globals->lexical->ignoreCase)
-	CcPrintfIL(output, "#define COCO_CASE_SENSITIVE");
+	CcPrintfIL(output, "#define %sScanner_CASE_SENSITIVE", self->prefix);
     if (self->base.globals->lexical->indentUsed) {
-	CcPrintfIL(output, "#define COCO_INDENTATION");
-	CcPrintfIL(output, "#define COCO_INDENT_START %d", 32);
-	CcPrintfIL(output, "#define COCO_INDENT_IN %d",
+	CcPrintfIL(output, "#define %sScanner_INDENTATION", self->prefix);
+	CcPrintfIL(output, "#define %sScanner_INDENT_START %d",
+		   self->prefix, 32);
+	CcPrintfIL(output, "#define %sScanner_INDENT_IN %d", self->prefix,
 		   self->base.globals->lexical->indentIn);
-	CcPrintfIL(output, "#define COCO_INDENT_OUT %d",
+	CcPrintfIL(output, "#define %sScanner_INDENT_OUT %d", self->prefix,
 		   self->base.globals->lexical->indentOut);
-	CcPrintfIL(output, "#define COCO_INDENT_ERR %d",
+	CcPrintfIL(output, "#define %sScanner_INDENT_ERR %d", self->prefix,
 		   self->base.globals->lexical->indentErr);
     }
     return TRUE;

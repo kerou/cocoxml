@@ -37,8 +37,8 @@ Author: Charles Wang <charlesw123456@gmail.com>
 EXTC_BEGIN
 
 /*---- defines ----*/
-#define COCO_MAX_KEYWORD_LEN 0
-#define COCO_CASE_SENSITIVE
+#define PgnScanner_MAX_KEYWORD_LEN 0
+#define PgnScanner_CASE_SENSITIVE
 /*---- enable ----*/
 
 typedef struct PgnScanner_s PgnScanner_t;
@@ -64,7 +64,7 @@ struct PgnScanner_s {
     int            oldEolsEOL;
 
     CcsBuffer_t    buffer;
-#ifdef COCO_INDENTATION
+#ifdef PgnScanner_INDENTATION
     CcsBool_t      lineStart;
     int          * indent;
     int          * indentUsed;
