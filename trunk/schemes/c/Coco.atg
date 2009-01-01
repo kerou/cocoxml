@@ -247,13 +247,16 @@ UpdateDecl
 
 SetDecl                         (. CcCharSet_t * s; .)
 =
-  ident                         (. const char * name = self->t->val;
+  ident                         (. CcsToken_t * nameToken;
+  				   const char * name = self->t->val;
+				   CcsScanner_IncRef(&self->scanner, nameToken = self->t);
 				   CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, name);
 				   if (c != NULL)
 				       CcsParser_SemErrT(self, "name '%s' declared twice", name); .)
   '=' Set<&s>                   (. if (CcCharSet_Elements(s) == 0)
 				       CcsParser_SemErrT(self, "character set must not be empty");
-				   CcLexical_NewCharClass(self->lexical, name, s); .)
+				   CcLexical_NewCharClass(self->lexical, name, s);
+				   CcsScanner_DecRef(&self->scanner, nameToken); .)
   '.'
 .
 
@@ -275,7 +278,7 @@ SimSet<CcCharSet_t ** s>        (. int n1, n2; .)
 =                               (. *s = CcCharSet(); .)
 ( ident                         (. CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, self->t->val);
 				   if (c != NULL) CcCharSet_Or(*s, c->set);
-				   else CcsParser_SemErrT(self, "undefined name"); .)
+				   else CcsParser_SemErrT(self, "undefined name '%s'", self->t->val); .)
 | string                        (. const char * cur0; int ch;
   				   char * cur, * name = CcUnescape(self->t->val);
 				   if (self->lexical->ignoreCase) {
