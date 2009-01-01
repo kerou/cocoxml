@@ -28,7 +28,7 @@ CcsToken(int kind, int pos, int col, int line, const char * val, size_t vallen)
 {
     CcsToken_t * self;
     if (!(self = CcsMalloc(sizeof(CcsToken_t) + vallen + 1))) return NULL;
-    self->refcnt = 0;
+    self->refcnt = 1;
     self->next = NULL;
     self->kind = kind;
     self->pos = pos;

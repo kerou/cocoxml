@@ -101,9 +101,13 @@ CcsScanner_Destruct(CcsScanner_t * self)
     CcsFree(self->indent);
 #endif
     for (cur = self->busyTokenList; cur; cur = next) {
+	/* May be trigged by .atg semantic code. */
+	CcsAssert(cur->refcnt == 1);
 	next = cur->next;
 	CcsToken_Destruct(cur);
     }
+    /* May be trigged by .atg semantic code. */
+    CcsAssert(self->dummyToken->refcnt == 1);
     CcsToken_Destruct(self->dummyToken);
     CcsBuffer_Destruct(&self->buffer);
 }
@@ -111,6 +115,7 @@ CcsScanner_Destruct(CcsScanner_t * self)
 CcsToken_t *
 CcsScanner_GetDummy(CcsScanner_t * self)
 {
+    CcsScanner_IncRef(self, self->dummyToken);
     return self->dummyToken;
 }
 
@@ -149,7 +154,7 @@ CcsScanner_Peek(CcsScanner_t * self)
 void
 CcsScanner_ResetPeek(CcsScanner_t * self)
 {
-    *self->peekToken = *self->curToken;
+    self->peekToken = self->curToken;
 }
 
 void
@@ -161,23 +166,27 @@ CcsScanner_IncRef(CcsScanner_t * self, CcsToken_t * token)
 void
 CcsScanner_DecRef(CcsScanner_t * self, CcsToken_t * token)
 {
-    CcsToken_t ** curToken;
-    if (token == self->dummyToken) return;
-    if (--token->refcnt > 0) return;
-    CcsAssert(self->busyTokenList != NULL);
-    for (curToken = &self->busyTokenList;
-	 *curToken != token; curToken = &(*curToken)->next)
-	CcsAssert(*curToken && curToken != self->curToken);
-    /* Found, *curToken == token, detach and destroy it. */
-    *curToken = (*curToken)->next;
-    CcsToken_Destruct(token);
+    if (--token->refcnt > 1) return;
+    CcsAssert(token->refcnt == 1);
+    if (token != self->busyTokenList) return;
+    /* Detach all tokens which is refered by self->busyTokenList only. */
+    while (token && token->refcnt <= 1) {
+	CcsAssert(token->refcnt == 1);
+	/* Detach token. */
+	if (self->curToken == &token->next)
+	    self->curToken = &self->busyTokenList;
+	if (self->peekToken == &token->next)
+	    self->peekToken = &self->busyTokenList;
+	self->busyTokenList = token->next;
+	CcsToken_Destruct(token);
+	token = self->busyTokenList;
+    }
     /* Adjust CcsBuffer busy pointer */
-    if (curToken == &self->busyTokenList) {
-	if (self->busyTokenList) {
-	    CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
-	} else {
-	    CcsBuffer_ClearBusy(&self->buffer);
-	}
+    if (self->busyTokenList) {
+	CcsAssert(self->busyTokenList->refcnt > 1);
+	CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
+    } else {
+	CcsBuffer_ClearBusy(&self->buffer);
     }
 }
 

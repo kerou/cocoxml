@@ -31,10 +31,13 @@ static const char * set[];
 static void
 PgnParser_Get(PgnParser_t * self)
 {
+    if (self->t) PgnScanner_DecRef(&self->scanner, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = PgnScanner_Scan(&self->scanner);
 	if (self->la->kind <= self->maxT) { /*++self->errDist;*/ break; }
+	/* May be implement pragmas here is wrong... But I still not found any
+	 * needs to use pragmas, so just leave it along. */
 	/*---- Pragmas ----*/
 	/*---- enable ----*/
     }
@@ -145,6 +148,8 @@ PgnParser_Destruct(PgnParser_t * self)
 	PgnGame_Destruct(cur);
     }
     /*---- enable ----*/
+    if (self->la) PgnScanner_DecRef(&self->scanner, self->la);
+    if (self->t) PgnScanner_DecRef(&self->scanner, self->t);
     PgnScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }

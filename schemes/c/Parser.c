@@ -49,10 +49,13 @@ static const char * set[];
 static void
 CcsParser_Get(CcsParser_t * self)
 {
+    if (self->t) CcsScanner_DecRef(&self->scanner, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = CcsScanner_Scan(&self->scanner);
 	if (self->la->kind <= self->maxT) { /*++self->errDist;*/ break; }
+	/* May be implement pragmas here is wrong... But I still not found any
+	 * needs to use pragmas, so just leave it along. */
 	/*---- Pragmas ----*/
 	if (self->la->kind == 49) {
 	    
@@ -191,6 +194,8 @@ CcsParser_Destruct(CcsParser_t * self)
 	CcFree(self->tokenString);
     CcGlobals_Destruct(&self->globals);
     /*---- enable ----*/
+    if (self->la) CcsScanner_DecRef(&self->scanner, self->la);
+    if (self->t) CcsScanner_DecRef(&self->scanner, self->t);
     CcsScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }
@@ -411,7 +416,9 @@ CcsParser_SetDecl(CcsParser_t * self)
 {
     CcCharSet_t * s; 
     CcsParser_Expect(self, 1);
+    CcsToken_t * nameToken;
     const char * name = self->t->val;
+    CcsScanner_IncRef(&self->scanner, nameToken = self->t);
     CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, name);
     if (c != NULL)
 	CcsParser_SemErrT(self, "name '%s' declared twice", name); 
@@ -419,7 +426,8 @@ CcsParser_SetDecl(CcsParser_t * self)
     CcsParser_Set(self, &s);
     if (CcCharSet_Elements(s) == 0)
 	CcsParser_SemErrT(self, "character set must not be empty");
-    CcLexical_NewCharClass(self->lexical, name, s); 
+    CcLexical_NewCharClass(self->lexical, name, s);
+    CcsScanner_DecRef(&self->scanner, nameToken);
     CcsParser_Expect(self, 22);
 }
 
@@ -593,7 +601,7 @@ CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s)
 	CcsParser_Get(self);
 	CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, self->t->val);
 	if (c != NULL) CcCharSet_Or(*s, c->set);
-	else CcsParser_SemErrT(self, "undefined name"); 
+	else CcsParser_SemErrT(self, "undefined name '%s'", self->t->val); 
     } else if (self->la->kind == 3) {
 	CcsParser_Get(self);
 	const char * cur0; int ch;
