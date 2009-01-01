@@ -29,18 +29,25 @@
 #include  "csharp/CSharpOutputScheme.h"
 #include  "dump/DumpOutputScheme.h"
 
-static const char * usage_format =
-    "Usage: %s Grammar.atg/Grammer.xatg {{Option}}\n"
-    "Options:\n"
-    "  -scheme  <SCHEME>\n"
-    "  -output  <OUTPUT-METHOD>\n"
-    "  -dir     <OUTPUT-DIR>\n"
-    "  -tempdir <TEMPLATE-DIR>\n"
-    "\n"
-    "The possible value of SCHEME are 'dump', SCHEME is fetched from atg/xatg if this argument not present.\n"
-    "The possible value of OUTPUT-METHOD are 'auto', 'generate', 'update', 'auto' is default.\n"
-    "The value of OUTPUT-DIR is the directory where the outputs are located.\n"
-    "The value of TEMPLATE-DIR is the directory where the templates for various schemes are located.\n";
+static const char * UsageHeadFormat =
+    "Usage: %s {{Options}} Grammar.atg/Grammer.xatg\n"
+    "Options:\n";
+static const char * UsageTail =
+    "If '--' is encountered, all the following arguments are not treated as any options.\n";
+
+static const CcArgDesc_t ArgDescList[] = {
+    { 's', "scheme", "SCHEME", NULL,
+      "The possible value of SCHEME are 'dump', SCHEME is fetched from atg/xatg if this argument not present." },
+    { 'o', "output", "OUTPUT-METHOD", NULL,
+      "The possible value of OUTPUT-METHOD are 'auto', 'generate', 'update', 'auto' is default." },
+    { 'g', "output", NULL, "generate", "This is a shortcut of '-o generate'." },
+    { 'd', "dir", "OUTPUT-DIR", NULL,
+      "The value of OUTPUT-DIR is the directory where the outputs are located." },
+    { 't', "tempdir", "TEMPLATE-DIR", NULL,
+      "The value of TEMPLATE-DIR is the directory where the templates for various schemes are located." }
+};
+static const CcArgDesc_t * ArgDescLast =
+    ArgDescList + sizeof(ArgDescList) / sizeof(ArgDescList[0]);
 
 static CcsBool_t
 CmpExtension(const char * fname, const char * ext)
@@ -65,10 +72,12 @@ main(int argc, char * argv[])
     CcOutputScheme_t * scheme;
 
     printf("Coco/R (Oct22, 2008)\n");
-    CcArguments(&arguments, argc, argv);
+    CcArguments(&arguments, ArgDescList, ArgDescLast, argc, argv);
     atgName = CcArguments_First(&arguments, "", &iter);
     if (atgName == NULL) {
-	printf(usage_format, argv[0]);
+	printf(UsageHeadFormat, argv[0]);
+	CcArguments_ShowHelp(stdout, ArgDescList, ArgDescLast);
+	printf(UsageTail);
 	return 0;
     }
 
@@ -125,4 +134,18 @@ main(int argc, char * argv[])
  errquit0:
     CcArguments_Destruct(&arguments);
     return -1;
+}
+
+void
+CcArguments_ShowHelp(FILE * outfp, const CcArgDesc_t * desc,
+		     const CcArgDesc_t * descLast)
+{
+    const CcArgDesc_t * cur;
+    for (cur = desc; cur < descLast; ++cur) {
+	if (cur->promptValue)
+	    fprintf(outfp, " -%c <%s>\n", cur->ch, cur->promptValue);
+	else
+	    fprintf(outfp, " -%c\n", cur->ch);
+	fprintf(outfp, "    %s\n", cur->help);
+    }
 }

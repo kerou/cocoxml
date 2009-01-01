@@ -50,20 +50,44 @@ CcArguments_Append(CcArguments_t * self, const char * key, const char * value)
 }
 
 CcArguments_t *
-CcArguments(CcArguments_t * self, int argc, char * argv[])
+CcArguments(CcArguments_t * self,
+	    const CcArgDesc_t * desc, const CcArgDesc_t * descLast,
+	    int argc, char * argv[])
 {
     int index;
+    const CcArgDesc_t * cur;
+
     self->selfpath = argv[0];
     CcArrayList(&self->storage);
     CcHashTable(&self->map, 127);
+    /* Scan argv. */
     for (index = 1; index < argc; ++index) {
-	if (*argv[index] == '-' && index + 1 < argc) {
-	    CcArguments_Append(self, argv[index] + 1, argv[index + 1]);
+	if (!strcmp(argv[index], "--")) break;
+	if (*argv[index] != '-') {
+	    CcArguments_Append(self, "", argv[index]);
+	    continue;
+	}
+	if (strlen(argv[index]) != 2) {
+	    fprintf(stderr, "Unrecognized option '%s' encountered.\n", argv[index]);
+	    continue;
+	}
+	for (cur = desc; cur < descLast; ++cur)
+	    if (cur->ch == argv[index][1]) break;
+	if (cur >= descLast) {
+	    fprintf(stderr, "Unrecognized option '%s' encountered.\n", argv[index]);
+	    continue;
+	}
+	if (cur->promptValue == NULL) {
+	    CcArguments_Append(self, cur->key, cur->defaultValue);
+	} else if (index + 1 < argc) {
+	    CcArguments_Append(self, cur->key, argv[index + 1]);
 	    ++index;
 	} else {
-	    CcArguments_Append(self, "", argv[index]);
+	    fprintf(stderr, "The required value of option '%s' is lost.\n", argv[index]);
+	    continue;
 	}
     }
+    for (;index < argc; ++index) CcArguments_Append(self, "", argv[index]);
     return self;
 }
 
