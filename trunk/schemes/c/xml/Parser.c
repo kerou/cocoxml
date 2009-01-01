@@ -43,10 +43,13 @@ static const char * set[];
 static void
 CcsXmlParser_Get(CcsXmlParser_t * self)
 {
+    if (self->t) CcsXmlScanner_DecRef(&self->scanner, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = CcsXmlScanner_Scan(&self->scanner);
 	if (self->la->kind <= self->maxT) { /*++self->errDist;*/ break; }
+	/* May be implement pragmas here is wrong... But I still not found any
+	 * needs to use pragmas, so just leave it along. */
 	/*---- Pragmas ----*/
 	/*---- enable ----*/
     }
@@ -176,6 +179,8 @@ CcsXmlParser_Destruct(CcsXmlParser_t * self)
     if (self->members) CcsPosition_Destruct(self->members);
     CcGlobals_Destruct(&self->globals);
     /*---- enable ----*/
+    if (self->la) CcsXmlScanner_DecRef(&self->scanner, self->la);
+    if (self->t) CcsXmlScanner_DecRef(&self->scanner, self->t);
     CcsXmlScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }

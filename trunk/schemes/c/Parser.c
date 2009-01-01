@@ -427,7 +427,7 @@ CcsParser_SetDecl(CcsParser_t * self)
     if (CcCharSet_Elements(s) == 0)
 	CcsParser_SemErrT(self, "character set must not be empty");
     CcLexical_NewCharClass(self->lexical, name, s);
-    CcsScanner_DecRef(&self->scanner, nameToken);
+    CcsScanner_DecRef(&self->scanner, nameToken); 
     CcsParser_Expect(self, 22);
 }
 
