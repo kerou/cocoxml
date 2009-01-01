@@ -79,7 +79,7 @@ PgnParser_WeakSeparator(PgnParser_t * self, int n, int syFol, int repFol)
 	PgnParser_Get(self);
     return PgnParser_StartOf(self, syFol);
 }
-#endif
+#endif /* PgnParser_WEAK_USED */
 
 /*---- ProductionsHeader ----*/
 static void PgnParser_Pgn(PgnParser_t * self);

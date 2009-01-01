@@ -683,6 +683,18 @@ CcLexical_GetStartTab(const CcLexical_t * self, int * retNumEle)
     return table;
 }
 
+CcsBool_t
+CcLexical_KeywordUsed(const CcLexical_t * self)
+{
+    const CcSymbolT_t * sym;
+    CcArrayListIter_t iter;
+    const CcArrayList_t * terminals = &self->globals->symtab.terminals;
+    for (sym = (const CcSymbolT_t *)CcArrayList_FirstC(terminals, &iter);
+	 sym; sym = (const CcSymbolT_t *)CcArrayList_NextC(terminals, &iter))
+	if (sym->tokenKind == symbol_litToken) return TRUE;
+    return FALSE;
+}
+
 int
 CcLexical_GetMaxKeywordLength(const CcLexical_t * self)
 {

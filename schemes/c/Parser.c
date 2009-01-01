@@ -100,7 +100,7 @@ CcsParser_WeakSeparator(CcsParser_t * self, int n, int syFol, int repFol)
 	CcsParser_Get(self);
     return CcsParser_StartOf(self, syFol);
 }
-#endif
+#endif /* CcsParser_WEAK_USED */
 
 /*---- ProductionsHeader ----*/
 static void CcsParser_Coco(CcsParser_t * self);

@@ -91,7 +91,7 @@ CcsXmlParser_WeakSeparator(CcsXmlParser_t * self, int n, int syFol, int repFol)
 	CcsXmlParser_Get(self);
     return CcsXmlParser_StartOf(self, syFol);
 }
-#endif
+#endif /* CcsXmlParser_WEAK_USED */
 
 /*---- ProductionsHeader ----*/
 static void CcsXmlParser_CocoXml(CcsXmlParser_t * self);

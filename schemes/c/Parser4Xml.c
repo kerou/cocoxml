@@ -58,6 +58,7 @@ CcxParser_Expect(CcxParser_t * self, int n)
     else CcxParser_SynErr(self, n);
 }
 
+#ifdef CcxParser_WEAK_USED
 static void
 CcxParser_ExpectWeak(CcxParser_t * self, int n, int follow)
 {
@@ -80,6 +81,7 @@ CcxParser_WeakSeparator(CcxParser_t * self, int n, int syFol, int repFol)
 	CcxParser_Get(self);
     return CcxParser_StartOf(self, syFol);
 }
+#endif  /* CcxParser_WEAK_USED */
 
 /*---- ProductionsHeader ----*/
 /*---- enable ----*/
