@@ -32,7 +32,6 @@
 #include  "Scanner.h"
 
 static int Char2State(int chr);
-static int Identifier2KWKind(const char * key, size_t keylen, int defaultVal);
 static void CcsXmlScanner_Init(CcsXmlScanner_t * self);
 static CcsToken_t * CcsXmlScanner_NextToken(CcsXmlScanner_t * self);
 static void CcsXmlScanner_GetCh(CcsXmlScanner_t * self);
@@ -263,6 +262,7 @@ Char2State(int chr)
     return c2s ? c2s->val : 0;
 }
 
+#ifdef CcsXmlScanner_KEYWORD_USED
 typedef struct {
     const char * key;
     int val;
@@ -324,6 +324,7 @@ CcsXmlScanner_GetKWKind(CcsXmlScanner_t * self, int start, int end, int defaultV
 						 start, end - start),
 			     end - start, defaultVal);
 }
+#endif /* CcsXmlScanner_KEYWORD_USED */
 
 static void
 CcsXmlScanner_GetCh(CcsXmlScanner_t * self)

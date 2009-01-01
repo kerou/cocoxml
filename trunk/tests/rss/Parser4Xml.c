@@ -48,6 +48,7 @@ RssParser_Expect(RssParser_t * self, int n)
     else RssParser_SynErr(self, n);
 }
 
+#ifdef RssParser_WEAK_USED
 static void
 RssParser_ExpectWeak(RssParser_t * self, int n, int follow)
 {
@@ -70,6 +71,7 @@ RssParser_WeakSeparator(RssParser_t * self, int n, int syFol, int repFol)
 	RssParser_Get(self);
     return RssParser_StartOf(self, syFol);
 }
+#endif  /* RssParser_WEAK_USED */
 
 /*---- ProductionsHeader ----*/
 static void RssParser_Rss(RssParser_t * self);

@@ -23,7 +23,6 @@ Author: Charles Wang <charlesw123456@gmail.com>
 #include  "Scanner.h"
 
 static int Char2State(int chr);
-static int Identifier2KWKind(const char * key, size_t keylen, int defaultVal);
 static void PgnScanner_Init(PgnScanner_t * self);
 static CcsToken_t * PgnScanner_NextToken(PgnScanner_t * self);
 static void PgnScanner_GetCh(PgnScanner_t * self);
@@ -259,6 +258,7 @@ Char2State(int chr)
     return c2s ? c2s->val : 0;
 }
 
+#ifdef PgnScanner_KEYWORD_USED
 typedef struct {
     const char * key;
     int val;
@@ -302,6 +302,7 @@ PgnScanner_GetKWKind(PgnScanner_t * self, int start, int end, int defaultVal)
 						 start, end - start),
 			     end - start, defaultVal);
 }
+#endif /* PgnScanner_KEYWORD_USED */
 
 static void
 PgnScanner_GetCh(PgnScanner_t * self)

@@ -71,6 +71,8 @@ COS_Defines(CcCOutputScheme_t * self, CcOutput_t * output)
 	       CcLexical_GetMaxKeywordLength(self->base.globals->lexical));
     if (!self->base.globals->lexical->ignoreCase)
 	CcPrintfIL(output, "#define %sScanner_CASE_SENSITIVE", self->prefix);
+    if (CcLexical_KeywordUsed(self->base.globals->lexical))
+	CcPrintfIL(output, "#define %sParser_KEYWORD_USED", self->prefix);
     if (self->base.globals->lexical->indentUsed) {
 	CcPrintfIL(output, "#define %sScanner_INDENTATION", self->prefix);
 	CcPrintfIL(output, "#define %sScanner_INDENT_START %d",

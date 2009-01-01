@@ -48,6 +48,7 @@ EXTC_BEGIN
 /*---- defines ----*/
 #define CcsScanner_MAX_KEYWORD_LEN 12
 #define CcsScanner_CASE_SENSITIVE
+#define CcsScanner_KEYWORD_USED
 /*---- enable ----*/
 
 typedef struct CcsScanner_s CcsScanner_t;

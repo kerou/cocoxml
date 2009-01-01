@@ -44,6 +44,9 @@
 
 EXTC_BEGIN
 
+/*---- SynDefines ----*/
+/*---- enable ----*/
+
 typedef struct {
     CcsErrorPool_t    errpool;
     CcxScanner_t      scanner;

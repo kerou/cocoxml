@@ -37,6 +37,9 @@
 
 EXTC_BEGIN
 
+/*---- SynDefines ----*/
+/*---- enable ----*/
+
 typedef struct {
     CcsErrorPool_t    errpool;
     RssScanner_t      scanner;
