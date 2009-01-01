@@ -50,8 +50,6 @@ CcsBool_t PgnBoard_Revoke(PgnBoard_t * self, const PgnMove_t * move);
 
 struct PgnMove_s {
     CcsBool_t WhiteOrNot;
-    int start, end;
-    PgnPiece_t preferment;
     char * value;
 };
 PgnMove_t * PgnMove(CcsBool_t WhiteOrNot, const char * value);
@@ -88,11 +86,10 @@ struct PgnGame_s {
 PgnGame_t *
 PgnGame(const char * Event, const char * Site, const char * Date,
 	const char * Round, const char * White, const char * Black,
-	const char * WhiteElo, const char * BlackElo, const char * TimeControl,
-	const char * Result);
+	const char * WhiteElo, const char * BlackElo, const char * TimeControl);
 void PgnGame_Destruct(PgnGame_t * self);
 
-void PgnGame_AppendRound(PgnGame_t * self, PgnMove_t * move);
+CcsBool_t PgnGame_AppendMove(PgnGame_t * self, PgnMove_t * move);
 
 EXTC_END
 
