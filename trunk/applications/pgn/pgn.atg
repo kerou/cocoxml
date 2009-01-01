@@ -43,7 +43,7 @@ TOKENS
     number    = digit { digit }.
     string    = '"' { stringCh | '\\' printable } '"' ']'.
     result    = '{' { resultCh | '\\' printable } '}'.
-    basemove  = [piece | col [row] ['x']] col row ['#' | { '+' } | { '?' } | { '!' }].
+    basemove  = [piece] [col] [row] ['x'] col row [ '=' piece ] ['#' | { '+' } | { '?' } | { '!' }].
     castling  = "O-O" ['#' | { '+' } | { '?' } | { '!' }].
     castlingL = "O-O-O" ['#' | { '+' } | { '?' } | { '!' }].
 
