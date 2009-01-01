@@ -46,8 +46,8 @@
 EXTC_BEGIN
 
 /*---- defines ----*/
-#define COCO_MAX_KEYWORD_LEN 23
-#define COCO_CASE_SENSITIVE
+#define CcsXmlScanner_MAX_KEYWORD_LEN 23
+#define CcsXmlScanner_CASE_SENSITIVE
 /*---- enable ----*/
 
 typedef struct CcsXmlScanner_s CcsXmlScanner_t;
@@ -73,7 +73,7 @@ struct CcsXmlScanner_s {
     int            oldEolsEOL;
 
     CcsBuffer_t    buffer;
-#ifdef COCO_INDENTATION
+#ifdef CcsXmlScanner_INDENTATION
     CcsBool_t      lineStart;
     int          * indent;
     int          * indentUsed;
