@@ -56,6 +56,7 @@ PgnParser_Expect(PgnParser_t * self, int n)
     else PgnParser_SynErr(self, n);
 }
 
+#ifdef PgnParser_WEAK_USED
 static void
 PgnParser_ExpectWeak(PgnParser_t * self, int n, int follow)
 {
@@ -78,6 +79,7 @@ PgnParser_WeakSeparator(PgnParser_t * self, int n, int syFol, int repFol)
 	PgnParser_Get(self);
     return PgnParser_StartOf(self, syFol);
 }
+#endif
 
 /*---- ProductionsHeader ----*/
 static void PgnParser_Pgn(PgnParser_t * self);

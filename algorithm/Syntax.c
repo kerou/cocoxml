@@ -31,6 +31,7 @@ CcSyntax(CcSyntax_t * self, CcGlobals_t * globals)
 {
     CcEBNF(&self->base);
     self->globals = globals;
+    self->weakUsed = FALSE;
     self->schemeName = NULL;
     self->grammarPrefix = NULL;
     self->gramSy = NULL;
@@ -58,16 +59,18 @@ CcNode_t *
 CcSyntax_NodeFromSymbol(CcSyntax_t * self, const CcSymbol_t * sym, int line,
 			CcsBool_t weak)
 {
-    if (sym->base.type == symbol_t && weak)
+    if (sym->base.type == symbol_t && weak) {
+	self->weakUsed = TRUE;
 	return (CcNode_t *)CcEBNF_NewNode(&self->base, CcNodeWT(line, sym));
-    else if (sym->base.type == symbol_t)
+    } else if (sym->base.type == symbol_t) {
 	return (CcNode_t *)CcEBNF_NewNode(&self->base, CcNodeT(line, sym));
-    else if (sym->base.type == symbol_pr)
+    } else if (sym->base.type == symbol_pr) {
 	return (CcNode_t *)CcEBNF_NewNode(&self->base, CcNodePR(line));
-    else if (sym->base.type == symbol_nt)
+    } else if (sym->base.type == symbol_nt) {
 	return (CcNode_t *)CcEBNF_NewNode(&self->base, CcNodeNT(line, sym));
-    else if (sym->base.type == symbol_rslv)
+    } else if (sym->base.type == symbol_rslv) {
 	return (CcNode_t *)CcEBNF_NewNode(&self->base, CcNodeRslv(line));
+    }
     CcsAssert(0);
     return NULL;
 }

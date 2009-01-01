@@ -38,6 +38,9 @@ Author: Charles Wang <charlesw123456@gmail.com>
 
 EXTC_BEGIN
 
+/*---- SynDefines ----*/
+/*---- enable ----*/
+
 typedef struct PgnParser_s PgnParser_t;
 struct PgnParser_s {
     CcsErrorPool_t    errpool;

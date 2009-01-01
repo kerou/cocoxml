@@ -394,6 +394,14 @@ COS_XmlSpecList(CcCOutputScheme_t * self, CcOutput_t * output)
 }
 
 static CcsBool_t
+COS_SynDefines(CcCOutputScheme_t * self, CcOutput_t * output)
+{
+    if (self->base.globals->syntax.weakUsed)
+	CcPrintfIL(output, "#define %sParser_WEAK_USED", self->prefix);
+    return TRUE;
+}
+
+static CcsBool_t
 COS_Members(CcCOutputScheme_t * self, CcOutput_t * output)
 {
     if (self->parser &&	self->parser->members)
@@ -795,6 +803,8 @@ CcCOutputScheme_write(CcOutputScheme_t * self, CcOutput_t * output,
 	return COS_XmlSpecSubLists(ccself, output);
     } else if (!strcmp(func, "XmlSpecList")) {
 	return COS_XmlSpecList(ccself, output);
+    } else if (!strcmp(func, "SynDefines")) {
+	return COS_SynDefines(ccself, output);
     } else if (!strcmp(func, "members")) {
 	return COS_Members(ccself, output);
     } else if (!strcmp(func, "constructor")) {
