@@ -19,6 +19,7 @@
 
 typedef struct {
     int castlingRow;
+    int passRow;
     PgnPiece_t king;
     PgnPiece_t queen;
     PgnPiece_t rook;
@@ -27,10 +28,10 @@ typedef struct {
     PgnPiece_t pawn;
 }  PgnInfo_t;
 static const PgnInfo_t whiteInfo = {
-    0, wKing, wQueen, wRook, wBishop, wKnight, wPawn
+    0, 4, wKing, wQueen, wRook, wBishop, wKnight, wPawn
 };
 static const PgnInfo_t blackInfo = {
-    0, bKing, bQueen, bRook, bBishop, bKnight, bPawn
+    7, 3, bKing, bQueen, bRook, bBishop, bKnight, bPawn
 };
 
 static int
@@ -70,17 +71,33 @@ PgnMove_t *
 PgnMove(CcsBool_t WhiteOrNot, const char * value)
 {
     PgnMove_t * self;
-    size_t valuelen;
+    char * curtgt; const char * cursrc; size_t valuelen;
+    const PgnInfo_t * info = WhiteOrNot ? &whiteInfo : &blackInfo;
+
     if (!(self = CcsMalloc(sizeof(PgnMove_t) + strlen(value) + 2)))
 	return NULL;
     memset(self, 0, sizeof(PgnMove_t));
     self->WhiteOrNot = WhiteOrNot;
+
+    curtgt = (char *)(self + 1); cursrc = value;
     valuelen = strspn(value, "KQRNBabcdefgh12345678xO-");
-    self->value = (char *)(self + 1);
-    memcpy(self->value, value, valuelen);
-    self->value[valuelen] = 0;
-    self->annotation = self->value + valuelen + 1;
-    strcpy(self->annotation, value + valuelen);
+    self->value = curtgt;
+    memcpy(curtgt, cursrc, valuelen);
+    curtgt[valuelen] = 0;
+    curtgt += valuelen + 1; cursrc += valuelen;
+
+    self->upgrade = pgnBlank;
+    if (cursrc[0] == '=') {
+	switch (cursrc[1]) {
+	case 'Q': self->upgrade = info->queen; cursrc += 2; break;
+	case 'R': self->upgrade = info->rook; cursrc += 2; break;
+	case 'B': self->upgrade = info->bishop; cursrc += 2; break;
+	case 'N': self->upgrade = info->knight; cursrc += 2; break;
+	}
+    }
+
+    self->annotation = curtgt;
+    strcpy(curtgt, cursrc);
     return self;
 }
 
@@ -157,14 +174,105 @@ PgnGame_Destruct(PgnGame_t * self)
     CcsFree(self);
 }
 
-static CcsBool_t
-PgnGame_FillMove(PgnGame_t * self, PgnMove_t * move)
+static const char * Xstr = "abcdefgh";
+static const char * Ystr = "12345678";
+
+static void
+PgnGame_SearchKing(const PgnGame_t * self, PgnMove_t * move)
 {
-    PgnGame_ToEnd(self);
+}
+static void
+PgnGame_SearchQueen(const PgnGame_t * self, PgnMove_t * move)
+{
+}
+static void
+PgnGame_SearchRook(const PgnGame_t * self, PgnMove_t * move)
+{
+}
+static void
+PgnGame_SearchBishop(const PgnGame_t * self, PgnMove_t * move)
+{
+}
+static void
+PgnGame_SearchKnight(const PgnGame_t * self, PgnMove_t * move)
+{
+}
+static void
+PgnGame_SearchPawn(const PgnGame_t * self, PgnMove_t * move)
+{
+}
+
+static CcsBool_t
+PgnGame_FillMove(const PgnGame_t * self, PgnMove_t * move)
+{
+    const char * curb, * cure, * c;
+    const PgnGameStatus_t * status = &self->status;
+    const PgnSide_t * side = move->WhiteOrNot ? &status->white : &status->black;
+    const PgnInfo_t * info = move->WhiteOrNot ? &whiteInfo : &blackInfo;
+    const PgnInfo_t * opinfo = move->WhiteOrNot ? &blackInfo : &whiteInfo;
+
+    move->castling = side->castling; move->castlingL = side->castlingL;
     if (!strcmp(move->value, "O-O")) {
+	if (!side->castling) return FALSE;
+	move->fPiece = move->tPiece = info->king;
+	move->fY = move->tY = info->castlingRow;
+	move->fX = 4; move->tX = 6;
+	move->kPiece = pgnBlank;
+	return TRUE;
     } else if (!strcmp(move->value, "O-O-O")) {
-    } else {
+	if (!side->castlingL) return FALSE;
+	move->fPiece = move->tPiece = info->king;
+	move->fY = move->tY = info->castlingRow;
+	move->fX = 4; move->tX = 2;
+	move->kPiece = pgnBlank;
+	return TRUE;
     }
+    /* Set move->fPiece, move->tPiece. */
+    curb = move->value; cure = move->value + strlen(move->value) - 1;
+    switch (*curb) {
+    case 'K': move->fPiece = info->king; ++curb; break;
+    case 'Q': move->fPiece = info->queen; ++curb; break;
+    case 'R': move->fPiece = info->rook; ++curb; break;
+    case 'B': move->fPiece = info->bishop; ++curb; break;
+    case 'N': move->fPiece = info->knight; ++curb; break;
+    default: move->fPiece = info->pawn; break;
+    }
+    move->tPiece = move->upgrade == pgnBlank ? move->fPiece : move->upgrade;
+    /* Set move->fX, move->fY, move->tX, move->tY */
+    move->fX = move->fY = move->tX = move->tY = -1;
+    if (curb <= cure && (c = strchr(Ystr, *cure))) {
+	move->tY = c - Ystr; --cure;
+    }
+    if (curb <= cure && (c = strchr(Xstr, *cure))) {
+	move->tX = c - Xstr; --cure;
+    }
+    if (curb <= cure && (c = strchr(Xstr, *curb))) {
+	move->fX = c - Xstr; ++curb;
+    }
+    if (curb <= cure && (c = strchr(Ystr, *curb))) {
+	move->fY = c - Ystr; ++curb;
+    }
+    if (move->fX == -1 || move->fY == -1 || move->tX == -1 || move->tY == -1) {
+	if (move->fPiece == info->king) PgnGame_SearchKing(self, move);
+	else if (move->fPiece == info->queen) PgnGame_SearchQueen(self, move);
+	else if (move->fPiece == info->rook) PgnGame_SearchRook(self, move);
+	else if (move->fPiece == info->bishop) PgnGame_SearchBishop(self, move);
+	else if (move->fPiece == info->knight) PgnGame_SearchKnight(self, move);
+	else if (move->fPiece == info->pawn) PgnGame_SearchPawn(self, move);
+    }
+    if (move->fX == -1 || move->fY == -1 || move->tX == -1 || move->tY == -1)
+	return FALSE;
+    /* Set move->kPiece, move->kX, move->kY */
+    if (move->fPiece == info->pawn && move->fY == info->passRow &&
+	move->fX != move->tX && status->board[move->tY][move->tX] == pgnBlank) {
+	/* Pawn Pass detected. */
+	if (status->board[move->fY][move->tX] == opinfo->pawn) return FALSE;
+	move->kPiece = opinfo->pawn; move->kX = move->tX; move->kY = move->fY;
+    } else {
+	move->kPiece = status->board[move->tY][move->tX];
+	move->kX = move->tX; move->kY = move->tY;
+    }
+    return TRUE;
 }
 
 CcsBool_t
@@ -172,6 +280,7 @@ PgnGame_AppendMove(PgnGame_t * self, PgnMove_t * move)
 {
     PgnMovesArr_t * newMovesArr;
 
+    PgnGame_ToEnd(self);
     if (!PgnGame_FillMove(self, move)) return FALSE;
     if (self->moveLast - self->movesArrLast->moves >= SZ_MOVES_ARR) {
 	if (!(newMovesArr = CcsMalloc(sizeof(PgnMovesArr_t)))) return FALSE;
@@ -181,8 +290,6 @@ PgnGame_AppendMove(PgnGame_t * self, PgnMove_t * move)
 	self->movesArrLast = newMovesArr;
 	self->moveLast = self->movesArrLast->moves;
     }
-    /* Fill the other members of move according to
-     * the current status of board. */
     *self->moveLast++ = move;
     PgnGame_Forward(self);
     return TRUE;
@@ -217,14 +324,14 @@ PgnGame_Backward(PgnGame_t * self)
     opside = cur->WhiteOrNot ? &status->black : &status->white;
     info = cur->WhiteOrNot ? &whiteInfo : &blackInfo;
     /* Basic moves */
-    status->board[cur->fX][cur->fY] = cur->fPiece;
-    status->board[cur->tX][cur->tY] = pgnBlank;
+    status->board[cur->fY][cur->fX] = cur->fPiece;
+    status->board[cur->tY][cur->tX] = pgnBlank;
     if (cur->fPiece != cur->tPiece)
 	side->material -=
 	    PgnPiece2Material(cur->tPiece) - PgnPiece2Material(cur->fPiece);
     if (cur->kPiece != pgnBlank) {
-	CcsAssert(status->board[cur->kX][cur->kY] == pgnBlank);
-	status->board[cur->kX][cur->kY] = cur->kPiece;
+	CcsAssert(status->board[cur->kY][cur->kX] == pgnBlank);
+	status->board[cur->kY][cur->kX] = cur->kPiece;
 	opside->material += PgnPiece2Material(cur->kPiece);
     }
     /* Deal with castling & castlingL */
@@ -258,13 +365,12 @@ PgnGame_Forward(PgnGame_t * self)
     if (self->moveCur == self->moveLast) return;
     /* Basic moves */
     if (cur->kPiece != pgnBlank) {
-	CcsAssert(status->board[cur->kX][cur->kY]
-		  == cur->kPiece);
-	status->board[cur->kX][cur->kY] = pgnBlank;
+	CcsAssert(status->board[cur->kY][cur->kX] == cur->kPiece);
+	status->board[cur->kY][cur->kX] = pgnBlank;
 	opside->material -= PgnPiece2Material(cur->kPiece);
     }
-    status->board[cur->fX][cur->fY] = pgnBlank;
-    status->board[cur->tX][cur->tX] = cur->tPiece;
+    status->board[cur->fY][cur->fX] = pgnBlank;
+    status->board[cur->tY][cur->tX] = cur->tPiece;
     if (cur->fPiece != cur->tPiece)
 	side->material +=
 	    PgnPiece2Material(cur->tPiece) - PgnPiece2Material(cur->fPiece);

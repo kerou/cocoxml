@@ -35,7 +35,7 @@ typedef enum {
 typedef struct {
     int material;
     CcsBool_t castling;
-    CcsBool_t castlingL;
+    CcsBool_t castlingL; 
 }  PgnSide_t;
 
 typedef struct {
@@ -52,6 +52,7 @@ extern const PgnGameStatus_t PgnStandardStart;
 typedef struct {
     CcsBool_t WhiteOrNot;
     char * value;
+    PgnPiece_t upgrade;
     char * annotation;
     PgnPiece_t fPiece; int fX, fY; /* From */
     PgnPiece_t tPiece; int tX, tY; /* To */
