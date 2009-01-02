@@ -54,9 +54,9 @@ typedef struct {
     char * value;
     PgnPiece_t upgrade;
     char * annotation;
-    PgnPiece_t fPiece; int fX, fY; /* From */
-    PgnPiece_t tPiece; int tX, tY; /* To */
-    PgnPiece_t kPiece; int kX, kY; /* Killed */
+    PgnPiece_t fpiece; int fx, fy; /* From */
+    PgnPiece_t tpiece; int tx, ty; /* To */
+    PgnPiece_t kpiece; int kx, ky; /* Killed */
     CcsBool_t castling, castlingL;
 }  PgnMove_t;
 PgnMove_t * PgnMove(CcsBool_t WhiteOrNot, const char * value);
