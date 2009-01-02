@@ -26,9 +26,9 @@ EXTC_BEGIN
 
 typedef enum {
     pgnBlank = '.',
-    wKind = 'K', wQueen = 'Q', wRook = 'R',
+    wKing = 'K', wQueen = 'Q', wRook = 'R',
     wBishop = 'B', wKnight = 'N', wPawn = 'P',
-    bKind = 'k', bQueen = 'q', bRook = 'r',
+    bKing = 'k', bQueen = 'q', bRook = 'r',
     bBishop = 'b', bKnight = 'n', bPawn = 'p'
 }  PgnPiece_t;
 
@@ -44,15 +44,18 @@ typedef struct {
     PgnSide_t black;
 }  PgnGameStatus_t;
 
-PgnGameStatus_t *
-PgnGameStatus(PgnGameStatus_t * self, const PgnGameStatus_t * status);
-void PgnGameStatus_Destruct(PgnGameStatus_t * self);
+void
+PgnGameStatus_Clone(PgnGameStatus_t * self, const PgnGameStatus_t * status);
 
 extern const PgnGameStatus_t PgnStandardStart;
 
 typedef struct {
     CcsBool_t WhiteOrNot;
     char * value;
+    PgnPiece_t fPiece; int fX, fY; /* From */
+    PgnPiece_t tPiece; int tX, tY; /* To */
+    PgnPiece_t kPiece; int kX, kY; /* Killed */
+    CcsBool_t castling, castlingL;
 }  PgnMove_t;
 PgnMove_t * PgnMove(CcsBool_t WhiteOrNot, const char * value);
 void PgnMove_Destruct(PgnMove_t * self);
@@ -60,6 +63,7 @@ void PgnMove_Destruct(PgnMove_t * self);
 #define  SZ_MOVES_ARR 32
 typedef struct PgnMovesArr_s PgnMovesArr_t;
 struct PgnMovesArr_s {
+    PgnMovesArr_t * prev;
     PgnMovesArr_t * next;
     PgnMove_t * moves[SZ_MOVES_ARR];
 };
@@ -80,12 +84,14 @@ struct PgnGame_s {
     char * Result;
     char * resultInfo;
 
+    PgnGameStatus_t startStatus;
     PgnGameStatus_t status;
 
     PgnMovesArr_t movesArr;
+    PgnMove_t ** moveCur; /* To the first unapplied move. */
+    PgnMovesArr_t * movesArrCur;
+    PgnMove_t ** moveLast; /* To the first unused move space. */
     PgnMovesArr_t * movesArrLast;
-    PgnMove_t ** moveCur;
-    PgnMove_t ** moveLast;
 };
 
 PgnGame_t *
