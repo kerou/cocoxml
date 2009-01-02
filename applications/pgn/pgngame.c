@@ -17,6 +17,31 @@
 -------------------------------------------------------------------------*/
 #include  "pgngame.h"
 
+PgnGameStatus_t *
+PgnGameStatus(PgnGameStatus_t * self, const PgnGameStatus_t * status)
+{
+    memcpy(self, status, sizeof(*self));
+    return self;
+}
+void
+PgnGameStatus_Destruct(PgnGameStatus_t * self)
+{
+    /* NOTHING IS OK. */
+}
+
+const PgnGameStatus_t PgnStandardStart = {
+    { "RNBQKBNR",
+      "PPPPPPPP",
+      "........",
+      "........",
+      "........",
+      "........",
+      "pppppppp",
+      "rnbqkbnr" },
+    { 39, TRUE, TRUE },
+    { 39, TRUE, TRUE }
+};
+
 PgnMove_t *
 PgnMove(CcsBool_t WhiteOrNot, const char * value)
 {
@@ -50,19 +75,18 @@ static char * safe_append(char ** cur, const char * str)
 }
 
 PgnGame_t *
-PgnGame(const char * Event, const char * Site, const char * Date,
+PgnGame(const PgnGameStatus_t * status,
+	const char * Event, const char * Site, const char * Date,
 	const char * Round, const char * White, const char * Black,
 	const char * WhiteElo, const char * BlackElo, const char * TimeControl)
 {
-    PgnGame_t * self;
-    char * cur;
-    int whiteScore, blackScore;
+    PgnGame_t * self;  char * cur;
     size_t len = safe_strlen(Event) + safe_strlen(Site) + safe_strlen(Date) +
 	safe_strlen(Round) + safe_strlen(White) + safe_strlen(Black) +
 	safe_strlen(TimeControl);
-    if (!(self = CcsMalloc(sizeof(PgnGame_t) + len))) return NULL;
+    if (!(self = CcsMalloc(sizeof(PgnGame_t) + len))) goto errquit0;
     self->next = NULL;
-    
+
     cur = (char *)(self + 1);
     self->Event = safe_append(&cur, Event);
     self->Site = safe_append(&cur, Site);
@@ -70,51 +94,41 @@ PgnGame(const char * Event, const char * Site, const char * Date,
     self->Round = safe_append(&cur, Round);
     self->White = safe_append(&cur, White);
     self->Black = safe_append(&cur, Black);
-    whiteScore = WhiteElo && *WhiteElo == '"' ? atoi(WhiteElo + 1) : -1;
-    blackScore = BlackElo && *BlackElo == '"' ? atoi(BlackElo + 1) : -1;
+    self->WhiteElo = WhiteElo && *WhiteElo == '"' ? atoi(WhiteElo + 1) : -1;
+    self->BlackElo = BlackElo && *BlackElo == '"' ? atoi(BlackElo + 1) : -1;
     self->TimeControl = safe_append(&cur, TimeControl);
     self->Result = NULL;
     self->resultInfo = NULL;
 
-    strcpy(self->board[0], "RNBQKBNR");
-    strcpy(self->board[1], "PPPPPPPP");
-    strcpy(self->board[2], "        ");
-    strcpy(self->board[3], "        ");
-    strcpy(self->board[4], "        ");
-    strcpy(self->board[5], "        ");
-    strcpy(self->board[6], "pppppppp");
-    strcpy(self->board[6], "rnbqkbnr");
-    self->white.playerName = self->White;
-    self->white.playerScore = whiteScore;
-    self->white.material = 39;
-    self->white.castling = TRUE;
-    self->white.castlingL = TRUE;
-    self->black.playerName = self->Black;
-    self->black.playerScore = blackScore;
-    self->black.material = 39;
-    self->black.castling = TRUE;
-    self->black.castlingL = TRUE;
+    if (!PgnGameStatus(&self->status, status)) goto errquit1;
 
     self->movesArr.next = NULL;
-    self->movesArr.cur = self->movesArr.moves;
     self->movesArrLast = &self->movesArr;
+    self->moveCur = NULL; /* Start status. */
+    self->moveLast = self->movesArrLast->moves;
     return self;
+ errquit1:
+    CcsFree(self);
+ errquit0:
+    return NULL;
 }
 
 void
 PgnGame_Destruct(PgnGame_t * self)
 {
     PgnMovesArr_t * curarr, * nextarr;
-    PgnMove_t ** cur;
+    PgnMove_t ** cur, ** last;
 
     for (curarr = &self->movesArr; curarr; curarr = nextarr) {
 	nextarr = curarr->next;
-	for (cur = curarr->moves; cur < curarr->cur; ++cur)
+	last = nextarr ? curarr->moves + SZ_MOVES_ARR : self->moveLast;
+	for (cur = curarr->moves; cur < last; ++cur)
 	    PgnMove_Destruct(*cur);
 	if (curarr != &self->movesArr) CcsFree(curarr);
     }
     if (self->resultInfo) CcsFree(self->resultInfo);
     if (self->Result) CcsFree(self->Result);
+    PgnGameStatus_Destruct(&self->status);
     CcsFree(self);
 }
 
@@ -122,15 +136,32 @@ CcsBool_t
 PgnGame_AppendMove(PgnGame_t * self, PgnMove_t * move)
 {
     PgnMovesArr_t * newMovesArr;
-    if (self->movesArrLast->cur - self->movesArrLast->moves >= SZ_MOVES_ARR) {
+    if (self->moveLast - self->movesArrLast->moves >= SZ_MOVES_ARR) {
 	if (!(newMovesArr = CcsMalloc(sizeof(PgnMovesArr_t)))) return FALSE;
 	newMovesArr->next = NULL;
-	newMovesArr->cur = newMovesArr->moves;
 	self->movesArrLast->next = newMovesArr;
 	self->movesArrLast = newMovesArr;
+	self->moveLast = self->movesArrLast->moves;
     }
-    *self->movesArrLast->cur++ = move;
+    *self->moveLast++ = move;
     /* Fill the other members of move according to
      * the current status of board. */
     return TRUE;
+}
+
+void
+PgnGame_ToStart(PgnGame_t * self)
+{
+}
+void
+PgnGame_Backward(PgnGame_t * self)
+{
+}
+void
+PgnGame_Forward(PgnGame_t * self)
+{
+}
+void
+PgnGame_ToEnd(PgnGame_t * self)
+{
 }

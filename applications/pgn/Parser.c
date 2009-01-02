@@ -233,7 +233,8 @@ PgnParser_Game(PgnParser_t * self, PgnGame_t ** game)
 	if (!values[index]) values[index] = CcsStrdup(self->t->val); 
 	PgnParser_Expect(self, 18);
     }
-    *game = PgnGame(values[0], values[1], values[2], values[3], values[4],
+    *game = PgnGame(&PgnStandardStart,
+		    values[0], values[1], values[2], values[3], values[4],
 		    values[5], values[6], values[7], values[8]);
     if (!(*game)->Result && values[9]) {
 	(*game)->Result = values[9]; values[9] = NULL;

@@ -25,7 +25,7 @@
 EXTC_BEGIN
 
 typedef enum {
-    pgnBlank = ' ',
+    pgnBlank = '.',
     wKind = 'K', wQueen = 'Q', wRook = 'R',
     wBishop = 'B', wKnight = 'N', wPawn = 'P',
     bKind = 'k', bQueen = 'q', bRook = 'r',
@@ -33,12 +33,22 @@ typedef enum {
 }  PgnPiece_t;
 
 typedef struct {
-    const char * playerName;
-    int playerScore;
     int material;
     CcsBool_t castling;
     CcsBool_t castlingL;
 }  PgnSide_t;
+
+typedef struct {
+    char board[8][9];
+    PgnSide_t white;
+    PgnSide_t black;
+}  PgnGameStatus_t;
+
+PgnGameStatus_t *
+PgnGameStatus(PgnGameStatus_t * self, const PgnGameStatus_t * status);
+void PgnGameStatus_Destruct(PgnGameStatus_t * self);
+
+extern const PgnGameStatus_t PgnStandardStart;
 
 typedef struct {
     CcsBool_t WhiteOrNot;
@@ -51,7 +61,6 @@ void PgnMove_Destruct(PgnMove_t * self);
 typedef struct PgnMovesArr_s PgnMovesArr_t;
 struct PgnMovesArr_s {
     PgnMovesArr_t * next;
-    PgnMove_t ** cur;
     PgnMove_t * moves[SZ_MOVES_ARR];
 };
 
@@ -64,21 +73,24 @@ struct PgnGame_s {
     char * Date;
     char * Round;
     char * White;
+    int WhiteElo;
     char * Black;
+    int BlackElo;
     char * TimeControl;
     char * Result;
     char * resultInfo;
 
-    char board[8][9];
-    PgnSide_t white;
-    PgnSide_t black;
+    PgnGameStatus_t status;
 
     PgnMovesArr_t movesArr;
     PgnMovesArr_t * movesArrLast;
+    PgnMove_t ** moveCur;
+    PgnMove_t ** moveLast;
 };
 
 PgnGame_t *
-PgnGame(const char * Event, const char * Site, const char * Date,
+PgnGame(const PgnGameStatus_t * status,
+	const char * Event, const char * Site, const char * Date,
 	const char * Round, const char * White, const char * Black,
 	const char * WhiteElo, const char * BlackElo, const char * TimeControl);
 void PgnGame_Destruct(PgnGame_t * self);
