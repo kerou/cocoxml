@@ -70,12 +70,17 @@ PgnMove_t *
 PgnMove(CcsBool_t WhiteOrNot, const char * value)
 {
     PgnMove_t * self;
-    if (!(self = CcsMalloc(sizeof(PgnMove_t) + strlen(value) + 1)))
+    size_t valuelen;
+    if (!(self = CcsMalloc(sizeof(PgnMove_t) + strlen(value) + 2)))
 	return NULL;
     memset(self, 0, sizeof(PgnMove_t));
     self->WhiteOrNot = WhiteOrNot;
+    valuelen = strspn(value, "KQRNBabcdefgh12345678xO-");
     self->value = (char *)(self + 1);
-    strcpy(self->value, value);
+    memcpy(self->value, value, valuelen);
+    self->value[valuelen] = 0;
+    self->annotation = self->value + valuelen + 1;
+    strcpy(self->annotation, value + valuelen);
     return self;
 }
 
@@ -152,12 +157,22 @@ PgnGame_Destruct(PgnGame_t * self)
     CcsFree(self);
 }
 
+static CcsBool_t
+PgnGame_FillMove(PgnGame_t * self, PgnMove_t * move)
+{
+    PgnGame_ToEnd(self);
+    if (!strcmp(move->value, "O-O")) {
+    } else if (!strcmp(move->value, "O-O-O")) {
+    } else {
+    }
+}
+
 CcsBool_t
 PgnGame_AppendMove(PgnGame_t * self, PgnMove_t * move)
 {
     PgnMovesArr_t * newMovesArr;
 
-    PgnGame_ToEnd(self);
+    if (!PgnGame_FillMove(self, move)) return FALSE;
     if (self->moveLast - self->movesArrLast->moves >= SZ_MOVES_ARR) {
 	if (!(newMovesArr = CcsMalloc(sizeof(PgnMovesArr_t)))) return FALSE;
 	newMovesArr->prev = self->movesArrLast;
