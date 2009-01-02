@@ -235,7 +235,9 @@ PgnParser_Game(PgnParser_t * self, PgnGame_t ** game)
     }
     *game = PgnGame(values[0], values[1], values[2], values[3], values[4],
 		    values[5], values[6], values[7], values[8]);
-    if (!(*game)->Result && values[9]) (*game)->Result = values[9];
+    if (!(*game)->Result && values[9]) {
+	(*game)->Result = values[9]; values[9] = NULL;
+    }
     for (index = 0; index < sizeof(values) / sizeof(values[0]); ++index)
 	if (values[index]) { CcsFree(values[index]); values[index] = NULL; } 
     while (self->la->kind == 1) {

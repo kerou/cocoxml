@@ -31,8 +31,8 @@ Author: Charles Wang <charlesw123456@gmail.com>
 #endif
 
 /*---- hIncludes ----*/
-#ifndef   COCO_PGNOPER_H
-#include  "pgnoper.h"
+#ifndef   COCO_PGNGAME_H
+#include  "pgngame.h"
 #endif
 /*---- enable ----*/
 
