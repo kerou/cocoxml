@@ -52,6 +52,7 @@ extern const PgnGameStatus_t PgnStandardStart;
 typedef struct {
     CcsBool_t WhiteOrNot;
     char * value;
+    char * annotation;
     PgnPiece_t fPiece; int fX, fY; /* From */
     PgnPiece_t tPiece; int tX, tY; /* To */
     PgnPiece_t kPiece; int kX, kY; /* Killed */
