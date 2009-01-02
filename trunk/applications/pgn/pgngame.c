@@ -176,28 +176,85 @@ PgnGame_Destruct(PgnGame_t * self)
 
 static const char * Xstr = "abcdefgh";
 static const char * Ystr = "12345678";
+static CcsBool_t
+CheckColor(PgnPiece_t piece, CcsBool_t WhiteOrNot)
+{
+    switch (piece) {
+    case wKing: case wQueen: case wRook:
+    case wBishop: case wKnight: case wPawn:
+	return WhiteOrNot;
+    case bKing: case bQueen: case bRook:
+    case bBishop: case bKnight: case bPawn:
+	return !WhiteOrNot;
+    default: break;
+    }
+    return FALSE;
+}
 
-static void
-PgnGame_SearchKing(const PgnGame_t * self, PgnMove_t * move)
+static CcsBool_t CheckKing(int dx, int dy)
 {
+    return dx >= -1 && dx <= 1 && dy >= -1 && dy <= 1;
 }
-static void
-PgnGame_SearchQueen(const PgnGame_t * self, PgnMove_t * move)
+static CcsBool_t CheckQueen(int dx, int dy)
 {
+    return dx == 0 || dy == 0 || dx == dy || dx == -dy;
 }
-static void
-PgnGame_SearchRook(const PgnGame_t * self, PgnMove_t * move)
+static CcsBool_t CheckRook(int dx, int dy)
 {
+    return dx == 0 || dy == 0;
 }
-static void
-PgnGame_SearchBishop(const PgnGame_t * self, PgnMove_t * move)
+static CcsBool_t CheckBishop(int dx, int dy)
 {
+    return dx == dy || dx == -dy;
 }
-static void
-PgnGame_SearchKnight(const PgnGame_t * self, PgnMove_t * move)
+static CcsBool_t CheckKnight(int dx, int dy)
 {
+    if (dx < 0) dx = -dx;
+    if (dy < 0) dy = -dy;
+    return (dx == 1 && dy == 2) || (dx == 2 && dy == 1);
 }
-static void
+
+static CcsBool_t
+PgnGame_Search(const PgnGame_t * self, PgnMove_t * move, PgnPiece_t piece,
+	       CcsBool_t (* checker)(int dx, int dy))
+{
+    CcsBool_t found;
+    int fx, fx0, fx1, fy, fy0, fy1;
+    int tx, tx0, tx1, ty, ty0, ty1;
+    const PgnGameStatus_t * status = &self->status;
+
+    found = FALSE;
+    if (move->fx == -1) { fx0 = 0; fx1 = 7; }
+    else { fx0 = fx1 = move->fx; }
+    if (move->fy == -1) { fy0 = 0; fy1 = 7; }
+    else { fy0 = fy1 = move->fy; }
+    if (move->tx == -1) { tx0 = 0; tx1 = 7; }
+    else { tx0 = tx1 = move->tx; }
+    if (move->ty == -1) { ty0 = 0; ty1 = 7; }
+    else { ty0 = ty1 = move->ty; }
+
+    for (fy = fy0; fy <= fy1; ++fy)
+	for (fx = fx0; fx <= fx1; ++fx) {
+	    if (status->board[fy][fx] != piece) continue;
+	    for (ty = ty0; ty <= ty1; ++ty)
+		for (tx = tx0; tx <= tx0; ++tx) {
+		    if (fx == fy && tx == ty) continue;
+		    if (CheckColor(status->board[tx][ty], move->WhiteOrNot))
+			continue;
+		    if (!checker(tx - fx, ty - fy))
+			continue;
+		    if (found) return FALSE; /* Multiple possibility found. */
+		    found = TRUE;
+		    if (move->fx == -1) move->fx = fx;
+		    if (move->fy == -1) move->fy = fy;
+		    if (move->tx == -1) move->tx = tx;
+		    if (move->ty == -1) move->tx = ty;
+		}
+	}
+    return found;
+}
+
+static CcsBool_t
 PgnGame_SearchPawn(const PgnGame_t * self, PgnMove_t * move)
 {
 }
@@ -214,63 +271,77 @@ PgnGame_FillMove(const PgnGame_t * self, PgnMove_t * move)
     move->castling = side->castling; move->castlingL = side->castlingL;
     if (!strcmp(move->value, "O-O")) {
 	if (!side->castling) return FALSE;
-	move->fPiece = move->tPiece = info->king;
-	move->fY = move->tY = info->castlingRow;
-	move->fX = 4; move->tX = 6;
-	move->kPiece = pgnBlank;
+	move->fpiece = move->tpiece = info->king;
+	move->fy = move->ty = info->castlingRow;
+	move->fx = 4; move->tx = 6;
+	move->kpiece = pgnBlank;
 	return TRUE;
     } else if (!strcmp(move->value, "O-O-O")) {
 	if (!side->castlingL) return FALSE;
-	move->fPiece = move->tPiece = info->king;
-	move->fY = move->tY = info->castlingRow;
-	move->fX = 4; move->tX = 2;
-	move->kPiece = pgnBlank;
+	move->fpiece = move->tpiece = info->king;
+	move->fy = move->ty = info->castlingRow;
+	move->fx = 4; move->tx = 2;
+	move->kpiece = pgnBlank;
 	return TRUE;
     }
-    /* Set move->fPiece, move->tPiece. */
+    /* Set move->fpiece, move->tpiece. */
     curb = move->value; cure = move->value + strlen(move->value) - 1;
     switch (*curb) {
-    case 'K': move->fPiece = info->king; ++curb; break;
-    case 'Q': move->fPiece = info->queen; ++curb; break;
-    case 'R': move->fPiece = info->rook; ++curb; break;
-    case 'B': move->fPiece = info->bishop; ++curb; break;
-    case 'N': move->fPiece = info->knight; ++curb; break;
-    default: move->fPiece = info->pawn; break;
+    case 'K': move->fpiece = info->king; ++curb; break;
+    case 'Q': move->fpiece = info->queen; ++curb; break;
+    case 'R': move->fpiece = info->rook; ++curb; break;
+    case 'B': move->fpiece = info->bishop; ++curb; break;
+    case 'N': move->fpiece = info->knight; ++curb; break;
+    default: move->fpiece = info->pawn; break;
     }
-    move->tPiece = move->upgrade == pgnBlank ? move->fPiece : move->upgrade;
-    /* Set move->fX, move->fY, move->tX, move->tY */
-    move->fX = move->fY = move->tX = move->tY = -1;
+    move->tpiece = move->upgrade == pgnBlank ? move->fpiece : move->upgrade;
+    /* Set move->fx, move->fy, move->tx, move->ty */
+    move->fx = move->fy = move->tx = move->ty = -1;
     if (curb <= cure && (c = strchr(Ystr, *cure))) {
-	move->tY = c - Ystr; --cure;
+	move->ty = c - Ystr; --cure;
     }
     if (curb <= cure && (c = strchr(Xstr, *cure))) {
-	move->tX = c - Xstr; --cure;
+	move->tx = c - Xstr; --cure;
     }
     if (curb <= cure && (c = strchr(Xstr, *curb))) {
-	move->fX = c - Xstr; ++curb;
+	move->fx = c - Xstr; ++curb;
     }
     if (curb <= cure && (c = strchr(Ystr, *curb))) {
-	move->fY = c - Ystr; ++curb;
+	move->fy = c - Ystr; ++curb;
     }
-    if (move->fX == -1 || move->fY == -1 || move->tX == -1 || move->tY == -1) {
-	if (move->fPiece == info->king) PgnGame_SearchKing(self, move);
-	else if (move->fPiece == info->queen) PgnGame_SearchQueen(self, move);
-	else if (move->fPiece == info->rook) PgnGame_SearchRook(self, move);
-	else if (move->fPiece == info->bishop) PgnGame_SearchBishop(self, move);
-	else if (move->fPiece == info->knight) PgnGame_SearchKnight(self, move);
-	else if (move->fPiece == info->pawn) PgnGame_SearchPawn(self, move);
+    if (move->tx == -1 && move->ty == -1) return FALSE;
+    if (move->fx == -1 || move->fy == -1 || move->tx == -1 || move->ty == -1) {
+	if (move->fpiece == info->king) {
+	    if (!PgnGame_Search(self, move, info->king, CheckKing))
+		return FALSE;
+	} else if (move->fpiece == info->queen) {
+	    if (!PgnGame_Search(self, move, info->queen, CheckQueen))
+		return FALSE;
+	} else if (move->fpiece == info->rook) {
+	    if (!PgnGame_Search(self, move, info->rook, CheckRook))
+		return FALSE;
+	} else if (move->fpiece == info->bishop) {
+	    if (!PgnGame_Search(self, move, info->bishop, CheckBishop))
+		return FALSE;
+	} else if (move->fpiece == info->knight) {
+	    if (!PgnGame_Search(self, move, info->knight, CheckKnight))
+		return FALSE;
+	} else if (move->fpiece == info->pawn) {
+	    if (!PgnGame_SearchPawn(self, move))
+		return FALSE;
+	}
     }
-    if (move->fX == -1 || move->fY == -1 || move->tX == -1 || move->tY == -1)
+    if (move->fx == -1 || move->fy == -1 || move->tx == -1 || move->ty == -1)
 	return FALSE;
-    /* Set move->kPiece, move->kX, move->kY */
-    if (move->fPiece == info->pawn && move->fY == info->passRow &&
-	move->fX != move->tX && status->board[move->tY][move->tX] == pgnBlank) {
+    /* Set move->kpiece, move->kx, move->ky */
+    if (move->fpiece == info->pawn && move->fy == info->passRow &&
+	move->fx != move->tx && status->board[move->ty][move->tx] == pgnBlank) {
 	/* Pawn Pass detected. */
-	if (status->board[move->fY][move->tX] == opinfo->pawn) return FALSE;
-	move->kPiece = opinfo->pawn; move->kX = move->tX; move->kY = move->fY;
+	if (status->board[move->fy][move->tx] == opinfo->pawn) return FALSE;
+	move->kpiece = opinfo->pawn; move->kx = move->tx; move->ky = move->fy;
     } else {
-	move->kPiece = status->board[move->tY][move->tX];
-	move->kX = move->tX; move->kY = move->tY;
+	move->kpiece = status->board[move->ty][move->tx];
+	move->kx = move->tx; move->ky = move->ty;
     }
     return TRUE;
 }
@@ -324,26 +395,26 @@ PgnGame_Backward(PgnGame_t * self)
     opside = cur->WhiteOrNot ? &status->black : &status->white;
     info = cur->WhiteOrNot ? &whiteInfo : &blackInfo;
     /* Basic moves */
-    status->board[cur->fY][cur->fX] = cur->fPiece;
-    status->board[cur->tY][cur->tX] = pgnBlank;
-    if (cur->fPiece != cur->tPiece)
+    status->board[cur->fy][cur->fx] = cur->fpiece;
+    status->board[cur->ty][cur->tx] = pgnBlank;
+    if (cur->fpiece != cur->tpiece)
 	side->material -=
-	    PgnPiece2Material(cur->tPiece) - PgnPiece2Material(cur->fPiece);
-    if (cur->kPiece != pgnBlank) {
-	CcsAssert(status->board[cur->kY][cur->kX] == pgnBlank);
-	status->board[cur->kY][cur->kX] = cur->kPiece;
-	opside->material += PgnPiece2Material(cur->kPiece);
+	    PgnPiece2Material(cur->tpiece) - PgnPiece2Material(cur->fpiece);
+    if (cur->kpiece != pgnBlank) {
+	CcsAssert(status->board[cur->ky][cur->kx] == pgnBlank);
+	status->board[cur->ky][cur->kx] = cur->kpiece;
+	opside->material += PgnPiece2Material(cur->kpiece);
     }
     /* Deal with castling & castlingL */
     side->castling = cur->castling; side->castlingL = cur->castlingL;
-    if (cur->fY == info->castlingRow && cur->tY == info->castlingRow &&
-	cur->fPiece == info->king && cur->fX == 4) {
-	if (cur->tX == 6) { /* castling */
+    if (cur->fy == info->castlingRow && cur->ty == info->castlingRow &&
+	cur->fpiece == info->king && cur->fx == 4) {
+	if (cur->tx == 6) { /* castling */
 	    CcsAssert(status->board[info->castlingRow][7] == info->rook);
 	    CcsAssert(status->board[info->castlingRow][5] == pgnBlank);
 	    status->board[info->castlingRow][7] = pgnBlank;
 	    status->board[info->castlingRow][5] = info->rook;
-	} else if (cur->tY == 2) { /* castlingL */
+	} else if (cur->ty == 2) { /* castlingL */
 	    CcsAssert(status->board[info->castlingRow][0] == info->rook);
 	    CcsAssert(status->board[info->castlingRow][1] == pgnBlank);
 	    CcsAssert(status->board[info->castlingRow][3] == pgnBlank);
@@ -364,30 +435,30 @@ PgnGame_Forward(PgnGame_t * self)
 
     if (self->moveCur == self->moveLast) return;
     /* Basic moves */
-    if (cur->kPiece != pgnBlank) {
-	CcsAssert(status->board[cur->kY][cur->kX] == cur->kPiece);
-	status->board[cur->kY][cur->kX] = pgnBlank;
-	opside->material -= PgnPiece2Material(cur->kPiece);
+    if (cur->kpiece != pgnBlank) {
+	CcsAssert(status->board[cur->ky][cur->kx] == cur->kpiece);
+	status->board[cur->ky][cur->kx] = pgnBlank;
+	opside->material -= PgnPiece2Material(cur->kpiece);
     }
-    status->board[cur->fY][cur->fX] = pgnBlank;
-    status->board[cur->tY][cur->tX] = cur->tPiece;
-    if (cur->fPiece != cur->tPiece)
+    status->board[cur->fy][cur->fx] = pgnBlank;
+    status->board[cur->ty][cur->tx] = cur->tpiece;
+    if (cur->fpiece != cur->tpiece)
 	side->material +=
-	    PgnPiece2Material(cur->tPiece) - PgnPiece2Material(cur->fPiece);
+	    PgnPiece2Material(cur->tpiece) - PgnPiece2Material(cur->fpiece);
     /* Deal with castling & castlingL */
     CcsAssert(cur->castling == side->castling);
     CcsAssert(cur->castlingL == side->castlingL);
     if ((side->castling || side->castlingL) &&
-	cur->fY == info->castlingRow) {
-	if (cur->fPiece == info->king) {
-	    if (cur->fX == 4 && cur->tX == 6) { /* Short castling */
+	cur->fy == info->castlingRow) {
+	if (cur->fpiece == info->king) {
+	    if (cur->fx == 4 && cur->tx == 6) { /* Short castling */
 		CcsAssert(side->castling);
 		CcsAssert(status->board[info->castlingRow][0] == info->rook);
 		CcsAssert(status->board[info->castlingRow][1] == pgnBlank);
 		CcsAssert(status->board[info->castlingRow][3] == pgnBlank);
 		status->board[info->castlingRow][0] = pgnBlank;
 		status->board[info->castlingRow][3] = info->rook;
-	    } else if (cur->fX == 4 && cur->tX == 2) { /* Long castling */
+	    } else if (cur->fx == 4 && cur->tx == 2) { /* Long castling */
 		CcsAssert(side->castlingL);
 		CcsAssert(status->board[info->castlingRow][7] == info->rook);
 		CcsAssert(status->board[info->castlingRow][5] == pgnBlank);
@@ -395,9 +466,9 @@ PgnGame_Forward(PgnGame_t * self)
 		status->board[info->castlingRow][5] = info->rook;
 	    }
 	    side->castling = side->castlingL = FALSE;
-	} else if (cur->fPiece == info->rook) {
-	    if (side->castling && cur->fX == 7) side->castling = FALSE;
-	    else if (side->castlingL && cur->fX == 0) side->castlingL = FALSE;
+	} else if (cur->fpiece == info->rook) {
+	    if (side->castling && cur->fx == 7) side->castling = FALSE;
+	    else if (side->castlingL && cur->fx == 0) side->castlingL = FALSE;
 	}
     }
     /* Forward cur */
