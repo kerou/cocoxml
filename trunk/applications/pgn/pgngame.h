@@ -15,8 +15,8 @@
   with this program; if not, write to the Free Software Foundation, Inc., 
   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
-#ifndef COCO_PGNOPER_H
-#define COCO_PGNOPER_H
+#ifndef COCO_PGNGAME_H
+#define COCO_PGNGAME_H
 
 #ifndef COCO_CDEFS_H
 #include "c/CDefs.h"
@@ -32,40 +32,32 @@ typedef enum {
     bBishop = 'b', bKnight = 'n', bPawn = 'p'
 }  PgnPiece_t;
 
-typedef struct PgnBoard_s PgnBoard_t;
-typedef struct PgnMove_s PgnMove_t;
-typedef struct PgnMovesArr_s PgnMovesArr_t;
-typedef struct PgnGame_s PgnGame_t;
+typedef struct {
+    const char * playerName;
+    int playerScore;
+    int material;
+    CcsBool_t castling;
+    CcsBool_t castlingL;
+}  PgnSide_t;
 
-struct PgnBoard_s {
-    char board[8][9];
-    int white_material;
-    int black_material;
-};
-PgnBoard_t * PgnBoard(PgnBoard_t * self);
-void PgnBoard_Destruct(PgnBoard_t * self);
-
-CcsBool_t PgnBoard_Move(PgnBoard_t * self, const PgnMove_t * move);
-CcsBool_t PgnBoard_Revoke(PgnBoard_t * self, const PgnMove_t * move);
-
-struct PgnMove_s {
+typedef struct {
     CcsBool_t WhiteOrNot;
     char * value;
-};
+}  PgnMove_t;
 PgnMove_t * PgnMove(CcsBool_t WhiteOrNot, const char * value);
 void PgnMove_Destruct(PgnMove_t * self);
 
 #define  SZ_MOVES_ARR 32
+typedef struct PgnMovesArr_s PgnMovesArr_t;
 struct PgnMovesArr_s {
     PgnMovesArr_t * next;
     PgnMove_t ** cur;
     PgnMove_t * moves[SZ_MOVES_ARR];
 };
 
+typedef struct PgnGame_s PgnGame_t;
 struct PgnGame_s {
     PgnGame_t * next;
-
-    PgnBoard_t board;
 
     char * Event;
     char * Site;
@@ -73,11 +65,13 @@ struct PgnGame_s {
     char * Round;
     char * White;
     char * Black;
-    char * WhiteElo;
-    char * BlackElo;
     char * TimeControl;
     char * Result;
     char * resultInfo;
+
+    char board[8][9];
+    PgnSide_t white;
+    PgnSide_t black;
 
     PgnMovesArr_t movesArr;
     PgnMovesArr_t * movesArrLast;
@@ -91,6 +85,11 @@ void PgnGame_Destruct(PgnGame_t * self);
 
 CcsBool_t PgnGame_AppendMove(PgnGame_t * self, PgnMove_t * move);
 
+void PgnGame_ToStart(PgnGame_t * self);
+void PgnGame_Backward(PgnGame_t * self);
+void PgnGame_Forward(PgnGame_t * self);
+void PgnGame_ToEnd(PgnGame_t * self);
+
 EXTC_END
 
-#endif /* COCO_PGNOPER_H */
+#endif /* COCO_PGNGAME_H */

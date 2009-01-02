@@ -15,37 +15,7 @@
   with this program; if not, write to the Free Software Foundation, Inc., 
   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
-#include  "pgnoper.h"
-
-PgnBoard_t *
-PgnBoard(PgnBoard_t * self)
-{
-    strcpy(self->board[0], "RNBQKBNR");
-    strcpy(self->board[1], "PPPPPPPP");
-    strcpy(self->board[2], "        ");
-    strcpy(self->board[3], "        ");
-    strcpy(self->board[4], "        ");
-    strcpy(self->board[5], "        ");
-    strcpy(self->board[6], "pppppppp");
-    strcpy(self->board[6], "rnbqkbnr");
-    self->white_material = 39;
-    self->white_material = 39;
-    return self;
-}
-
-void PgnBoard_Destruct(PgnBoard_t * self)
-{
-}
-
-CcsBool_t
-PgnBoard_Move(PgnBoard_t * self, const PgnMove_t * move)
-{
-}
-
-CcsBool_t
-PgnBoard_Revoke(PgnBoard_t * self, const PgnMove_t * move)
-{
-}
+#include  "pgngame.h"
 
 PgnMove_t *
 PgnMove(CcsBool_t WhiteOrNot, const char * value)
@@ -53,6 +23,7 @@ PgnMove(CcsBool_t WhiteOrNot, const char * value)
     PgnMove_t * self;
     if (!(self = CcsMalloc(sizeof(PgnMove_t) + strlen(value) + 1)))
 	return NULL;
+    memset(self, 0, sizeof(PgnMove_t));
     self->WhiteOrNot = WhiteOrNot;
     self->value = (char *)(self + 1);
     strcpy(self->value, value);
@@ -85,13 +56,13 @@ PgnGame(const char * Event, const char * Site, const char * Date,
 {
     PgnGame_t * self;
     char * cur;
+    int whiteScore, blackScore;
     size_t len = safe_strlen(Event) + safe_strlen(Site) + safe_strlen(Date) +
 	safe_strlen(Round) + safe_strlen(White) + safe_strlen(Black) +
-	safe_strlen(WhiteElo) + safe_strlen(BlackElo) +
 	safe_strlen(TimeControl);
-    if (!(self = CcsMalloc(sizeof(PgnGame_t) + len))) goto errquit0;
+    if (!(self = CcsMalloc(sizeof(PgnGame_t) + len))) return NULL;
     self->next = NULL;
-    if (!PgnBoard(&self->board)) goto errquit1;
+    
     cur = (char *)(self + 1);
     self->Event = safe_append(&cur, Event);
     self->Site = safe_append(&cur, Site);
@@ -99,19 +70,35 @@ PgnGame(const char * Event, const char * Site, const char * Date,
     self->Round = safe_append(&cur, Round);
     self->White = safe_append(&cur, White);
     self->Black = safe_append(&cur, Black);
-    self->WhiteElo = safe_append(&cur, WhiteElo);
-    self->BlackElo = safe_append(&cur, BlackElo);
+    whiteScore = WhiteElo && *WhiteElo == '"' ? atoi(WhiteElo + 1) : -1;
+    blackScore = BlackElo && *BlackElo == '"' ? atoi(BlackElo + 1) : -1;
     self->TimeControl = safe_append(&cur, TimeControl);
     self->Result = NULL;
     self->resultInfo = NULL;
+
+    strcpy(self->board[0], "RNBQKBNR");
+    strcpy(self->board[1], "PPPPPPPP");
+    strcpy(self->board[2], "        ");
+    strcpy(self->board[3], "        ");
+    strcpy(self->board[4], "        ");
+    strcpy(self->board[5], "        ");
+    strcpy(self->board[6], "pppppppp");
+    strcpy(self->board[6], "rnbqkbnr");
+    self->white.playerName = self->White;
+    self->white.playerScore = whiteScore;
+    self->white.material = 39;
+    self->white.castling = TRUE;
+    self->white.castlingL = TRUE;
+    self->black.playerName = self->Black;
+    self->black.playerScore = blackScore;
+    self->black.material = 39;
+    self->black.castling = TRUE;
+    self->black.castlingL = TRUE;
+
     self->movesArr.next = NULL;
     self->movesArr.cur = self->movesArr.moves;
     self->movesArrLast = &self->movesArr;
     return self;
- errquit1:
-    CcsFree(self);
- errquit0:
-    return NULL;
 }
 
 void
@@ -128,7 +115,6 @@ PgnGame_Destruct(PgnGame_t * self)
     }
     if (self->resultInfo) CcsFree(self->resultInfo);
     if (self->Result) CcsFree(self->Result);
-    PgnBoard_Destruct(&self->board);
     CcsFree(self);
 }
 
@@ -144,5 +130,7 @@ PgnGame_AppendMove(PgnGame_t * self, PgnMove_t * move)
 	self->movesArrLast = newMovesArr;
     }
     *self->movesArrLast->cur++ = move;
+    /* Fill the other members of move according to
+     * the current status of board. */
     return TRUE;
 }
