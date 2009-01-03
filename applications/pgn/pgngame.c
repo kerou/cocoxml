@@ -157,8 +157,9 @@ PgnGame(const PgnGameStatus_t * status,
 
     self->movesArr.prev = NULL;
     self->movesArr.next = NULL;
-    self->movesArrLast = &self->movesArr;
-    self->moveCur = self->moveLast = self->movesArrLast->moves;
+    self->movesArrCur = self->movesArrLast = &self->movesArr;
+    self->moveCur = self->movesArrCur->moves;
+    self->moveLast = self->movesArrLast->moves;
     return self;
 }
 
@@ -197,23 +198,43 @@ CheckColor(PgnPiece_t piece, CcsBool_t WhiteOrNot)
     return FALSE;
 }
 
-static CcsBool_t CheckKing(int dx, int dy)
+static CcsBool_t
+CheckReach(const PgnGameStatus_t * self, int fx, int fy, int dx, int dy)
+{
+    int x, y;
+    int ax = dx == 0 ? 0 : dx > 0 ? 1 : -1;
+    int ay = dy == 0 ? 0 : dy > 0 ? 1 : -1;
+    x = fx + ax; y = fy + ay;
+    for (;;) {
+	if (x == fx + dx && y == fy + dy) break;
+	if (self->board[y][x] != pgnBlank) return FALSE;
+	x += ax; y += ay;
+    }
+    return TRUE;
+}
+static CcsBool_t
+CheckKing(const PgnGameStatus_t * self, int fx, int fy, int dx, int dy)
 {
     return dx >= -1 && dx <= 1 && dy >= -1 && dy <= 1;
 }
-static CcsBool_t CheckQueen(int dx, int dy)
+static CcsBool_t
+CheckQueen(const PgnGameStatus_t * self, int fx, int fy, int dx, int dy)
 {
-    return dx == 0 || dy == 0 || dx == dy || dx == -dy;
+    return (dx == 0 || dy == 0 || dx == dy || dx == -dy) &&
+	CheckReach(self, fx, fy, dx, dy);
 }
-static CcsBool_t CheckRook(int dx, int dy)
+static CcsBool_t
+CheckRook(const PgnGameStatus_t * self, int fx, int fy, int dx, int dy)
 {
-    return dx == 0 || dy == 0;
+    return (dx == 0 || dy == 0) && CheckReach(self, fx, fy, dx, dy);
 }
-static CcsBool_t CheckBishop(int dx, int dy)
+static CcsBool_t
+CheckBishop(const PgnGameStatus_t * self, int fx, int fy, int dx, int dy)
 {
-    return dx == dy || dx == -dy;
+    return (dx == dy || dx == -dy) && CheckReach(self, fx, fy, dx, dy);
 }
-static CcsBool_t CheckKnight(int dx, int dy)
+static CcsBool_t
+CheckKnight(const PgnGameStatus_t * self, int fx, int fy, int dx, int dy)
 {
     if (dx < 0) dx = -dx;
     if (dy < 0) dy = -dy;
@@ -222,7 +243,8 @@ static CcsBool_t CheckKnight(int dx, int dy)
 
 static CcsBool_t
 PgnGame_Search(const PgnGame_t * self, PgnMove_t * move, PgnPiece_t piece,
-	       CcsBool_t (* checker)(int dx, int dy))
+	       CcsBool_t (* checker)(const PgnGameStatus_t * self,
+				     int fx, int fy, int dx, int dy))
 {
     CcsBool_t found;
     int fx, fx0, fx1, fy, fy0, fy1;
@@ -247,7 +269,7 @@ PgnGame_Search(const PgnGame_t * self, PgnMove_t * move, PgnPiece_t piece,
 		    if (fx == fy && tx == ty) continue;
 		    if (CheckColor(status->board[ty][tx], move->WhiteOrNot))
 			continue;
-		    if (!checker(tx - fx, ty - fy))
+		    if (!checker(status, fx, fy, tx - fx, ty - fy))
 			continue;
 		    if (found) return FALSE; /* Multiple possibility found. */
 		    found = TRUE;
@@ -481,13 +503,12 @@ PgnGame_Backward(PgnGame_t * self)
 
     if (self->moveCur == self->movesArr.moves) return;
     /* Backward cur */
-    if (self->moveCur > self->movesArrCur->moves) {
-	--self->moveCur;
-    } else {
+    if (self->moveCur == self->movesArrCur->moves) {
 	CcsAssert(self->movesArrCur->prev != NULL);
 	self->movesArrCur = self->movesArrCur->prev;
-	self->moveCur = self->movesArrCur->moves + (SZ_MOVES_ARR - 1);
+	self->moveCur = self->movesArrCur->moves + SZ_MOVES_ARR;
     }
+    --self->moveCur;
     cur = *self->moveCur;
     side = cur->WhiteOrNot ? &status->white : &status->black;
     opside = cur->WhiteOrNot ? &status->black : &status->white;
@@ -525,13 +546,21 @@ PgnGame_Backward(PgnGame_t * self)
 void
 PgnGame_Forward(PgnGame_t * self)
 {
+    PgnMove_t * cur;
+    PgnSide_t * side, * opside;
+    const PgnInfo_t * info;
     PgnGameStatus_t * status = &self->status;
-    PgnMove_t * cur = *self->moveCur;
-    PgnSide_t * side = cur->WhiteOrNot ? &status->white : &status->black;
-    PgnSide_t * opside = cur->WhiteOrNot ? &status->black : &status->white;
-    const PgnInfo_t * info = cur->WhiteOrNot ? &whiteInfo : &blackInfo;
 
     if (self->moveCur == self->moveLast) return;
+    if (self->moveCur - self->movesArrCur->moves >= SZ_MOVES_ARR) {
+	CcsAssert(self->movesArrCur->next != NULL);
+	self->movesArrCur = self->movesArrCur->next;
+	self->moveCur = self->movesArrCur->moves;
+    }
+    cur = *self->moveCur;
+    side = cur->WhiteOrNot ? &status->white : &status->black;
+    opside = cur->WhiteOrNot ? &status->black : &status->white;
+    info = cur->WhiteOrNot ? &whiteInfo : &blackInfo;
     /* Basic moves */
     if (cur->kpiece != pgnBlank) {
 	CcsAssert(status->board[cur->ky][cur->kx] == cur->kpiece);
@@ -571,11 +600,6 @@ PgnGame_Forward(PgnGame_t * self)
     }
     /* Forward cur */
     ++self->moveCur;
-    if (self->moveCur >= self->movesArrCur->moves + SZ_MOVES_ARR) {
-	CcsAssert(self->movesArrCur->next != NULL);
-	self->movesArrCur = self->movesArrCur->next;
-	self->moveCur = self->movesArrCur->moves;
-    }
 }
 
 void

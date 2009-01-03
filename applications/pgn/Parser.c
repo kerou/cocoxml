@@ -262,14 +262,19 @@ PgnParser_ARound(PgnParser_t * self, PgnGame_t * game)
     PgnParser_Expect(self, 19);
     PgnParser_Move(self, &move, TRUE);
     if (!PgnGame_AppendMove(game, move)) {
-	fprintf(stderr, "Error: %s\n", move->value);
-	PgnParser_SemErr(self, self->t, "Not enough memory");
+	PgnParser_SemErr(self, self->t,
+			 "Invalid move '%s' encountered or not enough memory.",
+			 move->value);
+	PgnMove_Destruct(move);
     } else PgnGame_Show(game, move); 
     if (self->la->kind == 4 || self->la->kind == 5 || self->la->kind == 6) {
 	PgnParser_Move(self, &move, FALSE);
 	if (!PgnGame_AppendMove(game, move)) {
 	    fprintf(stderr, "Error: %s\n", move->value);
-	    PgnParser_SemErr(self, self->t, "Not enough memory");
+	    PgnParser_SemErr(self, self->t,
+			     "Invalid move '%s' encountered or not enough memory.",
+			     move->value);
+	    PgnMove_Destruct(move);
 	} else PgnGame_Show(game, move); 
     }
 }
