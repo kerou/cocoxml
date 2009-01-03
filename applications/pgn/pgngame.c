@@ -229,7 +229,6 @@ PgnGame_Search(const PgnGame_t * self, PgnMove_t * move, PgnPiece_t piece,
     int tx, tx0, tx1, ty, ty0, ty1;
     const PgnGameStatus_t * status = &self->status;
 
-    found = FALSE;
     if (move->fx == -1) { fx0 = 0; fx1 = 7; }
     else { fx0 = fx1 = move->fx; }
     if (move->fy == -1) { fy0 = 0; fy1 = 7; }
@@ -239,13 +238,14 @@ PgnGame_Search(const PgnGame_t * self, PgnMove_t * move, PgnPiece_t piece,
     if (move->ty == -1) { ty0 = 0; ty1 = 7; }
     else { ty0 = ty1 = move->ty; }
 
+    found = FALSE;
     for (fy = fy0; fy <= fy1; ++fy)
 	for (fx = fx0; fx <= fx1; ++fx) {
 	    if (status->board[fy][fx] != piece) continue;
 	    for (ty = ty0; ty <= ty1; ++ty)
-		for (tx = tx0; tx <= tx0; ++tx) {
+		for (tx = tx0; tx <= tx1; ++tx) {
 		    if (fx == fy && tx == ty) continue;
-		    if (CheckColor(status->board[tx][ty], move->WhiteOrNot))
+		    if (CheckColor(status->board[ty][tx], move->WhiteOrNot))
 			continue;
 		    if (!checker(tx - fx, ty - fy))
 			continue;
@@ -314,6 +314,7 @@ PgnGame_SearchPawn(const PgnGame_t * self, PgnMove_t * move)
     } else if (move->fy == 7) { return FALSE;
     } else { fy0 = fy1 = move->fy; }
 
+    found = FALSE;
     for (fy = fy0; fy <= fy1; ++fy)
 	for (fx = fx0; fx <= fx1; ++fx) {
 	    if (status->board[fy][fx] != info->pawn) continue;
@@ -428,6 +429,21 @@ PgnGame_FillMove(const PgnGame_t * self, PgnMove_t * move)
     return TRUE;
 }
 
+void
+PgnGame_Show(const PgnGame_t * self, const PgnMove_t * move)
+{
+    if (!move->WhiteOrNot) fprintf(stderr, " %s\n", move->value);
+    fprintf(stderr, "%s\n", self->status.board[7]);
+    fprintf(stderr, "%s\n", self->status.board[6]);
+    fprintf(stderr, "%s\n", self->status.board[5]);
+    fprintf(stderr, "%s\n", self->status.board[4]);
+    fprintf(stderr, "%s\n", self->status.board[3]);
+    fprintf(stderr, "%s\n", self->status.board[2]);
+    fprintf(stderr, "%s\n", self->status.board[1]);
+    fprintf(stderr, "%s\n", self->status.board[0]);
+    if (move->WhiteOrNot) fprintf(stderr, " %s\n", move->value);
+    fprintf(stderr, "---------\n");
+}
 CcsBool_t
 PgnGame_AppendMove(PgnGame_t * self, PgnMove_t * move)
 {
@@ -534,18 +550,18 @@ PgnGame_Forward(PgnGame_t * self)
 	cur->fy == info->castlingRow) {
 	if (cur->fpiece == info->king) {
 	    if (cur->fx == 4 && cur->tx == 6) { /* Short castling */
+		CcsAssert(side->castlingL);
+		CcsAssert(status->board[info->castlingRow][7] == info->rook);
+		CcsAssert(status->board[info->castlingRow][5] == pgnBlank);
+		status->board[info->castlingRow][7] = pgnBlank;
+		status->board[info->castlingRow][5] = info->rook;
+	    } else if (cur->fx == 4 && cur->tx == 2) { /* Long castling */
 		CcsAssert(side->castling);
 		CcsAssert(status->board[info->castlingRow][0] == info->rook);
 		CcsAssert(status->board[info->castlingRow][1] == pgnBlank);
 		CcsAssert(status->board[info->castlingRow][3] == pgnBlank);
 		status->board[info->castlingRow][0] = pgnBlank;
 		status->board[info->castlingRow][3] = info->rook;
-	    } else if (cur->fx == 4 && cur->tx == 2) { /* Long castling */
-		CcsAssert(side->castlingL);
-		CcsAssert(status->board[info->castlingRow][7] == info->rook);
-		CcsAssert(status->board[info->castlingRow][5] == pgnBlank);
-		status->board[info->castlingRow][7] = pgnBlank;
-		status->board[info->castlingRow][5] = info->rook;
 	    }
 	    side->castling = side->castlingL = FALSE;
 	} else if (cur->fpiece == info->rook) {

@@ -103,6 +103,7 @@ PgnGame(const PgnGameStatus_t * status,
 	const char * WhiteElo, const char * BlackElo, const char * TimeControl);
 void PgnGame_Destruct(PgnGame_t * self);
 
+void PgnGame_Show(const PgnGame_t * self, const PgnMove_t * move);
 CcsBool_t PgnGame_AppendMove(PgnGame_t * self, PgnMove_t * move);
 
 void PgnGame_ToStart(PgnGame_t * self);

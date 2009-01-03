@@ -21,7 +21,7 @@
 #define LNWIDTH2 30
 
 static void
-PgnGame_Show(PgnGame_t * game)
+PgnGame_ShowEx(PgnGame_t * game)
 {
     char lnbuf[LNWIDTH + 1], sidebuf[LNWIDTH2 + 1];
     lnbuf[LNWIDTH] = 0;
@@ -54,7 +54,7 @@ main(int argc, char * argv[])
     if (!PgnParser(&parser, argv[1], stderr)) goto errquit0;
     PgnParser_Parse(&parser);
     for (cur = parser.firstGame; cur; cur = cur->next)
-	PgnGame_Show(cur);
+	PgnGame_ShowEx(cur);
     PgnParser_Destruct(&parser);
     return 0;
  errquit0:
