@@ -271,12 +271,12 @@ PgnGame_Search(const PgnGame_t * self, PgnMove_t * move, PgnPiece_t piece,
 			continue;
 		    if (!checker(status, fx, fy, tx - fx, ty - fy))
 			continue;
+#if 0 		    /* Choose the last one */
 		    if (found) return FALSE; /* Multiple possibility found. */
+#endif
 		    found = TRUE;
-		    if (move->fx == -1) move->fx = fx;
-		    if (move->fy == -1) move->fy = fy;
-		    if (move->tx == -1) move->tx = tx;
-		    if (move->ty == -1) move->tx = ty;
+		    move->fx = fx; move->fy = fy;
+		    move->tx = tx; move->ty = ty;
 		}
 	}
     return found;
@@ -353,15 +353,15 @@ PgnGame_SearchPawn(const PgnGame_t * self, PgnMove_t * move)
 			if (!CheckPawnKill(status, move, fx, fy, tx, ty))
 			    continue;
 		    }
+#if 0               /* Choose the last one. */
 		    if (found) return FALSE;
+#endif
 		    found = TRUE;
-		    if (move->fx == -1) move->fx = fx;
-		    if (move->fy == -1) move->fy = fy;
-		    if (move->tx == -1) move->tx = tx;
-		    if (move->ty == -1) move->ty = ty;
+		    move->fx = fx; move->fy = fy;
+		    move->tx = tx; move->ty = ty;
 		}
 	}
-    return TRUE;
+    return found;
 }
 
 static CcsBool_t
@@ -477,7 +477,7 @@ PgnGame_GetMove(PgnGame_t * self)
     if (PgnGame_AtEnd(self)) return NULL;
     if (self->moveCur - self->movesArrCur->moves >= SZ_MOVES_ARR) {
 	CcsAssert(self->movesArrCur->next != NULL);
-	return self->movesArrCur->moves[0];
+	return self->movesArrCur->next->moves[0];
     }
     return self->moveCur[0];
 }
