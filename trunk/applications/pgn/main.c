@@ -40,6 +40,7 @@ PgnGame_ShowEx(PgnGame_t * game)
     int index, y;
     const PgnMove_t * move;
     char moves[LNMOVES][16];
+    int materials[LNMOVES][2];
     char boards[LNMOVES][8][9];
     char lnbuf[LNWIDTH + 1];
     char movebuf[9];
@@ -69,6 +70,8 @@ PgnGame_ShowEx(PgnGame_t * game)
     while (!PgnGame_AtEnd(game)) {
 	for (index = 0; index < LNMOVES; ++index) {
 	    moves[index][0] = 0;
+	    materials[index][0] = 0;
+	    materials[index][1] = 0;
 	    for (y = 0; y < 8; ++y)
 		strcpy(boards[index][y], "        ");
 	}
@@ -82,6 +85,8 @@ PgnGame_ShowEx(PgnGame_t * game)
 		snprintf(moves[index], sizeof(moves[index]), "%s=%c%s",
 			 move->value, toupper(move->upgrade), move->annotation);
 	    PgnGame_Forward(game);
+	    materials[index][0] = game->status.white.material;
+	    materials[index][1] = game->status.black.material;
 	    for (y = 0; y < 8; ++y)
 		strcpy(boards[index][y], game->status.board[y]);
 	}
@@ -104,6 +109,10 @@ PgnGame_ShowEx(PgnGame_t * game)
 		memcpy(movebuf + (8 - strlen(moves[index])) / 2,
 		       moves[index], strlen(moves[index]));
 	    printf(" %8s ", movebuf);
+	}
+	printf("\n");
+	for (index = 0; index < LNMOVES; ++index) {
+	    printf(" %2d vs %2d ", materials[index][0], materials[index][1]);
 	}
 	printf("\n");
     }
