@@ -266,7 +266,7 @@ PgnParser_ARound(PgnParser_t * self, PgnGame_t * game)
 			 "Invalid move '%s' encountered or not enough memory.",
 			 move->value);
 	PgnMove_Destruct(move);
-    } else PgnGame_Show(game, move); 
+    } 
     if (self->la->kind == 4 || self->la->kind == 5 || self->la->kind == 6) {
 	PgnParser_Move(self, &move, FALSE);
 	if (!PgnGame_AppendMove(game, move)) {
@@ -275,7 +275,7 @@ PgnParser_ARound(PgnParser_t * self, PgnGame_t * game)
 			     "Invalid move '%s' encountered or not enough memory.",
 			     move->value);
 	    PgnMove_Destruct(move);
-	} else PgnGame_Show(game, move); 
+	} 
     }
 }
 

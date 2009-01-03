@@ -16,29 +16,100 @@
   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
 #include  "Parser.h"
+#include  <ctype.h>
 
-#define LNWIDTH  60
-#define LNWIDTH2 30
+#define LNWIDTH  80
+#define LNWIDTH2 40
+#define LNMOVES  8
+
+static void
+PgnGame_Center(char * lnbuf, int center, size_t space, const char * fmt, ...)
+{
+    va_list ap;
+    char buf[LNWIDTH + 1];
+
+    va_start(ap, fmt);
+    vsnprintf(buf, space + 1, fmt, ap);
+    va_end(ap);
+    memcpy(lnbuf + center - strlen(buf) / 2, buf, strlen(buf));
+}
 
 static void
 PgnGame_ShowEx(PgnGame_t * game)
 {
-    char lnbuf[LNWIDTH + 1], sidebuf[LNWIDTH2 + 1];
+    int index, y;
+    const PgnMove_t * move;
+    char moves[LNMOVES][16];
+    char boards[LNMOVES][8][9];
+    char lnbuf[LNWIDTH + 1];
+    char movebuf[9];
     lnbuf[LNWIDTH] = 0;
 
     memset(lnbuf, '-', LNWIDTH);
     printf("%s\n", lnbuf);
 
     memset(lnbuf, ' ', LNWIDTH);
-    lnbuf[LNWIDTH2 - 1] = 'v'; lnbuf[LNWIDTH2] = 's';
-    snprintf(sidebuf, LNWIDTH2 - 3, "%s(%d)", game->White, game->WhiteElo);
-    memcpy(lnbuf + 1 + (LNWIDTH2 - 3 - strlen(sidebuf)) / 2,
-	   sidebuf, strlen(sidebuf));
-    snprintf(sidebuf, sizeof(sidebuf), "%s(%d)", game->Black, game->BlackElo);
-    memcpy(lnbuf + LNWIDTH2 + 2 + (LNWIDTH2 - 3 - strlen(sidebuf)) / 2,
-	   sidebuf, strlen(sidebuf));
+    PgnGame_Center(lnbuf, LNWIDTH2 - 1, LNWIDTH - 4, "Date: %s", game->Date);
     printf("%s\n", lnbuf);
-    printf("------------------------------------------------------------\n");
+
+    memset(lnbuf, ' ', LNWIDTH);
+    PgnGame_Center(lnbuf, LNWIDTH2 - 1, 2, "vs");
+    PgnGame_Center(lnbuf, LNWIDTH / 4, LNWIDTH2 - 3,
+		   "%s(%d)", game->White, game->WhiteElo);
+    PgnGame_Center(lnbuf, LNWIDTH * 3 / 4, LNWIDTH2 - 3,
+		   "%s(%d)", game->Black, game->BlackElo);
+    printf("%s\n", lnbuf);
+
+    memset(lnbuf, ' ', LNWIDTH);
+    PgnGame_Center(lnbuf, LNWIDTH2 - 1, LNWIDTH - 4,
+		   "%s (%s)", game->resultInfo, game->Result);
+    printf("%s\n", lnbuf);
+
+    PgnGame_ToStart(game);
+    while (!PgnGame_AtEnd(game)) {
+	for (index = 0; index < LNMOVES; ++index) {
+	    moves[index][0] = 0;
+	    for (y = 0; y < 8; ++y)
+		strcpy(boards[index][y], "        ");
+	}
+	for (index = 0; index < LNMOVES; ++index) {
+	    if (PgnGame_AtEnd(game)) break;
+	    move = PgnGame_GetMove(game);
+	    if (move->upgrade == pgnBlank)
+		snprintf(moves[index], sizeof(moves[index]), "%s%s",
+			 move->value, move->annotation);
+	    else
+		snprintf(moves[index], sizeof(moves[index]), "%s=%c%s",
+			 move->value, toupper(move->upgrade), move->annotation);
+	    PgnGame_Forward(game);
+	    for (y = 0; y < 8; ++y)
+		strcpy(boards[index][y], game->status.board[y]);
+	}
+	for (index = 0; index < LNMOVES; ++index) {
+	    memset(movebuf, ' ', 8); movebuf[8] = 0;
+	    if (index % 2 != 0)
+		memcpy(movebuf + (8 - strlen(moves[index])) / 2,
+		       moves[index], strlen(moves[index]));
+	    printf(" %8s ", movebuf);
+	}
+	printf("\n");
+	for (y = 7; y >= 0; --y) {
+	    for (index = 0; index < LNMOVES; ++index)
+		printf(" %8s ", boards[index][y]);
+	    printf("\n");
+	}
+	for (index = 0; index < LNMOVES; ++index) {
+	    memset(movebuf, ' ', 8); movebuf[8] = 0;
+	    if (index % 2 == 0)
+		memcpy(movebuf + (8 - strlen(moves[index])) / 2,
+		       moves[index], strlen(moves[index]));
+	    printf(" %8s ", movebuf);
+	}
+	printf("\n");
+    }
+
+    memset(lnbuf, '-', LNWIDTH);
+    printf("%s\n", lnbuf);
 }
 
 int

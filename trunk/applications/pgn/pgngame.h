@@ -106,6 +106,9 @@ void PgnGame_Destruct(PgnGame_t * self);
 void PgnGame_Show(const PgnGame_t * self, const PgnMove_t * move);
 CcsBool_t PgnGame_AppendMove(PgnGame_t * self, PgnMove_t * move);
 
+const PgnMove_t * PgnGame_GetMove(PgnGame_t * self);
+CcsBool_t PgnGame_AtBegin(PgnGame_t * self);
+CcsBool_t PgnGame_AtEnd(PgnGame_t * self);
 void PgnGame_ToStart(PgnGame_t * self);
 void PgnGame_Backward(PgnGame_t * self);
 void PgnGame_Forward(PgnGame_t * self);
