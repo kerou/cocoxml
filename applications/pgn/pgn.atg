@@ -117,14 +117,14 @@ ARound<PgnGame_t * game> = (. PgnMove_t * move; .)
 				 		  "Invalid move '%s' encountered or not enough memory.",
 						  move->value);
 				 PgnMove_Destruct(move);
-			     } else PgnGame_Show(game, move); .)
+			     } .)
   [ Move<&move, FALSE>    (. if (!PgnGame_AppendMove(game, move)) {
     			         fprintf(stderr, "Error: %s\n", move->value);
     			         PgnParser_SemErr(self, self->t,
 				 		  "Invalid move '%s' encountered or not enough memory.",
 						  move->value);
 				 PgnMove_Destruct(move);
-			     } else PgnGame_Show(game, move); .)
+			     } .)
   ]
 .
 
