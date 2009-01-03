@@ -19,7 +19,11 @@
 
 typedef struct {
     int castlingRow;
-    int passRow;
+    int pawnToMin;
+    int pawnToMax;
+    int pawnStep;
+    int step2fy;  /* The pawn in this row can go forward step + step. */
+    int passfy;   /* Kill the passed pawn row. */
     PgnPiece_t king;
     PgnPiece_t queen;
     PgnPiece_t rook;
@@ -28,10 +32,12 @@ typedef struct {
     PgnPiece_t pawn;
 }  PgnInfo_t;
 static const PgnInfo_t whiteInfo = {
-    0, 4, wKing, wQueen, wRook, wBishop, wKnight, wPawn
+    0, 2, 7, 1, 1, 4,
+    wKing, wQueen, wRook, wBishop, wKnight, wPawn
 };
 static const PgnInfo_t blackInfo = {
-    7, 3, bKing, bQueen, bRook, bBishop, bKnight, bPawn
+    7, 0, 5, -1, 6, 3,
+    bKing, bQueen, bRook, bBishop, bKnight, bPawn
 };
 
 static int
@@ -255,8 +261,84 @@ PgnGame_Search(const PgnGame_t * self, PgnMove_t * move, PgnPiece_t piece,
 }
 
 static CcsBool_t
+CheckPawnMove(const PgnGameStatus_t * status, PgnMove_t * move,
+	      int fx, int fy, int tx, int ty)
+{
+    const PgnInfo_t * info = move->WhiteOrNot ? &whiteInfo : &blackInfo;
+    if (status->board[ty][tx] != pgnBlank) return FALSE;
+    if (fy + info->pawnStep == ty) return TRUE;
+    if (fy != info->step2fy) return FALSE;
+    return status->board[fy + info->pawnStep][tx] == pgnBlank;
+}
+static CcsBool_t
+CheckPawnKill(const PgnGameStatus_t * status, PgnMove_t * move,
+	      int fx, int fy, int tx, int ty)
+{
+    const PgnInfo_t * info = move->WhiteOrNot ? &whiteInfo : &blackInfo;
+    const PgnInfo_t * opinfo = move->WhiteOrNot ? &blackInfo : &whiteInfo;
+    if (fy + info->pawnStep != ty) return FALSE;
+    if (CheckColor(status->board[ty][tx], !move->WhiteOrNot)) return TRUE;
+    if (fy != info->passfy) return FALSE;
+    return status->board[fy][tx] == opinfo->pawn &&
+	status->board[ty][tx] == pgnBlank;
+}
+
+static CcsBool_t
 PgnGame_SearchPawn(const PgnGame_t * self, PgnMove_t * move)
 {
+    CcsBool_t found;
+    int fx, fx0, fx1, fy, fy0, fy1;
+    int tx, tx0, tx1, ty, ty0, ty1;
+    const PgnGameStatus_t * status = &self->status;
+    const PgnInfo_t * info = move->WhiteOrNot ? &whiteInfo : &blackInfo;
+
+    if (move->tx == -1) { tx0 = 0; tx1 = 7; }
+    else { tx0 = tx1 = move->tx; }
+    if (move->ty == -1) { ty0 = info->pawnToMin; ty1 = info->pawnToMax; }
+    else if (move->ty < info->pawnToMin) return FALSE;
+    else if (move->ty > info->pawnToMax) return FALSE;
+    else { ty0 = ty1 = move->ty; }
+    if (move->fx == -1) {
+	fx0 = tx0 == 0 ? 0: tx0 - 1;
+	fx1 = tx1 == 7 ? 7: tx1 + 1;
+    } else { fx0 = fx1 = move->fx; }
+    if (move->fy == -1) {
+	if (move->WhiteOrNot) {
+	    fy0 = ty0 == 3 ? 1 : ty0 - 1;
+	    fy1 = ty1 - 1;
+	} else {
+	    fy0 = ty0 + 1;
+	    fy1 = ty1 == 4 ? 6 : ty1 + 1;
+	}
+    } else if (move->fy == 0) { return FALSE;
+    } else if (move->fy == 7) { return FALSE;
+    } else { fy0 = fy1 = move->fy; }
+
+    for (fy = fy0; fy <= fy1; ++fy)
+	for (fx = fx0; fx <= fx1; ++fx) {
+	    if (status->board[fy][fx] != info->pawn) continue;
+	    for (ty = ty0; ty <= ty1; ++ty)
+		for (tx = tx0; tx <= tx1; ++tx) {
+		    if (fy == ty) continue;
+		    if (fx + 1 < tx || fx - 1 > tx) continue;
+		    if (CheckColor(status->board[ty][tx], move->WhiteOrNot))
+			continue;
+		    if (fx == tx) {
+			if (!CheckPawnMove(status, move, fx, fy, tx, ty))
+			    continue;
+		    } else {
+			if (!CheckPawnKill(status, move, fx, fy, tx, ty))
+			    continue;
+		    }
+		    if (found) return FALSE;
+		    found = TRUE;
+		    if (move->fx == -1) move->fx = fx;
+		    if (move->fy == -1) move->fy = fy;
+		    if (move->tx == -1) move->tx = tx;
+		    if (move->ty == -1) move->ty = ty;
+		}
+	}
+    return TRUE;
 }
 
 static CcsBool_t
@@ -334,10 +416,10 @@ PgnGame_FillMove(const PgnGame_t * self, PgnMove_t * move)
     if (move->fx == -1 || move->fy == -1 || move->tx == -1 || move->ty == -1)
 	return FALSE;
     /* Set move->kpiece, move->kx, move->ky */
-    if (move->fpiece == info->pawn && move->fy == info->passRow &&
+    if (move->fpiece == info->pawn && move->fy == info->passfy &&
 	move->fx != move->tx && status->board[move->ty][move->tx] == pgnBlank) {
 	/* Pawn Pass detected. */
-	if (status->board[move->fy][move->tx] == opinfo->pawn) return FALSE;
+	if (status->board[move->fy][move->tx] != opinfo->pawn) return FALSE;
 	move->kpiece = opinfo->pawn; move->kx = move->tx; move->ky = move->fy;
     } else {
 	move->kpiece = status->board[move->ty][move->tx];
