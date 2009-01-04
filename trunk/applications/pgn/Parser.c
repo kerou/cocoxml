@@ -122,6 +122,7 @@ PgnParser_SemErrT(PgnParser_t * self, const char * format, ...)
     va_end(ap);
 }
 
+#define ERRQUIT  errquit1
 PgnParser_t *
 PgnParser(PgnParser_t * self, const char * fname, FILE * errfp)
 {
@@ -133,7 +134,6 @@ PgnParser(PgnParser_t * self, const char * fname, FILE * errfp)
     self->firstGame = self->lastGame = NULL;
     /*---- enable ----*/
     return self;
- ERRQUIT:
  errquit1:
     CcsErrorPool_Destruct(&self->errpool);
  errquit0:
