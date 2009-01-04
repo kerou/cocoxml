@@ -124,6 +124,7 @@ CcxParser_SemErrT(CcxParser_t * self, const char * format, ...)
     va_end(ap);
 }
 
+#define ERRQUIT errquit1
 CcxParser_t *
 CcxParser(CcxParser_t * self, const char * fname, FILE * errfp)
 {
@@ -133,7 +134,6 @@ CcxParser(CcxParser_t * self, const char * fname, FILE * errfp)
     /*---- constructor ----*/
     /*---- enable ----*/
     return self;
- ERRQUIT:
  errquit1:
     CcsErrorPool_Destruct(&self->errpool);
  errquit0:

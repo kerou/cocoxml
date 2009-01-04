@@ -150,6 +150,7 @@ RssParser_SemErrT(RssParser_t * self, const char * format, ...)
     va_end(ap);
 }
 
+#define ERRQUIT errquit1
 RssParser_t *
 RssParser(RssParser_t * self, const char * fname, FILE * errfp)
 {
@@ -161,7 +162,6 @@ RssParser(RssParser_t * self, const char * fname, FILE * errfp)
     if (!CcRss(&self->rss)) goto ERRQUIT;
     /*---- enable ----*/
     return self;
- ERRQUIT:
  errquit1:
     CcsErrorPool_Destruct(&self->errpool);
  errquit0:

@@ -158,6 +158,7 @@ CcsParser_SemErrT(CcsParser_t * self, const char * format, ...)
     va_end(ap);
 }
 
+#define ERRQUIT  errquit1
 CcsParser_t *
 CcsParser(CcsParser_t * self, const char * fname, FILE * errfp)
 {
@@ -177,7 +178,6 @@ CcsParser(CcsParser_t * self, const char * fname, FILE * errfp)
     self->syntax = &self->globals.syntax;
     /*---- enable ----*/
     return self;
- ERRQUIT:
  errquit1:
     CcsErrorPool_Destruct(&self->errpool);
  errquit0:
