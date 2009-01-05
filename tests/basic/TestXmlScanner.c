@@ -54,6 +54,7 @@ static const CcsXmlSpec_t specs[] = {
 int
 main(int argc, char * argv[])
 {
+    FILE * infp;
     CcsXmlScanner_t scanner;
     CcsToken_t * t, * la;
 
@@ -61,7 +62,11 @@ main(int argc, char * argv[])
 	fprintf(stderr, "argc != 2\n");
 	return -1;
     }
-    CcsXmlScanner(&scanner, NULL, argv[1]);
+    if (!(infp = fopen(argv[1], "r"))) {
+	fprintf(stderr, "fopen(%s, \"r\") failed.\n", argv[1]);
+	return -1;
+    }
+    CcsXmlScanner(&scanner, NULL, infp);
     t = NULL; la = CcsXmlScanner_GetDummy(&scanner);
     for (;;) {
 	if (t) CcsXmlScanner_DecRef(&scanner, t);
@@ -76,5 +81,6 @@ main(int argc, char * argv[])
     if (t) CcsXmlScanner_DecRef(&scanner, t);
     if (la) CcsXmlScanner_DecRef(&scanner, la);
     CcsXmlScanner_Destruct(&scanner);
+    fclose(infp);
     return 0;
 }
