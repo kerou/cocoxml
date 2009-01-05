@@ -33,7 +33,7 @@ TOKENS
     string    = '"' { stringCh | '\\' printable } '"'.
     eol       = (cr lf) | lf.
 
-COMMENTS FROM "#" to lf
+COMMENTS FROM "#" TO lf
 
 IGNORE tab
 
@@ -42,13 +42,5 @@ PRODUCTIONS
 Kconfig (. .)
 =
 .
-
-source = "source" string eol.
-
-if = "if" "endif".
-
-menu = "menu" "endmenu".
-
-config = "config" ident eol INDENT_IN deps [INDENT_IN "help" INDENT_OUT].
 
 END Kconfig.

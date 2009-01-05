@@ -2,6 +2,8 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: GPLv2
 
-Import('env', 'lib')
+Import('env', 'lib', 'cocoexe')
 
+env.Command(['Scanner.h', 'Scanner.c', 'Parser.h', 'Parser.c'],
+            'Kconfig.atg', '%s $SOURCES' % str(cocoexe[0]))
 env.Program('TestKconfig', ['main.c', 'Parser.c', 'Scanner.c', lib])
