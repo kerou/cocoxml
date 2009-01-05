@@ -60,8 +60,8 @@ CExprScanner_Init(CExprScanner_t * self)
 {
     /*---- declarations ----*/
     self->eofSym = 0;
-    self->maxT = 22;
-    self->noSym = 22;
+    self->maxT = 24;
+    self->noSym = 24;
     /*---- enable ----*/
 
     self->busyTokenList = NULL;
@@ -208,19 +208,21 @@ static const Char2State_t c2sArr[] = {
     { EoF, EoF, -1 },
     { 33, 33, 9 },	/* '!' '!' */
     { 37, 37, 19 },	/* '%' '%' */
-    { 38, 38, 21 },	/* '&' '&' */
+    { 38, 38, 23 },	/* '&' '&' */
+    { 40, 40, 20 },	/* '(' '(' */
+    { 41, 41, 21 },	/* ')' ')' */
     { 42, 42, 17 },	/* '*' '*' */
     { 43, 43, 15 },	/* '+' '+' */
     { 45, 45, 16 },	/* '-' '-' */
     { 47, 47, 18 },	/* '/' '/' */
     { 48, 57, 1 },	/* '0' '9' */
     { 58, 58, 3 },	/* ':' ':' */
-    { 60, 60, 23 },	/* '<' '<' */
+    { 60, 60, 25 },	/* '<' '<' */
     { 61, 61, 7 },	/* '=' '=' */
-    { 62, 62, 22 },	/* '>' '>' */
+    { 62, 62, 24 },	/* '>' '>' */
     { 63, 63, 2 },	/* '?' '?' */
     { 94, 94, 6 },	/* '^' '^' */
-    { 124, 124, 20 },	/* '|' '|' */
+    { 124, 124, 22 },	/* '|' '|' */
     /*---- enable ----*/
 };
 static const int c2sNum = sizeof(c2sArr) / sizeof(c2sArr[0]);
@@ -519,20 +521,24 @@ CExprScanner_NextToken(CExprScanner_t * self)
     case 19:
 	{ kind = 21; break; }
     case 20:
+	{ kind = 22; break; }
+    case 21:
+	{ kind = 23; break; }
+    case 22:
 	if (self->ch == '|') {
 	    CExprScanner_GetCh(self); goto case_4;
 	} else { kind = 6; break; }
-    case 21:
+    case 23:
 	if (self->ch == '&') {
 	    CExprScanner_GetCh(self); goto case_5;
 	} else { kind = 8; break; }
-    case 22:
+    case 24:
 	if (self->ch == '=') {
 	    CExprScanner_GetCh(self); goto case_11;
 	} else if (self->ch == '>') {
 	    CExprScanner_GetCh(self); goto case_14;
 	} else { kind = 11; break; }
-    case 23:
+    case 25:
 	if (self->ch == '=') {
 	    CExprScanner_GetCh(self); goto case_12;
 	} else if (self->ch == '<') {

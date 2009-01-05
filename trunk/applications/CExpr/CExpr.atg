@@ -130,6 +130,9 @@ expr11<int * value> =  (. int op, subvalue; .)
   }
 .
 
-expr12<int * value> = number (. *value = atoi(self->t->val); .).
+expr12<int * value> =
+  number                 (. *value = atoi(self->t->val); .)
+  | '(' expr1<value> ')'
+.
 
 END CExpr.

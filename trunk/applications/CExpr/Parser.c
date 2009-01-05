@@ -138,7 +138,7 @@ CExprParser(CExprParser_t * self, FILE  * infp, FILE * errfp)
     if (!CExprScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
-    self->maxT = 22;
+    self->maxT = 24;
     
     /*---- enable ----*/
     return self;
@@ -353,8 +353,14 @@ CExprParser_expr11(CExprParser_t * self, int * value)
 static void
 CExprParser_expr12(CExprParser_t * self, int * value)
 {
-    CExprParser_Expect(self, 1);
-    *value = atoi(self->t->val); 
+    if (self->la->kind == 1) {
+	CExprParser_Get(self);
+	*value = atoi(self->t->val); 
+    } else if (self->la->kind == 22) {
+	CExprParser_Get(self);
+	CExprParser_expr1(self, value);
+	CExprParser_Expect(self, 23);
+    } else CExprParser_SynErr(self, 25);
 }
 
 /*---- enable ----*/
@@ -387,7 +393,10 @@ CExprParser_SynErr(CExprParser_t * self, int n)
     case 19: s = "\"" "*" "\" expected"; break;
     case 20: s = "\"" "/" "\" expected"; break;
     case 21: s = "\"" "%" "\" expected"; break;
-    case 22: s = "\"" "???" "\" expected"; break;
+    case 22: s = "\"" "(" "\" expected"; break;
+    case 23: s = "\"" ")" "\" expected"; break;
+    case 24: s = "\"" "???" "\" expected"; break;
+    case 25: s = "this symbol not expected in \"" "expr12" "\""; break;
     /*---- enable ----*/
     default:
 	snprintf(format, sizeof(format), "error %d", n);
@@ -399,8 +408,8 @@ CExprParser_SynErr(CExprParser_t * self, int n)
 
 static const char * set[] = {
     /*---- InitSet ----*/
-    /*    5    0    5    0   */
-    "*.......................", /* 0 */
-    "...........****........."  /* 1 */
+    /*    5    0    5    0     */
+    "*.........................", /* 0 */
+    "...........****..........."  /* 1 */
     /*---- enable ----*/
 };
