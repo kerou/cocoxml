@@ -26,6 +26,7 @@
 int
 main(int argc, char * argv[])
 {
+    FILE * infp;
     CcsScanner_t scanner;
     CcsToken_t * t, * la;
 
@@ -33,7 +34,11 @@ main(int argc, char * argv[])
 	fprintf(stderr, "argc != 2\n");
 	return -1;
     }
-    CcsScanner(&scanner, NULL, argv[1]);
+    if (!(infp = fopen(argv[1], "r"))) {
+	fprintf(stderr, "fopen(%s, \"r\") failed\n", argv[1]);
+	return -1;
+    }
+    CcsScanner(&scanner, NULL, infp);
     t = NULL; la = CcsScanner_GetDummy(&scanner);
     for (;;) {
 	if (t) CcsScanner_DecRef(&scanner, t);
@@ -48,5 +53,6 @@ main(int argc, char * argv[])
     if (t) CcsScanner_DecRef(&scanner, t);
     if (la) CcsScanner_DecRef(&scanner, la);
     CcsScanner_Destruct(&scanner);
+    fclose(infp);
     return 0;
 }
