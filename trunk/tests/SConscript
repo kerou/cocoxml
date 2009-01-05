@@ -6,4 +6,3 @@ import os.path
 
 SConscript(os.path.join('basic', 'SConscript'))
 SConscript(os.path.join('csharp', 'SConscript'))
-SConscript(os.path.join('rss', 'SConscript'))
