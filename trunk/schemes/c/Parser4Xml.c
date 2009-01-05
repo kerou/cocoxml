@@ -126,10 +126,10 @@ CcxParser_SemErrT(CcxParser_t * self, const char * format, ...)
 
 #define ERRQUIT errquit1
 CcxParser_t *
-CcxParser(CcxParser_t * self, const char * fname, FILE * errfp)
+CcxParser(CcxParser_t * self, FILE * infp, FILE * errfp)
 {
     if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
-    if (!CcxScanner(&self->scanner, &self->errpool, fname)) goto errquit1;
+    if (!CcxScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
     /*---- enable ----*/

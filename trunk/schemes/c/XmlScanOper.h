@@ -68,9 +68,9 @@ typedef struct {
 
 typedef struct {
     CcsErrorPool_t * errpool;
+    FILE * fp;
 
     XML_Parser parser;
-    FILE * fp;
 
     CcsBool_t EOFGenerated;
 
@@ -95,10 +95,10 @@ typedef struct {
     size_t numXmlSpecs;
 }  CcxScanOper_t;
 
-CcxScanOper_t * CcxScanOper(CcxScanOper_t * self, CcsErrorPool_t * errpool,
-			    const char * filename);
-
+CcxScanOper_t *
+CcxScanOper(CcxScanOper_t * self, CcsErrorPool_t * errpool, FILE * infp);
 void CcxScanOper_Destruct(CcxScanOper_t * self);
+
 CcsToken_t * CcxScanOper_GetDummy(CcxScanOper_t * self);
 CcsToken_t * CcxScanOper_Scan(CcxScanOper_t * self);
 CcsToken_t * CcxScanOper_Peek(CcxScanOper_t * self);

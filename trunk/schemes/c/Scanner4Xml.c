@@ -32,15 +32,14 @@ static const CcxSpec_t XmlSpecList[] = {
 };
 
 CcxScanner_t *
-CcxScanner(CcxScanner_t * self, CcsErrorPool_t * errpool,
-	   const char * filename)
+CcxScanner(CcxScanner_t * self, CcsErrorPool_t * errpool, FILE * infp)
 {
     /*---- kindUnknownNS ----*/
     self->base.kindUnknownNS = -1;
     /*---- enable ----*/
     self->base.firstXmlSpec = XmlSpecList;
     self->base.numXmlSpecs = sizeof(XmlSpecList) / sizeof(XmlSpecList[0]);
-    return (CcxScanner_t *)CcxScanOper(&self->base, errpool, filename);
+    return (CcxScanner_t *)CcxScanOper(&self->base, errpool, infp);
 }
 
 void

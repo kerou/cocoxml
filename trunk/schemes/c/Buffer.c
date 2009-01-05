@@ -50,7 +50,6 @@ CcsBuffer(CcsBuffer_t * self, FILE * fp)
 void
 CcsBuffer_Destruct(CcsBuffer_t * self)
 {
-    fclose(self->fp);
     CcsFree(self->buf);
 }
 

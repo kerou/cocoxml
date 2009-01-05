@@ -83,8 +83,7 @@ struct CcsScanner_s {
 };
 
 CcsScanner_t *
-CcsScanner(CcsScanner_t * self, CcsErrorPool_t * errpool,
-	   const char * filename);
+CcsScanner(CcsScanner_t * self, CcsErrorPool_t * errpool, FILE * fp);
 void CcsScanner_Destruct(CcsScanner_t * self);
 CcsToken_t * CcsScanner_GetDummy(CcsScanner_t * self);
 CcsToken_t * CcsScanner_Scan(CcsScanner_t * self);

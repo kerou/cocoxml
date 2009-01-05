@@ -83,8 +83,7 @@ struct CcsXmlScanner_s {
 };
 
 CcsXmlScanner_t *
-CcsXmlScanner(CcsXmlScanner_t * self, CcsErrorPool_t * errpool,
-	   const char * filename);
+CcsXmlScanner(CcsXmlScanner_t * self, CcsErrorPool_t * errpool, FILE * fp);
 void CcsXmlScanner_Destruct(CcsXmlScanner_t * self);
 CcsToken_t * CcsXmlScanner_GetDummy(CcsXmlScanner_t * self);
 CcsToken_t * CcsXmlScanner_Scan(CcsXmlScanner_t * self);

@@ -60,19 +60,26 @@ ShowRss(const CcRss_t * self)
 int
 main(int argc, char * argv[])
 {
+    FILE * infp;
     RssParser_t parser;
+
     if (argc != 2) {
 	fprintf(stderr, "%s rss\n", argv[0]);
 	return -1;
     }
-    if (!RssParser(&parser, argv[1], stderr)) goto errquit0;
+    if (!strcmp(argv[1], "-")) infp = stdin;
+    else if (!(infp = fopen(argv[1], "r"))) goto errquit0;
+    if (!RssParser(&parser, infp, stderr)) goto errquit1;
     RssParser_Parse(&parser);
-    if (!RssParser_Finish(&parser)) goto errquit1;
+    if (!RssParser_Finish(&parser)) goto errquit2;
     ShowRss(&parser.rss);
     RssParser_Destruct(&parser);
+    if (strcmp(argv[1], "-")) fclose(infp);
     return 0;
- errquit1:
+ errquit2:
     RssParser_Destruct(&parser);
+ errquit1:
+    if (strcmp(argv[1], "-")) fclose(infp);
  errquit0:
     return -1;
 }
