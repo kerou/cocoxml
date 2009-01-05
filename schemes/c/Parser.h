@@ -72,7 +72,7 @@ struct CcsParser_s {
     /*---- enable ----*/
 };
 
-CcsParser_t * CcsParser(CcsParser_t * self, const char * fname, FILE * errfp);
+CcsParser_t * CcsParser(CcsParser_t * self, FILE * infp, FILE * errfp);
 void CcsParser_Destruct(CcsParser_t * self);
 void CcsParser_Parse(CcsParser_t * self);
 

@@ -35,8 +35,7 @@ typedef struct {
 }  CcxScanner_t;
 
 CcxScanner_t *
-CcxScanner(CcxScanner_t * self, CcsErrorPool_t * errpool,
-	   const char * filename);
+CcxScanner(CcxScanner_t * self, CcsErrorPool_t * errpool, FILE * infp);
 void CcxScanner_Destruct(CcxScanner_t * self);
 
 EXTC_END

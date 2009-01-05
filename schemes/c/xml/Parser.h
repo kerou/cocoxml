@@ -70,7 +70,7 @@ struct CcsXmlParser_s {
     /*---- enable ----*/
 };
 
-CcsXmlParser_t * CcsXmlParser(CcsXmlParser_t * self, const char * fname, FILE * errfp);
+CcsXmlParser_t * CcsXmlParser(CcsXmlParser_t * self, FILE * infp, FILE * errfp);
 void CcsXmlParser_Destruct(CcsXmlParser_t * self);
 void CcsXmlParser_Parse(CcsXmlParser_t * self);
 

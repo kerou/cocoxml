@@ -80,15 +80,14 @@ static const CcxSpec_t XmlSpecList[] = {
 };
 
 RssScanner_t *
-RssScanner(RssScanner_t * self, CcsErrorPool_t * errpool,
-	   const char * filename)
+RssScanner(RssScanner_t * self, CcsErrorPool_t * errpool, FILE * infp)
 {
     /*---- kindUnknownNS ----*/
     self->base.kindUnknownNS = -1;
     /*---- enable ----*/
     self->base.firstXmlSpec = XmlSpecList;
     self->base.numXmlSpecs = sizeof(XmlSpecList) / sizeof(XmlSpecList[0]);
-    return (RssScanner_t *)CcxScanOper(&self->base, errpool, filename);
+    return (RssScanner_t *)CcxScanOper(&self->base, errpool, infp);
 }
 
 void

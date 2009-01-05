@@ -152,10 +152,10 @@ RssParser_SemErrT(RssParser_t * self, const char * format, ...)
 
 #define ERRQUIT errquit1
 RssParser_t *
-RssParser(RssParser_t * self, const char * fname, FILE * errfp)
+RssParser(RssParser_t * self, FILE * infp, FILE * errfp)
 {
     if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
-    if (!RssScanner(&self->scanner, &self->errpool, fname)) goto errquit1;
+    if (!RssScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
     self->maxT = 69;

@@ -160,10 +160,10 @@ CcsParser_SemErrT(CcsParser_t * self, const char * format, ...)
 
 #define ERRQUIT  errquit1
 CcsParser_t *
-CcsParser(CcsParser_t * self, const char * fname, FILE * errfp)
+CcsParser(CcsParser_t * self, FILE  * infp, FILE * errfp)
 {
     if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
-    if (!CcsScanner(&self->scanner, &self->errpool, fname)) goto errquit1;
+    if (!CcsScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
     self->maxT = 47;

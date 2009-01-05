@@ -173,10 +173,11 @@ CXS_Comment(void * self, const XML_Char * data)
 
 static const char * dummyval = "dummy";
 CcxScanOper_t *
-CcxScanOper(CcxScanOper_t * self, CcsErrorPool_t * errpool,
-	    const char * filename)
+CcxScanOper(CcxScanOper_t * self, CcsErrorPool_t * errpool, FILE * infp)
 {
+    CcsAssert(infp != NULL);
     self->errpool = errpool;
+    self->fp = infp;
     self->parser = XML_ParserCreateNS(NULL, nsSep);
     CcsAssert(self->parser);
 
@@ -186,16 +187,12 @@ CcxScanOper(CcxScanOper_t * self, CcsErrorPool_t * errpool,
     XML_SetProcessingInstructionHandler(self->parser, CXS_PInstruction);
     XML_SetCommentHandler(self->parser, CXS_Comment);
 
-    if (!(self->fp = fopen(filename, "r"))) {
-	fprintf(stderr, "Can not open '%s'.\n", filename);
-	goto errquit0;
-    }
     self->EOFGenerated = FALSE;
     if (!(self->dummy = CcsToken(0, 0, 0, 0, dummyval, strlen(dummyval))))
-	goto errquit1;
+	goto errquit0;
     CcxScanOper_IncRef(self, self->dummy);
     self->tokens = self->peek = NULL;
-    if (!(self->textStart = CcsMalloc(SZ_TEXTBUF))) goto errquit2;
+    if (!(self->textStart = CcsMalloc(SZ_TEXTBUF))) goto errquit1;
     self->textUsed = self->textStart;
     self->textSpace = SZ_TEXTBUF;
     self->stack[0].spec = &BottomSpec;
@@ -203,10 +200,8 @@ CcxScanOper(CcxScanOper_t * self, CcsErrorPool_t * errpool,
     self->cur = self->effect = self->stack;
     CXS_UpdateKinds(self);
     return self;
- errquit2:
-    CcsToken_Destruct(self->dummy);
  errquit1:
-    fclose(self->fp);
+    CcsToken_Destruct(self->dummy);
  errquit0:
     XML_ParserFree(self->parser);
     return NULL;
@@ -223,7 +218,6 @@ CcxScanOper_Destruct(CcxScanOper_t * self)
 	CcxScanOper_DecRef(self, cur);
     }
     CcxScanOper_DecRef(self, self->dummy);
-    fclose(self->fp);
     XML_ParserFree(self->parser);
 }
 

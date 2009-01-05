@@ -38,22 +38,16 @@ static void CcsXmlScanner_GetCh(CcsXmlScanner_t * self);
 
 static const char * dummyval = "dummy";
 CcsXmlScanner_t *
-CcsXmlScanner(CcsXmlScanner_t * self, CcsErrorPool_t * errpool,
-	   const char * filename)
+CcsXmlScanner(CcsXmlScanner_t * self, CcsErrorPool_t * errpool, FILE * fp)
 {
-    FILE * fp;
     self->errpool = errpool;
-    if (!(fp = fopen(filename, "r"))) {
-	fprintf(stderr, "Can not open '%s'.\n", filename);
-	goto errquit0;
-    }
     if (!(self->dummyToken = CcsToken(0, 0, 0, 0, dummyval, strlen(dummyval))))
-	goto errquit1;
-    if (CcsBuffer(&self->buffer, fp) == NULL) goto errquit2;
+	goto errquit0;
+    if (CcsBuffer(&self->buffer, fp) == NULL) goto errquit1;
 #ifdef CcsXmlScanner_INDENTATION
     self->lineStart = TRUE;
     if (!(self->indent = CcsMalloc(sizeof(int) * CcsXmlScanner_INDENT_START)))
-	goto errquit3;
+	goto errquit2;
     self->indentUsed = self->indent;
     self->indentLast = self->indent + CcsXmlScanner_INDENT_START;
     *self->indentUsed++ = 0;
@@ -61,11 +55,9 @@ CcsXmlScanner(CcsXmlScanner_t * self, CcsErrorPool_t * errpool,
     CcsXmlScanner_Init(self);
     return self;
 #ifdef CcsXmlScanner_INDENTATION
- errquit3:
+ errquit2:
     CcsBuffer_Destruct(&self->buffer);
 #endif
- errquit2:
-    fclose(fp);
  errquit1:
     CcsToken_Destruct(self->dummyToken);
  errquit0:

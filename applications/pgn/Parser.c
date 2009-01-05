@@ -124,10 +124,10 @@ PgnParser_SemErrT(PgnParser_t * self, const char * format, ...)
 
 #define ERRQUIT  errquit1
 PgnParser_t *
-PgnParser(PgnParser_t * self, const char * fname, FILE * errfp)
+PgnParser(PgnParser_t * self, FILE  * infp, FILE * errfp)
 {
     if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
-    if (!PgnScanner(&self->scanner, &self->errpool, fname)) goto errquit1;
+    if (!PgnScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
     self->maxT = 23;

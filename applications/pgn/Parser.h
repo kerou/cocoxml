@@ -54,7 +54,7 @@ struct PgnParser_s {
     /*---- enable ----*/
 };
 
-PgnParser_t * PgnParser(PgnParser_t * self, const char * fname, FILE * errfp);
+PgnParser_t * PgnParser(PgnParser_t * self, FILE * infp, FILE * errfp);
 void PgnParser_Destruct(PgnParser_t * self);
 void PgnParser_Parse(PgnParser_t * self);
 
