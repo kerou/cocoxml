@@ -46,7 +46,7 @@ struct CExprParser_s {
     CcsToken_t      * la;
     int               maxT;
     /*---- members ----*/
-    
+    int value;
     /*---- enable ----*/
 };
 

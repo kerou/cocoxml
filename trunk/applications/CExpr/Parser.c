@@ -83,6 +83,18 @@ CExprParser_WeakSeparator(CExprParser_t * self, int n, int syFol, int repFol)
 
 /*---- ProductionsHeader ----*/
 static void CExprParser_CExpr(CExprParser_t * self);
+static void CExprParser_expr1(CExprParser_t * self, int * value);
+static void CExprParser_expr2(CExprParser_t * self, int * value);
+static void CExprParser_expr3(CExprParser_t * self, int * value);
+static void CExprParser_expr4(CExprParser_t * self, int * value);
+static void CExprParser_expr5(CExprParser_t * self, int * value);
+static void CExprParser_expr6(CExprParser_t * self, int * value);
+static void CExprParser_expr7(CExprParser_t * self, int * value);
+static void CExprParser_expr8(CExprParser_t * self, int * value);
+static void CExprParser_expr9(CExprParser_t * self, int * value);
+static void CExprParser_expr10(CExprParser_t * self, int * value);
+static void CExprParser_expr11(CExprParser_t * self, int * value);
+static void CExprParser_expr12(CExprParser_t * self, int * value);
 /*---- enable ----*/
 
 void
@@ -126,7 +138,7 @@ CExprParser(CExprParser_t * self, FILE  * infp, FILE * errfp)
     if (!CExprScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
-    self->maxT = 1;
+    self->maxT = 22;
     
     /*---- enable ----*/
     return self;
@@ -152,6 +164,197 @@ CExprParser_Destruct(CExprParser_t * self)
 static void
 CExprParser_CExpr(CExprParser_t * self)
 {
+    int value; 
+    CExprParser_expr1(self, &value);
+    self->value = value; 
+}
+
+static void
+CExprParser_expr1(CExprParser_t * self, int * value)
+{
+    int subvalue1, subvalue2; 
+    CExprParser_expr2(self, value);
+    while (self->la->kind == 2) {
+	CExprParser_Get(self);
+	CExprParser_expr2(self, &subvalue1);
+	CExprParser_Expect(self, 3);
+	CExprParser_expr2(self, &subvalue2);
+	*value = *value ? subvalue1 : subvalue2; 
+    }
+}
+
+static void
+CExprParser_expr2(CExprParser_t * self, int * value)
+{
+    int subvalue; 
+    CExprParser_expr3(self, value);
+    while (self->la->kind == 4) {
+	CExprParser_Get(self);
+	CExprParser_expr3(self, &subvalue);
+	*value = *value || subvalue; 
+    }
+}
+
+static void
+CExprParser_expr3(CExprParser_t * self, int * value)
+{
+    int subvalue; 
+    CExprParser_expr4(self, value);
+    while (self->la->kind == 5) {
+	CExprParser_Get(self);
+	CExprParser_expr4(self, &subvalue);
+	*value = *value && subvalue; 
+    }
+}
+
+static void
+CExprParser_expr4(CExprParser_t * self, int * value)
+{
+    int subvalue; 
+    CExprParser_expr5(self, value);
+    while (self->la->kind == 6) {
+	CExprParser_Get(self);
+	CExprParser_expr5(self, &subvalue);
+	*value |= subvalue; 
+    }
+}
+
+static void
+CExprParser_expr5(CExprParser_t * self, int * value)
+{
+    int subvalue; 
+    CExprParser_expr6(self, value);
+    while (self->la->kind == 7) {
+	CExprParser_Get(self);
+	CExprParser_expr6(self, &subvalue);
+	*value ^= subvalue; 
+    }
+}
+
+static void
+CExprParser_expr6(CExprParser_t * self, int * value)
+{
+    int subvalue; 
+    CExprParser_expr7(self, value);
+    while (self->la->kind == 8) {
+	CExprParser_Get(self);
+	CExprParser_expr7(self, &subvalue);
+	*value &= subvalue; 
+    }
+}
+
+static void
+CExprParser_expr7(CExprParser_t * self, int * value)
+{
+    int op, subvalue; 
+    CExprParser_expr8(self, value);
+    while (self->la->kind == 9 || self->la->kind == 10) {
+	if (self->la->kind == 9) {
+	    CExprParser_Get(self);
+	    op = 0; 
+	} else {
+	    CExprParser_Get(self);
+	    op = 1; 
+	}
+	CExprParser_expr8(self, &subvalue);
+	if (op == 0) *value = *value == subvalue;
+	else if (op == 1) *value = *value != subvalue; 
+    }
+}
+
+static void
+CExprParser_expr8(CExprParser_t * self, int * value)
+{
+    int op, subvalue; 
+    CExprParser_expr9(self, value);
+    while (CExprParser_StartOf(self, 1)) {
+	if (self->la->kind == 11) {
+	    CExprParser_Get(self);
+	    op = 0; 
+	} else if (self->la->kind == 12) {
+	    CExprParser_Get(self);
+	    op = 1; 
+	} else if (self->la->kind == 13) {
+	    CExprParser_Get(self);
+	    op = 2; 
+	} else {
+	    CExprParser_Get(self);
+	    op = 3; 
+	}
+	CExprParser_expr9(self, &subvalue);
+	if (op == 0) *value = *value > subvalue;
+	else if (op == 1) *value = *value >= subvalue;
+	else if (op == 2) *value = *value < subvalue;
+	else if (op == 3) *value = *value <= subvalue; 
+    }
+}
+
+static void
+CExprParser_expr9(CExprParser_t * self, int * value)
+{
+    int op, subvalue; 
+    CExprParser_expr10(self, value);
+    while (self->la->kind == 15 || self->la->kind == 16) {
+	if (self->la->kind == 15) {
+	    CExprParser_Get(self);
+	    op = 0; 
+	} else {
+	    CExprParser_Get(self);
+	    op = 1; 
+	}
+	CExprParser_expr10(self, &subvalue);
+	if (op == 0) *value <<= subvalue;
+	else if (op == 1) *value >>= subvalue; 
+    }
+}
+
+static void
+CExprParser_expr10(CExprParser_t * self, int * value)
+{
+    int op, subvalue; 
+    CExprParser_expr11(self, value);
+    while (self->la->kind == 17 || self->la->kind == 18) {
+	if (self->la->kind == 17) {
+	    CExprParser_Get(self);
+	    op = 0; 
+	} else {
+	    CExprParser_Get(self);
+	    op = 1; 
+	}
+	CExprParser_expr11(self, &subvalue);
+	if (op == 0) *value += subvalue;
+	else if (op == 1) *value -= subvalue; 
+    }
+}
+
+static void
+CExprParser_expr11(CExprParser_t * self, int * value)
+{
+    int op, subvalue; 
+    CExprParser_expr12(self, value);
+    while (self->la->kind == 19 || self->la->kind == 20 || self->la->kind == 21) {
+	if (self->la->kind == 19) {
+	    CExprParser_Get(self);
+	    op = 0; 
+	} else if (self->la->kind == 20) {
+	    CExprParser_Get(self);
+	    op = 1; 
+	} else {
+	    CExprParser_Get(self);
+	    op = 2; 
+	}
+	CExprParser_expr12(self, &subvalue);
+	if (op == 0) *value *= subvalue;
+	else if (op == 1) *value /= subvalue;
+	else if (op == 2) *value %= subvalue; 
+    }
+}
+
+static void
+CExprParser_expr12(CExprParser_t * self, int * value)
+{
+    CExprParser_Expect(self, 1);
+    *value = atoi(self->t->val); 
 }
 
 /*---- enable ----*/
@@ -163,7 +366,28 @@ CExprParser_SynErr(CExprParser_t * self, int n)
     switch (n) {
     /*---- SynErrors ----*/
     case 0: s = "\"" "EOF" "\" expected"; break;
-    case 1: s = "\"" "???" "\" expected"; break;
+    case 1: s = "\"" "number" "\" expected"; break;
+    case 2: s = "\"" "?" "\" expected"; break;
+    case 3: s = "\"" ":" "\" expected"; break;
+    case 4: s = "\"" "||" "\" expected"; break;
+    case 5: s = "\"" "&&" "\" expected"; break;
+    case 6: s = "\"" "|" "\" expected"; break;
+    case 7: s = "\"" "^" "\" expected"; break;
+    case 8: s = "\"" "&" "\" expected"; break;
+    case 9: s = "\"" "==" "\" expected"; break;
+    case 10: s = "\"" "!=" "\" expected"; break;
+    case 11: s = "\"" ">" "\" expected"; break;
+    case 12: s = "\"" ">=" "\" expected"; break;
+    case 13: s = "\"" "<" "\" expected"; break;
+    case 14: s = "\"" "<=" "\" expected"; break;
+    case 15: s = "\"" "<<" "\" expected"; break;
+    case 16: s = "\"" ">>" "\" expected"; break;
+    case 17: s = "\"" "+" "\" expected"; break;
+    case 18: s = "\"" "-" "\" expected"; break;
+    case 19: s = "\"" "*" "\" expected"; break;
+    case 20: s = "\"" "/" "\" expected"; break;
+    case 21: s = "\"" "%" "\" expected"; break;
+    case 22: s = "\"" "???" "\" expected"; break;
     /*---- enable ----*/
     default:
 	snprintf(format, sizeof(format), "error %d", n);
@@ -175,6 +399,8 @@ CExprParser_SynErr(CExprParser_t * self, int n)
 
 static const char * set[] = {
     /*---- InitSet ----*/
-    "*.."  /* 0 */
+    /*    5    0    5    0   */
+    "*.......................", /* 0 */
+    "...........****........."  /* 1 */
     /*---- enable ----*/
 };

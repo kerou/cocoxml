@@ -60,8 +60,8 @@ CExprScanner_Init(CExprScanner_t * self)
 {
     /*---- declarations ----*/
     self->eofSym = 0;
-    self->maxT = 1;
-    self->noSym = 1;
+    self->maxT = 22;
+    self->noSym = 22;
     /*---- enable ----*/
 
     self->busyTokenList = NULL;
@@ -206,6 +206,21 @@ typedef struct {
 static const Char2State_t c2sArr[] = {
     /*---- chars2states ----*/
     { EoF, EoF, -1 },
+    { 33, 33, 9 },	/* '!' '!' */
+    { 37, 37, 19 },	/* '%' '%' */
+    { 38, 38, 21 },	/* '&' '&' */
+    { 42, 42, 17 },	/* '*' '*' */
+    { 43, 43, 15 },	/* '+' '+' */
+    { 45, 45, 16 },	/* '-' '-' */
+    { 47, 47, 18 },	/* '/' '/' */
+    { 48, 57, 1 },	/* '0' '9' */
+    { 58, 58, 3 },	/* ':' ':' */
+    { 60, 60, 23 },	/* '<' '<' */
+    { 61, 61, 7 },	/* '=' '=' */
+    { 62, 62, 22 },	/* '>' '>' */
+    { 63, 63, 2 },	/* '?' '?' */
+    { 94, 94, 6 },	/* '^' '^' */
+    { 124, 124, 20 },	/* '|' '|' */
     /*---- enable ----*/
 };
 static const int c2sNum = sizeof(c2sArr) / sizeof(c2sArr[0]);
@@ -459,6 +474,70 @@ CExprScanner_NextToken(CExprScanner_t * self)
     case -1: kind = self->eofSym; break;
     case 0: kind = self->noSym; break;
     /*---- scan3 ----*/
+    case 1: case_1:
+	if ((self->ch >= '0' && self->ch <= '9')) {
+	    CExprScanner_GetCh(self); goto case_1;
+	} else { kind = 1; break; }
+    case 2:
+	{ kind = 2; break; }
+    case 3:
+	{ kind = 3; break; }
+    case 4: case_4:
+	{ kind = 4; break; }
+    case 5: case_5:
+	{ kind = 5; break; }
+    case 6:
+	{ kind = 7; break; }
+    case 7:
+	if (self->ch == '=') {
+	    CExprScanner_GetCh(self); goto case_8;
+	} else { kind = self->noSym; break; }
+    case 8: case_8:
+	{ kind = 9; break; }
+    case 9:
+	if (self->ch == '=') {
+	    CExprScanner_GetCh(self); goto case_10;
+	} else { kind = self->noSym; break; }
+    case 10: case_10:
+	{ kind = 10; break; }
+    case 11: case_11:
+	{ kind = 12; break; }
+    case 12: case_12:
+	{ kind = 14; break; }
+    case 13: case_13:
+	{ kind = 15; break; }
+    case 14: case_14:
+	{ kind = 16; break; }
+    case 15:
+	{ kind = 17; break; }
+    case 16:
+	{ kind = 18; break; }
+    case 17:
+	{ kind = 19; break; }
+    case 18:
+	{ kind = 20; break; }
+    case 19:
+	{ kind = 21; break; }
+    case 20:
+	if (self->ch == '|') {
+	    CExprScanner_GetCh(self); goto case_4;
+	} else { kind = 6; break; }
+    case 21:
+	if (self->ch == '&') {
+	    CExprScanner_GetCh(self); goto case_5;
+	} else { kind = 8; break; }
+    case 22:
+	if (self->ch == '=') {
+	    CExprScanner_GetCh(self); goto case_11;
+	} else if (self->ch == '>') {
+	    CExprScanner_GetCh(self); goto case_14;
+	} else { kind = 11; break; }
+    case 23:
+	if (self->ch == '=') {
+	    CExprScanner_GetCh(self); goto case_12;
+	} else if (self->ch == '<') {
+	    CExprScanner_GetCh(self); goto case_13;
+	} else { kind = 13; break; }
     /*---- enable ----*/
     }
     t = CcsToken(kind, pos, col, line,
