@@ -31,6 +31,7 @@ main(int argc, char * argv[])
     else if (!(infp = fopen(argv[1], "r"))) goto errquit0;
     if (!CExprParser(&parser, infp, stderr)) goto errquit1;
     CExprParser_Parse(&parser);
+    printf("parser.value = %d\n", parser.value);
     CExprParser_Destruct(&parser);
     if (strcmp(argv[1], "-")) fclose(infp);
     return 0;
