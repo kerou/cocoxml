@@ -9,13 +9,25 @@ END.
 
 SCHEME c Kc
 
+SECTION hIncludes
+#ifndef  COCO_KCDATA_H
+#include "KcData.h"
+#endif
+END.
+
+SECTION cIncludes
+END.
+
 COMPILER Kconfig
 
 MEMBERS
+    KcSymbolTable_t * symtab;
 
 CONSTRUCTOR
+    if (!(self->symtab = KcSymbolTable(4409))) goto ERRQUIT;
 
 DESTRUCTOR
+    KcSymbolTable_Destruct(self->symtab);
 
 INDENTATIONS
 
@@ -39,8 +51,51 @@ IGNORE tab
 
 PRODUCTIONS
 
-Kconfig (. .)
-=
+Kconfig =
+  { ConfigDecl }
+.
+
+ConfigDecl = "config" ident IndentIn { ConfigProperty } [ Help ] IndentOut.
+
+ConfigProperty = TypeDefine | TypeWithDefault.
+
+TypeDefine = ("bool" [string]) | ("tristate" [string]).
+
+TypeWithDefault = (. KcExpr_t * expr; .)
+  ("def_bool" ('y' | 'n')) | ("def_tristate" ('y' | 'm' | 'n')) ["if" Expr<&expr>]
+.
+
+Help = "help" IndentIn { ANY } IndentOut.
+
+Expr<KcExpr_t ** expr> =            (. KcExpr_t * expr0; .)
+  Expr0<expr> { "||" Expr0<&expr0>  (. *expr = KcExpr(KcetExprOr, NULL, NULL, *expr, expr0); .)
+  }
+.
+
+Expr0<KcExpr_t ** expr> =           (. KcExpr_t * expr0; .)
+  Expr1<expr> { "&&" Expr1<&expr0>  (. *expr = KcExpr(KcetExprAnd, NULL, NULL, *expr, expr0); .)
+  }
+.
+
+Expr1<KcExpr_t ** expr> = (. KcExpr_t * expr0; .)
+  '!' Expr2<&expr0>       (. *expr = KcExpr(KcetNotExpr, NULL, NULL, expr0, NULL); .)
+.
+
+Expr2<KcExpr_t ** expr> =
+  '(' Expr3<expr> ')'
+.
+
+Expr3<KcExpr_t ** expr> = (. char op = 0; KcSymbol_t * sym0 = NULL, * sym1 = NULL; .)
+  (ident                  (. sym0 = KcSymbolTable_Get(self->symtab, self->t->val); .)
+    [ ("="                (. op = '='; .)
+      | "!="              (. op = '!'; .)
+      ) ident             (. sym1 = KcSymbolTable_Get(self->symtab, self->t->val); .)
+    ])                    (. switch (op) {
+    			     case 0: *expr = KcExpr(KcetSymbol, sym0, NULL, NULL, NULL); break;
+			     case '=': *expr = KcExpr(KcetSymbolEqual, sym0, sym1, NULL, NULL); break;
+			     case '!': *expr = KcExpr(KcetSymbolNotEqual, sym0, sym1, NULL, NULL); break;
+			     } .)
+  | Expr<expr>
 .
 
 END Kconfig.

@@ -18,6 +18,9 @@ License: LGPLv2
 #endif
 
 /*---- hIncludes ----*/
+#ifndef  COCO_KCDATA_H
+#include "KcData.h"
+#endif
 /*---- enable ----*/
 
 EXTC_BEGIN
@@ -33,7 +36,7 @@ struct KcParser_s {
     CcsToken_t      * la;
     int               maxT;
     /*---- members ----*/
-    
+    KcSymbolTable_t * symtab;
     /*---- enable ----*/
 };
 
