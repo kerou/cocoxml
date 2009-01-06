@@ -61,7 +61,7 @@ ConfigProperty = TypeDefine | TypeWithDefault.
 
 TypeDefine = ("bool" [string]) | ("tristate" [string]).
 
-TypeWithDefault = (. KcExpr_t * expr; .)
+TypeWithDefault (. KcExpr_t * expr; .) =
   ("def_bool" ('y' | 'n')) | ("def_tristate" ('y' | 'm' | 'n')) ["if" Expr<&expr>]
 .
 

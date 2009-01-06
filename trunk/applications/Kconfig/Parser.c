@@ -209,8 +209,8 @@ KcParser_TypeDefine(KcParser_t * self)
 static void
 KcParser_TypeWithDefault(KcParser_t * self)
 {
+    KcExpr_t * expr; 
     if (self->la->kind == 10) {
-	KcExpr_t * expr; 
 	KcParser_Get(self);
 	if (self->la->kind == 11) {
 	    KcParser_Get(self);
