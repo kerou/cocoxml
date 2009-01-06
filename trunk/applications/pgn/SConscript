@@ -5,5 +5,6 @@
 Import('env', 'lib', 'cocoexe')
 
 env.Command(['Scanner.h', 'Scanner.c', 'Parser.h', 'Parser.c'],
-            'pgn.atg', '%s $SOURCES' % str(cocoexe[0]))
+            ['pgn.atg'] + cocoexe,
+            '"%s" $SOURCES' % str(cocoexe[0]))
 env.Program('TestPgn', ['main.c', 'pgngame.c', 'Parser.c', 'Scanner.c', lib])

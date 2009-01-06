@@ -5,6 +5,7 @@
 Import('env', 'lib', 'cocoexe')
 
 env.Command(['Scanner.h', 'Scanner.c', 'Parser.h', 'Parser.c'],
-            'Kconfig.atg', '%s $SOURCES' % str(cocoexe[0]))
+            ['Kconfig.atg'] + cocoexe,
+            '"%s" $SOURCES' % str(cocoexe[0]))
 env.Program('TestKconfig', ['main.c', 'KcData.c',
                             'Parser.c', 'Scanner.c', lib])
