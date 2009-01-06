@@ -427,7 +427,7 @@ PgnScanner_IndentGenerator(PgnScanner_t * self)
     if (self->col > self->indentUsed[-1]) {
 	if (self->indentUsed == self->indentLast) {
 	    newLen = (self->indentLast - self->indent) + PgnScanner_INDENT_START;
-	    newIndent = CcRealloc(self->indent, sizeof(int) * newLen);
+	    newIndent = CcsRealloc(self->indent, sizeof(int) * newLen);
 	    if (!newIndent) return NULL;
 	    self->indentUsed = newIndent + (self->indentUsed - self->indent);
 	    self->indentLast = newIndent + newLen;
