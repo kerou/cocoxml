@@ -20,56 +20,43 @@
 static void KcSymbol_Destruct(KcSymbol_t * self);
 
 static KcSymbol_t *
-KcSymbol(KcSymbolType_t type, const char * symname)
+KcSymbol(const char * symname)
 {
     KcSymbol_t * self;
     if (!(self = CcsMalloc(sizeof(KcSymbol_t) + strlen(symname) + 1)))
 	return NULL;
-    self->type = type;
+    self->type = KcstNone;
     self->next = NULL;
     self->symname = (char *)(self + 1);
     strcpy(self->symname, symname);
     return self;
 }
 
-static KcSymbol_t *
-KcBoolSymbol(const char * symname, const char * value)
+static const char *
+KcSetBool(KcSymbol_t * self, const char * value)
 {
-    KcSymbol_t * self;
-    if (!(self = KcSymbol(KcstBool, symname))) return NULL;
     self->u._bool_ = *value == 'y' || *value == 'Y' ? KcYes : KcNo;
-    return self;
-}
-
-static KcSymbol_t *
-KcTristateSymbol(const char * symname, const char * value)
-{
-    KcSymbol_t * self;
-    if (!(self = KcSymbol(KcstTristate, symname))) return NULL;
-    self->u._tristate_ = *value == 'y' || *value == 'Y' ? KcYes :
-	*value == 'm' || *value == 'M' ? KcModule : KcNo;
-    return self;
-}
-
-static KcSymbol_t *
-KcStringSymbol(const char * symname, const char * value)
-{
-    KcSymbol_t * self;
-    if (!(self = KcSymbol(KcstString, symname))) goto errquit0;
-    if (!(self->u._string_ = CcsStrdup(value))) goto errquit1;
-    return self;
- errquit1:
-    KcSymbol_Destruct(self);
- errquit0:
     return NULL;
 }
 
-static KcSymbol_t *
-KcHexSymbol(const char * symname, const char * value)
+static const char *
+KcSetTristate(KcSymbol_t * self, const char * value)
 {
-    KcSymbol_t * self;
+    self->u._tristate_ = *value == 'y' || *value == 'Y' ? KcYes :
+	*value == 'm' || *value == 'M' ? KcModule : KcNo;
+    return NULL;
+}
+
+static const char *
+KcSetString(KcSymbol_t * self, const char * value)
+{
+    return self->u._string_ = CcsStrdup(value) ? NULL : "Not enough memory";
+}
+
+static const char *
+KcSetHex(KcSymbol_t * self, const char * value)
+{
     const char * cur;
-    if (!(self = KcSymbol(KcstTristate, symname))) return NULL;
     self->u._hex_ = 0;
     for (cur = value; *cur; ++cur)
 	if (*cur >= '0' && *cur <= '9')
@@ -78,16 +65,14 @@ KcHexSymbol(const char * symname, const char * value)
 	    self->u._hex_ = (self->u._hex_ << 4) + (*cur - 'A' + 10);
 	else if (*cur >= 'a' && *cur <= 'z')
 	    self->u._hex_ = (self->u._hex_ << 4) + (*cur - 'a' + 10);
-    return self;
+    return NULL;
 }
 
-static KcSymbol_t *
-KcIntSymbol(const char * symname, const char * value)
+static const char *
+KcSetInt(KcSymbol_t * self, const char * value)
 {
-    KcSymbol_t * self;
-    if (!(self = KcSymbol(KcstTristate, symname))) return NULL;
     self->u._int_ = atoi(value);
-    return self;
+    return NULL;
 }
 
 static void
@@ -133,60 +118,67 @@ strhash(const char * str, int szhash)
     return value % szhash;
 }
 
-static KcSymbol_t *
-KcSymbolTable_Add(KcSymbolTable_t * self,
-		  KcSymbol_t * (* creator)(const char * symname,
+static const char *
+KcSymbolTable_Set(KcSymbolTable_t * self, KcSymbolType_t type,
+		  const char * (* setfunc)(KcSymbol_t * sym,
 					   const char * value),
 		  const char * symname, const char * value)
 {
     KcSymbol_t ** start, ** cur;
     start = self->first + strhash(symname, self->last - self->first);
     do {
-	if (*cur == NULL) {
-	    if (!(*cur = creator(symname, value))) return NULL;
-	    if (!self->firstsym) self->firstsym = *cur;
-	    if (self->lastsym) self->lastsym->next = *cur;
-	    self->lastsym = *cur;
-	    return *cur;
+	if (!*cur || !strcmp((*cur)->symname, symname)) {
+	    if (!*cur) {
+		if (!(*cur = KcSymbol(symname))) return "Not enough memory";
+	    }
+	    if ((*cur)->type != KcstNone && (*cur)->type != type)
+		return "Type conflict for symbol '%s'";
+	    if ((*cur)->type == KcstNone) {
+		if (!self->firstsym) self->firstsym = *cur;
+		if (self->lastsym) self->lastsym->next = *cur;
+		self->lastsym = *cur;
+		(*cur)->type = type;
+	    }
+	    return setfunc(*cur, value);
 	}
 	if (++cur == self->last) cur = self->first;
     } while (cur != start);
-    return NULL; /* Full */
+    return "The symbol table is full when tring to add '%s'";
 }
 
-KcSymbol_t *
-KcSymbolTable_AddBool(KcSymbolTable_t * self, const char * symname,
+const char *
+KcSymbolTable_SetBool(KcSymbolTable_t * self, const char * symname,
 		      const char * value)
 {
-    return KcSymbolTable_Add(self, KcBoolSymbol, symname, value);
+    return KcSymbolTable_Set(self, KcstBool, KcSetBool, symname, value);
 }
 
-KcSymbol_t *
-KcSymbolTable_AddTristate(KcSymbolTable_t * self, const char * symname,
+const char *
+KcSymbolTable_SetTristate(KcSymbolTable_t * self, const char * symname,
 			  const char * value)
 {
-    return KcSymbolTable_Add(self, KcTristateSymbol, symname, value);
+    return KcSymbolTable_Set(self, KcstTristate, KcSetTristate, symname, value);
 }
 
-KcSymbol_t *
-KcSymbolTable_AddString(KcSymbolTable_t * self, const char * symname,
+const char *
+KcSymbolTable_SetString(KcSymbolTable_t * self, const char * symname,
 			const char * value)
 {
-    return KcSymbolTable_Add(self, KcStringSymbol, symname, value);
+    return KcSymbolTable_Set(self, KcstString, KcSetString, symname, value);
 }
 
-KcSymbol_t *
-KcSymbolTable_AddHex(KcSymbolTable_t * self, const char * symname,
+const char *
+KcSymbolTable_SetHex(KcSymbolTable_t * self, const char * symname,
 		     const char * value)
 {
-    return KcSymbolTable_Add(self, KcHexSymbol, symname, value);
+    return KcSymbolTable_Set(self, KcstHex, KcSetHex, symname, value);
 }
 
-KcSymbol_t *
-KcSymbolTable_AddInt(KcSymbolTable_t * self, const char * symname,
+const char *
+KcSymbolTable_SetInt(KcSymbolTable_t * self, const char * symname,
 		     const char * value)
 {
-    return KcSymbolTable_Add(self, KcIntSymbol, symname, value);
+    return KcSymbolTable_Set(self, KcstInt, KcSetInt, symname, value);
 }
 
 KcSymbol_t *
@@ -195,7 +187,7 @@ KcSymbolTable_Get(KcSymbolTable_t * self, const char * symname)
     KcSymbol_t ** start, ** cur;
     start = self->first + strhash(symname, self->last - self->first);
     do {
-	if (*cur == NULL) return NULL;
+	if (*cur == NULL) return *cur = KcSymbol(symname);
 	if (!strcmp((*cur)->symname, symname)) return *cur;
 	if (++cur == self->last) cur = self->first;
     } while (cur != start);

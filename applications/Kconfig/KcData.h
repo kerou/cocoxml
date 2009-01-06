@@ -32,7 +32,7 @@ typedef struct KcExpr_s KcExpr_t;
 #define  KcYes     2
 
 typedef enum {
-    KcstBool, KcstTristate, KcstString, KcstHex, KcstInt
+    KcstNone, KcstBool, KcstTristate, KcstString, KcstHex, KcstInt
 }   KcSymbolType_t;
 struct KcSymbol_s {
     KcSymbolType_t type;
@@ -75,21 +75,26 @@ struct KcExpr_s {
 KcSymbolTable_t * KcSymbolTable(size_t space);
 void KcSymbolTable_Destruct(KcSymbolTable_t * self);
 
-KcSymbol_t *
-KcSymbolTable_AddBool(KcSymbolTable_t * self, const char * symname,
+/* Return NULL in success, return error message format when failed.
+ * The only formatter is '%s' which will be replaced by symname. */
+const char *
+KcSymbolTable_SetBool(KcSymbolTable_t * self, const char * symname,
 		      const char * value);
-KcSymbol_t *
-KcSymbolTable_AddTristate(KcSymbolTable_t * self, const char * symname,
+const char *
+KcSymbolTable_SetTristate(KcSymbolTable_t * self, const char * symname,
 			  const char * value);
-KcSymbol_t *
-KcSymbolTable_AddString(KcSymbolTable_t * self, const char * symname,
+const char *
+KcSymbolTable_SetString(KcSymbolTable_t * self, const char * symname,
 			const char * value);
-KcSymbol_t *
-KcSymbolTable_AddHex(KcSymbolTable_t * self, const char * symname,
+const char *
+KcSymbolTable_SetHex(KcSymbolTable_t * self, const char * symname,
 		     const char * value);
-KcSymbol_t *
-KcSymbolTable_AddInt(KcSymbolTable_t * self, const char * symname,
+const char *
+KcSymbolTable_SetInt(KcSymbolTable_t * self, const char * symname,
 		     const char * value);
+
+/* Get the specified symbol. If the symbol is not defined yet, return a 'none'
+ * symbol with the specified name. */
 KcSymbol_t * KcSymbolTable_Get(KcSymbolTable_t * self, const char * symname);
 
 KcExpr_t * KcExpr(KcExprType_t type,
