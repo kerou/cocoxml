@@ -72,7 +72,7 @@ main(int argc, char * argv[])
     FILE * atgfp;
     CcOutputScheme_t * scheme;
 
-    printf("Coco/R (Oct22, 2008)\n");
+    printf("Coco/R & CocoXml (2008 ~ 2009)\n");
     CcArguments(&arguments, ArgDescList, ArgDescLast, argc, argv);
     atgName = CcArguments_First(&arguments, "", &iter);
     if (atgName == NULL) {
