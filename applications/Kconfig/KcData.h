@@ -36,6 +36,7 @@ typedef enum {
 }   KcSymbolType_t;
 struct KcSymbol_s {
     KcSymbolType_t type;
+    KcSymbol_t * next;
     char * symname;
     union {
 	int _bool_;
@@ -47,6 +48,8 @@ struct KcSymbol_s {
 };
 
 typedef struct {
+    KcSymbol_t *  firstsym;
+    KcSymbol_t *  lastsym;
     KcSymbol_t ** first;
     KcSymbol_t ** last;
 }   KcSymbolTable_t;
@@ -69,17 +72,24 @@ struct KcExpr_s {
     } u;
 };
 
-KcSymbol_t * KcBoolSymbol(const char * symname, const char * value);
-KcSymbol_t * KcTristateSymbol(const char * symname, const char * value);
-KcSymbol_t * KcStringSymbol(const char * symname, const char * value);
-KcSymbol_t * KcHexSymbol(const char * symname, const char * value);
-KcSymbol_t * KcIntSymbol(const char * symname, const char * value);
-void KcSymbol_Destruct(KcSymbol_t * self);
-
-KcSymbolTable_t * KcSymbolTable(int space);
+KcSymbolTable_t * KcSymbolTable(size_t space);
 void KcSymbolTable_Destruct(KcSymbolTable_t * self);
 
-void KcSymbolTable_Add(KcSymbolTable_t * self, KcSymbol_t * sym);
+KcSymbol_t *
+KcSymbolTable_AddBool(KcSymbolTable_t * self, const char * symname,
+		      const char * value);
+KcSymbol_t *
+KcSymbolTable_AddTristate(KcSymbolTable_t * self, const char * symname,
+			  const char * value);
+KcSymbol_t *
+KcSymbolTable_AddString(KcSymbolTable_t * self, const char * symname,
+			const char * value);
+KcSymbol_t *
+KcSymbolTable_AddHex(KcSymbolTable_t * self, const char * symname,
+		     const char * value);
+KcSymbol_t *
+KcSymbolTable_AddInt(KcSymbolTable_t * self, const char * symname,
+		     const char * value);
 KcSymbol_t * KcSymbolTable_Get(KcSymbolTable_t * self, const char * symname);
 
 KcExpr_t * KcExpr(KcExprType_t type,

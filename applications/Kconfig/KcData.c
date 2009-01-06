@@ -17,6 +17,8 @@
 -------------------------------------------------------------------------*/
 #include  "KcData.h"
 
+static void KcSymbol_Destruct(KcSymbol_t * self);
+
 static KcSymbol_t *
 KcSymbol(KcSymbolType_t type, const char * symname)
 {
@@ -24,12 +26,13 @@ KcSymbol(KcSymbolType_t type, const char * symname)
     if (!(self = CcsMalloc(sizeof(KcSymbol_t) + strlen(symname) + 1)))
 	return NULL;
     self->type = type;
+    self->next = NULL;
     self->symname = (char *)(self + 1);
     strcpy(self->symname, symname);
     return self;
 }
 
-KcSymbol_t *
+static KcSymbol_t *
 KcBoolSymbol(const char * symname, const char * value)
 {
     KcSymbol_t * self;
@@ -38,7 +41,7 @@ KcBoolSymbol(const char * symname, const char * value)
     return self;
 }
 
-KcSymbol_t *
+static KcSymbol_t *
 KcTristateSymbol(const char * symname, const char * value)
 {
     KcSymbol_t * self;
@@ -48,7 +51,7 @@ KcTristateSymbol(const char * symname, const char * value)
     return self;
 }
 
-KcSymbol_t *
+static KcSymbol_t *
 KcStringSymbol(const char * symname, const char * value)
 {
     KcSymbol_t * self;
@@ -61,7 +64,7 @@ KcStringSymbol(const char * symname, const char * value)
     return NULL;
 }
 
-KcSymbol_t *
+static KcSymbol_t *
 KcHexSymbol(const char * symname, const char * value)
 {
     KcSymbol_t * self;
@@ -78,7 +81,7 @@ KcHexSymbol(const char * symname, const char * value)
     return self;
 }
 
-KcSymbol_t *
+static KcSymbol_t *
 KcIntSymbol(const char * symname, const char * value)
 {
     KcSymbol_t * self;
@@ -87,7 +90,7 @@ KcIntSymbol(const char * symname, const char * value)
     return self;
 }
 
-void
+static void
 KcSymbol_Destruct(KcSymbol_t * self)
 {
     if (self->type == KcstString && self->u._string_ != NULL)
@@ -96,12 +99,13 @@ KcSymbol_Destruct(KcSymbol_t * self)
 }
 
 KcSymbolTable_t *
-KcSymbolTable(int space)
+KcSymbolTable(size_t space)
 {
     KcSymbolTable_t * self;
     if (!(self = CcsMalloc(sizeof(KcSymbolTable_t)))) goto errquit0;
     if (!(self->first = CcsMalloc(sizeof(KcSymbol_t *) * space))) goto errquit1;
     memset(self->first, 0, sizeof(KcSymbol_t *) * space);
+    self->firstsym = self->lastsym = NULL;
     self->last = self->first + space;
     return self;
  errquit1:
@@ -129,16 +133,60 @@ strhash(const char * str, int szhash)
     return value % szhash;
 }
 
-void
-KcSymbolTable_Add(KcSymbolTable_t * self, KcSymbol_t * sym)
+static KcSymbol_t *
+KcSymbolTable_Add(KcSymbolTable_t * self,
+		  KcSymbol_t * (* creator)(const char * symname,
+					   const char * value),
+		  const char * symname, const char * value)
 {
     KcSymbol_t ** start, ** cur;
-    start = self->first + strhash(sym->symname, self->last - self->first);
+    start = self->first + strhash(symname, self->last - self->first);
     do {
-	if (*cur == NULL) { *cur = sym; return; }
+	if (*cur == NULL) {
+	    if (!(*cur = creator(symname, value))) return NULL;
+	    if (!self->firstsym) self->firstsym = *cur;
+	    if (self->lastsym) self->lastsym->next = *cur;
+	    self->lastsym = *cur;
+	    return *cur;
+	}
 	if (++cur == self->last) cur = self->first;
     } while (cur != start);
-    CcsAssert(0); /* Full */
+    return NULL; /* Full */
+}
+
+KcSymbol_t *
+KcSymbolTable_AddBool(KcSymbolTable_t * self, const char * symname,
+		      const char * value)
+{
+    return KcSymbolTable_Add(self, KcBoolSymbol, symname, value);
+}
+
+KcSymbol_t *
+KcSymbolTable_AddTristate(KcSymbolTable_t * self, const char * symname,
+			  const char * value)
+{
+    return KcSymbolTable_Add(self, KcTristateSymbol, symname, value);
+}
+
+KcSymbol_t *
+KcSymbolTable_AddString(KcSymbolTable_t * self, const char * symname,
+			const char * value)
+{
+    return KcSymbolTable_Add(self, KcStringSymbol, symname, value);
+}
+
+KcSymbol_t *
+KcSymbolTable_AddHex(KcSymbolTable_t * self, const char * symname,
+		     const char * value)
+{
+    return KcSymbolTable_Add(self, KcHexSymbol, symname, value);
+}
+
+KcSymbol_t *
+KcSymbolTable_AddInt(KcSymbolTable_t * self, const char * symname,
+		     const char * value)
+{
+    return KcSymbolTable_Add(self, KcIntSymbol, symname, value);
 }
 
 KcSymbol_t *
