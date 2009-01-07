@@ -47,8 +47,8 @@ KcScanner_Init(KcScanner_t * self)
 {
     /*---- declarations ----*/
     self->eofSym = 0;
-    self->maxT = 24;
-    self->noSym = 24;
+    self->maxT = 26;
+    self->noSym = 26;
     /*---- enable ----*/
 
     self->busyTokenList = NULL;
@@ -195,16 +195,17 @@ static const Char2State_t c2sArr[] = {
     { EoF, EoF, -1 },
     { 10, 10, 6 },	/* '\n' '\n' */
     { 13, 13, 5 },	/* '\r' '\r' */
-    { 33, 33, 15 },	/* '!' '!' */
+    { 33, 33, 25 },	/* '!' '!' */
     { 34, 34, 2 },	/* '"' '"' */
-    { 38, 38, 9 },	/* '&' '&' */
-    { 40, 40, 11 },	/* '(' '(' */
-    { 41, 41, 12 },	/* ')' ')' */
-    { 61, 61, 13 },	/* '=' '=' */
+    { 38, 38, 19 },	/* '&' '&' */
+    { 40, 40, 21 },	/* '(' '(' */
+    { 41, 41, 22 },	/* ')' ')' */
+    { 45, 45, 7 },	/* '-' '-' */
+    { 61, 61, 23 },	/* '=' '=' */
     { 65, 90, 1 },	/* 'A' 'Z' */
     { 95, 95, 1 },	/* '_' '_' */
     { 97, 122, 1 },	/* 'a' 'z' */
-    { 124, 124, 7 },	/* '|' '|' */
+    { 124, 124, 17 },	/* '|' '|' */
     /*---- enable ----*/
 };
 static const int c2sNum = sizeof(c2sArr) / sizeof(c2sArr[0]);
@@ -235,16 +236,17 @@ typedef struct {
 
 static const Identifier2KWKind_t i2kArr[] = {
     /*---- identifiers2keywordkinds ----*/
-    { "bool", 8 },
+    { "bool", 9 },
     { "config", 7 },
-    { "def_bool", 10 },
-    { "def_tristate", 13 },
-    { "help", 16 },
-    { "if", 15 },
-    { "m", 14 },
-    { "n", 12 },
-    { "tristate", 9 },
-    { "y", 11 },
+    { "def_bool", 11 },
+    { "def_tristate", 14 },
+    { "help", 17 },
+    { "if", 16 },
+    { "m", 15 },
+    { "menuconfig", 8 },
+    { "n", 13 },
+    { "tristate", 10 },
+    { "y", 12 },
     /*---- enable ----*/
 };
 static const int i2kNum = sizeof(i2kArr) / sizeof(i2kArr[0]);
@@ -500,29 +502,67 @@ KcScanner_NextToken(KcScanner_t * self)
     case 6: case_6:
 	{ kind = 6; break; }
     case 7:
-	if (self->ch == '|') {
+	if (self->ch == '-') {
 	    KcScanner_GetCh(self); goto case_8;
 	} else { kind = self->noSym; break; }
     case 8: case_8:
-	{ kind = 17; break; }
-    case 9:
-	if (self->ch == '&') {
+	if (self->ch == '-') {
+	    KcScanner_GetCh(self); goto case_9;
+	} else { kind = self->noSym; break; }
+    case 9: case_9:
+	if (self->ch == 'h') {
 	    KcScanner_GetCh(self); goto case_10;
 	} else { kind = self->noSym; break; }
     case 10: case_10:
-	{ kind = 18; break; }
-    case 11:
-	{ kind = 20; break; }
-    case 12:
-	{ kind = 21; break; }
-    case 13:
-	{ kind = 22; break; }
-    case 14: case_14:
-	{ kind = 23; break; }
-    case 15:
-	if (self->ch == '=') {
+	if (self->ch == 'e') {
+	    KcScanner_GetCh(self); goto case_11;
+	} else { kind = self->noSym; break; }
+    case 11: case_11:
+	if (self->ch == 'l') {
+	    KcScanner_GetCh(self); goto case_12;
+	} else { kind = self->noSym; break; }
+    case 12: case_12:
+	if (self->ch == 'p') {
+	    KcScanner_GetCh(self); goto case_13;
+	} else { kind = self->noSym; break; }
+    case 13: case_13:
+	if (self->ch == '-') {
 	    KcScanner_GetCh(self); goto case_14;
-	} else { kind = 19; break; }
+	} else { kind = self->noSym; break; }
+    case 14: case_14:
+	if (self->ch == '-') {
+	    KcScanner_GetCh(self); goto case_15;
+	} else { kind = self->noSym; break; }
+    case 15: case_15:
+	if (self->ch == '-') {
+	    KcScanner_GetCh(self); goto case_16;
+	} else { kind = self->noSym; break; }
+    case 16: case_16:
+	{ kind = 18; break; }
+    case 17:
+	if (self->ch == '|') {
+	    KcScanner_GetCh(self); goto case_18;
+	} else { kind = self->noSym; break; }
+    case 18: case_18:
+	{ kind = 19; break; }
+    case 19:
+	if (self->ch == '&') {
+	    KcScanner_GetCh(self); goto case_20;
+	} else { kind = self->noSym; break; }
+    case 20: case_20:
+	{ kind = 20; break; }
+    case 21:
+	{ kind = 22; break; }
+    case 22:
+	{ kind = 23; break; }
+    case 23:
+	{ kind = 24; break; }
+    case 24: case_24:
+	{ kind = 25; break; }
+    case 25:
+	if (self->ch == '=') {
+	    KcScanner_GetCh(self); goto case_24;
+	} else { kind = 21; break; }
     /*---- enable ----*/
     }
     t = CcsToken(kind, pos, col, line,

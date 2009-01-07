@@ -55,17 +55,38 @@ Kconfig =
   { ConfigDecl }
 .
 
-ConfigDecl = "config" ident IndentIn { ConfigProperty } [ Help ] IndentOut.
+ConfigDecl           (. CcsBool_t menuOrNot;
+		     	char * symname = NULL;
+			KcProperty_t * propFirst = NULL, * propLast = NULL, * propNew = NULL;
+		     	CcsPosition_t * helpmsg = NULL; .)
+ = ("config"         (. menuOrNot = FALSE; .)
+    | "menuconfig"   (. menuOrNot = TRUE; .)
+  ) ident            (. symname = CcsStrdup(self->t->val); .)
+  eol IndentIn { ConfigProperty<&propNew>
+                     (. if (propLast) {
+      	       	 	    propLast->next = propNew; propLast = propNew;
+			} else {
+			    propFirst = propLast = propNew;
+			} .)
+  } [ Help<&helpmsg> ] IndentOut
+      		     (. KcSymbolTable_AppendSymbol(self->symtab, symname, menuOrNot, propFirst, helpmsg);
+		     	CcsFree(symname); .)
+.
 
-ConfigProperty = TypeDefine | TypeWithDefault.
+ConfigProperty<KcProperty_t ** prop> =
+  TypeDefine<prop> | TypeWithDefault<prop>.
 
-TypeDefine = ("bool" [string]) | ("tristate" [string]).
+TypeDefine<KcProperty_t ** prop> = ("bool" [string]) | ("tristate" [string]).
 
-TypeWithDefault (. KcExpr_t * expr; .) =
+TypeWithDefault<KcProperty_t ** prop> (. KcExpr_t * expr; .) =
   ("def_bool" ('y' | 'n')) | ("def_tristate" ('y' | 'm' | 'n')) ["if" Expr<&expr>]
 .
 
-Help = "help" IndentIn { ANY } IndentOut.
+Help<CcsPosition_t ** pos>              (. CcsToken_t * beg; .) =
+  ("help" | "---help---") eol IndentIn  (. KcScanner_IncRef(&self->scanner, beg = self->la); .)
+  { ANY } IndentOut                     (. *pos = KcScanner_GetPosition(&self->scanner, beg, self->t);
+    	  			           KcScanner_DecRef(&self->scanner, beg); .)
+.
 
 Expr<KcExpr_t ** expr> =            (. KcExpr_t * expr0; .)
   Expr0<expr> { "||" Expr0<&expr0>  (. *expr = KcExpr(KcetExprOr, NULL, NULL, *expr, expr0); .)
