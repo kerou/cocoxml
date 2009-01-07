@@ -24,7 +24,7 @@ MEMBERS
     KcSymbolTable_t * symtab;
 
 CONSTRUCTOR
-    if (!(self->symtab = KcSymbolTable(4409))) goto ERRQUIT;
+    if (!(self->symtab = KcSymbolTable())) goto ERRQUIT;
 
 DESTRUCTOR
     KcSymbolTable_Destruct(self->symtab);

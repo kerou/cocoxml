@@ -124,7 +124,7 @@ KcParser(KcParser_t * self, FILE  * infp, FILE * errfp)
     self->t = self->la = NULL;
     /*---- constructor ----*/
     self->maxT = 24;
-    if (!(self->symtab = KcSymbolTable(4409))) goto ERRQUIT;
+    if (!(self->symtab = KcSymbolTable())) goto ERRQUIT;
     /*---- enable ----*/
     return self;
  errquit1:
