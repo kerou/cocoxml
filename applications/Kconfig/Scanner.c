@@ -47,8 +47,8 @@ KcScanner_Init(KcScanner_t * self)
 {
     /*---- declarations ----*/
     self->eofSym = 0;
-    self->maxT = 26;
-    self->noSym = 26;
+    self->maxT = 31;
+    self->noSym = 31;
     /*---- enable ----*/
 
     self->busyTokenList = NULL;
@@ -238,15 +238,20 @@ static const Identifier2KWKind_t i2kArr[] = {
     /*---- identifiers2keywordkinds ----*/
     { "bool", 9 },
     { "config", 7 },
-    { "def_bool", 11 },
-    { "def_tristate", 14 },
-    { "help", 17 },
-    { "if", 16 },
-    { "m", 15 },
+    { "def_bool", 16 },
+    { "def_tristate", 17 },
+    { "default", 15 },
+    { "depends", 18 },
+    { "help", 22 },
+    { "hex", 11 },
+    { "if", 14 },
+    { "int", 12 },
     { "menuconfig", 8 },
-    { "n", 13 },
+    { "on", 19 },
+    { "prompt", 13 },
+    { "ranges", 21 },
+    { "select", 20 },
     { "tristate", 10 },
-    { "y", 12 },
     /*---- enable ----*/
 };
 static const int i2kNum = sizeof(i2kArr) / sizeof(i2kArr[0]);
@@ -538,31 +543,31 @@ KcScanner_NextToken(KcScanner_t * self)
 	    KcScanner_GetCh(self); goto case_16;
 	} else { kind = self->noSym; break; }
     case 16: case_16:
-	{ kind = 18; break; }
+	{ kind = 23; break; }
     case 17:
 	if (self->ch == '|') {
 	    KcScanner_GetCh(self); goto case_18;
 	} else { kind = self->noSym; break; }
     case 18: case_18:
-	{ kind = 19; break; }
+	{ kind = 24; break; }
     case 19:
 	if (self->ch == '&') {
 	    KcScanner_GetCh(self); goto case_20;
 	} else { kind = self->noSym; break; }
     case 20: case_20:
-	{ kind = 20; break; }
-    case 21:
-	{ kind = 22; break; }
-    case 22:
-	{ kind = 23; break; }
-    case 23:
-	{ kind = 24; break; }
-    case 24: case_24:
 	{ kind = 25; break; }
+    case 21:
+	{ kind = 27; break; }
+    case 22:
+	{ kind = 28; break; }
+    case 23:
+	{ kind = 29; break; }
+    case 24: case_24:
+	{ kind = 30; break; }
     case 25:
 	if (self->ch == '=') {
 	    KcScanner_GetCh(self); goto case_24;
-	} else { kind = 21; break; }
+	} else { kind = 26; break; }
     /*---- enable ----*/
     }
     t = CcsToken(kind, pos, col, line,

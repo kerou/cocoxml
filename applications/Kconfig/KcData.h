@@ -35,12 +35,26 @@ typedef struct KcMenu_s KcMenu_t;
 #define  KcYes     2
 
 typedef enum {
-    KcptPropmt, KcptDefault, KcptDepends, KcptSelect
+    KcptPropmt, KcptDefault, KcptDepends, KcptSelect, KcptRanges
 }   KcPropertyType_t;
 struct KcProperty_s {
     KcPropertyType_t type;
     KcProperty_t * next;
 };
+
+const char *
+KcProperty_AppendPrompt(KcProperty_t ** prop, char * prompt, KcExpr_t * expr);
+const char *
+KcProperty_AppendDefault(KcProperty_t ** prop, KcExpr_t * expr0,
+			 KcExpr_t * expr1);
+const char *
+KcProperty_AppendDepends(KcProperty_t ** prop, KcExpr_t * expr);
+const char *
+KcProperty_AppendSelect(KcProperty_t ** prop, KcSymbol_t * sym,
+			KcExpr_t * expr);
+const char *
+KcProperty_AppendRanges(KcProperty_t ** prop, KcSymbol_t * sym0,
+			KcSymbol_t * sym1, KcExpr_t * expr);
 
 typedef enum {
     KcstNone, KcstBool, KcstTristate, KcstString, KcstHex, KcstInt
@@ -60,13 +74,6 @@ struct KcSymbol_s {
     KcProperty_t * propFirst;
     KcProperty_t * propLast;
 };
-
-const char *
-KcSymbol_AppendPrompt(KcSymbol_t * self, const char * prompt);
-const char *
-KcSymbol_AppendDefault(KcSymbol_t * self, const char * _default_);
-const char *
-KcSymbol_AppendDepends(KcSymbol_t * self, KcExpr_t * depExpr);
 
 typedef enum {
     KcetSymbol, KcetSymbolEqual, KcetSymbolNotEqual,
