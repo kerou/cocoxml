@@ -57,12 +57,13 @@ Kconfig =
 
 ConfigDecl           (. CcsBool_t menuOrNot;
 		     	char * symname = NULL;
+			KcSymbolType_t symtype = KcstNone;
 			KcProperty_t * propFirst = NULL, * propLast = NULL, * propNew = NULL;
 		     	CcsPosition_t * helpmsg = NULL; .)
  = ("config"         (. menuOrNot = FALSE; .)
     | "menuconfig"   (. menuOrNot = TRUE; .)
   ) ident            (. symname = CcsStrdup(self->t->val); .)
-  eol IndentIn { ConfigProperty<&propNew>
+  eol IndentIn { ConfigProperty<&symtype, &propNew>
                      (. if (propLast) {
       	       	 	    propLast->next = propNew; propLast = propNew;
 			} else {
@@ -73,13 +74,57 @@ ConfigDecl           (. CcsBool_t menuOrNot;
 		     	CcsFree(symname); .)
 .
 
-ConfigProperty<KcProperty_t ** prop> =
-  TypeDefine<prop> | TypeWithDefault<prop>.
+ConfigProperty<KcSymbolType_t * symtype, KcProperty_t ** prop> =
+  TypeDefine<symtype, prop>
+  | InputPrompt<prop>
+  | Default<prop>
+  | TypeWithDefault<symtype, prop>
+  | DependsOn<prop>
+  | Select<prop>
+  | Ranges<prop>
+.
 
-TypeDefine<KcProperty_t ** prop> = ("bool" [string]) | ("tristate" [string]).
+TypeDefine<KcSymbolType_t * symtype, KcProperty_t ** prop> =
+  ("bool"          (. *symtype = KcstBool; .)
+  | "tristate"     (. *symtype = KcstTristate; .)
+  | "string"       (. *symtype = KcstString; .)
+  | "hex"          (. *symtype = KcstHex; .)
+  | "int"          (. *symtype = KcstInt; .)
+  ) [string        (. KcProperty_AppendPrompt(prop, self->t->val, NULL); .)
+  ] eol
+.
 
-TypeWithDefault<KcProperty_t ** prop> (. KcExpr_t * expr; .) =
-  ("def_bool" ('y' | 'n')) | ("def_tristate" ('y' | 'm' | 'n')) ["if" Expr<&expr>]
+InputPrompt<KcProperty_t ** prop>
+                         (. char * prompt; KcExpr_t * expr = NULL; .) =
+  "prompt" string        (. prompt = CcsStrdup(self->t->val); .)
+ ["if" Expr<&expr>] eol  (. KcProperty_AppendPrompt(prop, prompt, expr); .)
+.
+
+Default<KcProperty_t ** prop> (. KcExpr_t * expr0, * expr1 = NULL; .) =
+  "default" Expr<&expr0> ["if" Expr<&expr1>] eol
+                              (. KcProperty_AppendDefault(prop, expr0, expr1); .)
+.
+
+TypeWithDefault<KcSymbolType_t * symtype, KcProperty_t ** prop>
+                      (. KcExpr_t * expr0, * expr1  = NULL; .) =
+  ("def_bool"         (. *symtype = KcstBool; .)
+   | "def_tristate"   (. *symtype = KcstTristate; .)
+  ) Expr<&expr0> ["if" Expr<&expr1>] eol
+                      (. KcProperty_AppendDefault(prop, expr0, expr1); .)
+.
+
+DependsOn<KcProperty_t ** prop>  (. KcExpr_t * expr; .) =
+  "depends" "on" Expr<&expr> eol (. KcProperty_AppendDepends(prop, expr); .)
+.
+
+Select<KcProperty_t ** prop>   (. KcSymbol_t * sym; KcExpr_t * expr = NULL; .) =
+  "select" Symbol<&sym> ["if" Expr<&expr> ] eol
+                               (. KcProperty_AppendSelect(prop, sym, expr); .)
+.
+
+Ranges<KcProperty_t ** prop>    (. KcSymbol_t * sym0, * sym1; KcExpr_t * expr = NULL; .) =
+  "ranges" Symbol<&sym0> Symbol<&sym1> ["if" Expr<&expr>] eol
+                                (. KcProperty_AppendRanges(prop, sym0, sym1, expr); .)
 .
 
 Help<CcsPosition_t ** pos>              (. CcsToken_t * beg; .) =
@@ -107,16 +152,18 @@ Expr2<KcExpr_t ** expr> =
 .
 
 Expr3<KcExpr_t ** expr> = (. char op = 0; KcSymbol_t * sym0 = NULL, * sym1 = NULL; .)
-  (ident                  (. sym0 = KcSymbolTable_Get(self->symtab, self->t->val); .)
-    [ ("="                (. op = '='; .)
-      | "!="              (. op = '!'; .)
-      ) ident             (. sym1 = KcSymbolTable_Get(self->symtab, self->t->val); .)
-    ])                    (. switch (op) {
+  (Symbol<&sym0> [ ("="   (. op = '='; .)
+                 | "!="   (. op = '!'; .)
+  ) Symbol<&sym1> ])      (. switch (op) {
     			     case 0: *expr = KcExpr(KcetSymbol, sym0, NULL, NULL, NULL); break;
 			     case '=': *expr = KcExpr(KcetSymbolEqual, sym0, sym1, NULL, NULL); break;
 			     case '!': *expr = KcExpr(KcetSymbolNotEqual, sym0, sym1, NULL, NULL); break;
 			     } .)
   | Expr<expr>
+.
+
+Symbol<KcSymbol_t ** sym> = ident
+        (. *sym = KcSymbolTable_Get(self->symtab, self->t->val); .)
 .
 
 END Kconfig.

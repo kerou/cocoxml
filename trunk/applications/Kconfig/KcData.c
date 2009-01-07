@@ -23,6 +23,33 @@ KcProperty_Destruct(KcProperty_t * self)
     CcsFree(self);
 }
 
+const char *
+KcProperty_AppendPrompt(KcProperty_t ** prop, char * prompt, KcExpr_t * expr)
+{
+}
+
+const char *
+KcProperty_AppendDefault(KcProperty_t ** prop,
+			 KcExpr_t * expr0, KcExpr_t * expr1)
+{
+}
+
+const char *
+KcProperty_AppendDepends(KcProperty_t ** prop, KcExpr_t * expr)
+{
+}
+
+const char *
+KcProperty_AppendSelect(KcProperty_t ** prop, KcSymbol_t * sym, KcExpr_t * expr)
+{
+}
+
+const char *
+KcProperty_AppendRanges(KcProperty_t ** prop, KcSymbol_t * sym0,
+			KcSymbol_t * sym1, KcExpr_t * expr)
+{
+}
+
 static KcSymbol_t *
 KcSymbol(const char * symname)
 {
@@ -91,21 +118,6 @@ KcSymbol_Destruct(KcSymbol_t * self)
     if (self->type == KcstString && self->u._string_ != NULL)
 	CcsFree(self->u._string_);
     CcsFree(self);
-}
-
-const char *
-KcSymbol_AppendPrompt(KcSymbol_t * self, const char * prompt)
-{
-}
-
-const char *
-KcSymbol_AppendDefault(KcSymbol_t * self, const char * _default_)
-{
-}
-
-const char *
-KcSymbol_AppendDepends(KcSymbol_t * self, KcExpr_t * depExpr)
-{
 }
 
 #ifndef  KCSIZE_SYMTAB
