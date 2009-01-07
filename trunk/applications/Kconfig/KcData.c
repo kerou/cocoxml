@@ -147,6 +147,13 @@ symtabHash(KcSymbolTable_t * self, const char * symname)
     return self->first + value % (self->last - self->first);
 }
 
+const char *
+KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, const char * symname,
+			   CcsBool_t menuOrNot, KcProperty_t * properties,
+			   CcsPosition_t * helpmsg)
+{
+}
+
 static const char *
 KcSymbolTable_Set(KcSymbolTable_t * self, KcSymbolType_t type,
 		  const char * (* setfunc)(KcSymbol_t * sym,

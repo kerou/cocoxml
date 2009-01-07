@@ -35,7 +35,7 @@ typedef struct KcMenu_s KcMenu_t;
 #define  KcYes     2
 
 typedef enum {
-    KcptPropmt, KcptDefault, KcptDepends
+    KcptPropmt, KcptDefault, KcptDepends, KcptSelect
 }   KcPropertyType_t;
 struct KcProperty_s {
     KcPropertyType_t type;
@@ -49,6 +49,7 @@ struct KcSymbol_s {
     KcSymbolType_t type;
     KcSymbol_t * next;
     char * symname;
+    CcsBool_t menuOrNot;
     union {
 	int _bool_;
 	int _tristate_;
@@ -97,6 +98,11 @@ typedef struct {
 
 KcSymbolTable_t * KcSymbolTable(void);
 void KcSymbolTable_Destruct(KcSymbolTable_t * self);
+
+const char *
+KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, const char * symname,
+			   CcsBool_t menuOrNot, KcProperty_t * properties,
+			   CcsPosition_t * helpmsg);
 
 /* Return NULL in success, return error message format when failed.
  * The only formatter is '%s' which will be replaced by symname. */
