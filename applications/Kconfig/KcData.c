@@ -17,7 +17,11 @@
 -------------------------------------------------------------------------*/
 #include  "KcData.h"
 
-static void KcSymbol_Destruct(KcSymbol_t * self);
+static void
+KcProperty_Destruct(KcProperty_t * self)
+{
+    CcsFree(self);
+}
 
 static KcSymbol_t *
 KcSymbol(const char * symname)
@@ -25,8 +29,8 @@ KcSymbol(const char * symname)
     KcSymbol_t * self;
     if (!(self = CcsMalloc(sizeof(KcSymbol_t) + strlen(symname) + 1)))
 	return NULL;
+    memset(self, 0, sizeof(KcSymbol_t));
     self->type = KcstNone;
-    self->next = NULL;
     self->symname = (char *)(self + 1);
     strcpy(self->symname, symname);
     return self;
@@ -50,6 +54,7 @@ KcSetTristate(KcSymbol_t * self, const char * value)
 static const char *
 KcSetString(KcSymbol_t * self, const char * value)
 {
+    if (self->type == KcstString && self->u._string_) CcsFree(self->u._string_);
     return self->u._string_ = CcsStrdup(value) ? NULL : "Not enough memory";
 }
 
@@ -78,20 +83,44 @@ KcSetInt(KcSymbol_t * self, const char * value)
 static void
 KcSymbol_Destruct(KcSymbol_t * self)
 {
+    KcProperty_t * cur, * next;
+    for (cur = self->propFirst; cur; cur = next) {
+	next = cur->next;
+	KcProperty_Destruct(cur);
+    }
     if (self->type == KcstString && self->u._string_ != NULL)
 	CcsFree(self->u._string_);
     CcsFree(self);
 }
 
+const char *
+KcSymbol_AppendPrompt(KcSymbol_t * self, const char * prompt)
+{
+}
+
+const char *
+KcSymbol_AppendDefault(KcSymbol_t * self, const char * _default_)
+{
+}
+
+const char *
+KcSymbol_AppendDepends(KcSymbol_t * self, KcExpr_t * depExpr)
+{
+}
+
+#ifndef  KCSIZE_SYMTAB
+#define  KCSIZE_SYMTAB  509
+#endif
+
 KcSymbolTable_t *
-KcSymbolTable(size_t space)
+KcSymbolTable(void)
 {
     KcSymbolTable_t * self;
     if (!(self = CcsMalloc(sizeof(KcSymbolTable_t)))) goto errquit0;
-    if (!(self->first = CcsMalloc(sizeof(KcSymbol_t *) * space))) goto errquit1;
-    memset(self->first, 0, sizeof(KcSymbol_t *) * space);
-    self->firstsym = self->lastsym = NULL;
-    self->last = self->first + space;
+    if (!(self->first = CcsMalloc(sizeof(KcSymbol_t *) * KCSIZE_SYMTAB)))
+	goto errquit1;
+    memset(self->first, 0, sizeof(KcSymbol_t *) * KCSIZE_SYMTAB);
+    self->last = self->first + KCSIZE_SYMTAB;
     return self;
  errquit1:
     CcsFree(self);
@@ -108,14 +137,14 @@ KcSymbolTable_Destruct(KcSymbolTable_t * self)
     CcsFree(self);
 }
 
-static int
-strhash(const char * str, int szhash)
+static KcSymbol_t **
+symtabHash(KcSymbolTable_t * self, const char * symname)
 {
     int value = 0;
     const char * cur;
-    for (cur = str; *cur; ++cur)
+    for (cur = symname; *cur; ++cur)
 	value += *cur;
-    return value % szhash;
+    return self->first + value % (self->last - self->first);
 }
 
 static const char *
@@ -124,26 +153,15 @@ KcSymbolTable_Set(KcSymbolTable_t * self, KcSymbolType_t type,
 					   const char * value),
 		  const char * symname, const char * value)
 {
-    KcSymbol_t ** start, ** cur;
-    start = self->first + strhash(symname, self->last - self->first);
-    do {
-	if (!*cur || !strcmp((*cur)->symname, symname)) {
-	    if (!*cur) {
-		if (!(*cur = KcSymbol(symname))) return "Not enough memory";
-	    }
-	    if ((*cur)->type != KcstNone && (*cur)->type != type)
-		return "Type conflict for symbol '%s'";
-	    if ((*cur)->type == KcstNone) {
-		if (!self->firstsym) self->firstsym = *cur;
-		if (self->lastsym) self->lastsym->next = *cur;
-		self->lastsym = *cur;
-		(*cur)->type = type;
-	    }
-	    return setfunc(*cur, value);
-	}
-	if (++cur == self->last) cur = self->first;
-    } while (cur != start);
-    return "The symbol table is full when tring to add '%s'";
+    KcSymbol_t ** cur;
+    for (cur = symtabHash(self, symname); *cur; cur = &((*cur)->next)) {
+	if (strcmp((*cur)->symname, symname)) continue;
+	if ((*cur)->type == KcstNone) (*cur)->type = type;
+	else if ((*cur)->type != type) return "Type conflict for symbol '%s'";
+	return setfunc(*cur, value);
+    }
+    if (!(*cur = KcSymbol(symname))) return "Not enough memory";
+    return setfunc(*cur, value);
 }
 
 const char *
@@ -184,14 +202,10 @@ KcSymbolTable_SetInt(KcSymbolTable_t * self, const char * symname,
 KcSymbol_t *
 KcSymbolTable_Get(KcSymbolTable_t * self, const char * symname)
 {
-    KcSymbol_t ** start, ** cur;
-    start = self->first + strhash(symname, self->last - self->first);
-    do {
-	if (*cur == NULL) return *cur = KcSymbol(symname);
+    KcSymbol_t ** cur;
+    for (cur = symtabHash(self, symname); *cur; cur = &((*cur)->next))
 	if (!strcmp((*cur)->symname, symname)) return *cur;
-	if (++cur == self->last) cur = self->first;
-    } while (cur != start);
-    return NULL;
+    return *cur = KcSymbol(symname);
 }
 
 KcExpr_t *
@@ -225,4 +239,68 @@ KcExpr_Destruct(KcExpr_t * self)
 	break;
     }
     CcsFree(self);
+}
+
+static KcMenuEntry_t *
+KcMenuEntry(KcMenuEntryType_t type, KcSymbol_t * symbol, KcMenu_t * submenu)
+{
+    KcMenuEntry_t * self;
+    if (!(self = CcsMalloc(sizeof(KcMenuEntry_t)))) return NULL;
+    self->type = type;
+    switch (self->type) {
+    case KcmetSymbol: self->u.symbol = symbol; break;
+    case KcmetSubmenu: self->u.submenu = submenu; break;
+    }
+    return self;
+}
+
+static void
+KcMenuEntry_Destruct(KcMenuEntry_t * self)
+{
+    if (self->type == KcmetSubmenu) KcMenu_Destruct(self->u.submenu);
+    CcsFree(self);
+}
+
+KcMenu_t *
+KcMenu(void)
+{
+    KcMenu_t * self;
+    if (!(self = CcsMalloc(sizeof(KcMenu_t)))) return NULL;
+    self->first = self->last = NULL;
+    return self;
+}
+
+void
+KcMenu_Destruct(KcMenu_t * self)
+{
+    KcMenuEntry_t * cur, * next;
+    for (cur = self->first; cur; cur = next) {
+	next = cur->next;
+	KcMenuEntry_Destruct(cur);
+    }
+    CcsFree(self);
+}
+
+static const char *
+KcMenu_AppendEntry(KcMenu_t * self, KcMenuEntry_t * entry)
+{
+    if (!entry) return "Not enough memory";
+    if (self->last) {
+	self->last->next = entry; self->last = entry;
+    } else {
+	self->first = self->last = entry;
+    }
+    return NULL;
+}
+
+const char *
+KcMenu_AppendSymbol(KcMenu_t * self, KcSymbol_t * symbol)
+{
+    return KcMenu_AppendEntry(self, KcMenuEntry(KcmetSymbol, symbol, NULL));
+}
+
+const char *
+KcMenu_AppendSubmenu(KcMenu_t * self, KcMenu_t * submenu)
+{
+    return KcMenu_AppendEntry(self, KcMenuEntry(KcmetSubmenu, NULL, submenu));
 }

@@ -24,12 +24,23 @@
 
 EXTC_BEGIN
 
+typedef struct KcProperty_s KcProperty_t;
 typedef struct KcSymbol_s KcSymbol_t;
 typedef struct KcExpr_s KcExpr_t;
+typedef struct KcMenuEntry_s KcMenuEntry_t;
+typedef struct KcMenu_s KcMenu_t;
 
 #define  KcNo      0
 #define  KcModule  1
 #define  KcYes     2
+
+typedef enum {
+    KcptPropmt, KcptDefault, KcptDepends
+}   KcPropertyType_t;
+struct KcProperty_s {
+    KcPropertyType_t type;
+    KcProperty_t * next;
+};
 
 typedef enum {
     KcstNone, KcstBool, KcstTristate, KcstString, KcstHex, KcstInt
@@ -45,14 +56,16 @@ struct KcSymbol_s {
 	unsigned _hex_;
 	int _int_;
     } u;
+    KcProperty_t * propFirst;
+    KcProperty_t * propLast;
 };
 
-typedef struct {
-    KcSymbol_t *  firstsym;
-    KcSymbol_t *  lastsym;
-    KcSymbol_t ** first;
-    KcSymbol_t ** last;
-}   KcSymbolTable_t;
+const char *
+KcSymbol_AppendPrompt(KcSymbol_t * self, const char * prompt);
+const char *
+KcSymbol_AppendDefault(KcSymbol_t * self, const char * _default_);
+const char *
+KcSymbol_AppendDepends(KcSymbol_t * self, KcExpr_t * depExpr);
 
 typedef enum {
     KcetSymbol, KcetSymbolEqual, KcetSymbolNotEqual,
@@ -72,7 +85,17 @@ struct KcExpr_s {
     } u;
 };
 
-KcSymbolTable_t * KcSymbolTable(size_t space);
+KcExpr_t * KcExpr(KcExprType_t type,
+		  KcSymbol_t * sym0, KcSymbol_t * sym1,
+		  KcExpr_t * exp0, KcExpr_t * exp1);
+void KcExpr_Destruct(KcExpr_t * self);
+
+typedef struct {
+    KcSymbol_t ** first;
+    KcSymbol_t ** last;
+}   KcSymbolTable_t;
+
+KcSymbolTable_t * KcSymbolTable(void);
 void KcSymbolTable_Destruct(KcSymbolTable_t * self);
 
 /* Return NULL in success, return error message format when failed.
@@ -97,10 +120,28 @@ KcSymbolTable_SetInt(KcSymbolTable_t * self, const char * symname,
  * symbol with the specified name. */
 KcSymbol_t * KcSymbolTable_Get(KcSymbolTable_t * self, const char * symname);
 
-KcExpr_t * KcExpr(KcExprType_t type,
-		  KcSymbol_t * sym0, KcSymbol_t * sym1,
-		  KcExpr_t * exp0, KcExpr_t * exp1);
-void KcExpr_Destruct(KcExpr_t * self);
+typedef enum {
+    KcmetSymbol, KcmetSubmenu
+}   KcMenuEntryType_t;
+struct KcMenuEntry_s {
+    KcMenuEntryType_t type;
+    KcMenuEntry_t * next;
+    union {
+	KcSymbol_t * symbol;
+	KcMenu_t * submenu;
+    } u;
+};
+
+struct KcMenu_s {
+    KcMenuEntry_t * first;
+    KcMenuEntry_t * last;
+};
+
+KcMenu_t * KcMenu(void);
+void KcMenu_Destruct(KcMenu_t * self);
+
+const char * KcMenu_AppendSymbol(KcMenu_t * self, KcSymbol_t * symbol);
+const char * KcMenu_AppendSubmenu(KcMenu_t * self, KcMenu_t * submenu);
 
 EXTC_END
 
