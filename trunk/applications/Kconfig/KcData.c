@@ -23,31 +23,76 @@ KcProperty_Destruct(KcProperty_t * self)
     CcsFree(self);
 }
 
-const char *
-KcProperty_AppendPrompt(KcProperty_t ** prop, char * prompt, KcExpr_t * expr)
+static const char *
+AppendProperty(KcProperty_t ** props, KcProperty_t * prop)
 {
+    while (*props) props = &((*props)->next);
+    *props = prop;
+    return NULL;
 }
 
 const char *
-KcProperty_AppendDefault(KcProperty_t ** prop,
-			 KcExpr_t * expr0, KcExpr_t * expr1)
+KcProperty_AppendPrompt(KcProperty_t ** props, char * prompt, KcExpr_t * expr)
 {
+    KcProperty_t * self;
+    if (!(self = CcsMalloc(sizeof(KcProperty_t) + strlen(prompt) + 1)))
+	return "Not enough memory";
+    memset(self, 0, sizeof(KcProperty_t));
+    self->type = KcptPrompt;
+    self->prompt = (char *)(self + 1);
+    strcpy(self->prompt, prompt);
+    return AppendProperty(props, self);
 }
 
 const char *
-KcProperty_AppendDepends(KcProperty_t ** prop, KcExpr_t * expr)
+KcProperty_AppendDefault(KcProperty_t ** props,
+			 KcExpr_t * expr, KcExpr_t * ifexpr)
 {
+    KcProperty_t * self;
+    if (!(self = CcsMalloc(sizeof(KcProperty_t)))) return "Not enough memory";
+    memset(self, 0, sizeof(KcProperty_t));
+    self->type = KcptDefault;
+    self->expr = expr;
+    self->ifexpr = ifexpr;
+    return AppendProperty(props, self);
 }
 
 const char *
-KcProperty_AppendSelect(KcProperty_t ** prop, KcSymbol_t * sym, KcExpr_t * expr)
+KcProperty_AppendDepends(KcProperty_t ** props, KcExpr_t * expr)
 {
+    KcProperty_t * self;
+    if (!(self = CcsMalloc(sizeof(KcProperty_t)))) return "Not enough memory";
+    memset(self, 0, sizeof(KcProperty_t));
+    self->type = KcptDepends;
+    self->expr = expr;
+    return AppendProperty(props, self);
 }
 
 const char *
-KcProperty_AppendRanges(KcProperty_t ** prop, KcSymbol_t * sym0,
-			KcSymbol_t * sym1, KcExpr_t * expr)
+KcProperty_AppendSelect(KcProperty_t ** props, KcSymbol_t * sym,
+			KcExpr_t * ifexpr)
 {
+    KcProperty_t * self;
+    if (!(self = CcsMalloc(sizeof(KcProperty_t)))) return "Not enough memory";
+    memset(self, 0, sizeof(KcProperty_t));
+    self->type = KcptSelect;
+    self->sym0 = sym;
+    self->ifexpr = ifexpr;
+    return AppendProperty(props, self);
+}
+
+const char *
+KcProperty_AppendRanges(KcProperty_t ** props, KcSymbol_t * sym0,
+			KcSymbol_t * sym1, KcExpr_t * ifexpr)
+{
+    KcProperty_t * self;
+    if (!(self = CcsMalloc(sizeof(KcProperty_t)))) return "Not enough memory";
+    memset(self, 0, sizeof(KcProperty_t));
+    self->type = KcptRanges;
+    self->sym0 = sym0;
+    self->sym1 = sym1;
+    self->ifexpr = ifexpr;
+    return AppendProperty(props, self);
 }
 
 static KcSymbol_t *
@@ -111,7 +156,7 @@ static void
 KcSymbol_Destruct(KcSymbol_t * self)
 {
     KcProperty_t * cur, * next;
-    for (cur = self->propFirst; cur; cur = next) {
+    for (cur = self->props; cur; cur = next) {
 	next = cur->next;
 	KcProperty_Destruct(cur);
     }
@@ -161,9 +206,20 @@ symtabHash(KcSymbolTable_t * self, const char * symname)
 
 const char *
 KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, const char * symname,
-			   CcsBool_t menuOrNot, KcProperty_t * properties,
+			   CcsBool_t menuOrNot, KcProperty_t * props,
 			   CcsPosition_t * helpmsg)
 {
+    KcSymbol_t ** cur;
+    for (cur = symtabHash(self, symname); *cur; cur = &((*cur)->next)) {
+	if (strcmp((*cur)->symname, symname)) continue;
+	if ((*cur)->type != KcstNone) return "Symbol '%s' is defined already.";
+	break;
+    }
+    if (!*cur && !(*cur = KcSymbol(symname))) return "Not enough memory";
+    (*cur)->menuOrNot = menuOrNot;
+    (*cur)->props = props;
+    (*cur)->helpmsg = helpmsg;
+    return NULL;
 }
 
 static const char *

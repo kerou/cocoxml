@@ -166,7 +166,7 @@ KcParser_ConfigDecl(KcParser_t * self)
     CcsBool_t menuOrNot;
     char * symname = NULL;
     KcSymbolType_t symtype = KcstNone;
-    KcProperty_t * propFirst = NULL, * propLast = NULL, * propNew = NULL;
+    KcProperty_t * props = NULL;
     CcsPosition_t * helpmsg = NULL; 
     if (self->la->kind == 7) {
 	KcParser_Get(self);
@@ -180,18 +180,13 @@ KcParser_ConfigDecl(KcParser_t * self)
     KcParser_Expect(self, 6);
     KcParser_Expect(self, 1);
     while (KcParser_StartOf(self, 1)) {
-	KcParser_ConfigProperty(self, &symtype, &propNew);
-	if (propLast) {
-	    propLast->next = propNew; propLast = propNew;
-	} else {
-	    propFirst = propLast = propNew;
-	} 
+	KcParser_ConfigProperty(self, &symtype, &props);
     }
     if (self->la->kind == 22 || self->la->kind == 23) {
 	KcParser_Help(self, &helpmsg);
     }
     KcParser_Expect(self, 2);
-    KcSymbolTable_AppendSymbol(self->symtab, symname, menuOrNot, propFirst, helpmsg);
+    KcSymbolTable_AppendSymbol(self->symtab, symname, menuOrNot, props, helpmsg);
     CcsFree(symname); 
 }
 

@@ -58,19 +58,13 @@ Kconfig =
 ConfigDecl           (. CcsBool_t menuOrNot;
 		     	char * symname = NULL;
 			KcSymbolType_t symtype = KcstNone;
-			KcProperty_t * propFirst = NULL, * propLast = NULL, * propNew = NULL;
+			KcProperty_t * props = NULL;
 		     	CcsPosition_t * helpmsg = NULL; .)
  = ("config"         (. menuOrNot = FALSE; .)
     | "menuconfig"   (. menuOrNot = TRUE; .)
   ) ident            (. symname = CcsStrdup(self->t->val); .)
-  eol IndentIn { ConfigProperty<&symtype, &propNew>
-                     (. if (propLast) {
-      	       	 	    propLast->next = propNew; propLast = propNew;
-			} else {
-			    propFirst = propLast = propNew;
-			} .)
-  } [ Help<&helpmsg> ] IndentOut
-      		     (. KcSymbolTable_AppendSymbol(self->symtab, symname, menuOrNot, propFirst, helpmsg);
+  eol IndentIn { ConfigProperty<&symtype, &props> } [ Help<&helpmsg> ] IndentOut
+      		     (. KcSymbolTable_AppendSymbol(self->symtab, symname, menuOrNot, props, helpmsg);
 		     	CcsFree(symname); .)
 .
 
@@ -162,8 +156,8 @@ Expr3<KcExpr_t ** expr> = (. char op = 0; KcSymbol_t * sym0 = NULL, * sym1 = NUL
   | Expr<expr>
 .
 
-Symbol<KcSymbol_t ** sym> = ident
-        (. *sym = KcSymbolTable_Get(self->symtab, self->t->val); .)
+Symbol<KcSymbol_t ** sym> =
+  ident (. *sym = KcSymbolTable_Get(self->symtab, self->t->val); .)
 .
 
 END Kconfig.
