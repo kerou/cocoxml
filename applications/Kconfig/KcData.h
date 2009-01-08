@@ -35,26 +35,31 @@ typedef struct KcMenu_s KcMenu_t;
 #define  KcYes     2
 
 typedef enum {
-    KcptPropmt, KcptDefault, KcptDepends, KcptSelect, KcptRanges
+    KcptPrompt, KcptDefault, KcptDepends, KcptSelect, KcptRanges
 }   KcPropertyType_t;
 struct KcProperty_s {
     KcPropertyType_t type;
     KcProperty_t * next;
+    char * prompt;
+    KcSymbol_t * sym0;
+    KcSymbol_t * sym1;
+    KcExpr_t * expr;
+    KcExpr_t * ifexpr;
 };
 
 const char *
-KcProperty_AppendPrompt(KcProperty_t ** prop, char * prompt, KcExpr_t * expr);
+KcProperty_AppendPrompt(KcProperty_t ** props, char * prompt, KcExpr_t * ifexpr);
 const char *
-KcProperty_AppendDefault(KcProperty_t ** prop, KcExpr_t * expr0,
-			 KcExpr_t * expr1);
+KcProperty_AppendDefault(KcProperty_t ** props, KcExpr_t * expr,
+			 KcExpr_t * ifexpr);
 const char *
-KcProperty_AppendDepends(KcProperty_t ** prop, KcExpr_t * expr);
+KcProperty_AppendDepends(KcProperty_t ** props, KcExpr_t * expr);
 const char *
-KcProperty_AppendSelect(KcProperty_t ** prop, KcSymbol_t * sym,
-			KcExpr_t * expr);
+KcProperty_AppendSelect(KcProperty_t ** props, KcSymbol_t * sym,
+			KcExpr_t * ifexpr);
 const char *
-KcProperty_AppendRanges(KcProperty_t ** prop, KcSymbol_t * sym0,
-			KcSymbol_t * sym1, KcExpr_t * expr);
+KcProperty_AppendRanges(KcProperty_t ** props, KcSymbol_t * sym0,
+			KcSymbol_t * sym1, KcExpr_t * ifexpr);
 
 typedef enum {
     KcstNone, KcstBool, KcstTristate, KcstString, KcstHex, KcstInt
@@ -71,8 +76,8 @@ struct KcSymbol_s {
 	unsigned _hex_;
 	int _int_;
     } u;
-    KcProperty_t * propFirst;
-    KcProperty_t * propLast;
+    KcProperty_t * props;
+    CcsPosition_t * helpmsg;
 };
 
 typedef enum {
