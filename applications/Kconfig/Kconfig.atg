@@ -64,7 +64,7 @@ ConfigDecl           (. CcsBool_t menuOrNot;
     | "menuconfig"   (. menuOrNot = TRUE; .)
   ) ident            (. symname = CcsStrdup(self->t->val); .)
   eol IndentIn { ConfigProperty<&symtype, &props> } [ Help<&helpmsg> ] IndentOut
-      		     (. KcSymbolTable_AppendSymbol(self->symtab, symname, menuOrNot, props, helpmsg);
+      		     (. KcSymbolTable_AppendSymbol(self->symtab, symname, symtype, menuOrNot, props, helpmsg);
 		     	CcsFree(symname); .)
 .
 
@@ -78,13 +78,15 @@ ConfigProperty<KcSymbolType_t * symtype, KcProperty_t ** prop> =
   | Ranges<prop>
 .
 
-TypeDefine<KcSymbolType_t * symtype, KcProperty_t ** prop> =
-  ("bool"          (. *symtype = KcstBool; .)
-  | "tristate"     (. *symtype = KcstTristate; .)
-  | "string"       (. *symtype = KcstString; .)
-  | "hex"          (. *symtype = KcstHex; .)
-  | "int"          (. *symtype = KcstInt; .)
-  ) [string        (. KcProperty_AppendPrompt(prop, self->t->val, NULL); .)
+TypeDefine<KcSymbolType_t * symtype, KcProperty_t ** prop>
+    (. char * prompt = NULL; KcExpr_t * expr = NULL; .) =
+  ("bool"            (. *symtype = KcstBool; .)
+  | "tristate"       (. *symtype = KcstTristate; .)
+  | "string"         (. *symtype = KcstString; .)
+  | "hex"            (. *symtype = KcstHex; .)
+  | "int"            (. *symtype = KcstInt; .)
+  ) [string          (. prompt = CcsEscape(self->t->val); .)
+  ["if" Expr<&expr>] (. KcProperty_AppendPrompt(prop, prompt, expr); .)
   ] eol
 .
 
