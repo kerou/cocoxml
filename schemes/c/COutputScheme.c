@@ -67,6 +67,7 @@ CharRepr(char * buf, size_t szbuf, int ch)
 static CcsBool_t
 COS_Defines(CcCOutputScheme_t * self, CcOutput_t * output)
 {
+    CcSymbol_t * sym;
     CcPrintfIL(output, "#define %sScanner_MAX_KEYWORD_LEN %d", self->prefix,
 	       CcLexical_GetMaxKeywordLength(self->base.globals->lexical));
     if (!self->base.globals->lexical->ignoreCase)
@@ -77,12 +78,17 @@ COS_Defines(CcCOutputScheme_t * self, CcOutput_t * output)
 	CcPrintfIL(output, "#define %sScanner_INDENTATION", self->prefix);
 	CcPrintfIL(output, "#define %sScanner_INDENT_START %d",
 		   self->prefix, 32);
+	sym = CcSymbolTable_FindSym(&self->base.globals->symtab, IndentInName);
+	CcsAssert(sym != NULL);
 	CcPrintfIL(output, "#define %sScanner_INDENT_IN %d", self->prefix,
-		   self->base.globals->lexical->indentIn);
+		   sym->kind);
+	sym = CcSymbolTable_FindSym(&self->base.globals->symtab, IndentOutName);
+	CcsAssert(sym != NULL);
 	CcPrintfIL(output, "#define %sScanner_INDENT_OUT %d", self->prefix,
-		   self->base.globals->lexical->indentOut);
+		   sym->kind);
+	sym = CcSymbolTable_FindSym(&self->base.globals->symtab, IndentErrName);
 	CcPrintfIL(output, "#define %sScanner_INDENT_ERR %d", self->prefix,
-		   self->base.globals->lexical->indentErr);
+		   sym->kind);
     }
     return TRUE;
 }

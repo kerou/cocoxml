@@ -45,9 +45,6 @@ struct CcLexical_s {
     CcCharSet_t   * ignored;
     CcsBool_t       ignoreCase;
     CcsBool_t       indentUsed;
-    int             indentIn;
-    int             indentOut;
-    int             indentErr;
     CcArrayList_t   states;
     CcArrayList_t   classes;
     CcHashTable_t   literals;
@@ -61,6 +58,10 @@ struct CcLexical_s {
     CcsBool_t       dirtyLexical;
     CcsBool_t       hasCtxMoves;
 };
+
+extern const char * IndentInName;
+extern const char * IndentOutName;
+extern const char * IndentErrName;
 
 CcLexical_t * CcLexical(CcLexical_t * self, CcGlobals_t * globals);
 void CcLexical_Destruct(CcLexical_t * self);

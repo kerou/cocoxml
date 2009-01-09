@@ -137,12 +137,9 @@ Coco                            (. CcSymbol_t  * sym;
     ]
   [ "IGNORECASE"                (. self->lexical->ignoreCase = TRUE; .) ]   /* pdt */
   [ "INDENTATIONS"              (. self->lexical->indentUsed = TRUE;
-    				   sym = CcSymbolTable_NewTerminal(self->symtab, "IndentIn", 0);
-    				   self->lexical->indentIn = sym->kind;
-				   sym = CcSymbolTable_NewTerminal(self->symtab, "IndentOut", 0);
-    				   self->lexical->indentOut = sym->kind;
-				   sym = CcSymbolTable_NewTerminal(self->symtab, "IndentErr", 0);
-    				   self->lexical->indentErr = sym->kind; .) ]
+    				   CcSymbolTable_NewTerminal(self->symtab, IndentInName, 0);
+				   CcSymbolTable_NewTerminal(self->symtab, IndentOutName, 0);
+				   CcSymbolTable_NewTerminal(self->symtab, IndentErrName, 0); .) ]
   [ "CHARACTERS" { SetDecl }]
   [ "TOKENS"  { TokenDecl<symbol_t> }]
   [ "PRAGMAS" { TokenDecl<symbol_pr> }]

@@ -256,12 +256,9 @@ CcsParser_Coco(CcsParser_t * self)
     if (self->la->kind == 11) {
 	CcsParser_Get(self);
 	self->lexical->indentUsed = TRUE;
-	sym = CcSymbolTable_NewTerminal(self->symtab, "IndentIn", 0);
-	self->lexical->indentIn = sym->kind;
-	sym = CcSymbolTable_NewTerminal(self->symtab, "IndentOut", 0);
-	self->lexical->indentOut = sym->kind;
-	sym = CcSymbolTable_NewTerminal(self->symtab, "IndentErr", 0);
-	self->lexical->indentErr = sym->kind; 
+	CcSymbolTable_NewTerminal(self->symtab, IndentInName, 0);
+	CcSymbolTable_NewTerminal(self->symtab, IndentOutName, 0);
+	CcSymbolTable_NewTerminal(self->symtab, IndentErrName, 0); 
     }
     if (self->la->kind == 12) {
 	CcsParser_Get(self);
