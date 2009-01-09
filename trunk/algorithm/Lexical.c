@@ -37,6 +37,10 @@
 #include  "c/ErrorPool.h"
 #include  "c/Token.h"
 
+const char * IndentInName = "IndentIn";
+const char * IndentOutName = "IndentOut";
+const char * IndentErrName = "IndentErr";
+
 /* SZ_LITERALS is a prime number, auto-extending is not supported now */
 #define  SZ_LITERALS 127
 
