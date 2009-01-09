@@ -25,7 +25,7 @@
 #define  COCO_RssScanner_H
 
 #ifndef  COCO_XMLSCANOPER_H
-#include  "c/XmlScanOper.h"
+#include  "cxml/XmlScanOper.h"
 #endif
 
 EXTC_BEGIN

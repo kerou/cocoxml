@@ -63,24 +63,24 @@ COS_Defines(CcCOutputScheme_t * self, CcOutput_t * output)
 {
     CcSymbol_t * sym;
     CcPrintfIL(output, "#define %sScanner_MAX_KEYWORD_LEN %d", self->base.prefix,
-	       CcLexical_GetMaxKeywordLength(self->base.globals->lexical));
-    if (!self->base.globals->lexical->ignoreCase)
+	       CcLexical_GetMaxKeywordLength(self->base.base.globals->lexical));
+    if (!self->base.base.globals->lexical->ignoreCase)
 	CcPrintfIL(output, "#define %sScanner_CASE_SENSITIVE", self->base.prefix);
-    if (CcLexical_KeywordUsed(self->base.globals->lexical))
+    if (CcLexical_KeywordUsed(self->base.base.globals->lexical))
 	CcPrintfIL(output, "#define %sScanner_KEYWORD_USED", self->base.prefix);
-    if (self->base.globals->lexical->indentUsed) {
+    if (self->base.base.globals->lexical->indentUsed) {
 	CcPrintfIL(output, "#define %sScanner_INDENTATION", self->base.prefix);
 	CcPrintfIL(output, "#define %sScanner_INDENT_START %d",
 		   self->base.prefix, 32);
-	sym = CcSymbolTable_FindSym(&self->base.globals->symtab, IndentInName);
+	sym = CcSymbolTable_FindSym(&self->base.base.globals->symtab, IndentInName);
 	CcsAssert(sym != NULL);
 	CcPrintfIL(output, "#define %sScanner_INDENT_IN %d", self->base.prefix,
 		   sym->kind);
-	sym = CcSymbolTable_FindSym(&self->base.globals->symtab, IndentOutName);
+	sym = CcSymbolTable_FindSym(&self->base.base.globals->symtab, IndentOutName);
 	CcsAssert(sym != NULL);
 	CcPrintfIL(output, "#define %sScanner_INDENT_OUT %d", self->base.prefix,
 		   sym->kind);
-	sym = CcSymbolTable_FindSym(&self->base.globals->symtab, IndentErrName);
+	sym = CcSymbolTable_FindSym(&self->base.base.globals->symtab, IndentErrName);
 	CcPrintfIL(output, "#define %sScanner_INDENT_ERR %d", self->base.prefix,
 		   sym->kind);
     }
@@ -91,11 +91,11 @@ static CcsBool_t
 COS_Declarations(CcCOutputScheme_t * self, CcOutput_t * output)
 {
     CcPrintfIL(output, "self->eofSym = %d;",
-	       self->base.globals->syntax.eofSy->kind);
+	       self->base.base.globals->syntax.eofSy->kind);
     CcPrintfIL(output, "self->maxT = %d;",
-	       self->base.globals->symtab.terminals.Count - 1);
+	       self->base.base.globals->symtab.terminals.Count - 1);
     CcPrintfIL(output, "self->noSym = %d;",
-	       self->base.globals->syntax.noSy->kind);
+	       self->base.base.globals->syntax.noSy->kind);
     return TRUE;
 }
 
@@ -106,7 +106,7 @@ COS_Chars2States(CcCOutputScheme_t * self, CcOutput_t * output)
     CcLexical_StartTab_t * table, * cur;
     char buf0[8], buf1[8];
     CcPrintfIL(output, "{ EoF, EoF, -1 },");
-    table = CcLexical_GetStartTab(self->base.globals->lexical, &numEle);
+    table = CcLexical_GetStartTab(self->base.base.globals->lexical, &numEle);
     for (cur = table; cur - table < numEle; ++cur)
 	CcPrintfIL(output, "{ %d, %d, %d },\t/* %s %s */",
 		   cur->keyFrom, cur->keyTo, cur->state,
@@ -122,7 +122,7 @@ COS_Identifiers2KeywordKinds(CcCOutputScheme_t * self, CcOutput_t * output)
     int numEle;
     CcLexical_Identifier_t * list, * cur;
 
-    list = CcLexical_GetIdentifiers(self->base.globals->lexical, &numEle);
+    list = CcLexical_GetIdentifiers(self->base.base.globals->lexical, &numEle);
     for (cur = list; cur - list < numEle; ++cur)
 	CcPrintfIL(output, "{ %s, %d },", cur->name, cur->index);
     CcLexical_Identifiers_Destruct(list, numEle);
@@ -135,7 +135,7 @@ COS_Comments(CcCOutputScheme_t * self, CcOutput_t * output)
     const CcComment_t * cur;
     char buf0[8], buf1[8], buf2[8], buf3[8];
     output->indent += 4;
-    for (cur = self->base.globals->lexical->firstComment; cur; cur = cur->next)
+    for (cur = self->base.base.globals->lexical->firstComment; cur; cur = cur->next)
 	CcPrintfIL(output, "{ { %s, %s }, { %s, %s }, %s },",
 		   CharRepr(buf0, sizeof(buf0), cur->start[0]),
 		   CharRepr(buf1, sizeof(buf1), cur->start[1]),
@@ -151,7 +151,7 @@ COS_Scan1(CcCOutputScheme_t * self, CcOutput_t * output)
 {
     const CcRange_t * curRange;
     char buf0[8], buf1[8];
-    for (curRange = self->base.globals->lexical->ignored->head;
+    for (curRange = self->base.base.globals->lexical->ignored->head;
 	 curRange; curRange = curRange->next) {
 	if (curRange->from == curRange->to)
 	    CcPrintfIL(output, "|| self->ch == %s",
@@ -222,9 +222,9 @@ COS_Scan3(CcCOutputScheme_t * self, CcOutput_t * output)
     CcArrayListIter_t iter;
     CcBitArray_t mask;
     const CcState_t * state;
-    CcArrayList_t * stateArr = &self->base.globals->lexical->states;
+    CcArrayList_t * stateArr = &self->base.base.globals->lexical->states;
 
-    CcLexical_TargetStates(self->base.globals->lexical, &mask);
+    CcLexical_TargetStates(self->base.base.globals->lexical, &mask);
     state = (CcState_t *)CcArrayList_First(stateArr, &iter);
     for (state = (const CcState_t *)CcArrayList_Next(stateArr, &iter);
 	 state; state = (const CcState_t *)CcArrayList_Next(stateArr, &iter))
