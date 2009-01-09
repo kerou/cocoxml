@@ -94,11 +94,14 @@ def install_temp(destroot, tgtdir, srcfile,
 # Real installations.
 install(destroot, cfgmap['bindir'], execname('Coco'))
 install(destroot, cfgmap['libdir'], 'libcoco.a')
-for hdr in ['Buffer.h', 'CDefs.h', 'ErrorPool.h', 'Position.h',
-            'Token.h', 'XmlScanOper.h']:
+for hdr in ['Buffer.h', 'CDefs.h', 'ErrorPool.h', 'Position.h', 'Token.h']:
     install(destroot,
             os.path.join(cfgmap['includedir'], 'Coco', 'c'),
             os.path.join('schemes', 'c', hdr))
+for hdr in ['XmlScanOper.h']:
+    install(destroot,
+            os.path.join(cfgmap['includedir'], 'Coco', 'cxml'),
+            os.path.join('schemes', 'cxml', hdr))
 pclines = []
 pclines.append('prefix=%s' % cfgmap['prefix'])
 pclines.append('includedir=%s' % cfgmap['includedir'])
@@ -120,11 +123,13 @@ tgtdir = os.path.join(tempdir, 'dump')
 for f in glob.glob(os.path.join('schemes', 'dump', '*.html')):
     install_temp(destroot, tgtdir, f, '<!---- ', ' ---->')
 
-tgtdir = os.path.join(tempdir, 'c')
-for f in ['Scanner', 'Parser', 'Scanner4Xml', 'Parser4Xml']:
-    install_temp(destroot, tgtdir, os.path.join('schemes', 'c', f + '.h'))
-    install_temp(destroot, tgtdir, os.path.join('schemes', 'c', f + '.c'))
-
-tgtdir = os.path.join(tempdir, 'csharp')
-for f in ['Buffer', 'ErrorPool', 'Position', 'Token', 'Scanner', 'Parser']:
-    install_temp(destroot, tgtdir, os.path.join('schemes', 'csharp', f + '.cs'))
+for scheme in [('c', ['Scanner', 'Parser'], ['.h', '.c']),
+               ('cxml', ['Scanner4Xml', 'Parser4Xml'], ['.h', '.c']),
+               ('csharp', ['Buffer', 'ErrorPool', 'Position',
+                           'Token', 'Scanner', 'Parser'], ['.cs']),
+               ('csharpxml', [], ['.cs'])]:
+    tgtdir = os.path.join(tempdir, scheme[0])
+    for f in scheme[1]:
+        for e in scheme[2]:
+            install_temp(destroot, tgtdir,
+                         os.path.join('schemes', scheme[0], f + e))
