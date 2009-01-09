@@ -27,9 +27,9 @@
 static CcsBool_t
 COS_KindUnknownNS(CcCXmlOutputScheme_t * self, CcOutput_t * output)
 {
-    CcsAssert(self->base.globals->xmlspecmap);
+    CcsAssert(self->base.base.globals->xmlspecmap);
     CcPrintfIL(output, "self->base.kindUnknownNS = %d;",
-	       self->base.globals->xmlspecmap->kindUnknownNS);
+	       self->base.base.globals->xmlspecmap->kindUnknownNS);
     return TRUE;
 }
 
@@ -46,7 +46,7 @@ COS_XmlSpecSubLists(CcCXmlOutputScheme_t * self, CcOutput_t * output)
     const char ** keylist, ** curkey;
     const CcXmlSpec_t * spec;
     CcXmlSpecData_t * datalist, * datacur; size_t datanum; char * tmp;
-    CcXmlSpecMap_t * map = self->base.globals->xmlspecmap;
+    CcXmlSpecMap_t * map = self->base.base.globals->xmlspecmap;
 
     CcsAssert(map != NULL);
     count = CcHashTable_Num(&map->map);
@@ -60,7 +60,7 @@ COS_XmlSpecSubLists(CcCXmlOutputScheme_t * self, CcOutput_t * output)
     for (curkey = keylist; curkey - keylist < count; ++curkey) {
 	spec = (const CcXmlSpec_t *)CcHashTable_Get(&map->map, *curkey);
 	CcsAssert(spec != NULL);
-	datalist = CcXmlSpec_GetSortedTagList(spec, self->base.globals,
+	datalist = CcXmlSpec_GetSortedTagList(spec, self->base.base.globals,
 					      &datanum);
 	if (datanum == 0) continue;
 	output->indent += 4;
@@ -79,7 +79,7 @@ COS_XmlSpecSubLists(CcCXmlOutputScheme_t * self, CcOutput_t * output)
     for (curkey = keylist; curkey - keylist < count; ++curkey) {
 	spec = (const CcXmlSpec_t *)CcHashTable_Get(&map->map, *curkey);
 	CcsAssert(spec != NULL);
-	datalist = CcXmlSpec_GetSortedAttrList(spec, self->base.globals,
+	datalist = CcXmlSpec_GetSortedAttrList(spec, self->base.base.globals,
 					       &datanum);
 	if (datanum == 0) continue;
 	output->indent += 4;
@@ -97,7 +97,7 @@ COS_XmlSpecSubLists(CcCXmlOutputScheme_t * self, CcOutput_t * output)
     for (curkey = keylist; curkey - keylist < count; ++curkey) {
 	spec = (const CcXmlSpec_t *)CcHashTable_Get(&map->map, *curkey);
 	CcsAssert(spec != NULL);
-	datalist = CcXmlSpec_GetSortedPIList(spec, self->base.globals,
+	datalist = CcXmlSpec_GetSortedPIList(spec, self->base.base.globals,
 					     &datanum);
 	if (datanum == 0) continue;
 	output->indent += 4;
@@ -125,10 +125,10 @@ COS_XmlSpecList(CcCXmlOutputScheme_t * self, CcOutput_t * output)
     char * tmp; CcsXmlSpecOption_t option;
     const CcXmlSpec_t * spec;
     CcXmlSpecData_t * datalist; size_t datanum;
-    CcXmlSpecMap_t * map = self->base.globals->xmlspecmap;
+    CcXmlSpecMap_t * map = self->base.base.globals->xmlspecmap;
 
     CcsAssert(map != NULL);
-    CcXmlSpecMap_GetOptionKinds(map, kinds, self->base.globals);
+    CcXmlSpecMap_GetOptionKinds(map, kinds, self->base.base.globals);
     count = CcHashTable_Num(&map->map);
     keylist = curkey = CcMalloc(sizeof(char *) * count);
     CcHashTable_GetIterator(&map->map, &iter);
@@ -151,7 +151,7 @@ COS_XmlSpecList(CcCXmlOutputScheme_t * self, CcOutput_t * output)
 		     CcBitArray_Get(&spec->options, option) ? kinds[option] : -1);
 	CcPrintfL(output, " },");
 
-	datalist = CcXmlSpec_GetSortedTagList(spec, self->base.globals,
+	datalist = CcXmlSpec_GetSortedTagList(spec, self->base.base.globals,
 					      &datanum);
 	if (datanum == 0) CcPrintfIL(output, "NULL, 0, /* Tags */");
 	else {
@@ -160,7 +160,7 @@ COS_XmlSpecList(CcCXmlOutputScheme_t * self, CcOutput_t * output)
 	}
 	CcXmlSpecData_Destruct(datalist, datanum);
 
-	datalist = CcXmlSpec_GetSortedAttrList(spec, self->base.globals,
+	datalist = CcXmlSpec_GetSortedAttrList(spec, self->base.base.globals,
 					       &datanum);
 	if (datanum == 0) CcPrintfIL(output, "NULL, 0, /* Attrs */");
 	else {
@@ -169,7 +169,7 @@ COS_XmlSpecList(CcCXmlOutputScheme_t * self, CcOutput_t * output)
 	}
 	CcXmlSpecData_Destruct(datalist, datanum);
 
-	datalist = CcXmlSpec_GetSortedPIList(spec, self->base.globals,
+	datalist = CcXmlSpec_GetSortedPIList(spec, self->base.base.globals,
 					     &datanum);
 	if (datanum == 0) {
 	    CcPrintfIL(output, "NULL, 0, /* Processing Instructions */");

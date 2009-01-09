@@ -52,8 +52,8 @@ COS_SynDefines(CcCBaseOutputScheme_t * self, CcOutput_t * output)
 static CcsBool_t
 COS_Members(CcCBaseOutputScheme_t * self, CcOutput_t * output)
 {
-    if (self->globals->syntax.members)
-	CcSource(output, self->globals->syntax.members);
+    if (self->base.globals->syntax.members)
+	CcSource(output, self->base.globals->syntax.members);
     return TRUE;
 }
 
@@ -62,16 +62,16 @@ COS_Constructor(CcCBaseOutputScheme_t * self, CcOutput_t * output)
 {
     CcPrintfIL(output, "self->maxT = %d;",
 	      self->base.globals->symtab.terminals.Count - 1);
-    if (self->globals->syntax.constructor)
-	CcSource(output, self->globals->syntax.constructor);
+    if (self->base.globals->syntax.constructor)
+	CcSource(output, self->base.globals->syntax.constructor);
     return TRUE;
 }
 
 static CcsBool_t
 COS_Destructor(CcCBaseOutputScheme_t * self, CcOutput_t * output)
 {
-    if (self->globals->syntax.destructor)
-	CcSource(output, self->globals->syntax.destructor);
+    if (self->base.globals->syntax.destructor)
+	CcSource(output, self->base.globals->syntax.destructor);
     return TRUE;
 }
 

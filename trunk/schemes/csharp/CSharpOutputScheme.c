@@ -63,13 +63,13 @@ static CcsBool_t
 CSOS_Declarations(CcCSharpOutputScheme_t * self, CcOutput_t * output)
 {
     CcPrintfIL(output, "caseSensitive = %s;",
-	       self->base.globals->lexical->ignoreCase ? "false" : "true");
+	       self->base.base.globals->lexical->ignoreCase ? "false" : "true");
     CcPrintfIL(output, "eofSym = %d;",
-	       self->base.globals->syntax.eofSy->kind);
+	       self->base.base.globals->syntax.eofSy->kind);
     CcPrintfIL(output, "maxT = %d;",
-	       self->base.globals->symtab.terminals.Count - 1);
+	       self->base.base.globals->symtab.terminals.Count - 1);
     CcPrintfIL(output, "noSym = %d;",
-	       self->base.globals->syntax.noSy->kind);
+	       self->base.base.globals->syntax.noSy->kind);
     return TRUE;
 }
 
@@ -80,7 +80,7 @@ CSOS_Chars2States(CcCSharpOutputScheme_t * self, CcOutput_t * output)
     CcLexical_StartTab_t * table, * cur;
     char buf0[8], buf1[8];
     CcPrintfIL(output, "new Char2State_t(CcsBuffer_t.EoF, CcsBuffer_t.EoF, -1),");
-    table = CcLexical_GetStartTab(self->base.globals->lexical, &numEle);
+    table = CcLexical_GetStartTab(self->base.base.globals->lexical, &numEle);
     for (cur = table; cur - table < numEle; ++cur)
 	CcPrintfIL(output, "new Char2State_t(%d, %d, %d),\t/* %s %s */",
 		   cur->keyFrom, cur->keyTo, cur->state,
@@ -97,7 +97,7 @@ CSOS_Identifiers2KeywordKinds(CcCSharpOutputScheme_t * self,
     int numEle;
     CcLexical_Identifier_t * list, * cur;
 
-    list = CcLexical_GetIdentifiers(self->base.globals->lexical, &numEle);
+    list = CcLexical_GetIdentifiers(self->base.base.globals->lexical, &numEle);
     for (cur = list; cur - list < numEle; ++cur)
 	CcPrintfIL(output, "new Identifier2KWKind_t(%s, %d),",
 		   cur->name, cur->index);
@@ -111,7 +111,7 @@ CSOS_Comments(CcCSharpOutputScheme_t * self, CcOutput_t * output)
     const CcComment_t * cur;
     char buf0[8], buf1[8], buf2[8], buf3[8];
     output->indent += 4;
-    for (cur = self->base.globals->lexical->firstComment; cur; cur = cur->next)
+    for (cur = self->base.base.globals->lexical->firstComment; cur; cur = cur->next)
 	CcPrintfIL(output, "new CcsComment_t(%s, %s, %s, %s, %s),",
 		   CharRepr(buf0, sizeof(buf0), cur->start[0]),
 		   CharRepr(buf1, sizeof(buf1), cur->start[1]),
@@ -127,7 +127,7 @@ CSOS_Scan1(CcCSharpOutputScheme_t * self, CcOutput_t * output)
 {
     const CcRange_t * curRange;
     char buf0[8], buf1[8];
-    for (curRange = self->base.globals->lexical->ignored->head;
+    for (curRange = self->base.base.globals->lexical->ignored->head;
 	 curRange; curRange = curRange->next) {
 	if (curRange->from == curRange->to)
 	    CcPrintfIL(output, "|| ch == %s",
@@ -197,9 +197,9 @@ CSOS_Scan3(CcCSharpOutputScheme_t * self, CcOutput_t * output)
     CcArrayListIter_t iter;
     CcBitArray_t mask;
     const CcState_t * state;
-    CcArrayList_t * stateArr = &self->base.globals->lexical->states;
+    CcArrayList_t * stateArr = &self->base.base.globals->lexical->states;
 
-    CcLexical_TargetStates(self->base.globals->lexical, &mask);
+    CcLexical_TargetStates(self->base.base.globals->lexical, &mask);
     state = (CcState_t *)CcArrayList_First(stateArr, &iter);
     for (state = (const CcState_t *)CcArrayList_Next(stateArr, &iter);
 	 state; state = (const CcState_t *)CcArrayList_Next(stateArr, &iter))

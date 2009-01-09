@@ -24,7 +24,7 @@ END.
    Coco rss.xatg
 -------------------------------------------------------------------------*/
 
-SCHEME c Rss
+SCHEME cxml Rss
 
 SECTION hIncludes
 #ifndef  COCO_RSSDATA_H
