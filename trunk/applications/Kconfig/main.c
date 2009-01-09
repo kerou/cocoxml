@@ -15,9 +15,26 @@
   with this program; if not, write to the Free Software Foundation, Inc., 
   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
+#include  "Parser.h"
 
 int
 main(int argc, char * argv[])
 {
+    FILE * infp;
+    KcParser_t parser;
+
+    if (argc != 2) {
+	fprintf(stderr, "%s Kconfig-FILENAME\n", argv[0]);
+	goto errquit0;
+    }
+    if (!strcmp(argv[1], "-")) infp = stdin;
+    else if (!(infp = fopen(argv[1], "r"))) goto errquit0;
+    if (!KcParser(&parser, infp, stderr)) goto errquit1;
+    KcParser_Parse(&parser);
+    if (strcmp(argv[1], "-")) fclose(infp);
     return 0;
+ errquit1:
+    if (strcmp(argv[1], "-")) fclose(infp);
+ errquit0:
+    return -1;
 }

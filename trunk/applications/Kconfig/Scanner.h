@@ -29,9 +29,9 @@ EXTC_BEGIN
 #define KcScanner_KEYWORD_USED
 #define KcScanner_INDENTATION
 #define KcScanner_INDENT_START 32
-#define KcScanner_INDENT_IN 0
-#define KcScanner_INDENT_OUT 0
-#define KcScanner_INDENT_ERR 0
+#define KcScanner_INDENT_IN 1
+#define KcScanner_INDENT_OUT 2
+#define KcScanner_INDENT_ERR 3
 /*---- enable ----*/
 
 typedef struct KcScanner_s KcScanner_t;
