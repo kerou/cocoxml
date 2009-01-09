@@ -47,9 +47,6 @@ COMPILER CocoXml
 
 MEMBERS
     CcGlobals_t       globals;
-    CcsPosition_t   * members;
-    CcsPosition_t   * constructor;
-    CcsPosition_t   * destructor;
 
     /* Shortcut pointers */
     CcSymbolTable_t * symtab;
@@ -58,17 +55,11 @@ MEMBERS
 
 CONSTRUCTOR
     if (!CcGlobalsXml(&self->globals, &self->errpool)) goto ERRQUIT;
-    self->members = NULL;
-    self->constructor = NULL;
-    self->destructor = NULL;
     self->symtab = &self->globals.symtab;
     self->xmlspecmap = self->globals.xmlspecmap;
     self->syntax = &self->globals.syntax; 
 
 DESTRUCTOR
-    if (self->destructor) CcsPosition_Destruct(self->destructor);
-    if (self->constructor) CcsPosition_Destruct(self->constructor);
-    if (self->members) CcsPosition_Destruct(self->members);
     CcGlobals_Destruct(&self->globals);
 
 CHARACTERS
@@ -110,15 +101,15 @@ CocoXml                         (. CcSymbol_t  * sym;
   "COMPILER"
   ident                         (. gramName = CcStrdup(self->t->val); .)
   [ "MEMBERS"                   (. CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
-    { ANY }                     (. self->members = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
+    { ANY }                     (. self->syntax->members = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
       	  			   CcsXmlScanner_DecRef(&self->scanner, beg); .)
     ]
   [ "CONSTRUCTOR"               (. CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
-    { ANY }			(. self->constructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
+    { ANY }			(. self->syntax->constructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
       	  			   CcsXmlScanner_DecRef(&self->scanner, beg); .)
     ]
   [ "DESTRUCTOR"                (. CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
-    { ANY }			(. self->destructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
+    { ANY }			(. self->syntax->destructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
       	  			   CcsXmlScanner_DecRef(&self->scanner, beg); .)
     ]
 

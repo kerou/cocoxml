@@ -51,7 +51,6 @@ struct CcOutputSchemeType_s {
 
     /* Separated by \0, terminated by blank update name .*/
     const char * updates;
-    const char * xmlupdates;
 
     CcsBool_t (* write)(CcOutputScheme_t * self, CcOutput_t * output,
 			const char * func, const char * params);

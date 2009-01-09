@@ -157,9 +157,6 @@ CcsXmlParser(CcsXmlParser_t * self, FILE  * infp, FILE * errfp)
     /*---- constructor ----*/
     self->maxT = 39;
     if (!CcGlobalsXml(&self->globals, &self->errpool)) goto ERRQUIT;
-    self->members = NULL;
-    self->constructor = NULL;
-    self->destructor = NULL;
     self->symtab = &self->globals.symtab;
     self->xmlspecmap = self->globals.xmlspecmap;
     self->syntax = &self->globals.syntax; 
@@ -175,9 +172,6 @@ void
 CcsXmlParser_Destruct(CcsXmlParser_t * self)
 {
     /*---- destructor ----*/
-    if (self->destructor) CcsPosition_Destruct(self->destructor);
-    if (self->constructor) CcsPosition_Destruct(self->constructor);
-    if (self->members) CcsPosition_Destruct(self->members);
     CcGlobals_Destruct(&self->globals);
     /*---- enable ----*/
     if (self->la) CcsXmlScanner_DecRef(&self->scanner, self->la);
@@ -211,7 +205,7 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
 	while (CcsXmlParser_StartOf(self, 1)) {
 	    CcsXmlParser_Get(self);
 	}
-	self->members = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
+	self->syntax->members = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
 	CcsXmlScanner_DecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 8) {
@@ -220,7 +214,7 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
 	while (CcsXmlParser_StartOf(self, 2)) {
 	    CcsXmlParser_Get(self);
 	}
-	self->constructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
+	self->syntax->constructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
 	CcsXmlScanner_DecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 9) {
@@ -229,7 +223,7 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
 	while (CcsXmlParser_StartOf(self, 3)) {
 	    CcsXmlParser_Get(self);
 	}
-	self->destructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
+	self->syntax->destructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
 	CcsXmlScanner_DecRef(&self->scanner, beg); 
     }
     CcsXmlParser_XmlSpecDecl(self, &xsdef);

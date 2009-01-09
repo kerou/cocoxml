@@ -24,9 +24,11 @@
 #include  "Arguments.h"
 #include  "OutputScheme.h"
 #include  "c/Parser.h"
-#include  "c/xml/Parser.h"
+#include  "cxml/Parser.h"
 #include  "c/COutputScheme.h"
+#include  "cxml/CXmlOutputScheme.h"
 #include  "csharp/CSharpOutputScheme.h"
+#include  "csharpxml/CSharpXmlOutputScheme.h"
 #include  "dump/DumpOutputScheme.h"
 
 static const char * UsageHeadFormat =
@@ -105,27 +107,41 @@ main(int argc, char * argv[])
 	else if (xmlparser) schemeName = xmlparser->syntax->schemeName;
 	if (schemeName == NULL) schemeName = "dump";
     }
-    if (!strcmp(schemeName, "c")) {
-	if (!(scheme = (CcOutputScheme_t *)
-	      CcCOutputScheme(parser, xmlparser, &arguments)))
-	    goto errquit2;
-    } else if (!strcmp(schemeName, "csharp")) {
-	if (!(scheme = (CcOutputScheme_t *)
-	      CcCSharpOutputScheme(parser, xmlparser, &arguments)))
-	    goto errquit2;
-    } else if (!strcmp(schemeName, "dump")) {
+    scheme = NULL;
+    if (!strcmp(schemeName, "dump")) {
 	if (!(scheme = (CcOutputScheme_t *)
 	      CcDumpOutputScheme(parser, xmlparser, &arguments)))
 	    goto errquit2;
-    } else {
-	scheme = NULL;
+    } else if (parser) {
+	if (!strcmp(schemeName, "c")) {
+	    if (!(scheme = (CcOutputScheme_t *)
+		  CcCOutputScheme(parser, &arguments)))
+		goto errquit2;
+	} else if (!strcmp(schemeName, "csharp")) {
+	    if (!(scheme = (CcOutputScheme_t *)
+		  CcCSharpOutputScheme(parser, &arguments)))
+		goto errquit2;
+	}
+    } else if (xmlparser) {
+	if (!strcmp(schemeName, "cxml")) {
+	    if (!(scheme = (CcOutputScheme_t *)
+		  CcCXmlOutputScheme(xmlparser, &arguments)))
+		goto errquit2;
+	} else if (!strcmp(schemeName, "csharpxml")) {
+	    if (!(scheme = (CcOutputScheme_t *)
+		  CcCSharpXmlOutputScheme(xmlparser, &arguments)))
+		goto errquit2;
+	}
     }
-    if (scheme) {
-	printf("scheme '%s' is used.\n", schemeName);
-	if (!CcOutputScheme_GenerateOutputs(scheme, schemeName, atgName))
-	    goto errquit3;
-	CcObject_VDestruct((CcObject_t *)scheme);
+    if (!scheme) {
+	fprintf(stderr, "Unsupported scheme '%s' for %s.\n",
+		schemeName, atgName);
+	goto errquit2;
     }
+    printf("scheme '%s' is used.\n", schemeName);
+    if (!CcOutputScheme_GenerateOutputs(scheme, schemeName, atgName))
+	goto errquit3;
+    CcObject_VDestruct((CcObject_t *)scheme);
     if (parser) CcsParser_Destruct(parser);
     else if (xmlparser) CcsXmlParser_Destruct(xmlparser);
     if (strcmp(atgName, "-")) fclose(atgfp);

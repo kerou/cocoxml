@@ -422,8 +422,7 @@ CcOutputScheme_GenerateOutputs(CcOutputScheme_t * self,
     /* curpath->dir = NULL; */
 
     /* For all template/update files */
-    for (update = self->globals->lexical ? cctype->updates : cctype->xmlupdates;
-	 *update; update += strlen(update) + 1) {
+    for (update = cctype->updates; *update; update += strlen(update) + 1) {
 	for (curpath = pathes; curpath->dir; ++curpath) {
 	    PathJoin(srcPath, sizeof(srcPath), curpath->dir, curpath->dir1,
 		     curpath->scheme, update);

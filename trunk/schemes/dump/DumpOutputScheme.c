@@ -236,7 +236,6 @@ static const CcOutputSchemeType_t DumpOutputSchemeType = {
       CcDumpOutputScheme_Destruct },
     /* If the following lists are modified, modify install.py too. */
     "NodeTable.html\0StateTable.html\0SymbolTable.html\0\0",
-    "NodeTable.html\0StateTable.html\0SymbolTable.html\0\0",
     CcDumpOutputScheme_write
 };
 
