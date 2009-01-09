@@ -418,6 +418,17 @@ CExprScanner_IndentGenerator(CExprScanner_t * self)
 
     if (!self->lineStart) return NULL;
     CcsAssert(self->indent < self->indentUsed);
+    /* Skip blank lines. */
+    if (self->ch == '\r' || self->ch == '\n') return NULL;
+    /* Dump all required IndentOut when EoF encountered. */
+    if (self->ch == EoF) {
+	while (self->indent < self->indentUsed) {
+	    cur = CcsToken(CExprScanner_INDENT_OUT, self->pos,
+			   self->col, self->line, NULL, 0);
+	    cur->next = head; head = cur;
+	    --self->indentUsed;
+	}
+    }
     self->lineStart = FALSE;
     if (self->col > self->indentUsed[-1]) {
 	if (self->indentUsed == self->indentLast) {
