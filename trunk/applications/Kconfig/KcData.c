@@ -206,8 +206,8 @@ symtabHash(KcSymbolTable_t * self, const char * symname)
 
 const char *
 KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, const char * symname,
-			   CcsBool_t menuOrNot, KcProperty_t * props,
-			   CcsPosition_t * helpmsg)
+			   KcSymbolType_t symtype, CcsBool_t menuOrNot,
+			   KcProperty_t * props, CcsPosition_t * helpmsg)
 {
     KcSymbol_t ** cur;
     for (cur = symtabHash(self, symname); *cur; cur = &((*cur)->next)) {
@@ -216,6 +216,7 @@ KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, const char * symname,
 	break;
     }
     if (!*cur && !(*cur = KcSymbol(symname))) return "Not enough memory";
+    (*cur)->type = symtype;
     (*cur)->menuOrNot = menuOrNot;
     (*cur)->props = props;
     (*cur)->helpmsg = helpmsg;

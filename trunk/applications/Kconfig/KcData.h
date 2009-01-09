@@ -113,8 +113,8 @@ void KcSymbolTable_Destruct(KcSymbolTable_t * self);
 
 const char *
 KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, const char * symname,
-			   CcsBool_t menuOrNot, KcProperty_t * properties,
-			   CcsPosition_t * helpmsg);
+			   KcSymbolType_t symtype, CcsBool_t menuOrNot,
+			   KcProperty_t * properties, CcsPosition_t * helpmsg);
 
 /* Return NULL in success, return error message format when failed.
  * The only formatter is '%s' which will be replaced by symname. */
