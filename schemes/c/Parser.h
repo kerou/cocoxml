@@ -62,9 +62,6 @@ struct CcsParser_s {
     CcGlobals_t       globals;
     char            * tokenString;
     CcsBool_t         genScanner;
-    CcsPosition_t   * members;
-    CcsPosition_t   * constructor;
-    CcsPosition_t   * destructor;
     /* Shortcut pointers */
     CcSymbolTable_t * symtab;
     CcLexical_t     * lexical;

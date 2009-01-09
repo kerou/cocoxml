@@ -2,8 +2,6 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: GPLv2
 
-import os.path
-
 Import('env')
 Import('libobjs')
 Import('cocosrc_libobjs')
@@ -11,9 +9,5 @@ Import('cocosrc_libobjs')
 libobjs.extend(map(lambda src: env.Object(src),
                    ['CDefs.c', 'ErrorPool.c', 'Buffer.c', 'Token.c',
                     'Position.c']))
-if  'expat' in env['COCO_FEATURES']:
-    libobjs.extend(map(lambda src: env.Object(src), ['XmlScanOper.c']))
 cocosrc_libobjs.extend(map(lambda src: env.Object(src),
                            ['Scanner.c', 'Parser.c', 'COutputScheme.c']))
-
-SConscript(os.path.join('xml', 'SConscript'))

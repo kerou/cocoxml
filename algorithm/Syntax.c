@@ -31,6 +31,9 @@ CcSyntax(CcSyntax_t * self, CcGlobals_t * globals)
 {
     CcEBNF(&self->base);
     self->globals = globals;
+    self->members = NULL;
+    self->constructor = NULL;
+    self->destructor = NULL;
     self->weakUsed = FALSE;
     self->schemeName = NULL;
     self->grammarPrefix = NULL;
@@ -52,6 +55,9 @@ CcSyntax_Destruct(CcSyntax_t * self)
     if (self->visited) CcBitArray_Destruct(self->visited);
     if (self->grammarPrefix) CcFree(self->grammarPrefix);
     if (self->schemeName) CcFree(self->schemeName);
+    if (self->destructor) CcsPosition_Destruct(self->destructor);
+    if (self->constructor) CcsPosition_Destruct(self->constructor);
+    if (self->members) CcsPosition_Destruct(self->members);
     CcEBNF_Destruct(&self->base);
 }
 

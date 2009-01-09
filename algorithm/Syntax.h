@@ -39,24 +39,28 @@
 EXTC_BEGIN
 
 struct CcSyntax_s {
-    CcEBNF_t       base;
-    CcGlobals_t  * globals;
+    CcEBNF_t        base;
+    CcGlobals_t   * globals;
 
-    CcsBool_t      weakUsed;
-    char         * schemeName;
-    char         * grammarPrefix;
-    CcSymbol_t   * gramSy;
-    CcSymbol_t   * eofSy;
-    CcSymbol_t   * noSy;
-    CcSymbol_t   * curSy;
+    CcsPosition_t * members;
+    CcsPosition_t * constructor;
+    CcsPosition_t * destructor;
+
+    CcsBool_t       weakUsed;
+    char          * schemeName;
+    char          * grammarPrefix;
+    CcSymbol_t    * gramSy;
+    CcSymbol_t    * eofSy;
+    CcSymbol_t    * noSy;
+    CcSymbol_t    * curSy;
     /* Sometimes the length of visited is nodes.Count.
      * And sometimes the length of visited is nonterminals.Count...... */
-    CcBitArray_t * visited;
-    CcBitArray_t   visitedSpace;
-    CcBitArray_t * allSyncSets;
-    CcBitArray_t   allSyncSetsSpace;
+    CcBitArray_t  * visited;
+    CcBitArray_t    visitedSpace;
+    CcBitArray_t  * allSyncSets;
+    CcBitArray_t    allSyncSetsSpace;
 
-    CcArrayList_t  errors;
+    CcArrayList_t   errors;
 };
 
 CcSyntax_t * CcSyntax(CcSyntax_t * self, CcGlobals_t * globals);

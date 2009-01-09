@@ -170,9 +170,6 @@ CcsParser(CcsParser_t * self, FILE  * infp, FILE * errfp)
     if (!CcGlobals(&self->globals, &self->errpool)) goto ERRQUIT;
     self->tokenString = NULL;
     self->genScanner = FALSE;
-    self->members = NULL;
-    self->constructor = NULL;
-    self->destructor = NULL;
     self->symtab = &self->globals.symtab;
     self->lexical = self->globals.lexical;
     self->syntax = &self->globals.syntax;
@@ -188,9 +185,6 @@ void
 CcsParser_Destruct(CcsParser_t * self)
 {
     /*---- destructor ----*/
-    if (self->destructor) CcsPosition_Destruct(self->destructor);
-    if (self->constructor) CcsPosition_Destruct(self->constructor);
-    if (self->members) CcsPosition_Destruct(self->members);
     if (self->tokenString && self->tokenString != noString)
 	CcFree(self->tokenString);
     CcGlobals_Destruct(&self->globals);
@@ -228,7 +222,7 @@ CcsParser_Coco(CcsParser_t * self)
 	while (CcsParser_StartOf(self, 1)) {
 	    CcsParser_Get(self);
 	}
-	self->members = CcsScanner_GetPosition(&self->scanner, beg, self->la);
+	self->syntax->members = CcsScanner_GetPosition(&self->scanner, beg, self->la);
 	CcsScanner_DecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 8) {
@@ -237,7 +231,7 @@ CcsParser_Coco(CcsParser_t * self)
 	while (CcsParser_StartOf(self, 2)) {
 	    CcsParser_Get(self);
 	}
-	self->constructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
+	self->syntax->constructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
 	CcsScanner_DecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 9) {
@@ -246,7 +240,7 @@ CcsParser_Coco(CcsParser_t * self)
 	while (CcsParser_StartOf(self, 3)) {
 	    CcsParser_Get(self);
 	}
-	self->destructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
+	self->syntax->destructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
 	CcsScanner_DecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 10) {

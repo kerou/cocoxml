@@ -24,38 +24,23 @@
 #ifndef  COCO_COUTPUTSCHEME_H
 #define  COCO_COUTPUTSCHEME_H
 
-#ifndef  COCO_OUTPUTSCHEME_H
-#include "OutputScheme.h"
-#endif
-
-#ifndef  COCO_SYNTAX_H
-#incldue "Syntax.h"
+#ifndef  COCO_CBASEOUTPUTSCHEME_H
+#include "CBaseOutputScheme.h"
 #endif
 
 #ifndef  COCO_CcsParser_H
 #include "c/Parser.h"
 #endif
 
-#ifndef  COCO_CcsXmlParser_H
-#include "c/xml/Parser.h"
-#endif
-
 EXTC_BEGIN
 
 typedef struct {
-    CcOutputScheme_t base;
-
+    CcCBaseOutputScheme_t base;
     CcsParser_t * parser;
-    CcsXmlParser_t * xmlparser;
-
-    const char * prefix;
-    CcSyntaxSymSet_t symSet;
-    const CcSymbol_t * curSy;
 } CcCOutputScheme_t;
 
 CcCOutputScheme_t *
-CcCOutputScheme(CcsParser_t * parser, CcsXmlParser_t * xmlparser,
-		CcArguments_t * arguments);
+CcCOutputScheme(CcsParser_t * parser, CcArguments_t * arguments);
 
 EXTC_END
 
