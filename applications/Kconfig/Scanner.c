@@ -47,8 +47,8 @@ KcScanner_Init(KcScanner_t * self)
 {
     /*---- declarations ----*/
     self->eofSym = 0;
-    self->maxT = 31;
-    self->noSym = 31;
+    self->maxT = 38;
+    self->noSym = 38;
     /*---- enable ----*/
 
     self->busyTokenList = NULL;
@@ -236,22 +236,29 @@ typedef struct {
 
 static const Identifier2KWKind_t i2kArr[] = {
     /*---- identifiers2keywordkinds ----*/
-    { "bool", 9 },
+    { "bool", 17 },
+    { "choice", 11 },
+    { "comment", 13 },
     { "config", 7 },
-    { "def_bool", 16 },
-    { "def_tristate", 17 },
-    { "default", 15 },
-    { "depends", 18 },
-    { "help", 22 },
-    { "hex", 11 },
-    { "if", 13 },
-    { "int", 12 },
+    { "def_bool", 23 },
+    { "def_tristate", 24 },
+    { "default", 22 },
+    { "depends", 25 },
+    { "endchoice", 12 },
+    { "endif", 15 },
+    { "endmenu", 10 },
+    { "help", 29 },
+    { "hex", 19 },
+    { "if", 14 },
+    { "int", 20 },
+    { "mainmenu", 16 },
+    { "menu", 9 },
     { "menuconfig", 8 },
-    { "on", 19 },
-    { "prompt", 14 },
-    { "ranges", 21 },
-    { "select", 20 },
-    { "tristate", 10 },
+    { "on", 26 },
+    { "prompt", 21 },
+    { "ranges", 28 },
+    { "select", 27 },
+    { "tristate", 18 },
     /*---- enable ----*/
 };
 static const int i2kNum = sizeof(i2kArr) / sizeof(i2kArr[0]);
@@ -556,31 +563,31 @@ KcScanner_NextToken(KcScanner_t * self)
 	    KcScanner_GetCh(self); goto case_16;
 	} else { kind = self->noSym; break; }
     case 16: case_16:
-	{ kind = 23; break; }
+	{ kind = 30; break; }
     case 17:
 	if (self->ch == '|') {
 	    KcScanner_GetCh(self); goto case_18;
 	} else { kind = self->noSym; break; }
     case 18: case_18:
-	{ kind = 24; break; }
+	{ kind = 31; break; }
     case 19:
 	if (self->ch == '&') {
 	    KcScanner_GetCh(self); goto case_20;
 	} else { kind = self->noSym; break; }
     case 20: case_20:
-	{ kind = 25; break; }
+	{ kind = 32; break; }
     case 21:
-	{ kind = 27; break; }
+	{ kind = 34; break; }
     case 22:
-	{ kind = 28; break; }
+	{ kind = 35; break; }
     case 23:
-	{ kind = 29; break; }
+	{ kind = 36; break; }
     case 24: case_24:
-	{ kind = 30; break; }
+	{ kind = 37; break; }
     case 25:
 	if (self->ch == '=') {
 	    KcScanner_GetCh(self); goto case_24;
-	} else { kind = 26; break; }
+	} else { kind = 33; break; }
     /*---- enable ----*/
     }
     t = CcsToken(kind, pos, col, line,

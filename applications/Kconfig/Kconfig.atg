@@ -21,13 +21,19 @@ END.
 COMPILER Kconfig
 
 MEMBERS
+    char * mainmenu;
     KcSymbolTable_t * symtab;
+    KcSymbolList_t * toplist;
 
 CONSTRUCTOR
+    self->mainmenu = NULL;
     if (!(self->symtab = KcSymbolTable())) goto ERRQUIT;
+    self->toplist = NULL;
 
 DESTRUCTOR
+    if (self->toplist)  KcSymbolList_Destruct(self->toplist);
     KcSymbolTable_Destruct(self->symtab);
+    if (self->mainmenu)  CcsFree(self->mainmenu);
 
 INDENTATIONS
 
@@ -51,24 +57,105 @@ IGNORE tab
 
 PRODUCTIONS
 
-Kconfig =
-  { ConfigDecl }
+Kconfig (. KcSymbolList_t * toplist = NULL; .) =
+  SymbolListDecl<&toplist> (. self->toplist = toplist; .)
 .
 
-ConfigDecl           (. CcsBool_t menuOrNot;
-		     	char * symname = NULL;
-			KcSymbolType_t symtype = KcstNone;
-			KcProperty_t * props = NULL;
-		     	CcsPosition_t * helpmsg = NULL; .)
+SymbolListDecl<KcSymbolList_t ** symlist>
+    (. KcSymbol_t * sym; .) =
+  { SymbolDecl<&sym>   (. if (*symlist == NULL) *symlist = KcSymbolList();
+                          if (sym) KcSymbolList_Append(*symlist, sym); .)
+  }
+.
+
+SymbolDecl<KcSymbol_t ** sym> =
+  ConfigDecl<sym> | MenuDecl<sym> | ChoiceDecl<sym> | CommentDecl<sym> |
+  IfDecl<sym> | MainMenuDecl<sym>
+.
+
+ConfigDecl<KcSymbol_t ** sym>
+    (. const char * errmsg;
+       CcsBool_t menuOrNot;
+       char * symname = NULL;
+       KcSymbolType_t symtype = KcstNone;
+       KcProperty_t * props = NULL;
+       CcsPosition_t * helpmsg = NULL; .)
  = ("config"         (. menuOrNot = FALSE; .)
     | "menuconfig"   (. menuOrNot = TRUE; .)
   ) ident            (. symname = CcsStrdup(self->t->val); .)
-  eol IndentIn { ConfigProperty<&symtype, &props> } [ Help<&helpmsg> ] { eol } IndentOut
-      		     (. KcSymbolTable_AppendSymbol(self->symtab, symname, symtype, menuOrNot, props, helpmsg);
-		     	CcsFree(symname); .)
+  eol IndentIn { Property<&symtype, &props> } [ Help<&helpmsg> ] { eol } IndentOut
+    (. if ((errmsg = KcSymbolTable_AppendSymbol(self->symtab, sym, symname,
+       	  	     				symtype, menuOrNot, props, helpmsg))) {
+	   if (props) KcPropertyList_Destruct(props);
+	   if (helpmsg) CcsPosition_Destruct(helpmsg);
+       }
+       CcsFree(symname); .)
 .
 
-ConfigProperty<KcSymbolType_t * symtype, KcProperty_t ** prop> =
+MenuDecl<KcSymbol_t ** menu>
+    (. const char * errmsg;
+       char * prompt;
+       KcSymbolType_t symtype;
+       KcProperty_t * props = NULL;
+       KcSymbolList_t * symlist = NULL; .) =
+  "menu" string (. prompt = CcsEscape(self->t->val);
+                   KcProperty_AppendPrompt(&props, prompt, NULL); .)
+  eol { Property<&symtype, &props> } SymbolListDecl<&symlist> "endmenu" eol
+    (. if ((errmsg = KcSymbolTable_AppendSymbol(self->symtab, menu, NULL,
+	   	       	 			KcstMenu, FALSE, props, NULL))) {
+	   KcParser_SemErrT(self, "Append 'menu' failed: %s.", errmsg);
+	   if (props) KcPropertyList_Destruct(props);
+	   if (symlist) KcSymbolList_Destruct(symlist);
+       } else (*menu)->u._menu_ = symlist; .)
+.
+
+ChoiceDecl<KcSymbol_t ** choice>
+    (. const char * errmsg;
+       KcSymbolType_t symtype;
+       KcProperty_t * props = NULL;
+       KcSymbolList_t * symlist = NULL; .) =
+  "choice" eol { Property<&symtype, &props> } SymbolListDecl<&symlist> "endchoice" eol
+    (. if ((errmsg = KcSymbolTable_AppendSymbol(self->symtab, choice, NULL,
+       	  	     				KcstChoice, FALSE, props, NULL))) {
+	   KcParser_SemErrT(self, "Append 'choice' failed: %s.", errmsg);
+	   if (props) KcPropertyList_Destruct(props);
+	   if (symlist) KcSymbolList_Destruct(symlist);
+       } else (*choice)->u._choice_ = symlist; .)
+.
+
+CommentDecl<KcSymbol_t ** comment>
+    (. const char * errmsg;
+       char * _comment_;
+       KcSymbolType_t symtype;
+       KcProperty_t * props = NULL; .) =
+  "comment" string  (. _comment_ = CcsEscape(self->t->val); .)
+  { Property<&symtype, &props> } eol
+    (. if ((errmsg = KcSymbolTable_AppendSymbol(self->symtab, comment, NULL,
+  	    	      	 	    		KcstComment, FALSE, props, NULL))) {
+	   KcParser_SemErrT(self, "Append 'comment' failed: %s.", errmsg);
+	   if (_comment_) CcsFree(_comment_);
+	   if (props) KcPropertyList_Destruct(props);
+       } else (*comment)->u._comment_ = _comment_; .)
+.
+
+IfDecl<KcSymbol_t ** _if_>
+    (. const char * errmsg;
+       KcExpr_t * ifexpr = NULL;
+       KcSymbolList_t * symlist = NULL; .) =
+  "if" Expr<&ifexpr> eol SymbolListDecl<&symlist> "endif" eol
+    (. if ((errmsg = KcSymbolTable_AppendSymbol(self->symtab, _if_, NULL,
+       	  	     				KcstIf, FALSE, NULL, NULL))) {
+	   KcParser_SemErrT(self, "Append 'if' failed: %s.", errmsg);
+	   if (ifexpr) KcExpr_Destruct(ifexpr);
+       } else (*_if_)->u._ifexpr_ = ifexpr; .)
+.
+
+MainMenuDecl<KcSymbol_t ** sym> =
+  "mainmenu" string (. if (!self->mainmenu) self->mainmenu = CcsEscape(self->t->val); .)
+  eol
+.
+
+Property<KcSymbolType_t * symtype, KcProperty_t ** prop> =
   TypeDefine<symtype, prop>
   | InputPrompt<prop>
   | Default<prop>

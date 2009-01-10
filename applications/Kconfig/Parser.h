@@ -36,7 +36,9 @@ struct KcParser_s {
     CcsToken_t      * la;
     int               maxT;
     /*---- members ----*/
+    char * mainmenu;
     KcSymbolTable_t * symtab;
+    KcSymbolList_t * toplist;
     /*---- enable ----*/
 };
 
