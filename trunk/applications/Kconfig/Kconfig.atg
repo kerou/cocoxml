@@ -63,7 +63,7 @@ ConfigDecl           (. CcsBool_t menuOrNot;
  = ("config"         (. menuOrNot = FALSE; .)
     | "menuconfig"   (. menuOrNot = TRUE; .)
   ) ident            (. symname = CcsStrdup(self->t->val); .)
-  eol IndentIn { ConfigProperty<&symtype, &props> } [ Help<&helpmsg> ] IndentOut
+  eol IndentIn { ConfigProperty<&symtype, &props> } [ Help<&helpmsg> ] { eol } IndentOut
       		     (. KcSymbolTable_AppendSymbol(self->symtab, symname, symtype, menuOrNot, props, helpmsg);
 		     	CcsFree(symname); .)
 .
@@ -139,12 +139,12 @@ Expr0<KcExpr_t ** expr> =           (. KcExpr_t * expr0; .)
   }
 .
 
-Expr1<KcExpr_t ** expr> = (. KcExpr_t * expr0; .)
-  '!' Expr2<&expr0>       (. *expr = KcExpr(KcetNotExpr, NULL, NULL, expr0, NULL); .)
+Expr1<KcExpr_t ** expr>             (. KcExpr_t * expr0; .) =
+  Expr2<expr> | '!' Expr2<&expr0>   (. *expr = KcExpr(KcetNotExpr, NULL, NULL, expr0, NULL); .)
 .
 
-Expr2<KcExpr_t ** expr> =
-  '(' Expr3<expr> ')'
+Expr2<KcExpr_t ** expr> = 
+  Expr3<expr> | '(' Expr<expr> ')'
 .
 
 Expr3<KcExpr_t ** expr> = (. char op = 0; KcSymbol_t * sym0 = NULL, * sym1 = NULL; .)
@@ -155,7 +155,6 @@ Expr3<KcExpr_t ** expr> = (. char op = 0; KcSymbol_t * sym0 = NULL, * sym1 = NUL
 			     case '=': *expr = KcExpr(KcetSymbolEqual, sym0, sym1, NULL, NULL); break;
 			     case '!': *expr = KcExpr(KcetSymbolNotEqual, sym0, sym1, NULL, NULL); break;
 			     } .)
-  | Expr<expr>
 .
 
 Symbol<KcSymbol_t ** sym> =

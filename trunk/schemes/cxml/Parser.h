@@ -72,7 +72,7 @@ void CcsXmlParser_Destruct(CcsXmlParser_t * self);
 void CcsXmlParser_Parse(CcsXmlParser_t * self);
 
 void CcsXmlParser_SemErr(CcsXmlParser_t * self, const CcsToken_t * token,
-			 const char * format, ...);
+		      const char * format, ...);
 void CcsXmlParser_SemErrT(CcsXmlParser_t * self, const char * format, ...);
 
 EXTC_END

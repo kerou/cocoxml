@@ -447,11 +447,24 @@ CcsXmlScanner_IndentGenerator(CcsXmlScanner_t * self)
 
     if (!self->lineStart) return NULL;
     CcsAssert(self->indent < self->indentUsed);
+    /* Skip blank lines. */
+    if (self->ch == '\r' || self->ch == '\n') return NULL;
+    /* Dump all required IndentOut when EoF encountered. */
+    if (self->ch == EoF) {
+	head = NULL;
+	while (self->indent < self->indentUsed - 1) {
+	    cur = CcsToken(CcsXmlScanner_INDENT_OUT, self->pos,
+			   self->col, self->line, NULL, 0);
+	    cur->next = head; head = cur;
+	    --self->indentUsed;
+	}
+	return head;
+    }
     self->lineStart = FALSE;
     if (self->col > self->indentUsed[-1]) {
 	if (self->indentUsed == self->indentLast) {
 	    newLen = (self->indentLast - self->indent) + CcsXmlScanner_INDENT_START;
-	    newIndent = CcRealloc(self->indent, sizeof(int) * newLen);
+	    newIndent = CcsRealloc(self->indent, sizeof(int) * newLen);
 	    if (!newIndent) return NULL;
 	    self->indentUsed = newIndent + (self->indentUsed - self->indent);
 	    self->indentLast = newIndent + newLen;
