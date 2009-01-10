@@ -459,12 +459,14 @@ CcsScanner_IndentGenerator(CcsScanner_t * self)
     if (self->ch == '\r' || self->ch == '\n') return NULL;
     /* Dump all required IndentOut when EoF encountered. */
     if (self->ch == EoF) {
-	while (self->indent < self->indentUsed) {
+	head = NULL;
+	while (self->indent < self->indentUsed - 1) {
 	    cur = CcsToken(CcsScanner_INDENT_OUT, self->pos,
 			   self->col, self->line, NULL, 0);
 	    cur->next = head; head = cur;
 	    --self->indentUsed;
 	}
+	return head;
     }
     self->lineStart = FALSE;
     if (self->col > self->indentUsed[-1]) {
