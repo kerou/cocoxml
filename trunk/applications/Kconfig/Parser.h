@@ -43,6 +43,8 @@ struct KcParser_s {
 };
 
 KcParser_t * KcParser(KcParser_t * self, FILE * infp, FILE * errfp);
+KcParser_t *
+KcParser_ByName(KcParser_t * self, const char * infn, FILE * errfp);
 void KcParser_Destruct(KcParser_t * self);
 void KcParser_Parse(KcParser_t * self);
 

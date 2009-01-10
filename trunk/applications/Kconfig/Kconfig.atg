@@ -27,7 +27,7 @@ MEMBERS
 
 CONSTRUCTOR
     self->mainmenu = NULL;
-    if (!(self->symtab = KcSymbolTable())) goto ERRQUIT;
+    if (!(self->symtab = KcSymbolTable())) return FALSE;
     self->toplist = NULL;
 
 DESTRUCTOR

@@ -51,6 +51,8 @@ struct CExprParser_s {
 };
 
 CExprParser_t * CExprParser(CExprParser_t * self, FILE * infp, FILE * errfp);
+CExprParser_t *
+CExprParser_ByName(CExprParser_t * self, const char * infn, FILE * errfp);
 void CExprParser_Destruct(CExprParser_t * self);
 void CExprParser_Parse(CExprParser_t * self);
 

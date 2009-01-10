@@ -147,21 +147,45 @@ CcsXmlParser_SemErrT(CcsXmlParser_t * self, const char * format, ...)
     va_end(ap);
 }
 
-#define ERRQUIT  errquit1
+static CcsBool_t
+CcsXmlParser_Init(CcsXmlParser_t * self)
+{
+    self->t = self->la = NULL;
+    /*---- constructor ----*/
+    self->maxT = 39;
+    if (!CcGlobalsXml(&self->globals, &self->errpool)) return FALSE;
+    self->symtab = &self->globals.symtab;
+    self->xmlspecmap = self->globals.xmlspecmap;
+    self->syntax = &self->globals.syntax; 
+    /*---- enable ----*/
+    return TRUE;
+}
+
 CcsXmlParser_t *
 CcsXmlParser(CcsXmlParser_t * self, FILE  * infp, FILE * errfp)
 {
     if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
     if (!CcsXmlScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
-    self->t = self->la = NULL;
-    /*---- constructor ----*/
-    self->maxT = 39;
-    if (!CcGlobalsXml(&self->globals, &self->errpool)) goto ERRQUIT;
-    self->symtab = &self->globals.symtab;
-    self->xmlspecmap = self->globals.xmlspecmap;
-    self->syntax = &self->globals.syntax; 
-    /*---- enable ----*/
+    if (!CcsXmlParser_Init(self)) goto errquit2;
     return self;
+ errquit2:
+    CcsXmlScanner_Destruct(&self->scanner);
+ errquit1:
+    CcsErrorPool_Destruct(&self->errpool);
+ errquit0:
+    return NULL;
+}
+
+CcsXmlParser_t *
+CcsXmlParser_ByName(CcsXmlParser_t * self, const char * infn, FILE * errfp)
+{
+    if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
+    if (!CcsXmlScanner_ByName(&self->scanner, &self->errpool, infn))
+	goto errquit1;
+    if (!CcsXmlParser_Init(self)) goto errquit2;
+    return self;
+ errquit2:
+    CcsXmlScanner_Destruct(&self->scanner);
  errquit1:
     CcsErrorPool_Destruct(&self->errpool);
  errquit0:

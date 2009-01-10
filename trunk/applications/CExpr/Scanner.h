@@ -74,6 +74,9 @@ struct CExprScanner_s {
 
 CExprScanner_t *
 CExprScanner(CExprScanner_t * self, CcsErrorPool_t * errpool, FILE * fp);
+CExprScanner_t *
+CExprScanner_ByName(CExprScanner_t * self, CcsErrorPool_t * errpool,
+		  const char * infn);
 void CExprScanner_Destruct(CExprScanner_t * self);
 CcsToken_t * CExprScanner_GetDummy(CExprScanner_t * self);
 CcsToken_t * CExprScanner_Scan(CExprScanner_t * self);

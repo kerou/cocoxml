@@ -67,6 +67,9 @@ struct KcScanner_s {
 
 KcScanner_t *
 KcScanner(KcScanner_t * self, CcsErrorPool_t * errpool, FILE * fp);
+KcScanner_t *
+KcScanner_ByName(KcScanner_t * self, CcsErrorPool_t * errpool,
+		  const char * infn);
 void KcScanner_Destruct(KcScanner_t * self);
 CcsToken_t * KcScanner_GetDummy(KcScanner_t * self);
 CcsToken_t * KcScanner_Scan(KcScanner_t * self);
