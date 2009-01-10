@@ -23,6 +23,17 @@ KcProperty_Destruct(KcProperty_t * self)
     CcsFree(self);
 }
 
+void
+KcPropertyList_Destruct(KcProperty_t * self)
+{
+    KcProperty_t * next;
+    while (self) {
+	next = self->next;
+	KcProperty_Destruct(self);
+	self = next;
+    }
+}
+
 static const char *
 AppendProperty(KcProperty_t ** props, KcProperty_t * prop)
 {
@@ -99,12 +110,17 @@ static KcSymbol_t *
 KcSymbol(const char * symname)
 {
     KcSymbol_t * self;
-    if (!(self = CcsMalloc(sizeof(KcSymbol_t) + strlen(symname) + 1)))
+    size_t symnamelen = symname ? strlen(symname) + 1 : 0;
+    if (!(self = CcsMalloc(sizeof(KcSymbol_t) + symnamelen)))
 	return NULL;
     memset(self, 0, sizeof(KcSymbol_t));
     self->type = KcstNone;
-    self->symname = (char *)(self + 1);
-    strcpy(self->symname, symname);
+    if (symname) {
+	self->symname = (char *)(self + 1);
+	strcpy(self->symname, symname);
+    } else {
+	self->symname = NULL;
+    }
     return self;
 }
 
@@ -160,8 +176,19 @@ KcSymbol_Destruct(KcSymbol_t * self)
 	next = cur->next;
 	KcProperty_Destruct(cur);
     }
-    if (self->type == KcstString && self->u._string_ != NULL)
-	CcsFree(self->u._string_);
+    switch (self->type) {
+    case KcstString: if (self->u._string_) CcsFree(self->u._string_);
+	break;
+    case KcstMenu: if (self->u._menu_) KcSymbolList_Destruct(self->u._menu_);
+	break;
+    case KcstChoice: if (self->u._choice_) KcSymbolList_Destruct(self->u._choice_);
+	break;
+    case KcstComment: if (self->u._comment_) CcsFree(self->u._comment_);
+	break;
+    case KcstIf: if (self->u._ifexpr_) KcExpr_Destruct(self->u._ifexpr_);
+	break;
+    default: break;
+    }
     CcsFree(self);
 }
 
@@ -205,9 +232,10 @@ symtabHash(KcSymbolTable_t * self, const char * symname)
 }
 
 const char *
-KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, const char * symname,
-			   KcSymbolType_t symtype, CcsBool_t menuOrNot,
-			   KcProperty_t * props, CcsPosition_t * helpmsg)
+KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, KcSymbol_t ** retNewSymbol,
+			   const char * symname, KcSymbolType_t symtype,
+			   CcsBool_t menuOrNot, KcProperty_t * props,
+			   CcsPosition_t * helpmsg)
 {
     KcSymbol_t ** cur;
     for (cur = symtabHash(self, symname); *cur; cur = &((*cur)->next)) {
@@ -220,6 +248,7 @@ KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, const char * symname,
     (*cur)->menuOrNot = menuOrNot;
     (*cur)->props = props;
     (*cur)->helpmsg = helpmsg;
+    *retNewSymbol = *cur;
     return NULL;
 }
 
@@ -317,66 +346,40 @@ KcExpr_Destruct(KcExpr_t * self)
     CcsFree(self);
 }
 
-static KcMenuEntry_t *
-KcMenuEntry(KcMenuEntryType_t type, KcSymbol_t * symbol, KcMenu_t * submenu)
+KcSymbolList_t *
+KcSymbolList(void)
 {
-    KcMenuEntry_t * self;
-    if (!(self = CcsMalloc(sizeof(KcMenuEntry_t)))) return NULL;
-    self->type = type;
-    switch (self->type) {
-    case KcmetSymbol: self->u.symbol = symbol; break;
-    case KcmetSubmenu: self->u.submenu = submenu; break;
-    }
-    return self;
-}
+    KcSymbolList_t * self;
 
-static void
-KcMenuEntry_Destruct(KcMenuEntry_t * self)
-{
-    if (self->type == KcmetSubmenu) KcMenu_Destruct(self->u.submenu);
-    CcsFree(self);
-}
-
-KcMenu_t *
-KcMenu(void)
-{
-    KcMenu_t * self;
-    if (!(self = CcsMalloc(sizeof(KcMenu_t)))) return NULL;
-    self->first = self->last = NULL;
+    if (!(self = CcsMalloc(sizeof(KcSymbolList_t)))) return NULL;
+    self->next = NULL;
+    self->symarrUsed = self->symarr;
     return self;
 }
 
 void
-KcMenu_Destruct(KcMenu_t * self)
+KcSymbolList_Destruct(KcSymbolList_t * self)
 {
-    KcMenuEntry_t * cur, * next;
-    for (cur = self->first; cur; cur = next) {
-	next = cur->next;
-	KcMenuEntry_Destruct(cur);
+    KcSymbolList_t * next;
+
+    while (self) {
+	next = self->next;
+	CcsFree(self);
+	self = next;
     }
-    CcsFree(self);
 }
 
-static const char *
-KcMenu_AppendEntry(KcMenu_t * self, KcMenuEntry_t * entry)
+const char *
+KcSymbolList_Append(KcSymbolList_t * self, KcSymbol_t * symbol)
 {
-    if (!entry) return "Not enough memory";
-    if (self->last) {
-	self->last->next = entry; self->last = entry;
-    } else {
-	self->first = self->last = entry;
+    KcSymbolList_t * newlist;
+    while (self->symarrUsed >= self->symarr + SZ_SYMLISTARR && self->next)
+	self = self->next;
+    if (self->symarrUsed >= self->symarr + SZ_SYMLISTARR) {
+	if (!(newlist = KcSymbolList())) return "Not enough memory";
+	self->next = newlist; self = newlist;
     }
+    *self->symarrUsed = symbol;
+    ++self->symarrUsed;
     return NULL;
-}
-
-const char *
-KcMenu_AppendSymbol(KcMenu_t * self, KcSymbol_t * symbol)
-{
-    return KcMenu_AppendEntry(self, KcMenuEntry(KcmetSymbol, symbol, NULL));
-}
-
-const char *
-KcMenu_AppendSubmenu(KcMenu_t * self, KcMenu_t * submenu)
-{
-    return KcMenu_AppendEntry(self, KcMenuEntry(KcmetSubmenu, NULL, submenu));
 }
