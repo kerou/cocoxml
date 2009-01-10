@@ -74,6 +74,9 @@ struct PgnScanner_s {
 
 PgnScanner_t *
 PgnScanner(PgnScanner_t * self, CcsErrorPool_t * errpool, FILE * fp);
+PgnScanner_t *
+PgnScanner_ByName(PgnScanner_t * self, CcsErrorPool_t * errpool,
+		  const char * infn);
 void PgnScanner_Destruct(PgnScanner_t * self);
 CcsToken_t * PgnScanner_GetDummy(PgnScanner_t * self);
 CcsToken_t * PgnScanner_Scan(PgnScanner_t * self);

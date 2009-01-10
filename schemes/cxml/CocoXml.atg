@@ -54,7 +54,7 @@ MEMBERS
     CcSyntax_t      * syntax;
 
 CONSTRUCTOR
-    if (!CcGlobalsXml(&self->globals, &self->errpool)) goto ERRQUIT;
+    if (!CcGlobalsXml(&self->globals, &self->errpool)) return FALSE;
     self->symtab = &self->globals.symtab;
     self->xmlspecmap = self->globals.xmlspecmap;
     self->syntax = &self->globals.syntax; 

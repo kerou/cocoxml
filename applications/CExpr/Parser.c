@@ -130,18 +130,42 @@ CExprParser_SemErrT(CExprParser_t * self, const char * format, ...)
     va_end(ap);
 }
 
-#define ERRQUIT  errquit1
-CExprParser_t *
-CExprParser(CExprParser_t * self, FILE  * infp, FILE * errfp)
+static CcsBool_t
+CExprParser_Init(CExprParser_t * self)
 {
-    if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
-    if (!CExprScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
     self->maxT = 24;
     
     /*---- enable ----*/
+    return TRUE;
+}
+
+CExprParser_t *
+CExprParser(CExprParser_t * self, FILE  * infp, FILE * errfp)
+{
+    if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
+    if (!CExprScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
+    if (!CExprParser_Init(self)) goto errquit2;
     return self;
+ errquit2:
+    CExprScanner_Destruct(&self->scanner);
+ errquit1:
+    CcsErrorPool_Destruct(&self->errpool);
+ errquit0:
+    return NULL;
+}
+
+CExprParser_t *
+CExprParser_ByName(CExprParser_t * self, const char * infn, FILE * errfp)
+{
+    if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
+    if (!CExprScanner_ByName(&self->scanner, &self->errpool, infn))
+	goto errquit1;
+    if (!CExprParser_Init(self)) goto errquit2;
+    return self;
+ errquit2:
+    CExprScanner_Destruct(&self->scanner);
  errquit1:
     CcsErrorPool_Destruct(&self->errpool);
  errquit0:

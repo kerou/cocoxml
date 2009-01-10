@@ -158,23 +158,47 @@ CcsParser_SemErrT(CcsParser_t * self, const char * format, ...)
     va_end(ap);
 }
 
-#define ERRQUIT  errquit1
-CcsParser_t *
-CcsParser(CcsParser_t * self, FILE  * infp, FILE * errfp)
+static CcsBool_t
+CcsParser_Init(CcsParser_t * self)
 {
-    if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
-    if (!CcsScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
     self->maxT = 47;
-    if (!CcGlobals(&self->globals, &self->errpool)) goto ERRQUIT;
+    if (!CcGlobals(&self->globals, &self->errpool)) return FALSE;
     self->tokenString = NULL;
     self->genScanner = FALSE;
     self->symtab = &self->globals.symtab;
     self->lexical = self->globals.lexical;
     self->syntax = &self->globals.syntax;
     /*---- enable ----*/
+    return TRUE;
+}
+
+CcsParser_t *
+CcsParser(CcsParser_t * self, FILE  * infp, FILE * errfp)
+{
+    if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
+    if (!CcsScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
+    if (!CcsParser_Init(self)) goto errquit2;
     return self;
+ errquit2:
+    CcsScanner_Destruct(&self->scanner);
+ errquit1:
+    CcsErrorPool_Destruct(&self->errpool);
+ errquit0:
+    return NULL;
+}
+
+CcsParser_t *
+CcsParser_ByName(CcsParser_t * self, const char * infn, FILE * errfp)
+{
+    if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
+    if (!CcsScanner_ByName(&self->scanner, &self->errpool, infn))
+	goto errquit1;
+    if (!CcsParser_Init(self)) goto errquit2;
+    return self;
+ errquit2:
+    CcsScanner_Destruct(&self->scanner);
  errquit1:
     CcsErrorPool_Destruct(&self->errpool);
  errquit0:

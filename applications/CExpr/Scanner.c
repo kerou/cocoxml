@@ -23,41 +23,58 @@ Author: Charles Wang <charlesw123456@gmail.com>
 #include  "Scanner.h"
 
 static int Char2State(int chr);
-static void CExprScanner_Init(CExprScanner_t * self);
+static CcsBool_t CExprScanner_Init(CExprScanner_t * self);
 static CcsToken_t * CExprScanner_NextToken(CExprScanner_t * self);
 static void CExprScanner_GetCh(CExprScanner_t * self);
 
 static const char * dummyval = "dummy";
+
 CExprScanner_t *
 CExprScanner(CExprScanner_t * self, CcsErrorPool_t * errpool, FILE * fp)
 {
     self->errpool = errpool;
     if (!(self->dummyToken = CcsToken(0, 0, 0, 0, dummyval, strlen(dummyval))))
 	goto errquit0;
-    if (CcsBuffer(&self->buffer, fp) == NULL) goto errquit1;
-#ifdef CExprScanner_INDENTATION
-    self->lineStart = TRUE;
-    if (!(self->indent = CcsMalloc(sizeof(int) * CExprScanner_INDENT_START)))
-	goto errquit2;
-    self->indentUsed = self->indent;
-    self->indentLast = self->indent + CExprScanner_INDENT_START;
-    *self->indentUsed++ = 0;
-#endif
-    CExprScanner_Init(self);
+    if (!CcsBuffer(&self->buffer, fp)) goto errquit1;
+    if (!CExprScanner_Init(self)) goto errquit2;
     return self;
-#ifdef CExprScanner_INDENTATION
  errquit2:
     CcsBuffer_Destruct(&self->buffer);
-#endif
  errquit1:
     CcsToken_Destruct(self->dummyToken);
  errquit0:
     return NULL;
 }
 
-static void
+CExprScanner_t *
+CExprScanner_ByName(CExprScanner_t * self, CcsErrorPool_t * errpool,
+		  const char * fn)
+{
+    self->errpool = errpool;
+    if (!(self->dummyToken = CcsToken(0, 0, 0, 0, dummyval, strlen(dummyval))))
+	goto errquit0;
+    if (!CcsBuffer_ByName(&self->buffer, fn)) goto errquit1;
+    if (!CExprScanner_Init(self)) goto errquit2;
+    return self;
+ errquit2:
+    CcsBuffer_Destruct(&self->buffer);
+ errquit1:
+    CcsToken_Destruct(self->dummyToken);
+ errquit0:
+    return NULL;
+}
+
+static CcsBool_t
 CExprScanner_Init(CExprScanner_t * self)
 {
+#ifdef CExprScanner_INDENTATION
+    self->lineStart = TRUE;
+    if (!(self->indent = CcsMalloc(sizeof(int) * CExprScanner_INDENT_START)))
+	return FALSE;
+    self->indentUsed = self->indent;
+    self->indentLast = self->indent + CExprScanner_INDENT_START;
+    *self->indentUsed++ = 0;
+#endif
     /*---- declarations ----*/
     self->eofSym = 0;
     self->maxT = 24;
@@ -72,6 +89,7 @@ CExprScanner_Init(CExprScanner_t * self)
     self->pos = 0; self->line = 1; self->col = 0;
     self->oldEols = 0; self->oldEolsEOL = 0;
     CExprScanner_GetCh(self);
+    return TRUE;
 }
 
 void

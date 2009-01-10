@@ -122,18 +122,42 @@ PgnParser_SemErrT(PgnParser_t * self, const char * format, ...)
     va_end(ap);
 }
 
-#define ERRQUIT  errquit1
-PgnParser_t *
-PgnParser(PgnParser_t * self, FILE  * infp, FILE * errfp)
+static CcsBool_t
+PgnParser_Init(PgnParser_t * self)
 {
-    if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
-    if (!PgnScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
     self->t = self->la = NULL;
     /*---- constructor ----*/
     self->maxT = 23;
     self->firstGame = self->lastGame = NULL;
     /*---- enable ----*/
+    return TRUE;
+}
+
+PgnParser_t *
+PgnParser(PgnParser_t * self, FILE  * infp, FILE * errfp)
+{
+    if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
+    if (!PgnScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
+    if (!PgnParser_Init(self)) goto errquit2;
     return self;
+ errquit2:
+    PgnScanner_Destruct(&self->scanner);
+ errquit1:
+    CcsErrorPool_Destruct(&self->errpool);
+ errquit0:
+    return NULL;
+}
+
+PgnParser_t *
+PgnParser_ByName(PgnParser_t * self, const char * infn, FILE * errfp)
+{
+    if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
+    if (!PgnScanner_ByName(&self->scanner, &self->errpool, infn))
+	goto errquit1;
+    if (!PgnParser_Init(self)) goto errquit2;
+    return self;
+ errquit2:
+    PgnScanner_Destruct(&self->scanner);
  errquit1:
     CcsErrorPool_Destruct(&self->errpool);
  errquit0:

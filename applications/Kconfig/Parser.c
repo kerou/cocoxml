@@ -128,20 +128,44 @@ KcParser_SemErrT(KcParser_t * self, const char * format, ...)
     va_end(ap);
 }
 
-#define ERRQUIT  errquit1
+static CcsBool_t
+KcParser_Init(KcParser_t * self)
+{
+    self->t = self->la = NULL;
+    /*---- constructor ----*/
+    self->maxT = 38;
+    self->mainmenu = NULL;
+    if (!(self->symtab = KcSymbolTable())) return FALSE;
+    self->toplist = NULL;
+    /*---- enable ----*/
+    return TRUE;
+}
+
 KcParser_t *
 KcParser(KcParser_t * self, FILE  * infp, FILE * errfp)
 {
     if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
     if (!KcScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
-    self->t = self->la = NULL;
-    /*---- constructor ----*/
-    self->maxT = 38;
-    self->mainmenu = NULL;
-    if (!(self->symtab = KcSymbolTable())) goto ERRQUIT;
-    self->toplist = NULL;
-    /*---- enable ----*/
+    if (!KcParser_Init(self)) goto errquit2;
     return self;
+ errquit2:
+    KcScanner_Destruct(&self->scanner);
+ errquit1:
+    CcsErrorPool_Destruct(&self->errpool);
+ errquit0:
+    return NULL;
+}
+
+KcParser_t *
+KcParser_ByName(KcParser_t * self, const char * infn, FILE * errfp)
+{
+    if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
+    if (!KcScanner_ByName(&self->scanner, &self->errpool, infn))
+	goto errquit1;
+    if (!KcParser_Init(self)) goto errquit2;
+    return self;
+ errquit2:
+    KcScanner_Destruct(&self->scanner);
  errquit1:
     CcsErrorPool_Destruct(&self->errpool);
  errquit0:

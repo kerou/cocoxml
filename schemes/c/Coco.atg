@@ -62,7 +62,7 @@ MEMBERS
     CcSyntax_t      * syntax;
 
 CONSTRUCTOR
-    if (!CcGlobals(&self->globals, &self->errpool)) goto ERRQUIT;
+    if (!CcGlobals(&self->globals, &self->errpool)) return FALSE;
     self->tokenString = NULL;
     self->genScanner = FALSE;
     self->symtab = &self->globals.symtab;

@@ -68,6 +68,8 @@ struct CcsXmlParser_s {
 };
 
 CcsXmlParser_t * CcsXmlParser(CcsXmlParser_t * self, FILE * infp, FILE * errfp);
+CcsXmlParser_t *
+CcsXmlParser_ByName(CcsXmlParser_t * self, const char * infn, FILE * errfp);
 void CcsXmlParser_Destruct(CcsXmlParser_t * self);
 void CcsXmlParser_Parse(CcsXmlParser_t * self);
 

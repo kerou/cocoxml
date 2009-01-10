@@ -29,10 +29,9 @@
 static int CcsBuffer_Load(CcsBuffer_t * self);
 static int CcsBuffer_ReadByte(CcsBuffer_t * self, int * value);
 
-CcsBuffer_t *
-CcsBuffer(CcsBuffer_t * self, FILE * fp)
+static CcsBool_t
+CcsBuffer_Init(CcsBuffer_t * self)
 {
-    self->fp = fp;
     self->start = 0;
     if (!(self->buf = CcsMalloc(BUFSTEP))) goto errquit0;
     self->busyFirst = self->lockCur = NULL;
@@ -40,16 +39,35 @@ CcsBuffer(CcsBuffer_t * self, FILE * fp)
     self->next = self->loaded = self->buf;
     self->last = self->buf + BUFSTEP;
     if (CcsBuffer_Load(self) < 0) goto errquit1;
+    return TRUE;
+ errquit1: CcsFree(self->buf);
+ errquit0: return FALSE;
+}
+
+CcsBuffer_t *
+CcsBuffer(CcsBuffer_t * self, FILE * fp)
+{
+    self->fname = NULL;
+    self->fp = fp;
+    return CcsBuffer_Init(self) ? self : NULL;
+}
+
+CcsBuffer_t *
+CcsBuffer_ByName(CcsBuffer_t * self, const char * fn)
+{
+    if (!(self->fname = CcsStrdup(fn))) goto errquit0;
+    if (!(self->fp = fopen(self->fname, "r"))) goto errquit1;
+    if (!CcsBuffer_Init(self)) goto errquit2;
     return self;
- errquit1:
-    CcsFree(self->buf);
- errquit0:
-    return NULL;
+ errquit2: fclose(self->fp);
+ errquit1: CcsFree(self->fname);
+ errquit0: return NULL;
 }
 
 void
 CcsBuffer_Destruct(CcsBuffer_t * self)
 {
+    if (self->fname) CcsFree(self->fname);
     CcsFree(self->buf);
 }
 
