@@ -111,6 +111,7 @@ KcExpr_t * KcExpr(KcExprType_t type,
 void KcExpr_Destruct(KcExpr_t * self);
 
 typedef struct {
+    KcSymbol_t  * nonlist;
     KcSymbol_t ** first;
     KcSymbol_t ** last;
 }   KcSymbolTable_t;
@@ -123,6 +124,10 @@ KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, KcSymbol_t ** retNewSymbol,
 			   const char * symname, KcSymbolType_t symtype,
 			   CcsBool_t menuOrNot, KcProperty_t * properties,
 			   CcsPosition_t * helpmsg);
+
+const char *
+KcSymbolTable_AddNoNSymbol(KcSymbolTable_t * self, KcSymbol_t ** retNewSymbol,
+			   KcSymbolType_t symtype, KcProperty_t * properties);
 
 /* Return NULL in success, return error message format when failed.
  * The only formatter is '%s' which will be replaced by symname. */
