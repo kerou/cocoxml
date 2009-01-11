@@ -31,65 +31,41 @@
 #include  <ctype.h>
 #include  "Scanner.h"
 
-static int Char2State(int chr);
-static CcsBool_t CcsScanner_Init(CcsScanner_t * self);
-static CcsToken_t * CcsScanner_NextToken(CcsScanner_t * self);
-static void CcsScanner_GetCh(CcsScanner_t * self);
+/*------------------------------- ScanInput --------------------------------*/
+struct CcsScanInput_s {
+    CcsScanInput_t * next;
 
-static const char * dummyval = "dummy";
+    CcsScanner_t   * scanner;
+    char           * fname;
+    CcsBuffer_t      buffer;
 
-CcsScanner_t *
-CcsScanner(CcsScanner_t * self, CcsErrorPool_t * errpool, FILE * fp)
-{
-    self->errpool = errpool;
-    if (!(self->dummyToken = CcsToken(0, 0, 0, 0, dummyval, strlen(dummyval))))
-	goto errquit0;
-    if (!CcsBuffer(&self->buffer, fp)) goto errquit1;
-    if (!CcsScanner_Init(self)) goto errquit2;
-    return self;
- errquit2:
-    CcsBuffer_Destruct(&self->buffer);
- errquit1:
-    CcsToken_Destruct(self->dummyToken);
- errquit0:
-    return NULL;
-}
+    CcsToken_t     * busyTokenList;
+    CcsToken_t    ** curToken;
+    CcsToken_t    ** peekToken;
 
-CcsScanner_t *
-CcsScanner_ByName(CcsScanner_t * self, CcsErrorPool_t * errpool,
-		  const char * fn)
-{
-    self->errpool = errpool;
-    if (!(self->dummyToken = CcsToken(0, 0, 0, 0, dummyval, strlen(dummyval))))
-	goto errquit0;
-    if (!CcsBuffer_ByName(&self->buffer, fn)) goto errquit1;
-    if (!CcsScanner_Init(self)) goto errquit2;
-    return self;
- errquit2:
-    CcsBuffer_Destruct(&self->buffer);
- errquit1:
-    CcsToken_Destruct(self->dummyToken);
- errquit0:
-    return NULL;
-}
+    int              ch;
+    int              chBytes;
+    int              pos;
+    int              line;
+    int              col;
+    int              oldEols;
+    int              oldEolsEOL;
+
+#ifdef CcsScanner_INDENTATION
+    CcsBool_t        lineStart;
+    int            * indent;
+    int            * indentUsed;
+    int            * indentLast;
+#endif
+};
+
+static CcsToken_t * CcsScanInput_NextToken(CcsScanInput_t * self);
 
 static CcsBool_t
-CcsScanner_Init(CcsScanner_t * self)
+CcsScanInput_Init(CcsScanInput_t * self, CcsScanner_t * scanner, FILE * fp)
 {
-#ifdef CcsScanner_INDENTATION
-    self->lineStart = TRUE;
-    if (!(self->indent = CcsMalloc(sizeof(int) * CcsScanner_INDENT_START)))
-	return FALSE;
-    self->indentUsed = self->indent;
-    self->indentLast = self->indent + CcsScanner_INDENT_START;
-    *self->indentUsed++ = 0;
-#endif
-    /*---- declarations ----*/
-    self->eofSym = 0;
-    self->maxT = 47;
-    self->noSym = 47;
-    /*---- enable ----*/
-
+    self->scanner = scanner;
+    if (!CcsBuffer(&self->buffer, fp)) goto errquit0;
     self->busyTokenList = NULL;
     self->curToken = &self->busyTokenList;
     self->peekToken = &self->busyTokenList;
@@ -97,12 +73,59 @@ CcsScanner_Init(CcsScanner_t * self)
     self->ch = 0; self->chBytes = 0;
     self->pos = 0; self->line = 1; self->col = 0;
     self->oldEols = 0; self->oldEolsEOL = 0;
-    CcsScanner_GetCh(self);
+#ifdef CcsScanner_INDENTATION
+    self->lineStart = TRUE;
+    if (!(self->indent = CcsMalloc(sizeof(int) * CcsScanner_INDENT_START)))
+	goto errquit1;
+    self->indentUsed = self->indent;
+    self->indentLast = self->indent + CcsScanner_INDENT_START;
+    *self->indentUsed++ = 0;
+#endif
     return TRUE;
+#ifdef CcsScanner_INDENTATION
+ errquit1:
+    CcsBuffer_Destruct(&self->buffer);
+#endif
+ errquit0:
+    return FALSE;
 }
 
-void
-CcsScanner_Destruct(CcsScanner_t * self)
+static CcsScanInput_t *
+CcsScanInput(CcsScanner_t * scanner, FILE * fp)
+{
+    CcsScanInput_t * self;
+    if (!(self = CcsMalloc(sizeof(CcsScanInput_t)))) goto errquit0;
+    self->next = NULL;
+    self->fname = NULL;
+    if (!CcsScanInput_Init(self, scanner, fp)) goto errquit1;
+    return self;
+ errquit1:
+    CcsFree(self);
+ errquit0:
+    return NULL;
+}
+
+static CcsScanInput_t *
+CcsScanInput_ByName(CcsScanner_t * scanner, const char * infn)
+{
+    FILE * fp;
+    CcsScanInput_t * self;
+    if (!(fp = fopen(infn, "r"))) goto errquit0;
+    if (!(self = CcsMalloc(sizeof(CcsScanInput_t) + strlen(infn) + 1))) goto errquit1;
+    self->next = NULL;
+    strcpy(self->fname = (char *)(self + 1), infn);
+    if (!CcsScanInput_Init(self, scanner, fp)) goto errquit2;
+    return self;
+ errquit2:
+    CcsFree(self);
+ errquit1:
+    fclose(fp);
+ errquit0:
+    return NULL;
+}
+
+static void
+CcsScanInput_Destruct(CcsScanInput_t * self)
 {
     CcsToken_t * cur, * next;
 
@@ -115,25 +138,42 @@ CcsScanner_Destruct(CcsScanner_t * self)
 	next = cur->next;
 	CcsToken_Destruct(cur);
     }
-    /* May be trigged by .atg semantic code. */
-    CcsAssert(self->dummyToken->refcnt == 1);
-    CcsToken_Destruct(self->dummyToken);
     CcsBuffer_Destruct(&self->buffer);
+    CcsFree(self);
 }
 
-CcsToken_t *
-CcsScanner_GetDummy(CcsScanner_t * self)
+static void
+CcsScanInput_GetCh(CcsScanInput_t * self)
 {
-    CcsScanner_IncRef(self, self->dummyToken);
-    return self->dummyToken;
+    if (self->oldEols > 0) {
+	self->ch = '\n'; --self->oldEols; self->oldEolsEOL = 1;
+    } else {
+	if (self->ch == '\n') {
+	    if (self->oldEolsEOL) self->oldEolsEOL = 0;
+	    else {
+		++self->line; self->col = 0;
+	    }
+#ifdef CcsScanner_INDENTATION
+	    self->lineStart = TRUE;
+#endif
+	} else if (self->ch == '\t') {
+	    self->col += 8 - self->col % 8;
+	} else {
+	    /* FIX ME: May be the width of some specical character
+	     * is NOT self->chBytes. */
+	    self->col += self->chBytes;
+	}
+	self->ch = CcsBuffer_Read(&self->buffer, &self->chBytes);
+	self->pos = CcsBuffer_GetPos(&self->buffer);
+    }
 }
 
-CcsToken_t *
-CcsScanner_Scan(CcsScanner_t * self)
+static CcsToken_t *
+CcsScanInput_Scan(CcsScanInput_t * self)
 {
     CcsToken_t * cur;
     if (*self->curToken == NULL) {
-	*self->curToken = CcsScanner_NextToken(self);
+	*self->curToken = CcsScanInput_NextToken(self);
 	if (self->curToken == &self->busyTokenList)
 	    CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
     }
@@ -143,37 +183,37 @@ CcsScanner_Scan(CcsScanner_t * self)
     return cur;
 }
 
-CcsToken_t *
-CcsScanner_Peek(CcsScanner_t * self)
+static CcsToken_t *
+CcsScanInput_Peek(CcsScanInput_t * self)
 {
     CcsToken_t * cur;
     do {
 	if (*self->peekToken == NULL) {
-	    *self->peekToken = CcsScanner_NextToken(self);
+	    *self->peekToken = CcsScanInput_NextToken(self);
 	    if (self->peekToken == &self->busyTokenList)
 		CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
 	}
 	cur = *self->peekToken;
 	self->peekToken = &cur->next;
-    } while (cur->kind > self->maxT); /* Skip pragmas */
+    } while (cur->kind > self->scanner->maxT); /* Skip pragmas */
     ++cur->refcnt;
     return cur;
 }
 
-void
-CcsScanner_ResetPeek(CcsScanner_t * self)
+static void
+CcsScanInput_ResetPeek(CcsScanInput_t * self)
 {
     self->peekToken = self->curToken;
 }
 
-void
-CcsScanner_IncRef(CcsScanner_t * self, CcsToken_t * token)
+static void
+CcsScanInput_IncRef(CcsScanInput_t * self, CcsToken_t * token)
 {
     ++token->refcnt;
 }
 
-void
-CcsScanner_DecRef(CcsScanner_t * self, CcsToken_t * token)
+static void
+CcsScanInput_DecRef(CcsScanInput_t * self, CcsToken_t * token)
 {
     if (--token->refcnt > 1) return;
     CcsAssert(token->refcnt == 1);
@@ -199,21 +239,28 @@ CcsScanner_DecRef(CcsScanner_t * self, CcsToken_t * token)
     }
 }
 
-CcsPosition_t *
-CcsScanner_GetPosition(CcsScanner_t * self, const CcsToken_t * begin,
-		       const CcsToken_t * end)
+static CcsPosition_t *
+CcsScanInput_GetPosition(CcsScanInput_t * self, const CcsToken_t * begin,
+			 const CcsToken_t * end)
 {
-    int len = end->pos - begin->pos;
+    int len;
+    CcsAssert(self == begin->input);
+    CcsAssert(self == end->input);
+    len = end->pos - begin->pos;
     return CcsPosition(begin->pos, len, begin->col,
 		       CcsBuffer_GetString(&self->buffer, begin->pos, len));
 }
 
-CcsPosition_t *
-CcsScanner_GetPositionBetween(CcsScanner_t * self, const CcsToken_t * begin,
-			      const CcsToken_t * end)
+static CcsPosition_t *
+CcsScanInput_GetPositionBetween(CcsScanInput_t * self,
+				const CcsToken_t * begin,
+				const CcsToken_t * end)
 {
-    int begpos = begin->pos + strlen(begin->val);
-    int len = end->pos - begpos;
+    int begpos, len;
+    CcsAssert(self == begin->input);
+    CcsAssert(self == end->input);
+    begpos = begin->pos + strlen(begin->val);
+    len = end->pos - begpos;
     const char * start = CcsBuffer_GetString(&self->buffer, begpos, len);
     const char * cur, * last = start + len;
 
@@ -223,7 +270,118 @@ CcsScanner_GetPositionBetween(CcsScanner_t * self, const CcsToken_t * begin,
     return CcsPosition(begpos + (cur - start), last - cur, 0, cur);
 }
 
-/* All the following things are used by CcsScanner_NextToken. */
+/*------------------------------- Scanner --------------------------------*/
+static const char * dummyval = "dummy";
+
+static CcsBool_t
+CcsScanner_Init(CcsScanner_t * self, CcsErrorPool_t * errpool) {
+    self->errpool = errpool;
+    /*---- declarations ----*/
+    self->eofSym = 0;
+    self->maxT = 47;
+    self->noSym = 47;
+    /*---- enable ----*/
+    if (!(self->dummyToken =
+	  CcsToken(NULL, 0, 0, 0, 0, dummyval, strlen(dummyval))))
+	return FALSE;
+    return TRUE;
+}
+
+CcsScanner_t *
+CcsScanner(CcsScanner_t * self, CcsErrorPool_t * errpool, FILE * fp)
+{
+    if (!(self->cur = CcsScanInput(self, fp))) goto errquit0;
+    if (!CcsScanner_Init(self, errpool)) goto errquit1;
+    CcsScanInput_GetCh(self->cur);
+    return self;
+ errquit1:
+    CcsScanInput_Destruct(self->cur);
+ errquit0:
+    return NULL;
+}
+
+CcsScanner_t *
+CcsScanner_ByName(CcsScanner_t * self, CcsErrorPool_t * errpool,
+		  const char * fn)
+{
+    if (!(self->cur = CcsScanInput_ByName(self, fn))) goto errquit0;
+    if (!CcsScanner_Init(self, errpool)) goto errquit1;
+    CcsScanInput_GetCh(self->cur);
+    return self;
+ errquit1:
+    CcsScanInput_Destruct(self->cur);
+ errquit0:
+    return NULL;
+}
+
+void
+CcsScanner_Destruct(CcsScanner_t * self)
+{
+    CcsScanInput_t * cur, * next;
+    for (cur = self->cur; cur; cur = next) {
+	next = cur->next;
+	CcsScanInput_Destruct(cur);
+    }
+    /* May be trigged by .atg semantic code. */
+    CcsAssert(self->dummyToken->refcnt == 1);
+    CcsToken_Destruct(self->dummyToken);
+}
+
+CcsToken_t *
+CcsScanner_GetDummy(CcsScanner_t * self)
+{
+    CcsScanner_IncRef(self, self->dummyToken);
+    return self->dummyToken;
+}
+
+CcsToken_t *
+CcsScanner_Scan(CcsScanner_t * self)
+{
+    return CcsScanInput_Scan(self->cur);
+}
+
+CcsToken_t *
+CcsScanner_Peek(CcsScanner_t * self)
+{
+    return CcsScanInput_Peek(self->cur);
+}
+
+void
+CcsScanner_ResetPeek(CcsScanner_t * self)
+{
+    CcsScanInput_ResetPeek(self->cur);
+}
+
+void
+CcsScanner_IncRef(CcsScanner_t * self, CcsToken_t * token)
+{
+    if (token == self->dummyToken) ++token->refcnt;
+    else CcsScanInput_IncRef(token->input, token);
+}
+
+void
+CcsScanner_DecRef(CcsScanner_t * self, CcsToken_t * token)
+{
+    if (token == self->dummyToken) --token->refcnt;
+    else CcsScanInput_DecRef(token->input, token);
+}
+
+CcsPosition_t *
+CcsScanner_GetPosition(CcsScanner_t * self, const CcsToken_t * begin,
+		       const CcsToken_t * end)
+{
+    return CcsScanInput_GetPosition(begin->input, begin, end);
+}
+
+CcsPosition_t *
+CcsScanner_GetPositionBetween(CcsScanner_t * self, const CcsToken_t * begin,
+			      const CcsToken_t * end)
+{
+    return CcsScanInput_GetPositionBetween(begin->input, begin, end);
+}
+
+/*------------------------------- ScanInput --------------------------------*/
+/* All the following things are used by CcsScanInput_NextToken. */
 typedef struct {
     int keyFrom;
     int keyTo;
@@ -336,7 +494,7 @@ Identifier2KWKind(const char * key, size_t keylen, int defaultVal)
 }
 
 static int
-CcsScanner_GetKWKind(CcsScanner_t * self, int start, int end, int defaultVal)
+GetKWKind(CcsScanInput_t * self, int start, int end, int defaultVal)
 {
     return Identifier2KWKind(CcsBuffer_GetString(&self->buffer,
 						 start, end - start),
@@ -344,38 +502,12 @@ CcsScanner_GetKWKind(CcsScanner_t * self, int start, int end, int defaultVal)
 }
 #endif /* CcsScanner_KEYWORD_USED */
 
-static void
-CcsScanner_GetCh(CcsScanner_t * self)
-{
-    if (self->oldEols > 0) {
-	self->ch = '\n'; --self->oldEols; self->oldEolsEOL = 1;
-    } else {
-	if (self->ch == '\n') {
-	    if (self->oldEolsEOL) self->oldEolsEOL = 0;
-	    else {
-		++self->line; self->col = 0;
-	    }
-#ifdef CcsScanner_INDENTATION
-	    self->lineStart = TRUE;
-#endif
-	} else if (self->ch == '\t') {
-	    self->col += 8 - self->col % 8;
-	} else {
-	    /* FIX ME: May be the width of some specical character
-	     * is NOT self->chBytes. */
-	    self->col += self->chBytes;
-	}
-	self->ch = CcsBuffer_Read(&self->buffer, &self->chBytes);
-	self->pos = CcsBuffer_GetPos(&self->buffer);
-    }
-}
-
 typedef struct {
     int ch, chBytes;
     int pos, line, col;
 }  SLock_t;
 static void
-CcsScanner_LockCh(CcsScanner_t * self, SLock_t * slock)
+CcsScanInput_LockCh(CcsScanInput_t * self, SLock_t * slock)
 {
     slock->ch = self->ch;
     slock->chBytes = self->chBytes;
@@ -385,12 +517,12 @@ CcsScanner_LockCh(CcsScanner_t * self, SLock_t * slock)
     CcsBuffer_Lock(&self->buffer);
 }
 static void
-CcsScanner_UnlockCh(CcsScanner_t * self, SLock_t * slock)
+CcsScanInput_UnlockCh(CcsScanInput_t * self, SLock_t * slock)
 {
     CcsBuffer_Unlock(&self->buffer);
 }
 static void
-CcsScanner_ResetCh(CcsScanner_t * self, SLock_t * slock)
+CcsScanInput_ResetCh(CcsScanInput_t * self, SLock_t * slock)
 {
     self->ch = slock->ch;
     self->chBytes = slock->chBytes;
@@ -415,58 +547,58 @@ static const CcsComment_t * commentsLast =
     comments + sizeof(comments) / sizeof(comments[0]);
 
 static CcsBool_t
-CcsScanner_Comment(CcsScanner_t * self, const CcsComment_t * c)
+CcsScanInput_Comment(CcsScanInput_t * self, const CcsComment_t * c)
 {
     SLock_t slock;
     int level = 1, line0 = self->line;
 
     if (c->start[1]) {
-	CcsScanner_LockCh(self, &slock); CcsScanner_GetCh(self);
+	CcsScanInput_LockCh(self, &slock); CcsScanInput_GetCh(self);
 	if (self->ch != c->start[1]) {
-	    CcsScanner_ResetCh(self, &slock);
+	    CcsScanInput_ResetCh(self, &slock);
 	    return FALSE;
 	}
-	CcsScanner_UnlockCh(self, &slock);
+	CcsScanInput_UnlockCh(self, &slock);
     }
-    CcsScanner_GetCh(self);
+    CcsScanInput_GetCh(self);
     for (;;) {
 	if (self->ch == c->end[0]) {
 	    if (c->end[1] == 0) {
 		if (--level == 0) break;
 	    } else {
-		CcsScanner_LockCh(self, &slock); CcsScanner_GetCh(self);
+		CcsScanInput_LockCh(self, &slock); CcsScanInput_GetCh(self);
 		if (self->ch == c->end[1]) {
-		    CcsScanner_UnlockCh(self, &slock);
+		    CcsScanInput_UnlockCh(self, &slock);
 		    if (--level == 0) break;
 		} else {
-		    CcsScanner_ResetCh(self, &slock);
+		    CcsScanInput_ResetCh(self, &slock);
 		}
 	    }
 	} else if (c->nested && self->ch == c->start[0]) {
 	    if (c->start[1] == 0) {
 		++level;
 	    } else {
-		CcsScanner_LockCh(self, &slock); CcsScanner_GetCh(self);
+		CcsScanInput_LockCh(self, &slock); CcsScanInput_GetCh(self);
 		if (self->ch == c->start[1]) {
-		    CcsScanner_UnlockCh(self, &slock);
+		    CcsScanInput_UnlockCh(self, &slock);
 		    ++level;
 		} else {
-		    CcsScanner_ResetCh(self, &slock);
+		    CcsScanInput_ResetCh(self, &slock);
 		}
 	    }
 	} else if (self->ch == EoF) {
 	    return TRUE;
 	}
-	CcsScanner_GetCh(self);
+	CcsScanInput_GetCh(self);
     }
     self->oldEols = self->line - line0;
-    CcsScanner_GetCh(self);
+    CcsScanInput_GetCh(self);
     return TRUE;
 }
 
 #ifdef CcsScanner_INDENTATION
 static CcsToken_t *
-CcsScanner_IndentGenerator(CcsScanner_t * self)
+CcsScanInput_IndentGenerator(CcsScanInput_t * self)
 {
     int newLen; int * newIndent, * curIndent;
     CcsToken_t * head, * cur;
@@ -479,7 +611,7 @@ CcsScanner_IndentGenerator(CcsScanner_t * self)
     if (self->ch == EoF) {
 	head = NULL;
 	while (self->indent < self->indentUsed - 1) {
-	    cur = CcsToken(CcsScanner_INDENT_OUT, self->pos,
+	    cur = CcsToken(self, CcsScanner_INDENT_OUT, self->pos,
 			   self->col, self->line, NULL, 0);
 	    cur->next = head; head = cur;
 	    --self->indentUsed;
@@ -498,16 +630,16 @@ CcsScanner_IndentGenerator(CcsScanner_t * self)
 	}
 	CcsAssert(self->indentUsed < self->indentLast);
 	*self->indentUsed++ = self->col;
-	return CcsToken(CcsScanner_INDENT_IN, self->pos,
+	return CcsToken(self, CcsScanner_INDENT_IN, self->pos,
 			self->col, self->line, NULL, 0);
     }
     for (curIndent = self->indentUsed - 1; self->col < *curIndent; --curIndent);
     if (self->col > *curIndent)
-	return CcsToken(CcsScanner_INDENT_ERR, self->pos,
+	return CcsToken(self, CcsScanner_INDENT_ERR, self->pos,
 			self->col, self->line, NULL, 0);
     head = NULL;
     while (curIndent < self->indentUsed - 1) {
-	cur = CcsToken(CcsScanner_INDENT_OUT, self->pos,
+	cur = CcsToken(self, CcsScanner_INDENT_OUT, self->pos,
 		       self->col, self->line, NULL, 0);
 	cur->next = head; head = cur;
 	--self->indentUsed;
@@ -517,7 +649,7 @@ CcsScanner_IndentGenerator(CcsScanner_t * self)
 #endif
 
 static CcsToken_t *
-CcsScanner_NextToken(CcsScanner_t * self)
+CcsScanInput_NextToken(CcsScanInput_t * self)
 {
     int pos, line, col, state, kind; CcsToken_t * t;
     const CcsComment_t * curComment;
@@ -527,33 +659,33 @@ CcsScanner_NextToken(CcsScanner_t * self)
 	       || (self->ch >= '\t' && self->ch <= '\n')
 	       || self->ch == '\r'
 	       /*---- enable ----*/
-	       ) CcsScanner_GetCh(self);
+	       ) CcsScanInput_GetCh(self);
 #ifdef CcsScanner_INDENTATION
-	if ((t = CcsScanner_IndentGenerator(self))) return t;
+	if ((t = CcsScanInput_IndentGenerator(self))) return t;
 #endif
 	for (curComment = comments; curComment < commentsLast; ++curComment)
 	    if (self->ch == curComment->start[0] &&
-		CcsScanner_Comment(self, curComment)) break;
+		CcsScanInput_Comment(self, curComment)) break;
 	if (curComment >= commentsLast) break;
     }
     pos = self->pos; line = self->line; col = self->col;
     CcsBuffer_Lock(&self->buffer);
     state = Char2State(self->ch);
-    CcsScanner_GetCh(self);
+    CcsScanInput_GetCh(self);
     switch (state) {
-    case -1: kind = self->eofSym; break;
-    case 0: kind = self->noSym; break;
+    case -1: kind = self->scanner->eofSym; break;
+    case 0: kind = self->scanner->noSym; break;
     /*---- scan3 ----*/
     case 1: case_1:
 	if ((self->ch >= '0' && self->ch <= '9') ||
 	    (self->ch >= 'A' && self->ch <= 'Z') ||
 	    self->ch == '_' ||
 	    (self->ch >= 'a' && self->ch <= 'z')) {
-	    CcsScanner_GetCh(self); goto case_1;
-	} else { kind = CcsScanner_GetKWKind(self, pos, self->pos, 1); break; }
+	    CcsScanInput_GetCh(self); goto case_1;
+	} else { kind = GetKWKind(self, pos, self->pos, 1); break; }
     case 2: case_2:
 	if ((self->ch >= '0' && self->ch <= '9')) {
-	    CcsScanner_GetCh(self); goto case_2;
+	    CcsScanInput_GetCh(self); goto case_2;
 	} else { kind = 2; break; }
     case 3: case_3:
 	{ kind = 3; break; }
@@ -565,25 +697,25 @@ CcsScanner_NextToken(CcsScanner_t * self)
 	    (self->ch >= 14 && self->ch <= '&') ||
 	    (self->ch >= '(' && self->ch <= '[') ||
 	    (self->ch >= ']' && self->ch <= 65535)) {
-	    CcsScanner_GetCh(self); goto case_6;
+	    CcsScanInput_GetCh(self); goto case_6;
 	} else if (self->ch == '\\') {
-	    CcsScanner_GetCh(self); goto case_7;
-	} else { kind = self->noSym; break; }
+	    CcsScanInput_GetCh(self); goto case_7;
+	} else { kind = self->scanner->noSym; break; }
     case 6: case_6:
 	if (self->ch == '\'') {
-	    CcsScanner_GetCh(self); goto case_9;
-	} else { kind = self->noSym; break; }
+	    CcsScanInput_GetCh(self); goto case_9;
+	} else { kind = self->scanner->noSym; break; }
     case 7: case_7:
 	if ((self->ch >= ' ' && self->ch <= '~')) {
-	    CcsScanner_GetCh(self); goto case_8;
-	} else { kind = self->noSym; break; }
+	    CcsScanInput_GetCh(self); goto case_8;
+	} else { kind = self->scanner->noSym; break; }
     case 8: case_8:
 	if ((self->ch >= '0' && self->ch <= '9') ||
 	    (self->ch >= 'a' && self->ch <= 'f')) {
-	    CcsScanner_GetCh(self); goto case_8;
+	    CcsScanInput_GetCh(self); goto case_8;
 	} else if (self->ch == '\'') {
-	    CcsScanner_GetCh(self); goto case_9;
-	} else { kind = self->noSym; break; }
+	    CcsScanInput_GetCh(self); goto case_9;
+	} else { kind = self->scanner->noSym; break; }
     case 9: case_9:
 	{ kind = 5; break; }
     case 10: case_10:
@@ -591,7 +723,7 @@ CcsScanner_NextToken(CcsScanner_t * self)
 	    (self->ch >= 'A' && self->ch <= 'Z') ||
 	    self->ch == '_' ||
 	    (self->ch >= 'a' && self->ch <= 'z')) {
-	    CcsScanner_GetCh(self); goto case_10;
+	    CcsScanInput_GetCh(self); goto case_10;
 	} else { kind = 48; break; }
     case 11: case_11:
 	if ((self->ch >= 0 && self->ch <= '\t') ||
@@ -599,19 +731,19 @@ CcsScanner_NextToken(CcsScanner_t * self)
 	    (self->ch >= 14 && self->ch <= '!') ||
 	    (self->ch >= '#' && self->ch <= '[') ||
 	    (self->ch >= ']' && self->ch <= 65535)) {
-	    CcsScanner_GetCh(self); goto case_11;
+	    CcsScanInput_GetCh(self); goto case_11;
 	} else if (self->ch == '"') {
-	    CcsScanner_GetCh(self); goto case_3;
+	    CcsScanInput_GetCh(self); goto case_3;
 	} else if (self->ch == '\\') {
-	    CcsScanner_GetCh(self); goto case_12;
+	    CcsScanInput_GetCh(self); goto case_12;
 	} else if (self->ch == '\n' ||
 	    self->ch == '\r') {
-	    CcsScanner_GetCh(self); goto case_4;
-	} else { kind = self->noSym; break; }
+	    CcsScanInput_GetCh(self); goto case_4;
+	} else { kind = self->scanner->noSym; break; }
     case 12: case_12:
 	if ((self->ch >= ' ' && self->ch <= '~')) {
-	    CcsScanner_GetCh(self); goto case_11;
-	} else { kind = self->noSym; break; }
+	    CcsScanInput_GetCh(self); goto case_11;
+	} else { kind = self->scanner->noSym; break; }
     case 13:
 	{ kind = 21; break; }
     case 14:
@@ -644,23 +776,23 @@ CcsScanner_NextToken(CcsScanner_t * self)
 	{ kind = 46; break; }
     case 28:
 	if (self->ch == '.') {
-	    CcsScanner_GetCh(self); goto case_16;
+	    CcsScanInput_GetCh(self); goto case_16;
 	} else if (self->ch == '>') {
-	    CcsScanner_GetCh(self); goto case_19;
+	    CcsScanInput_GetCh(self); goto case_19;
 	} else if (self->ch == ')') {
-	    CcsScanner_GetCh(self); goto case_27;
+	    CcsScanInput_GetCh(self); goto case_27;
 	} else { kind = 22; break; }
     case 29:
 	if (self->ch == '.') {
-	    CcsScanner_GetCh(self); goto case_18;
+	    CcsScanInput_GetCh(self); goto case_18;
 	} else { kind = 30; break; }
     case 30:
 	if (self->ch == '.') {
-	    CcsScanner_GetCh(self); goto case_26;
+	    CcsScanInput_GetCh(self); goto case_26;
 	} else { kind = 36; break; }
     /*---- enable ----*/
     }
-    t = CcsToken(kind, pos, col, line,
+    t = CcsToken(self, kind, pos, col, line,
 		 CcsBuffer_GetString(&self->buffer, pos, self->pos - pos),
 		 self->pos - pos);
     CcsBuffer_Unlock(&self->buffer);

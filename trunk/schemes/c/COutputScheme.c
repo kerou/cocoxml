@@ -195,7 +195,7 @@ COS_WriteState(CcCOutputScheme_t * self, CcOutput_t * output,
 	}
 	CcPrintfL(output, ") {");
 	output->indent += 4;
-	CcPrintfIL(output, "%sScanner_GetCh(self); goto case_%d;",
+	CcPrintfIL(output, "%sScanInput_GetCh(self); goto case_%d;",
 		   self->base.prefix, action->target->state->base.index);
 	output->indent -= 4;
 	CcCharSet_Destruct(s);
@@ -204,12 +204,11 @@ COS_WriteState(CcCOutputScheme_t * self, CcOutput_t * output,
     if (state->firstAction == NULL) CcPrintfI(output, "{ ");
     else CcPrintfI(output, "} else { ");
     if (state->endOf == NULL) {
-	CcPrintf(output, "kind = self->noSym;");
+	CcPrintf(output, "kind = self->scanner->noSym;");
     } else if (CcSymbol_GetTokenKind(state->endOf) != symbol_classLitToken) {
 	CcPrintf(output, "kind = %d;", state->endOf->kind);
     } else {
-	CcPrintf(output,
-		 "kind = %sScanner_GetKWKind(self, pos, self->pos, %d);",
+	CcPrintf(output, "kind = GetKWKind(self, pos, self->pos, %d);",
 		 self->base.prefix, state->endOf->kind);
     }
     CcPrintfL(output, " break; }");

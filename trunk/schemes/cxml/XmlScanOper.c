@@ -188,7 +188,7 @@ CcxScanOper(CcxScanOper_t * self, CcsErrorPool_t * errpool, FILE * infp)
     XML_SetCommentHandler(self->parser, CXS_Comment);
 
     self->EOFGenerated = FALSE;
-    if (!(self->dummy = CcsToken(0, 0, 0, 0, dummyval, strlen(dummyval))))
+    if (!(self->dummy = CcsToken(NULL, 0, 0, 0, 0, dummyval, strlen(dummyval))))
 	goto errquit0;
     CcxScanOper_IncRef(self, self->dummy);
     self->tokens = self->peek = NULL;
@@ -322,7 +322,7 @@ CXS_Append(CcxScanOper_t * self, CcsToken_t * last,
 {
     CcsToken_t * token;
     if (kind < 0) return last;
-    token = CcsToken(kind,
+    token = CcsToken(self, kind,
 		     XML_GetCurrentByteIndex(self->parser),
 		     XML_GetCurrentColumnNumber(self->parser),
 		     XML_GetCurrentLineNumber(self->parser),

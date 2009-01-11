@@ -34,35 +34,15 @@ EXTC_BEGIN
 #define KcScanner_INDENT_ERR 3
 /*---- enable ----*/
 
+typedef struct KcScanInput_s KcScanInput_t;
 typedef struct KcScanner_s KcScanner_t;
 struct KcScanner_s {
     CcsErrorPool_t * errpool;
-
-    int            eofSym;
-    int            noSym;
-    int            maxT;
-
-    CcsToken_t   * dummyToken;
-
-    CcsToken_t   * busyTokenList;
-    CcsToken_t  ** curToken;
-    CcsToken_t  ** peekToken;
-
-    int            ch;
-    int            chBytes;
-    int            pos;
-    int            line;
-    int            col;
-    int            oldEols;
-    int            oldEolsEOL;
-
-    CcsBuffer_t    buffer;
-#ifdef KcScanner_INDENTATION
-    CcsBool_t      lineStart;
-    int          * indent;
-    int          * indentUsed;
-    int          * indentLast;
-#endif
+    int              eofSym;
+    int              noSym;
+    int              maxT;
+    CcsToken_t     * dummyToken;
+    KcScanInput_t * cur;
 };
 
 KcScanner_t *
@@ -84,6 +64,9 @@ KcScanner_GetPosition(KcScanner_t * self, const CcsToken_t * begin,
 CcsPosition_t *
 KcScanner_GetPositionBetween(KcScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end);
+
+CcsBool_t KcScanner_Include(KcScanner_t * self, FILE * fp);
+CcsBool_t KcScanner_IncludeByName(KcScanner_t * self, const char * infn);
 
 EXTC_END
 

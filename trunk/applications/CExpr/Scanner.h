@@ -41,35 +41,15 @@ EXTC_BEGIN
 #define CExprScanner_CASE_SENSITIVE
 /*---- enable ----*/
 
+typedef struct CExprScanInput_s CExprScanInput_t;
 typedef struct CExprScanner_s CExprScanner_t;
 struct CExprScanner_s {
     CcsErrorPool_t * errpool;
-
-    int            eofSym;
-    int            noSym;
-    int            maxT;
-
-    CcsToken_t   * dummyToken;
-
-    CcsToken_t   * busyTokenList;
-    CcsToken_t  ** curToken;
-    CcsToken_t  ** peekToken;
-
-    int            ch;
-    int            chBytes;
-    int            pos;
-    int            line;
-    int            col;
-    int            oldEols;
-    int            oldEolsEOL;
-
-    CcsBuffer_t    buffer;
-#ifdef CExprScanner_INDENTATION
-    CcsBool_t      lineStart;
-    int          * indent;
-    int          * indentUsed;
-    int          * indentLast;
-#endif
+    int              eofSym;
+    int              noSym;
+    int              maxT;
+    CcsToken_t     * dummyToken;
+    CExprScanInput_t * cur;
 };
 
 CExprScanner_t *
@@ -91,6 +71,9 @@ CExprScanner_GetPosition(CExprScanner_t * self, const CcsToken_t * begin,
 CcsPosition_t *
 CExprScanner_GetPositionBetween(CExprScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end);
+
+CcsBool_t CExprScanner_Include(CExprScanner_t * self, FILE * fp);
+CcsBool_t CExprScanner_IncludeByName(CExprScanner_t * self, const char * infn);
 
 EXTC_END
 

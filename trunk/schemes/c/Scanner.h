@@ -51,35 +51,15 @@ EXTC_BEGIN
 #define CcsScanner_KEYWORD_USED
 /*---- enable ----*/
 
+typedef struct CcsScanInput_s CcsScanInput_t;
 typedef struct CcsScanner_s CcsScanner_t;
 struct CcsScanner_s {
     CcsErrorPool_t * errpool;
-
-    int            eofSym;
-    int            noSym;
-    int            maxT;
-
-    CcsToken_t   * dummyToken;
-
-    CcsToken_t   * busyTokenList;
-    CcsToken_t  ** curToken;
-    CcsToken_t  ** peekToken;
-
-    int            ch;
-    int            chBytes;
-    int            pos;
-    int            line;
-    int            col;
-    int            oldEols;
-    int            oldEolsEOL;
-
-    CcsBuffer_t    buffer;
-#ifdef CcsScanner_INDENTATION
-    CcsBool_t      lineStart;
-    int          * indent;
-    int          * indentUsed;
-    int          * indentLast;
-#endif
+    int              eofSym;
+    int              noSym;
+    int              maxT;
+    CcsToken_t     * dummyToken;
+    CcsScanInput_t * cur;
 };
 
 CcsScanner_t *
@@ -101,6 +81,9 @@ CcsScanner_GetPosition(CcsScanner_t * self, const CcsToken_t * begin,
 CcsPosition_t *
 CcsScanner_GetPositionBetween(CcsScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end);
+
+CcsBool_t CcsScanner_Include(CcsScanner_t * self, FILE * fp);
+CcsBool_t CcsScanner_IncludeByName(CcsScanner_t * self, const char * infn);
 
 EXTC_END
 

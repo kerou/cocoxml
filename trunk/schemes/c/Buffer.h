@@ -32,7 +32,6 @@ EXTC_BEGIN
 
 typedef struct CcsBuffer_s CcsBuffer_t;
 struct CcsBuffer_s {
-    char * fname;
     FILE * fp;
     long   start;
     char * buf;
@@ -48,7 +47,6 @@ struct CcsBuffer_s {
 /* CcsBuffer_t members for Scanner_t. */
 /* fp should be opened with 'r' mode to deal with CR/LF. */
 CcsBuffer_t * CcsBuffer(CcsBuffer_t * self, FILE * fp);
-CcsBuffer_t * CcsBuffer_ByName(CcsBuffer_t * self, const char * fn);
 void CcsBuffer_Destruct(CcsBuffer_t * self);
 long CcsBuffer_GetPos(CcsBuffer_t * self);
 int CcsBuffer_Read(CcsBuffer_t * self, int * retBytes);
