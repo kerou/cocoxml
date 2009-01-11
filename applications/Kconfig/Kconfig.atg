@@ -52,7 +52,7 @@ CHARACTERS
 
 TOKENS
     ident     = ( letter | digit ) { letter | digit }.
-    string    = '"' { stringCh | '\\' printable } '"'.
+    stringT   = '"' { stringCh | '\\' printable } '"'.
     eol       = (cr lf) | lf.
 
 COMMENTS FROM "#" TO lf
@@ -102,11 +102,11 @@ MenuDecl<KcSymbol_t ** menu>
        KcSymbolType_t symtype;
        KcProperty_t * props = NULL;
        KcSymbolList_t * symlist = NULL; .) =
-  "menu" string (. prompt = CcsUnescape(self->t->val);
-                   if ((errmsg = KcProperty_AppendPrompt(&props, prompt, NULL))) {
-		       KcParser_SemErrT(self, "Append prompt failed: %s.", errmsg);
-		       CcsFree(prompt);
-		   } .)
+  "menu" stringT (. prompt = CcsUnescape(self->t->val);
+                    if ((errmsg = KcProperty_AppendPrompt(&props, prompt, NULL))) {
+		        KcParser_SemErrT(self, "Append prompt failed: %s.", errmsg);
+		        CcsFree(prompt);
+		    } .)
   eol { eol } [ IndentIn { Property<&symtype, &props> } { eol } IndentOut ]
   SymbolListDecl<&symlist> "endmenu" eol
     (. if ((errmsg = KcSymbolTable_AddNoNSymbol(self->symtab, menu,
@@ -137,7 +137,7 @@ CommentDecl<KcSymbol_t ** comment>
        char * _comment_;
        KcSymbolType_t symtype;
        KcProperty_t * props = NULL; .) =
-  "comment" string  (. _comment_ = CcsEscape(self->t->val); .)
+  "comment" stringT  (. _comment_ = CcsEscape(self->t->val); .)
   { Property<&symtype, &props> } eol
     (. if ((errmsg = KcSymbolTable_AddNoNSymbol(self->symtab, comment,
   	    	      	 	    		KcstComment, props))) {
@@ -160,15 +160,15 @@ IfDecl<KcSymbol_t ** _if_>
 .
 
 MainMenuDecl<KcSymbol_t ** sym> =
-  "mainmenu" string (. if (!self->mainmenu) self->mainmenu = CcsEscape(self->t->val); .)
+  "mainmenu" stringT (. if (!self->mainmenu) self->mainmenu = CcsEscape(self->t->val); .)
   eol
 .
 
-Source            (. char * fname; .) =
-  "source" string (. fname = CcsStrdup(self->t->val); .)
-  eol             (. if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname))
-  		         KcParser_SemErrT(self, "Can not include '%s'.", fname);
-  		     CcsFree(fname); .)
+Source             (. char * fname; .) =
+  "source" stringT (. fname = CcsStrdup(self->t->val); .)
+  eol              (. if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname))
+  		          KcParser_SemErrT(self, "Can not include '%s'.", fname);
+  		      CcsFree(fname); .)
 .
 
 Property<KcSymbolType_t * symtype, KcProperty_t ** prop> =
@@ -189,7 +189,7 @@ TypeDefine<KcSymbolType_t * symtype, KcProperty_t ** prop>
   | "string"           (. *symtype = KcstString; .)
   | "hex"              (. *symtype = KcstHex; .)
   | "int"              (. *symtype = KcstInt; .)
-  ) [ string           (. prompt = CcsEscape(self->t->val); .)
+  ) [ stringT          (. prompt = CcsEscape(self->t->val); .)
   [ "if" Expr<&expr> ] (. if (prompt) {
   		     	    KcProperty_AppendPrompt(prop, prompt, expr);
 			    CcsFree(prompt);
@@ -199,7 +199,7 @@ TypeDefine<KcSymbolType_t * symtype, KcProperty_t ** prop>
 
 InputPrompt<KcProperty_t ** prop>
                          (. char * prompt; KcExpr_t * expr = NULL; .) =
-  "prompt" string        (. prompt = CcsStrdup(self->t->val); .)
+  "prompt" stringT       (. prompt = CcsStrdup(self->t->val); .)
  ["if" Expr<&expr>] eol  (. if (prompt) {
        		    	        KcProperty_AppendPrompt(prop, prompt, expr);
 				CcsFree(prompt);
@@ -234,7 +234,7 @@ Ranges<KcProperty_t ** prop>    (. KcSymbol_t * sym0, * sym1; KcExpr_t * expr = 
 .
 
 Option<KcProperty_t ** prop>     (. char * envname; .) =
-  "option" ("env" '=' string     (. envname = CcsUnescape(self->t->val);
+  "option" ("env" '=' stringT    (. envname = CcsUnescape(self->t->val);
   	   	      		    if (envname) {
   	   	      		        KcProperty_AppendEnv(prop, envname);
 					CcsFree(envname);
@@ -279,12 +279,12 @@ Expr3<KcExpr_t ** expr> = (. char op = 0; KcSymbol_t * sym0 = NULL, * sym1 = NUL
 .
 
 Symbol<KcSymbol_t ** sym> (. const char * errmsg; char * unescaped; .) =
-  ident    (. *sym = KcSymbolTable_Get(self->symtab, self->t->val); .)
-  | string (. unescaped = CcsUnescape(self->t->val);
-    	      if ((errmsg = KcSymbolTable_AddConst(self->symtab, sym, unescaped))) {
-	          KcParser_SemErrT(self, "Add const %s failed: %s", self->t->val, errmsg);
-		  CcsFree(unescaped);
-	      } .)
+  ident     (. *sym = KcSymbolTable_Get(self->symtab, self->t->val); .)
+  | stringT (. unescaped = CcsUnescape(self->t->val);
+    	       if ((errmsg = KcSymbolTable_AddConst(self->symtab, sym, unescaped))) {
+	           KcParser_SemErrT(self, "Add const %s failed: %s", self->t->val, errmsg);
+		   CcsFree(unescaped);
+	       } .)
 .
 
 END Kconfig.

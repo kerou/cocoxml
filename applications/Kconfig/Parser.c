@@ -136,7 +136,7 @@ KcParser_Init(KcParser_t * self)
 {
     self->t = self->la = NULL;
     /*---- constructor ----*/
-    self->maxT = 42;
+    self->maxT = 43;
     self->mainmenu = NULL;
     if (!(self->symtab = KcSymbolTable())) return FALSE;
     self->toplist = NULL;
@@ -244,7 +244,7 @@ KcParser_SymbolDecl(KcParser_t * self, KcSymbol_t ** sym)
 	KcParser_MainMenuDecl(self, sym);
 	break;
     }
-    default: KcParser_SynErr(self, 43); break;
+    default: KcParser_SynErr(self, 44); break;
     }
     while (self->la->kind == 6) {
 	KcParser_Get(self);
@@ -279,7 +279,7 @@ KcParser_ConfigDecl(KcParser_t * self, KcSymbol_t ** sym)
     } else if (self->la->kind == 8) {
 	KcParser_Get(self);
 	menuOrNot = TRUE; 
-    } else KcParser_SynErr(self, 44);
+    } else KcParser_SynErr(self, 45);
     KcParser_Expect(self, 4);
     symname = CcsStrdup(self->t->val); 
     KcParser_Expect(self, 6);
@@ -287,7 +287,7 @@ KcParser_ConfigDecl(KcParser_t * self, KcSymbol_t ** sym)
     while (KcParser_StartOf(self, 3)) {
 	KcParser_Property(self, &symtype, &props);
     }
-    if (self->la->kind == 34 || self->la->kind == 35) {
+    if (self->la->kind == 35 || self->la->kind == 36) {
 	KcParser_Help(self, &helpmsg);
     }
     while (self->la->kind == 6) {
@@ -432,39 +432,39 @@ static void
 KcParser_Property(KcParser_t * self, KcSymbolType_t * symtype, KcProperty_t ** prop)
 {
     switch (self->la->kind) {
-    case 5: case 18: case 19: case 20: case 21: {
+    case 18: case 19: case 20: case 21: case 22: {
 	KcParser_TypeDefine(self, symtype, prop);
 	break;
     }
-    case 22: {
+    case 23: {
 	KcParser_InputPrompt(self, prop);
 	break;
     }
-    case 23: {
+    case 24: {
 	KcParser_Default(self, prop);
 	break;
     }
-    case 24: case 25: {
+    case 25: case 26: {
 	KcParser_TypeWithDefault(self, symtype, prop);
 	break;
     }
-    case 26: {
+    case 27: {
 	KcParser_DependsOn(self, prop);
 	break;
     }
-    case 28: {
+    case 29: {
 	KcParser_Select(self, prop);
 	break;
     }
-    case 29: {
+    case 30: {
 	KcParser_Ranges(self, prop);
 	break;
     }
-    case 30: {
+    case 31: {
 	KcParser_Option(self, prop);
 	break;
     }
-    default: KcParser_SynErr(self, 45); break;
+    default: KcParser_SynErr(self, 46); break;
     }
 }
 
@@ -472,11 +472,11 @@ static void
 KcParser_Help(KcParser_t * self, CcsPosition_t ** pos)
 {
     CcsToken_t * beg; 
-    if (self->la->kind == 34) {
+    if (self->la->kind == 35) {
 	KcParser_Get(self);
-    } else if (self->la->kind == 35) {
+    } else if (self->la->kind == 36) {
 	KcParser_Get(self);
-    } else KcParser_SynErr(self, 46);
+    } else KcParser_SynErr(self, 47);
     KcParser_Expect(self, 6);
     KcParser_Expect(self, 1);
     KcScanner_IndentLimit(&self->scanner, self->t);
@@ -494,7 +494,7 @@ KcParser_Expr(KcParser_t * self, KcExpr_t ** expr)
 {
     KcExpr_t * expr0; 
     KcParser_Expr0(self, expr);
-    while (self->la->kind == 36) {
+    while (self->la->kind == 37) {
 	KcParser_Get(self);
 	KcParser_Expr0(self, &expr0);
 	*expr = KcExpr(KcetExprOr, NULL, NULL, *expr, expr0); 
@@ -511,16 +511,16 @@ KcParser_TypeDefine(KcParser_t * self, KcSymbolType_t * symtype, KcProperty_t **
     } else if (self->la->kind == 19) {
 	KcParser_Get(self);
 	*symtype = KcstTristate; 
-    } else if (self->la->kind == 5) {
-	KcParser_Get(self);
-	*symtype = KcstString; 
     } else if (self->la->kind == 20) {
 	KcParser_Get(self);
-	*symtype = KcstHex; 
+	*symtype = KcstString; 
     } else if (self->la->kind == 21) {
 	KcParser_Get(self);
+	*symtype = KcstHex; 
+    } else if (self->la->kind == 22) {
+	KcParser_Get(self);
 	*symtype = KcstInt; 
-    } else KcParser_SynErr(self, 47);
+    } else KcParser_SynErr(self, 48);
     if (self->la->kind == 5) {
 	KcParser_Get(self);
 	prompt = CcsEscape(self->t->val); 
@@ -540,7 +540,7 @@ static void
 KcParser_InputPrompt(KcParser_t * self, KcProperty_t ** prop)
 {
     char * prompt; KcExpr_t * expr = NULL; 
-    KcParser_Expect(self, 22);
+    KcParser_Expect(self, 23);
     KcParser_Expect(self, 5);
     prompt = CcsStrdup(self->t->val); 
     if (self->la->kind == 14) {
@@ -558,7 +558,7 @@ static void
 KcParser_Default(KcParser_t * self, KcProperty_t ** prop)
 {
     KcExpr_t * expr0, * expr1 = NULL; 
-    KcParser_Expect(self, 23);
+    KcParser_Expect(self, 24);
     KcParser_Expr(self, &expr0);
     if (self->la->kind == 14) {
 	KcParser_Get(self);
@@ -572,13 +572,13 @@ static void
 KcParser_TypeWithDefault(KcParser_t * self, KcSymbolType_t * symtype, KcProperty_t ** prop)
 {
     KcExpr_t * expr0, * expr1  = NULL; 
-    if (self->la->kind == 24) {
+    if (self->la->kind == 25) {
 	KcParser_Get(self);
 	*symtype = KcstBool; 
-    } else if (self->la->kind == 25) {
+    } else if (self->la->kind == 26) {
 	KcParser_Get(self);
 	*symtype = KcstTristate; 
-    } else KcParser_SynErr(self, 48);
+    } else KcParser_SynErr(self, 49);
     KcParser_Expr(self, &expr0);
     if (self->la->kind == 14) {
 	KcParser_Get(self);
@@ -592,8 +592,8 @@ static void
 KcParser_DependsOn(KcParser_t * self, KcProperty_t ** prop)
 {
     KcExpr_t * expr; 
-    KcParser_Expect(self, 26);
     KcParser_Expect(self, 27);
+    KcParser_Expect(self, 28);
     KcParser_Expr(self, &expr);
     KcParser_Expect(self, 6);
     KcProperty_AppendDepends(prop, expr); 
@@ -603,7 +603,7 @@ static void
 KcParser_Select(KcParser_t * self, KcProperty_t ** prop)
 {
     KcSymbol_t * sym; KcExpr_t * expr = NULL; 
-    KcParser_Expect(self, 28);
+    KcParser_Expect(self, 29);
     KcParser_Symbol(self, &sym);
     if (self->la->kind == 14) {
 	KcParser_Get(self);
@@ -617,7 +617,7 @@ static void
 KcParser_Ranges(KcParser_t * self, KcProperty_t ** prop)
 {
     KcSymbol_t * sym0, * sym1; KcExpr_t * expr = NULL; 
-    KcParser_Expect(self, 29);
+    KcParser_Expect(self, 30);
     KcParser_Symbol(self, &sym0);
     KcParser_Symbol(self, &sym1);
     if (self->la->kind == 14) {
@@ -632,19 +632,19 @@ static void
 KcParser_Option(KcParser_t * self, KcProperty_t ** prop)
 {
     char * envname; 
-    KcParser_Expect(self, 30);
-    if (self->la->kind == 31) {
+    KcParser_Expect(self, 31);
+    if (self->la->kind == 32) {
 	KcParser_Get(self);
-	KcParser_Expect(self, 32);
+	KcParser_Expect(self, 33);
 	KcParser_Expect(self, 5);
 	envname = CcsUnescape(self->t->val);
 	if (envname) {
 	    KcProperty_AppendEnv(prop, envname);
 	    CcsFree(envname);
 	} 
-    } else if (self->la->kind == 33) {
+    } else if (self->la->kind == 34) {
 	KcParser_Get(self);
-    } else KcParser_SynErr(self, 49);
+    } else KcParser_SynErr(self, 50);
     KcProperty_AppendDefConfigList(prop); 
     KcParser_Expect(self, 6);
 }
@@ -663,7 +663,7 @@ KcParser_Symbol(KcParser_t * self, KcSymbol_t ** sym)
 	    KcParser_SemErrT(self, "Add const %s failed: %s", self->t->val, errmsg);
 	    CcsFree(unescaped);
 	} 
-    } else KcParser_SynErr(self, 50);
+    } else KcParser_SynErr(self, 51);
 }
 
 static void
@@ -671,7 +671,7 @@ KcParser_Expr0(KcParser_t * self, KcExpr_t ** expr)
 {
     KcExpr_t * expr0; 
     KcParser_Expr1(self, expr);
-    while (self->la->kind == 37) {
+    while (self->la->kind == 38) {
 	KcParser_Get(self);
 	KcParser_Expr1(self, &expr0);
 	*expr = KcExpr(KcetExprAnd, NULL, NULL, *expr, expr0); 
@@ -682,13 +682,13 @@ static void
 KcParser_Expr1(KcParser_t * self, KcExpr_t ** expr)
 {
     KcExpr_t * expr0; 
-    if (self->la->kind == 4 || self->la->kind == 5 || self->la->kind == 39) {
+    if (self->la->kind == 4 || self->la->kind == 5 || self->la->kind == 40) {
 	KcParser_Expr2(self, expr);
-    } else if (self->la->kind == 38) {
+    } else if (self->la->kind == 39) {
 	KcParser_Get(self);
 	KcParser_Expr2(self, &expr0);
 	*expr = KcExpr(KcetNotExpr, NULL, NULL, expr0, NULL); 
-    } else KcParser_SynErr(self, 51);
+    } else KcParser_SynErr(self, 52);
 }
 
 static void
@@ -696,11 +696,11 @@ KcParser_Expr2(KcParser_t * self, KcExpr_t ** expr)
 {
     if (self->la->kind == 4 || self->la->kind == 5) {
 	KcParser_Expr3(self, expr);
-    } else if (self->la->kind == 39) {
+    } else if (self->la->kind == 40) {
 	KcParser_Get(self);
 	KcParser_Expr(self, expr);
-	KcParser_Expect(self, 40);
-    } else KcParser_SynErr(self, 52);
+	KcParser_Expect(self, 41);
+    } else KcParser_SynErr(self, 53);
 }
 
 static void
@@ -708,8 +708,8 @@ KcParser_Expr3(KcParser_t * self, KcExpr_t ** expr)
 {
     char op = 0; KcSymbol_t * sym0 = NULL, * sym1 = NULL; 
     KcParser_Symbol(self, &sym0);
-    if (self->la->kind == 32 || self->la->kind == 41) {
-	if (self->la->kind == 32) {
+    if (self->la->kind == 33 || self->la->kind == 42) {
+	if (self->la->kind == 33) {
 	    KcParser_Get(self);
 	    op = '='; 
 	} else {
@@ -738,7 +738,7 @@ KcParser_SynErr(KcParser_t * self, int n)
     case 2: s = "\"" "IndentOut" "\" expected"; break;
     case 3: s = "\"" "IndentErr" "\" expected"; break;
     case 4: s = "\"" "ident" "\" expected"; break;
-    case 5: s = "\"" "string" "\" expected"; break;
+    case 5: s = "\"" "stringT" "\" expected"; break;
     case 6: s = "\"" "eol" "\" expected"; break;
     case 7: s = "\"" "config" "\" expected"; break;
     case 8: s = "\"" "menuconfig" "\" expected"; break;
@@ -753,39 +753,40 @@ KcParser_SynErr(KcParser_t * self, int n)
     case 17: s = "\"" "source" "\" expected"; break;
     case 18: s = "\"" "bool" "\" expected"; break;
     case 19: s = "\"" "tristate" "\" expected"; break;
-    case 20: s = "\"" "hex" "\" expected"; break;
-    case 21: s = "\"" "int" "\" expected"; break;
-    case 22: s = "\"" "prompt" "\" expected"; break;
-    case 23: s = "\"" "default" "\" expected"; break;
-    case 24: s = "\"" "def_bool" "\" expected"; break;
-    case 25: s = "\"" "def_tristate" "\" expected"; break;
-    case 26: s = "\"" "depends" "\" expected"; break;
-    case 27: s = "\"" "on" "\" expected"; break;
-    case 28: s = "\"" "select" "\" expected"; break;
-    case 29: s = "\"" "ranges" "\" expected"; break;
-    case 30: s = "\"" "option" "\" expected"; break;
-    case 31: s = "\"" "env" "\" expected"; break;
-    case 32: s = "\"" "=" "\" expected"; break;
-    case 33: s = "\"" "defconfig_list" "\" expected"; break;
-    case 34: s = "\"" "help" "\" expected"; break;
-    case 35: s = "\"" "---help---" "\" expected"; break;
-    case 36: s = "\"" "||" "\" expected"; break;
-    case 37: s = "\"" "&&" "\" expected"; break;
-    case 38: s = "\"" "!" "\" expected"; break;
-    case 39: s = "\"" "(" "\" expected"; break;
-    case 40: s = "\"" ")" "\" expected"; break;
-    case 41: s = "\"" "!=" "\" expected"; break;
-    case 42: s = "\"" "???" "\" expected"; break;
-    case 43: s = "this symbol not expected in \"" "SymbolDecl" "\""; break;
-    case 44: s = "this symbol not expected in \"" "ConfigDecl" "\""; break;
-    case 45: s = "this symbol not expected in \"" "Property" "\""; break;
-    case 46: s = "this symbol not expected in \"" "Help" "\""; break;
-    case 47: s = "this symbol not expected in \"" "TypeDefine" "\""; break;
-    case 48: s = "this symbol not expected in \"" "TypeWithDefault" "\""; break;
-    case 49: s = "this symbol not expected in \"" "Option" "\""; break;
-    case 50: s = "this symbol not expected in \"" "Symbol" "\""; break;
-    case 51: s = "this symbol not expected in \"" "Expr1" "\""; break;
-    case 52: s = "this symbol not expected in \"" "Expr2" "\""; break;
+    case 20: s = "\"" "string" "\" expected"; break;
+    case 21: s = "\"" "hex" "\" expected"; break;
+    case 22: s = "\"" "int" "\" expected"; break;
+    case 23: s = "\"" "prompt" "\" expected"; break;
+    case 24: s = "\"" "default" "\" expected"; break;
+    case 25: s = "\"" "def_bool" "\" expected"; break;
+    case 26: s = "\"" "def_tristate" "\" expected"; break;
+    case 27: s = "\"" "depends" "\" expected"; break;
+    case 28: s = "\"" "on" "\" expected"; break;
+    case 29: s = "\"" "select" "\" expected"; break;
+    case 30: s = "\"" "ranges" "\" expected"; break;
+    case 31: s = "\"" "option" "\" expected"; break;
+    case 32: s = "\"" "env" "\" expected"; break;
+    case 33: s = "\"" "=" "\" expected"; break;
+    case 34: s = "\"" "defconfig_list" "\" expected"; break;
+    case 35: s = "\"" "help" "\" expected"; break;
+    case 36: s = "\"" "---help---" "\" expected"; break;
+    case 37: s = "\"" "||" "\" expected"; break;
+    case 38: s = "\"" "&&" "\" expected"; break;
+    case 39: s = "\"" "!" "\" expected"; break;
+    case 40: s = "\"" "(" "\" expected"; break;
+    case 41: s = "\"" ")" "\" expected"; break;
+    case 42: s = "\"" "!=" "\" expected"; break;
+    case 43: s = "\"" "???" "\" expected"; break;
+    case 44: s = "this symbol not expected in \"" "SymbolDecl" "\""; break;
+    case 45: s = "this symbol not expected in \"" "ConfigDecl" "\""; break;
+    case 46: s = "this symbol not expected in \"" "Property" "\""; break;
+    case 47: s = "this symbol not expected in \"" "Help" "\""; break;
+    case 48: s = "this symbol not expected in \"" "TypeDefine" "\""; break;
+    case 49: s = "this symbol not expected in \"" "TypeWithDefault" "\""; break;
+    case 50: s = "this symbol not expected in \"" "Option" "\""; break;
+    case 51: s = "this symbol not expected in \"" "Symbol" "\""; break;
+    case 52: s = "this symbol not expected in \"" "Expr1" "\""; break;
+    case 53: s = "this symbol not expected in \"" "Expr2" "\""; break;
     /*---- enable ----*/
     default:
 	snprintf(format, sizeof(format), "error %d", n);
@@ -797,11 +798,11 @@ KcParser_SynErr(KcParser_t * self, int n)
 
 static const char * set[] = {
     /*---- InitSet ----*/
-    /*    5    0    5    0    5    0    5    0   */
-    "*...........................................", /* 0 */
-    ".......***.*.**.**..........................", /* 1 */
-    ".......***.*.**.*...........................", /* 2 */
-    ".....*............*********.***.............", /* 3 */
-    ".*.****************************************."  /* 4 */
+    /*    5    0    5    0    5    0    5    0    */
+    "*............................................", /* 0 */
+    ".......***.*.**.**...........................", /* 1 */
+    ".......***.*.**.*............................", /* 2 */
+    "..................**********.***.............", /* 3 */
+    ".*.*****************************************."  /* 4 */
     /*---- enable ----*/
 };
