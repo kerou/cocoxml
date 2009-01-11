@@ -337,19 +337,40 @@ CcsScanner_GetDummy(CcsScanner_t * self)
 CcsToken_t *
 CcsScanner_Scan(CcsScanner_t * self)
 {
-    return CcsScanInput_Scan(self->cur);
+    CcsToken_t * token; CcsScanInput_t * next;
+    for (;;) {
+	token = CcsScanInput_Scan(self->cur);
+	if (token->kind != self->eofSym) break;
+	if (self->cur->next == NULL) break;
+	CcsScanInput_DecRef(token->input, token);
+	next = self->cur->next;
+	CcsScanInput_Destruct(self->cur);
+	self->cur = next;
+    }
+    return token;
 }
 
 CcsToken_t *
 CcsScanner_Peek(CcsScanner_t * self)
 {
-    return CcsScanInput_Peek(self->cur);
+    CcsToken_t * token; CcsScanInput_t * cur;
+    cur = self->cur;
+    for (;;) {
+	token = CcsScanInput_Peek(self->cur);
+	if (token->kind != self->eofSym) break;
+	if (cur->next == NULL) break;
+	CcsScanInput_DecRef(token->input, token);
+	cur = cur->next;
+    }
+    return token;
 }
 
 void
 CcsScanner_ResetPeek(CcsScanner_t * self)
 {
-    CcsScanInput_ResetPeek(self->cur);
+    CcsScanInput_t * cur;
+    for (cur = self->cur; cur; cur = cur->next)
+	CcsScanInput_ResetPeek(cur);
 }
 
 void
@@ -378,6 +399,26 @@ CcsScanner_GetPositionBetween(CcsScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end)
 {
     return CcsScanInput_GetPositionBetween(begin->input, begin, end);
+}
+
+CcsBool_t
+CcsScanner_Include(CcsScanner_t * self, FILE * fp)
+{
+    CcsScanInput_t * input;
+    if (!(input = CcsScanInput(self, fp))) return FALSE;
+    input->next = self->cur;
+    self->cur = input;
+    return TRUE;
+}
+
+CcsBool_t
+CcsScanner_IncludeByName(CcsScanner_t * self, const char * infn)
+{
+    CcsScanInput_t * input;
+    if (!(input = CcsScanInput_ByName(self, infn))) return FALSE;
+    input->next = self->cur;
+    self->cur = input;
+    return TRUE;
 }
 
 /*------------------------------- ScanInput --------------------------------*/
@@ -672,6 +713,7 @@ CcsScanInput_NextToken(CcsScanInput_t * self)
     CcsBuffer_Lock(&self->buffer);
     state = Char2State(self->ch);
     CcsScanInput_GetCh(self);
+    kind = -2; /* Avoid gcc warning */
     switch (state) {
     case -1: kind = self->scanner->eofSym; break;
     case 0: kind = self->scanner->noSym; break;
@@ -792,6 +834,7 @@ CcsScanInput_NextToken(CcsScanInput_t * self)
 	} else { kind = 36; break; }
     /*---- enable ----*/
     }
+    CcsAssert(kind != -2);
     t = CcsToken(self, kind, pos, col, line,
 		 CcsBuffer_GetString(&self->buffer, pos, self->pos - pos),
 		 self->pos - pos);
