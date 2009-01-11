@@ -168,6 +168,7 @@ KcSymbolList_t * KcSymbolList(void);
 void KcSymbolList_Destruct(KcSymbolList_t * self);
 
 const char * KcSymbolList_Append(KcSymbolList_t * self, KcSymbol_t * symbol);
+void KcSymbolList_Link(KcSymbolList_t * self, KcSymbolList_t * successor);
 
 EXTC_END
 

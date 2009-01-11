@@ -413,8 +413,7 @@ const char *
 KcSymbolList_Append(KcSymbolList_t * self, KcSymbol_t * symbol)
 {
     KcSymbolList_t * newlist;
-    while (self->symarrUsed >= self->symarr + SZ_SYMLISTARR && self->next)
-	self = self->next;
+    while (self->next) self = self->next;
     if (self->symarrUsed >= self->symarr + SZ_SYMLISTARR) {
 	if (!(newlist = KcSymbolList())) return "Not enough memory";
 	self->next = newlist; self = newlist;
@@ -422,4 +421,11 @@ KcSymbolList_Append(KcSymbolList_t * self, KcSymbol_t * symbol)
     *self->symarrUsed = symbol;
     ++self->symarrUsed;
     return NULL;
+}
+
+void
+KcSymbolList_Link(KcSymbolList_t * self, KcSymbolList_t * successor)
+{
+    while (self->next) self = self->next;
+    self->next = successor;
 }
