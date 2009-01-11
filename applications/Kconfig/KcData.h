@@ -64,7 +64,7 @@ KcProperty_AppendRanges(KcProperty_t ** props, KcSymbol_t * sym0,
 
 typedef enum {
     KcstNone, KcstBool, KcstTristate, KcstString, KcstHex, KcstInt,
-    KcstMenu, KcstChoice, KcstComment, KcstIf
+    KcstMenu, KcstChoice, KcstComment, KcstIf, KcstConst
 }   KcSymbolType_t;
 
 struct KcSymbol_s {
@@ -82,6 +82,7 @@ struct KcSymbol_s {
 	KcSymbolList_t * _choice_;
 	char * _comment_;
 	KcExpr_t * _ifexpr_;
+	char * _const_;
     } u;
     KcProperty_t * props;
     CcsPosition_t * helpmsg;
@@ -112,6 +113,7 @@ void KcExpr_Destruct(KcExpr_t * self);
 
 typedef struct {
     KcSymbol_t  * nonlist;
+    KcSymbol_t  * constlist;
     KcSymbol_t ** first;
     KcSymbol_t ** last;
 }   KcSymbolTable_t;
@@ -120,14 +122,18 @@ KcSymbolTable_t * KcSymbolTable(void);
 void KcSymbolTable_Destruct(KcSymbolTable_t * self);
 
 const char *
-KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, KcSymbol_t ** retNewSymbol,
+KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, KcSymbol_t ** retSymbol,
 			   const char * symname, KcSymbolType_t symtype,
 			   CcsBool_t menuOrNot, KcProperty_t * properties,
 			   CcsPosition_t * helpmsg);
 
 const char *
-KcSymbolTable_AddNoNSymbol(KcSymbolTable_t * self, KcSymbol_t ** retNewSymbol,
+KcSymbolTable_AddNoNSymbol(KcSymbolTable_t * self, KcSymbol_t ** retSymbol,
 			   KcSymbolType_t symtype, KcProperty_t * properties);
+
+const char *
+KcSymbolTable_AddConst(KcSymbolTable_t * self, KcSymbol_t ** retSymbol,
+		       char * value);
 
 /* Return NULL in success, return error message format when failed.
  * The only formatter is '%s' which will be replaced by symname. */
