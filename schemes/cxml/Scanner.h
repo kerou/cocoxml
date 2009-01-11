@@ -51,35 +51,15 @@ EXTC_BEGIN
 #define CcsXmlScanner_KEYWORD_USED
 /*---- enable ----*/
 
+typedef struct CcsXmlScanInput_s CcsXmlScanInput_t;
 typedef struct CcsXmlScanner_s CcsXmlScanner_t;
 struct CcsXmlScanner_s {
     CcsErrorPool_t * errpool;
-
-    int            eofSym;
-    int            noSym;
-    int            maxT;
-
-    CcsToken_t   * dummyToken;
-
-    CcsToken_t   * busyTokenList;
-    CcsToken_t  ** curToken;
-    CcsToken_t  ** peekToken;
-
-    int            ch;
-    int            chBytes;
-    int            pos;
-    int            line;
-    int            col;
-    int            oldEols;
-    int            oldEolsEOL;
-
-    CcsBuffer_t    buffer;
-#ifdef CcsXmlScanner_INDENTATION
-    CcsBool_t      lineStart;
-    int          * indent;
-    int          * indentUsed;
-    int          * indentLast;
-#endif
+    int              eofSym;
+    int              noSym;
+    int              maxT;
+    CcsToken_t     * dummyToken;
+    CcsXmlScanInput_t * cur;
 };
 
 CcsXmlScanner_t *
@@ -101,6 +81,9 @@ CcsXmlScanner_GetPosition(CcsXmlScanner_t * self, const CcsToken_t * begin,
 CcsPosition_t *
 CcsXmlScanner_GetPositionBetween(CcsXmlScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end);
+
+CcsBool_t CcsXmlScanner_Include(CcsXmlScanner_t * self, FILE * fp);
+CcsBool_t CcsXmlScanner_IncludeByName(CcsXmlScanner_t * self, const char * infn);
 
 EXTC_END
 

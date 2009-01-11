@@ -24,10 +24,12 @@
 #include  "Token.h"
 
 CcsToken_t *
-CcsToken(int kind, int pos, int col, int line, const char * val, size_t vallen)
+CcsToken(void * input, int kind, int pos, int col, int line,
+	 const char * val, size_t vallen)
 {
     CcsToken_t * self;
     if (!(self = CcsMalloc(sizeof(CcsToken_t) + vallen + 1))) return NULL;
+    self->input = input;
     self->refcnt = 1;
     self->next = NULL;
     self->kind = kind;

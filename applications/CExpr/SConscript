@@ -4,7 +4,7 @@
 
 Import('env', 'lib', 'cocoexe')
 
-env.Command(['Scanner.h', 'Scanner.c', 'Parser.h', 'Parser.c'],
-            ['CExpr.atg'] + cocoexe,
-            '"%s" $SOURCES' % str(cocoexe[0]))
+targets = ['Scanner.h', 'Scanner.c', 'Parser.h', 'Parser.c']
+env.Command(targets, ['CExpr.atg'], '"%s" -g $SOURCES' % str(cocoexe[0]))
+env.Depends(targets, cocoexe)
 env.Program('TestCExpr', ['main.c', 'Parser.c', 'Scanner.c', lib])

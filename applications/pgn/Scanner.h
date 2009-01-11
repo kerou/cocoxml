@@ -41,35 +41,15 @@ EXTC_BEGIN
 #define PgnScanner_CASE_SENSITIVE
 /*---- enable ----*/
 
+typedef struct PgnScanInput_s PgnScanInput_t;
 typedef struct PgnScanner_s PgnScanner_t;
 struct PgnScanner_s {
     CcsErrorPool_t * errpool;
-
-    int            eofSym;
-    int            noSym;
-    int            maxT;
-
-    CcsToken_t   * dummyToken;
-
-    CcsToken_t   * busyTokenList;
-    CcsToken_t  ** curToken;
-    CcsToken_t  ** peekToken;
-
-    int            ch;
-    int            chBytes;
-    int            pos;
-    int            line;
-    int            col;
-    int            oldEols;
-    int            oldEolsEOL;
-
-    CcsBuffer_t    buffer;
-#ifdef PgnScanner_INDENTATION
-    CcsBool_t      lineStart;
-    int          * indent;
-    int          * indentUsed;
-    int          * indentLast;
-#endif
+    int              eofSym;
+    int              noSym;
+    int              maxT;
+    CcsToken_t     * dummyToken;
+    PgnScanInput_t * cur;
 };
 
 PgnScanner_t *
@@ -91,6 +71,9 @@ PgnScanner_GetPosition(PgnScanner_t * self, const CcsToken_t * begin,
 CcsPosition_t *
 PgnScanner_GetPositionBetween(PgnScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end);
+
+CcsBool_t PgnScanner_Include(PgnScanner_t * self, FILE * fp);
+CcsBool_t PgnScanner_IncludeByName(PgnScanner_t * self, const char * infn);
 
 EXTC_END
 

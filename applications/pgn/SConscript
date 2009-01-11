@@ -4,7 +4,7 @@
 
 Import('env', 'lib', 'cocoexe')
 
-env.Command(['Scanner.h', 'Scanner.c', 'Parser.h', 'Parser.c'],
-            ['pgn.atg'] + cocoexe,
-            '"%s" $SOURCES' % str(cocoexe[0]))
+targets = ['Scanner.h', 'Scanner.c', 'Parser.h', 'Parser.c']
+env.Command(targets, ['pgn.atg'], '"%s" -g $SOURCES' % str(cocoexe[0]))
+env.Depends(targets, cocoexe)
 env.Program('TestPgn', ['main.c', 'pgngame.c', 'Parser.c', 'Scanner.c', lib])

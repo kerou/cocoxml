@@ -33,6 +33,7 @@ EXTC_BEGIN
 struct CcsToken_s
 {
     CcsToken_t * next;
+    void * input;
     int refcnt;
     int kind;
     int pos;
@@ -42,7 +43,8 @@ struct CcsToken_s
 };
 
 CcsToken_t *
-CcsToken(int kind, int pos, int col, int line, const char * val, size_t vallen);
+CcsToken(void * input, int kind, int pos, int col, int line,
+	 const char * val, size_t vallen);
 void CcsToken_Destruct(CcsToken_t * self);
 
 EXTC_END
