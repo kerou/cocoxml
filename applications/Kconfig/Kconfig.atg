@@ -178,7 +178,7 @@ Property<KcSymbolType_t * symtype, KcProperty_t ** prop> =
   | TypeWithDefault<symtype, prop>
   | DependsOn<prop>
   | Select<prop>
-  | Ranges<prop>
+  | Range<prop>
   | Option<prop>
 .
 
@@ -228,9 +228,9 @@ Select<KcProperty_t ** prop>   (. KcSymbol_t * sym; KcExpr_t * expr = NULL; .) =
                                (. KcProperty_AppendSelect(prop, sym, expr); .)
 .
 
-Ranges<KcProperty_t ** prop>    (. KcSymbol_t * sym0, * sym1; KcExpr_t * expr = NULL; .) =
-  "ranges" Symbol<&sym0> Symbol<&sym1> ["if" Expr<&expr>] eol
-                                (. KcProperty_AppendRanges(prop, sym0, sym1, expr); .)
+Range<KcProperty_t ** prop>    (. KcSymbol_t * sym0, * sym1; KcExpr_t * expr = NULL; .) =
+  "range" Symbol<&sym0> Symbol<&sym1> ["if" Expr<&expr>] eol
+                               (. KcProperty_AppendRange(prop, sym0, sym1, expr); .)
 .
 
 Option<KcProperty_t ** prop>     (. char * envname; .) =

@@ -89,7 +89,7 @@ static void KcParser_Default(KcParser_t * self, KcProperty_t ** prop);
 static void KcParser_TypeWithDefault(KcParser_t * self, KcSymbolType_t * symtype, KcProperty_t ** prop);
 static void KcParser_DependsOn(KcParser_t * self, KcProperty_t ** prop);
 static void KcParser_Select(KcParser_t * self, KcProperty_t ** prop);
-static void KcParser_Ranges(KcParser_t * self, KcProperty_t ** prop);
+static void KcParser_Range(KcParser_t * self, KcProperty_t ** prop);
 static void KcParser_Option(KcParser_t * self, KcProperty_t ** prop);
 static void KcParser_Symbol(KcParser_t * self, KcSymbol_t ** sym);
 static void KcParser_Expr0(KcParser_t * self, KcExpr_t ** expr);
@@ -457,7 +457,7 @@ KcParser_Property(KcParser_t * self, KcSymbolType_t * symtype, KcProperty_t ** p
 	break;
     }
     case 30: {
-	KcParser_Ranges(self, prop);
+	KcParser_Range(self, prop);
 	break;
     }
     case 31: {
@@ -614,7 +614,7 @@ KcParser_Select(KcParser_t * self, KcProperty_t ** prop)
 }
 
 static void
-KcParser_Ranges(KcParser_t * self, KcProperty_t ** prop)
+KcParser_Range(KcParser_t * self, KcProperty_t ** prop)
 {
     KcSymbol_t * sym0, * sym1; KcExpr_t * expr = NULL; 
     KcParser_Expect(self, 30);
@@ -625,7 +625,7 @@ KcParser_Ranges(KcParser_t * self, KcProperty_t ** prop)
 	KcParser_Expr(self, &expr);
     }
     KcParser_Expect(self, 6);
-    KcProperty_AppendRanges(prop, sym0, sym1, expr); 
+    KcProperty_AppendRange(prop, sym0, sym1, expr); 
 }
 
 static void
@@ -763,7 +763,7 @@ KcParser_SynErr(KcParser_t * self, int n)
     case 27: s = "\"" "depends" "\" expected"; break;
     case 28: s = "\"" "on" "\" expected"; break;
     case 29: s = "\"" "select" "\" expected"; break;
-    case 30: s = "\"" "ranges" "\" expected"; break;
+    case 30: s = "\"" "range" "\" expected"; break;
     case 31: s = "\"" "option" "\" expected"; break;
     case 32: s = "\"" "env" "\" expected"; break;
     case 33: s = "\"" "=" "\" expected"; break;
