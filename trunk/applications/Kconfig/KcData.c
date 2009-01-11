@@ -187,6 +187,8 @@ KcSymbol_Destruct(KcSymbol_t * self)
 	break;
     case KcstIf: if (self->u._ifexpr_) KcExpr_Destruct(self->u._ifexpr_);
 	break;
+    case KcstConst: if (self->u._const_) CcsFree(self->u._const_);
+	break;
     default: break;
     }
     CcsFree(self);
@@ -202,6 +204,7 @@ KcSymbolTable(void)
     KcSymbolTable_t * self;
     if (!(self = CcsMalloc(sizeof(KcSymbolTable_t)))) goto errquit0;
     self->nonlist = NULL;
+    self->constlist = NULL;
     if (!(self->first = CcsMalloc(sizeof(KcSymbol_t *) * KCSIZE_SYMTAB)))
 	goto errquit1;
     memset(self->first, 0, sizeof(KcSymbol_t *) * KCSIZE_SYMTAB);
@@ -221,6 +224,10 @@ KcSymbolTable_Destruct(KcSymbolTable_t * self)
 	next0 = cur0->next;
 	KcSymbol_Destruct(cur0);
     }
+    for (cur0 = self->constlist; cur0; cur0 = next0) {
+	next0 = cur0->next;
+	KcSymbol_Destruct(cur0);
+    }
     for (cur = self->first; cur < self->last; ++cur)
 	if (*cur) KcSymbol_Destruct(*cur);
     CcsFree(self);
@@ -237,7 +244,7 @@ symtabHash(KcSymbolTable_t * self, const char * symname)
 }
 
 const char *
-KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, KcSymbol_t ** retNewSymbol,
+KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, KcSymbol_t ** retSymbol,
 			   const char * symname, KcSymbolType_t symtype,
 			   CcsBool_t menuOrNot, KcProperty_t * props,
 			   CcsPosition_t * helpmsg)
@@ -253,12 +260,12 @@ KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, KcSymbol_t ** retNewSymbol,
     (*cur)->menuOrNot = menuOrNot;
     (*cur)->props = props;
     (*cur)->helpmsg = helpmsg;
-    *retNewSymbol = *cur;
+    *retSymbol = *cur;
     return NULL;
 }
 
 const char *
-KcSymbolTable_AddNoNSymbol(KcSymbolTable_t * self, KcSymbol_t ** retNewSymbol,
+KcSymbolTable_AddNoNSymbol(KcSymbolTable_t * self, KcSymbol_t ** retSymbol,
 			   KcSymbolType_t symtype, KcProperty_t * properties)
 {
     KcSymbol_t * nonSymbol;
@@ -267,7 +274,21 @@ KcSymbolTable_AddNoNSymbol(KcSymbolTable_t * self, KcSymbol_t ** retNewSymbol,
     nonSymbol->props = properties;
     nonSymbol->next = self->nonlist;
     self->nonlist = nonSymbol;
-    *retNewSymbol = nonSymbol;
+    *retSymbol = nonSymbol;
+    return NULL;
+}
+
+const char *
+KcSymbolTable_AddConst(KcSymbolTable_t * self, KcSymbol_t ** retSymbol,
+		       char * value)
+{
+    KcSymbol_t * constSymbol;
+    if (!(constSymbol = KcSymbol(NULL))) return "Not enough memory";
+    constSymbol->type = KcstConst;
+    constSymbol->u._const_ = value;
+    constSymbol->next = self->constlist;
+    self->constlist = constSymbol;
+    *retSymbol = constSymbol;
     return NULL;
 }
 

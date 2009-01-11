@@ -47,7 +47,7 @@ CHARACTERS
     printable = '\x20' .. '\x7e'.
 
 TOKENS
-    ident     = letter { letter | digit }.
+    ident     = ( letter | digit ) { letter | digit }.
     string    = '"' { stringCh | '\\' printable } '"'.
     eol       = (cr lf) | lf.
 
@@ -68,7 +68,7 @@ SymbolListDecl<KcSymbolList_t ** symlist>
   }
 .
 
-SymbolDecl<KcSymbol_t ** sym> =
+SymbolDecl<KcSymbol_t ** sym> (. *sym = NULL; .) =
   (ConfigDecl<sym> | MenuDecl<sym> | ChoiceDecl<sym> | CommentDecl<sym> |
    IfDecl<sym> | MainMenuDecl<sym>) { eol }
 .
@@ -98,8 +98,11 @@ MenuDecl<KcSymbol_t ** menu>
        KcSymbolType_t symtype;
        KcProperty_t * props = NULL;
        KcSymbolList_t * symlist = NULL; .) =
-  "menu" string (. prompt = CcsEscape(self->t->val);
-                   KcProperty_AppendPrompt(&props, prompt, NULL); .)
+  "menu" string (. prompt = CcsUnescape(self->t->val);
+                   if ((errmsg = KcProperty_AppendPrompt(&props, prompt, NULL))) {
+		       KcParser_SemErrT(self, "Append prompt failed: %s.", errmsg);
+		       CcsFree(prompt);
+		   } .)
   eol { eol } [ IndentIn { Property<&symtype, &props> } { eol } IndentOut ]
   SymbolListDecl<&symlist> "endmenu" eol
     (. if ((errmsg = KcSymbolTable_AddNoNSymbol(self->symtab, menu,
@@ -247,8 +250,13 @@ Expr3<KcExpr_t ** expr> = (. char op = 0; KcSymbol_t * sym0 = NULL, * sym1 = NUL
 			     } .)
 .
 
-Symbol<KcSymbol_t ** sym> =
-  ident (. *sym = KcSymbolTable_Get(self->symtab, self->t->val); .)
+Symbol<KcSymbol_t ** sym> (. const char * errmsg; char * unescaped; .) =
+  ident    (. *sym = KcSymbolTable_Get(self->symtab, self->t->val); .)
+  | string (. unescaped = CcsUnescape(self->t->val);
+    	      if ((errmsg = KcSymbolTable_AddConst(self->symtab, sym, unescaped))) {
+	          KcParser_SemErrT(self, "Add const %s failed: %s", self->t->val, errmsg);
+		  CcsFree(unescaped);
+	      } .)
 .
 
 END Kconfig.
