@@ -34,12 +34,13 @@ typedef struct KcSymbolList_s KcSymbolList_t;
 #define  KcYes     2
 
 typedef enum {
-    KcptPrompt, KcptDefault, KcptDepends, KcptSelect, KcptRanges
+    KcptPrompt, KcptDefault, KcptDepends, KcptSelect, KcptRanges,
+    KcptEnv, KcptDefConfigList
 }   KcPropertyType_t;
 struct KcProperty_s {
     KcPropertyType_t type;
     KcProperty_t * next;
-    char * prompt;
+    char * str;
     KcSymbol_t * sym0;
     KcSymbol_t * sym1;
     KcExpr_t * expr;
@@ -49,7 +50,8 @@ struct KcProperty_s {
 void KcPropertyList_Destruct(KcProperty_t * self);
 
 const char *
-KcProperty_AppendPrompt(KcProperty_t ** props, char * prompt, KcExpr_t * ifexpr);
+KcProperty_AppendPrompt(KcProperty_t ** props, const char * prompt,
+			KcExpr_t * ifexpr);
 const char *
 KcProperty_AppendDefault(KcProperty_t ** props, KcExpr_t * expr,
 			 KcExpr_t * ifexpr);
@@ -61,6 +63,12 @@ KcProperty_AppendSelect(KcProperty_t ** props, KcSymbol_t * sym,
 const char *
 KcProperty_AppendRanges(KcProperty_t ** props, KcSymbol_t * sym0,
 			KcSymbol_t * sym1, KcExpr_t * ifexpr);
+
+const char *
+KcProperty_AppendEnv(KcProperty_t ** props, const char * envname);
+
+const char *
+KcProperty_AppendDefConfigList(KcProperty_t ** props);
 
 typedef enum {
     KcstNone, KcstBool, KcstTristate, KcstString, KcstHex, KcstInt,

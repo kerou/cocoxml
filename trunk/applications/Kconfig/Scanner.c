@@ -274,8 +274,8 @@ KcScanner_Init(KcScanner_t * self, CcsErrorPool_t * errpool) {
     self->errpool = errpool;
     /*---- declarations ----*/
     self->eofSym = 0;
-    self->maxT = 39;
-    self->noSym = 39;
+    self->maxT = 42;
+    self->noSym = 42;
     /*---- enable ----*/
     if (!(self->dummyToken =
 	  CcsToken(NULL, 0, 0, 0, 0, dummyval, strlen(dummyval))))
@@ -444,16 +444,16 @@ static const Char2State_t c2sArr[] = {
     { 13, 13, 5 },	/* '\r' '\r' */
     { 33, 33, 25 },	/* '!' '!' */
     { 34, 34, 2 },	/* '"' '"' */
-    { 38, 38, 19 },	/* '&' '&' */
-    { 40, 40, 21 },	/* '(' '(' */
-    { 41, 41, 22 },	/* ')' ')' */
-    { 45, 45, 7 },	/* '-' '-' */
+    { 38, 38, 20 },	/* '&' '&' */
+    { 40, 40, 22 },	/* '(' '(' */
+    { 41, 41, 23 },	/* ')' ')' */
+    { 45, 45, 8 },	/* '-' '-' */
     { 48, 57, 1 },	/* '0' '9' */
-    { 61, 61, 23 },	/* '=' '=' */
+    { 61, 61, 7 },	/* '=' '=' */
     { 65, 90, 1 },	/* 'A' 'Z' */
     { 95, 95, 1 },	/* '_' '_' */
     { 97, 122, 1 },	/* 'a' 'z' */
-    { 124, 124, 17 },	/* '|' '|' */
+    { 124, 124, 18 },	/* '|' '|' */
     /*---- enable ----*/
 };
 static const int c2sNum = sizeof(c2sArr) / sizeof(c2sArr[0]);
@@ -491,11 +491,13 @@ static const Identifier2KWKind_t i2kArr[] = {
     { "def_bool", 24 },
     { "def_tristate", 25 },
     { "default", 23 },
+    { "defconfig_list", 33 },
     { "depends", 26 },
     { "endchoice", 12 },
     { "endif", 15 },
     { "endmenu", 10 },
-    { "help", 30 },
+    { "env", 31 },
+    { "help", 34 },
     { "hex", 20 },
     { "if", 14 },
     { "int", 21 },
@@ -503,6 +505,7 @@ static const Identifier2KWKind_t i2kArr[] = {
     { "menu", 9 },
     { "menuconfig", 8 },
     { "on", 27 },
+    { "option", 30 },
     { "prompt", 22 },
     { "ranges", 29 },
     { "select", 28 },
@@ -753,31 +756,29 @@ KcScanInput_NextToken(KcScanInput_t * self)
     case 6: case_6:
 	{ kind = 6; break; }
     case 7:
-	if (self->ch == '-') {
-	    KcScanInput_GetCh(self); goto case_8;
-	} else { kind = self->scanner->noSym; break; }
-    case 8: case_8:
+	{ kind = 32; break; }
+    case 8:
 	if (self->ch == '-') {
 	    KcScanInput_GetCh(self); goto case_9;
 	} else { kind = self->scanner->noSym; break; }
     case 9: case_9:
-	if (self->ch == 'h') {
+	if (self->ch == '-') {
 	    KcScanInput_GetCh(self); goto case_10;
 	} else { kind = self->scanner->noSym; break; }
     case 10: case_10:
-	if (self->ch == 'e') {
+	if (self->ch == 'h') {
 	    KcScanInput_GetCh(self); goto case_11;
 	} else { kind = self->scanner->noSym; break; }
     case 11: case_11:
-	if (self->ch == 'l') {
+	if (self->ch == 'e') {
 	    KcScanInput_GetCh(self); goto case_12;
 	} else { kind = self->scanner->noSym; break; }
     case 12: case_12:
-	if (self->ch == 'p') {
+	if (self->ch == 'l') {
 	    KcScanInput_GetCh(self); goto case_13;
 	} else { kind = self->scanner->noSym; break; }
     case 13: case_13:
-	if (self->ch == '-') {
+	if (self->ch == 'p') {
 	    KcScanInput_GetCh(self); goto case_14;
 	} else { kind = self->scanner->noSym; break; }
     case 14: case_14:
@@ -789,31 +790,33 @@ KcScanInput_NextToken(KcScanInput_t * self)
 	    KcScanInput_GetCh(self); goto case_16;
 	} else { kind = self->scanner->noSym; break; }
     case 16: case_16:
-	{ kind = 31; break; }
-    case 17:
-	if (self->ch == '|') {
-	    KcScanInput_GetCh(self); goto case_18;
+	if (self->ch == '-') {
+	    KcScanInput_GetCh(self); goto case_17;
 	} else { kind = self->scanner->noSym; break; }
-    case 18: case_18:
-	{ kind = 32; break; }
-    case 19:
-	if (self->ch == '&') {
-	    KcScanInput_GetCh(self); goto case_20;
-	} else { kind = self->scanner->noSym; break; }
-    case 20: case_20:
-	{ kind = 33; break; }
-    case 21:
+    case 17: case_17:
 	{ kind = 35; break; }
-    case 22:
+    case 18:
+	if (self->ch == '|') {
+	    KcScanInput_GetCh(self); goto case_19;
+	} else { kind = self->scanner->noSym; break; }
+    case 19: case_19:
 	{ kind = 36; break; }
-    case 23:
+    case 20:
+	if (self->ch == '&') {
+	    KcScanInput_GetCh(self); goto case_21;
+	} else { kind = self->scanner->noSym; break; }
+    case 21: case_21:
 	{ kind = 37; break; }
+    case 22:
+	{ kind = 39; break; }
+    case 23:
+	{ kind = 40; break; }
     case 24: case_24:
-	{ kind = 38; break; }
+	{ kind = 41; break; }
     case 25:
 	if (self->ch == '=') {
 	    KcScanInput_GetCh(self); goto case_24;
-	} else { kind = 34; break; }
+	} else { kind = 38; break; }
     /*---- enable ----*/
     }
     CcsAssert(kind != -2);
