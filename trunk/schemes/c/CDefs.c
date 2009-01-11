@@ -22,6 +22,7 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "CDefs.h"
+#include  <libgen.h>
 
 void
 _CcsAssertFailed_(const char * vstr, const char * fname, int line)
@@ -246,4 +247,42 @@ CcsEscape(const char * str)
     *ecur++ = '"';
     *ecur = 0;
     return estr;
+}
+
+#if defined _WIN32_ || defined __WIN32__
+static const char * sepformat = "\\%s";
+#else
+static const char * sepformat = "/%s";
+#endif
+
+char *
+CcsPathJoin(char * result, size_t szresult, const char * path, ...)
+{
+    int rc; va_list ap;
+    va_start(ap, path);
+    rc = snprintf(result, szresult, "%s", path);
+    result += rc; szresult -= rc;
+    while (szresult > 0 && (path = va_arg(ap, const char *))) {
+	rc = snprintf(result, szresult, sepformat, path);
+	result += rc; szresult -= rc;
+    }
+    return result;
+}
+
+char *
+CcsDirname(char * result, size_t szresult, const char * path)
+{
+    char * duppath = CcsStrdup(path);
+    strncpy(result, dirname(duppath), szresult);
+    CcsFree(duppath);
+    return result;
+}
+
+char *
+CcsBasename(char * result, size_t szresult, const char * path)
+{
+    char * duppath = CcsStrdup(path);
+    strncpy(result, basename(duppath), szresult);
+    CcsFree(duppath);
+    return result;
 }

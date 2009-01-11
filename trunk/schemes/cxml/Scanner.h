@@ -83,7 +83,9 @@ CcsXmlScanner_GetPositionBetween(CcsXmlScanner_t * self, const CcsToken_t * begi
 			      const CcsToken_t * end);
 
 CcsBool_t CcsXmlScanner_Include(CcsXmlScanner_t * self, FILE * fp);
-CcsBool_t CcsXmlScanner_IncludeByName(CcsXmlScanner_t * self, const char * infn);
+CcsBool_t
+CcsXmlScanner_IncludeByName(CcsXmlScanner_t * self, const CcsIncPathList_t * list,
+			 const char * infn);
 
 EXTC_END
 
