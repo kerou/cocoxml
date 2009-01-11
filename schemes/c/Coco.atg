@@ -531,10 +531,10 @@ TokenFactor<CcGraph_t ** g>     (. char * name = NULL; int kind; CcTransition_t 
 /*------------------------------------------------------------------------------------*/
 
 Sym<char ** name, int * kind>
-=                               (. *name = CcStrdup("???"); *kind = CcsParser_id; .)
-( ident                         (. *kind = CcsParser_id; CcFree(*name); *name = CcStrdup(self->t->val); .)
-| (string                       (. CcFree(*name); *name = CcStrdup(self->t->val); .)
-  | char                        (. CcFree(*name); *name = CcStrdup(self->t->val); .)
+=                               (. *name = NULL; .)
+( ident                         (. *kind = CcsParser_id; *name = CcStrdup(self->t->val); .)
+| (string                       (. *name = CcStrdup(self->t->val); .)
+  | char                        (. *name = CcStrdup(self->t->val); .)
   )                             (. *kind = CcsParser_str;
                                    if (self->lexical->ignoreCase) {
                                        char * cur;
@@ -542,7 +542,7 @@ Sym<char ** name, int * kind>
 				   }
 				   if (strchr(*name, ' '))
 				       CcsParser_SemErrT(self, "literal tokens \"%s\" can not contain blanks", *name); .)
-)
+)                               (. if (!*name) *name = CcStrdup("???"); .)
 .
 
 /*------------------------------------------------------------------------------------*/
