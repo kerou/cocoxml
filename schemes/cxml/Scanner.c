@@ -337,19 +337,40 @@ CcsXmlScanner_GetDummy(CcsXmlScanner_t * self)
 CcsToken_t *
 CcsXmlScanner_Scan(CcsXmlScanner_t * self)
 {
-    return CcsXmlScanInput_Scan(self->cur);
+    CcsToken_t * token; CcsXmlScanInput_t * next;
+    for (;;) {
+	token = CcsXmlScanInput_Scan(self->cur);
+	if (token->kind != self->eofSym) break;
+	if (self->cur->next == NULL) break;
+	CcsXmlScanInput_DecRef(token->input, token);
+	next = self->cur->next;
+	CcsXmlScanInput_Destruct(self->cur);
+	self->cur = next;
+    }
+    return token;
 }
 
 CcsToken_t *
 CcsXmlScanner_Peek(CcsXmlScanner_t * self)
 {
-    return CcsXmlScanInput_Peek(self->cur);
+    CcsToken_t * token; CcsXmlScanInput_t * cur;
+    cur = self->cur;
+    for (;;) {
+	token = CcsXmlScanInput_Peek(self->cur);
+	if (token->kind != self->eofSym) break;
+	if (cur->next == NULL) break;
+	CcsXmlScanInput_DecRef(token->input, token);
+	cur = cur->next;
+    }
+    return token;
 }
 
 void
 CcsXmlScanner_ResetPeek(CcsXmlScanner_t * self)
 {
-    CcsXmlScanInput_ResetPeek(self->cur);
+    CcsXmlScanInput_t * cur;
+    for (cur = self->cur; cur; cur = cur->next)
+	CcsXmlScanInput_ResetPeek(cur);
 }
 
 void
@@ -378,6 +399,26 @@ CcsXmlScanner_GetPositionBetween(CcsXmlScanner_t * self, const CcsToken_t * begi
 			      const CcsToken_t * end)
 {
     return CcsXmlScanInput_GetPositionBetween(begin->input, begin, end);
+}
+
+CcsBool_t
+CcsXmlScanner_Include(CcsXmlScanner_t * self, FILE * fp)
+{
+    CcsXmlScanInput_t * input;
+    if (!(input = CcsXmlScanInput(self, fp))) return FALSE;
+    input->next = self->cur;
+    self->cur = input;
+    return TRUE;
+}
+
+CcsBool_t
+CcsXmlScanner_IncludeByName(CcsXmlScanner_t * self, const char * infn)
+{
+    CcsXmlScanInput_t * input;
+    if (!(input = CcsXmlScanInput_ByName(self, infn))) return FALSE;
+    input->next = self->cur;
+    self->cur = input;
+    return TRUE;
 }
 
 /*------------------------------- ScanInput --------------------------------*/
@@ -664,6 +705,7 @@ CcsXmlScanInput_NextToken(CcsXmlScanInput_t * self)
     CcsBuffer_Lock(&self->buffer);
     state = Char2State(self->ch);
     CcsXmlScanInput_GetCh(self);
+    kind = -2; /* Avoid gcc warning */
     switch (state) {
     case -1: kind = self->scanner->eofSym; break;
     case 0: kind = self->scanner->noSym; break;
@@ -769,6 +811,7 @@ CcsXmlScanInput_NextToken(CcsXmlScanInput_t * self)
 	} else { kind = 28; break; }
     /*---- enable ----*/
     }
+    CcsAssert(kind != -2);
     t = CcsToken(self, kind, pos, col, line,
 		 CcsBuffer_GetString(&self->buffer, pos, self->pos - pos),
 		 self->pos - pos);
