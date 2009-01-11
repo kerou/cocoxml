@@ -43,15 +43,20 @@ AppendProperty(KcProperty_t ** props, KcProperty_t * prop)
 }
 
 const char *
-KcProperty_AppendPrompt(KcProperty_t ** props, char * prompt, KcExpr_t * expr)
+KcProperty_AppendPrompt(KcProperty_t ** props, const char * prompt,
+			KcExpr_t * expr)
 {
     KcProperty_t * self;
-    if (!(self = CcsMalloc(sizeof(KcProperty_t) + strlen(prompt) + 1)))
+    size_t promptlen = prompt ? strlen(prompt) + 1 : 0;
+    if (!(self = CcsMalloc(sizeof(KcProperty_t) + promptlen)))
 	return "Not enough memory";
     memset(self, 0, sizeof(KcProperty_t));
     self->type = KcptPrompt;
-    self->prompt = (char *)(self + 1);
-    strcpy(self->prompt, prompt);
+    if (!prompt) self->str = NULL;
+    else {
+	self->str = (char *)(self + 1);
+	strcpy(self->str, prompt);
+    }
     return AppendProperty(props, self);
 }
 
@@ -103,6 +108,30 @@ KcProperty_AppendRanges(KcProperty_t ** props, KcSymbol_t * sym0,
     self->sym0 = sym0;
     self->sym1 = sym1;
     self->ifexpr = ifexpr;
+    return AppendProperty(props, self);
+}
+
+const char *
+KcProperty_AppendEnv(KcProperty_t ** props, const char * envname)
+{
+    KcProperty_t * self;
+    size_t envnamelen = envname ? strlen(envname) + 1 : 0;
+    if (!(self = CcsMalloc(sizeof(KcProperty_t) + envnamelen)))
+	return "Not enough memory";
+    self->type = KcptEnv;
+    if (envname) {
+	self->str = (char *)(self + 1);
+	strcpy(self->str, envname);
+    } else self->str = NULL;
+    return AppendProperty(props, self);
+}
+
+const char *
+KcProperty_AppendDefConfigList(KcProperty_t ** props)
+{
+    KcProperty_t * self;
+    if (!(self = CcsMalloc(sizeof(KcProperty_t)))) return "Not enough memroy";
+    self->type = KcptDefConfigList;
     return AppendProperty(props, self);
 }
 

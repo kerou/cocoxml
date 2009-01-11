@@ -166,7 +166,8 @@ MainMenuDecl<KcSymbol_t ** sym> =
 
 Source            (. char * fname; .) =
   "source" string (. fname = CcsStrdup(self->t->val); .)
-  eol             (. KcScanner_IncludeByName(&self->scanner, self->incdirs, fname);
+  eol             (. if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname))
+  		         KcParser_SemErrT(self, "Can not include '%s'.", fname);
   		     CcsFree(fname); .)
 .
 
@@ -178,24 +179,31 @@ Property<KcSymbolType_t * symtype, KcProperty_t ** prop> =
   | DependsOn<prop>
   | Select<prop>
   | Ranges<prop>
+  | Option<prop>
 .
 
 TypeDefine<KcSymbolType_t * symtype, KcProperty_t ** prop>
-    (. char * prompt = NULL; KcExpr_t * expr = NULL; .) =
-  ("bool"            (. *symtype = KcstBool; .)
-  | "tristate"       (. *symtype = KcstTristate; .)
-  | "string"         (. *symtype = KcstString; .)
-  | "hex"            (. *symtype = KcstHex; .)
-  | "int"            (. *symtype = KcstInt; .)
-  ) [string          (. prompt = CcsEscape(self->t->val); .)
-  ["if" Expr<&expr>] (. KcProperty_AppendPrompt(prop, prompt, expr); .)
+    (. char * prompt; KcExpr_t * expr = NULL; .) =
+  ( "bool"             (. *symtype = KcstBool; .)
+  | "tristate"         (. *symtype = KcstTristate; .)
+  | "string"           (. *symtype = KcstString; .)
+  | "hex"              (. *symtype = KcstHex; .)
+  | "int"              (. *symtype = KcstInt; .)
+  ) [ string           (. prompt = CcsEscape(self->t->val); .)
+  [ "if" Expr<&expr> ] (. if (prompt) {
+  		     	    KcProperty_AppendPrompt(prop, prompt, expr);
+			    CcsFree(prompt);
+			  } .)
   ] eol
 .
 
 InputPrompt<KcProperty_t ** prop>
                          (. char * prompt; KcExpr_t * expr = NULL; .) =
   "prompt" string        (. prompt = CcsStrdup(self->t->val); .)
- ["if" Expr<&expr>] eol  (. KcProperty_AppendPrompt(prop, prompt, expr); .)
+ ["if" Expr<&expr>] eol  (. if (prompt) {
+       		    	        KcProperty_AppendPrompt(prop, prompt, expr);
+				CcsFree(prompt);
+			    } .)
 .
 
 Default<KcProperty_t ** prop> (. KcExpr_t * expr0, * expr1 = NULL; .) =
@@ -223,6 +231,16 @@ Select<KcProperty_t ** prop>   (. KcSymbol_t * sym; KcExpr_t * expr = NULL; .) =
 Ranges<KcProperty_t ** prop>    (. KcSymbol_t * sym0, * sym1; KcExpr_t * expr = NULL; .) =
   "ranges" Symbol<&sym0> Symbol<&sym1> ["if" Expr<&expr>] eol
                                 (. KcProperty_AppendRanges(prop, sym0, sym1, expr); .)
+.
+
+Option<KcProperty_t ** prop>     (. char * envname; .) =
+  "option" ("env" '=' string     (. envname = CcsUnescape(self->t->val);
+  	   	      		    if (envname) {
+  	   	      		        KcProperty_AppendEnv(prop, envname);
+					CcsFree(envname);
+				    } .)
+            | "defconfig_list")  (. KcProperty_AppendDefConfigList(prop); .)
+  eol
 .
 
 Help<CcsPosition_t ** pos>              (. CcsToken_t * beg; .) =

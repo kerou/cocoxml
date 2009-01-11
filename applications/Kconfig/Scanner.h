@@ -24,7 +24,7 @@ License: LGPLv2
 EXTC_BEGIN
 
 /*---- defines ----*/
-#define KcScanner_MAX_KEYWORD_LEN 12
+#define KcScanner_MAX_KEYWORD_LEN 14
 #define KcScanner_CASE_SENSITIVE
 #define KcScanner_KEYWORD_USED
 #define KcScanner_INDENTATION
