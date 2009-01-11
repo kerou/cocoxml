@@ -650,17 +650,17 @@ CcsParser_Char(CcsParser_t * self, int * n)
 static void
 CcsParser_Sym(CcsParser_t * self, char ** name, int * kind)
 {
-    *name = CcStrdup("???"); *kind = CcsParser_id; 
+    *name = NULL; 
     if (self->la->kind == 1) {
 	CcsParser_Get(self);
-	*kind = CcsParser_id; CcFree(*name); *name = CcStrdup(self->t->val); 
+	*kind = CcsParser_id; *name = CcStrdup(self->t->val); 
     } else if (self->la->kind == 3 || self->la->kind == 5) {
 	if (self->la->kind == 3) {
 	    CcsParser_Get(self);
-	    CcFree(*name); *name = CcStrdup(self->t->val); 
+	    *name = CcStrdup(self->t->val); 
 	} else {
 	    CcsParser_Get(self);
-	    CcFree(*name); *name = CcStrdup(self->t->val); 
+	    *name = CcStrdup(self->t->val); 
 	}
 	*kind = CcsParser_str;
 	if (self->lexical->ignoreCase) {
@@ -670,6 +670,7 @@ CcsParser_Sym(CcsParser_t * self, char ** name, int * kind)
 	if (strchr(*name, ' '))
 	    CcsParser_SemErrT(self, "literal tokens \"%s\" can not contain blanks", *name); 
     } else CcsParser_SynErr(self, 53);
+    if (!*name) *name = CcStrdup("???"); 
 }
 
 static void
