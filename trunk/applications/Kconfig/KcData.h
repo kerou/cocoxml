@@ -34,7 +34,7 @@ typedef struct KcSymbolList_s KcSymbolList_t;
 #define  KcYes     2
 
 typedef enum {
-    KcptPrompt, KcptDefault, KcptDepends, KcptSelect, KcptRanges,
+    KcptPrompt, KcptDefault, KcptDepends, KcptSelect, KcptRange,
     KcptEnv, KcptDefConfigList
 }   KcPropertyType_t;
 struct KcProperty_s {
@@ -61,8 +61,8 @@ const char *
 KcProperty_AppendSelect(KcProperty_t ** props, KcSymbol_t * sym,
 			KcExpr_t * ifexpr);
 const char *
-KcProperty_AppendRanges(KcProperty_t ** props, KcSymbol_t * sym0,
-			KcSymbol_t * sym1, KcExpr_t * ifexpr);
+KcProperty_AppendRange(KcProperty_t ** props, KcSymbol_t * sym0,
+		       KcSymbol_t * sym1, KcExpr_t * ifexpr);
 
 const char *
 KcProperty_AppendEnv(KcProperty_t ** props, const char * envname);

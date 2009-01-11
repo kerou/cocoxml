@@ -98,13 +98,13 @@ KcProperty_AppendSelect(KcProperty_t ** props, KcSymbol_t * sym,
 }
 
 const char *
-KcProperty_AppendRanges(KcProperty_t ** props, KcSymbol_t * sym0,
-			KcSymbol_t * sym1, KcExpr_t * ifexpr)
+KcProperty_AppendRange(KcProperty_t ** props, KcSymbol_t * sym0,
+		       KcSymbol_t * sym1, KcExpr_t * ifexpr)
 {
     KcProperty_t * self;
     if (!(self = CcsMalloc(sizeof(KcProperty_t)))) return "Not enough memory";
     memset(self, 0, sizeof(KcProperty_t));
-    self->type = KcptRanges;
+    self->type = KcptRange;
     self->sym0 = sym0;
     self->sym1 = sym1;
     self->ifexpr = ifexpr;
@@ -118,6 +118,7 @@ KcProperty_AppendEnv(KcProperty_t ** props, const char * envname)
     size_t envnamelen = envname ? strlen(envname) + 1 : 0;
     if (!(self = CcsMalloc(sizeof(KcProperty_t) + envnamelen)))
 	return "Not enough memory";
+    memset(self, 0, sizeof(KcProperty_t));
     self->type = KcptEnv;
     if (envname) {
 	self->str = (char *)(self + 1);
@@ -131,6 +132,7 @@ KcProperty_AppendDefConfigList(KcProperty_t ** props)
 {
     KcProperty_t * self;
     if (!(self = CcsMalloc(sizeof(KcProperty_t)))) return "Not enough memroy";
+    memset(self, 0, sizeof(KcProperty_t));
     self->type = KcptDefConfigList;
     return AppendProperty(props, self);
 }

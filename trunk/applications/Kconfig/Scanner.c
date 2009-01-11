@@ -507,7 +507,7 @@ static const Identifier2KWKind_t i2kArr[] = {
     { "on", 28 },
     { "option", 31 },
     { "prompt", 23 },
-    { "ranges", 30 },
+    { "range", 30 },
     { "select", 29 },
     { "source", 17 },
     { "string", 20 },
