@@ -49,6 +49,7 @@ struct CExprScanInput_s {
     int            * indent;
     int            * indentUsed;
     int            * indentLast;
+    int              indentLimit;
 #endif
 };
 
@@ -73,6 +74,7 @@ CExprScanInput_Init(CExprScanInput_t * self, CExprScanner_t * scanner, FILE * fp
     self->indentUsed = self->indent;
     self->indentLast = self->indent + CExprScanner_INDENT_START;
     *self->indentUsed++ = 0;
+    self->indentLimit = -1;
 #endif
     return TRUE;
 #ifdef CExprScanner_INDENTATION
@@ -237,6 +239,15 @@ CExprScanInput_DecRef(CExprScanInput_t * self, CcsToken_t * token)
     }
 }
 
+#ifdef CExprScanner_INDENTATION
+static void
+CExprScanInput_IndentLimit(CExprScanInput_t * self, const CcsToken_t * indentIn)
+{
+    CcsAssert(indentIn->kind == CExprScanner_INDENT_IN);
+    self->indentLimit = indentIn->col;
+}
+#endif
+
 static CcsPosition_t *
 CExprScanInput_GetPosition(CExprScanInput_t * self, const CcsToken_t * begin,
 			 const CcsToken_t * end)
@@ -385,6 +396,15 @@ CExprScanner_DecRef(CExprScanner_t * self, CcsToken_t * token)
     if (token == self->dummyToken) --token->refcnt;
     else CExprScanInput_DecRef(token->input, token);
 }
+
+#ifdef CExprScanner_INDENTATION
+void
+CExprScanner_IndentLimit(CExprScanner_t * self, const CcsToken_t * indentIn)
+{
+    CcsAssert(indentIn->input == self->cur);
+    CExprScanInput_IndentLimit(self->cur, indentIn);
+}
+#endif
 
 CcsPosition_t *
 CExprScanner_GetPosition(CExprScanner_t * self, const CcsToken_t * begin,
@@ -632,6 +652,8 @@ CExprScanInput_IndentGenerator(CExprScanInput_t * self)
 	}
 	return head;
     }
+    if (self->indentLimit != -1 && self->col >= self->indentLimit) return NULL;
+    self->indentLimit = -1;
     self->lineStart = FALSE;
     if (self->col > self->indentUsed[-1]) {
 	if (self->indentUsed == self->indentLast) {

@@ -213,7 +213,8 @@ Ranges<KcProperty_t ** prop>    (. KcSymbol_t * sym0, * sym1; KcExpr_t * expr = 
 .
 
 Help<CcsPosition_t ** pos>              (. CcsToken_t * beg; .) =
-  ("help" | "---help---") eol IndentIn  (. KcScanner_IncRef(&self->scanner, beg = self->la); .)
+  ("help" | "---help---") eol IndentIn  (. KcScanner_IndentLimit(&self->scanner, self->t);
+  	    		      		   KcScanner_IncRef(&self->scanner, beg = self->la); .)
   { ANY } IndentOut                     (. *pos = KcScanner_GetPosition(&self->scanner, beg, self->t);
 					   KcScanner_DecRef(&self->scanner, beg); .)
 .

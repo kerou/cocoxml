@@ -64,6 +64,11 @@ CcsToken_t * PgnScanner_Peek(PgnScanner_t * self);
 void PgnScanner_ResetPeek(PgnScanner_t * self);
 void PgnScanner_IncRef(PgnScanner_t * self, CcsToken_t * token);
 void PgnScanner_DecRef(PgnScanner_t * self, CcsToken_t * token);
+#ifdef PgnScanner_INDENTATION
+/* If the col >= indentIn->col, not any IndentIn/IndentOut/IndentErr is generated.
+ * Useful when we need to collect ANY text by indentation. */
+void PgnScanner_IndentLimit(PgnScanner_t * self, const CcsToken_t * indentIn);
+#endif
 
 CcsPosition_t *
 PgnScanner_GetPosition(PgnScanner_t * self, const CcsToken_t * begin,

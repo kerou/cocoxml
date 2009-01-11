@@ -449,6 +449,7 @@ KcParser_Help(KcParser_t * self, CcsPosition_t ** pos)
     } else KcParser_SynErr(self, 42);
     KcParser_Expect(self, 6);
     KcParser_Expect(self, 1);
+    KcScanner_IndentLimit(&self->scanner, self->t);
     KcScanner_IncRef(&self->scanner, beg = self->la); 
     while (KcParser_StartOf(self, 3)) {
 	KcParser_Get(self);
