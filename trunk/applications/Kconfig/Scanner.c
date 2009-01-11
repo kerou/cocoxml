@@ -566,7 +566,7 @@ KcScanInput_Comment(KcScanInput_t * self, const CcsComment_t * c)
     return TRUE;
 }
 
-#ifdef KcScanInput_INDENTATION
+#ifdef KcScanner_INDENTATION
 static CcsToken_t *
 KcScanInput_IndentGenerator(KcScanInput_t * self)
 {
@@ -581,7 +581,7 @@ KcScanInput_IndentGenerator(KcScanInput_t * self)
     if (self->ch == EoF) {
 	head = NULL;
 	while (self->indent < self->indentUsed - 1) {
-	    cur = CcsToken(self, KcScanInput_INDENT_OUT, self->pos,
+	    cur = CcsToken(self, KcScanner_INDENT_OUT, self->pos,
 			   self->col, self->line, NULL, 0);
 	    cur->next = head; head = cur;
 	    --self->indentUsed;
@@ -591,7 +591,7 @@ KcScanInput_IndentGenerator(KcScanInput_t * self)
     self->lineStart = FALSE;
     if (self->col > self->indentUsed[-1]) {
 	if (self->indentUsed == self->indentLast) {
-	    newLen = (self->indentLast - self->indent) + KcScanInput_INDENT_START;
+	    newLen = (self->indentLast - self->indent) + KcScanner_INDENT_START;
 	    newIndent = CcsRealloc(self->indent, sizeof(int) * newLen);
 	    if (!newIndent) return NULL;
 	    self->indentUsed = newIndent + (self->indentUsed - self->indent);
@@ -600,16 +600,16 @@ KcScanInput_IndentGenerator(KcScanInput_t * self)
 	}
 	CcsAssert(self->indentUsed < self->indentLast);
 	*self->indentUsed++ = self->col;
-	return CcsToken(self, KcScanInput_INDENT_IN, self->pos,
+	return CcsToken(self, KcScanner_INDENT_IN, self->pos,
 			self->col, self->line, NULL, 0);
     }
     for (curIndent = self->indentUsed - 1; self->col < *curIndent; --curIndent);
     if (self->col > *curIndent)
-	return CcsToken(self, KcScanInput_INDENT_ERR, self->pos,
+	return CcsToken(self, KcScanner_INDENT_ERR, self->pos,
 			self->col, self->line, NULL, 0);
     head = NULL;
     while (curIndent < self->indentUsed - 1) {
-	cur = CcsToken(self, KcScanInput_INDENT_OUT, self->pos,
+	cur = CcsToken(self, KcScanner_INDENT_OUT, self->pos,
 		       self->col, self->line, NULL, 0);
 	cur->next = head; head = cur;
 	--self->indentUsed;
@@ -629,7 +629,7 @@ KcScanInput_NextToken(KcScanInput_t * self)
 	       || self->ch == '\t'
 	       /*---- enable ----*/
 	       ) KcScanInput_GetCh(self);
-#ifdef KcScanInput_INDENTATION
+#ifdef KcScanner_INDENTATION
 	if ((t = KcScanInput_IndentGenerator(self))) return t;
 #endif
 	for (curComment = comments; curComment < commentsLast; ++curComment)
@@ -651,7 +651,7 @@ KcScanInput_NextToken(KcScanInput_t * self)
 	    self->ch == '_' ||
 	    (self->ch >= 'a' && self->ch <= 'z')) {
 	    KcScanInput_GetCh(self); goto case_1;
-	} else { kind = GetKWKind(self, pos, self->pos, 134658968); break; }
+	} else { kind = GetKWKind(self, pos, self->pos, 4); break; }
     case 2: case_2:
 	if ((self->ch >= 0 && self->ch <= '\t') ||
 	    (self->ch >= '\v' && self->ch <= '\f') ||

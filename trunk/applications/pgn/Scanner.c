@@ -564,7 +564,7 @@ PgnScanInput_Comment(PgnScanInput_t * self, const CcsComment_t * c)
     return TRUE;
 }
 
-#ifdef PgnScanInput_INDENTATION
+#ifdef PgnScanner_INDENTATION
 static CcsToken_t *
 PgnScanInput_IndentGenerator(PgnScanInput_t * self)
 {
@@ -579,7 +579,7 @@ PgnScanInput_IndentGenerator(PgnScanInput_t * self)
     if (self->ch == EoF) {
 	head = NULL;
 	while (self->indent < self->indentUsed - 1) {
-	    cur = CcsToken(self, PgnScanInput_INDENT_OUT, self->pos,
+	    cur = CcsToken(self, PgnScanner_INDENT_OUT, self->pos,
 			   self->col, self->line, NULL, 0);
 	    cur->next = head; head = cur;
 	    --self->indentUsed;
@@ -589,7 +589,7 @@ PgnScanInput_IndentGenerator(PgnScanInput_t * self)
     self->lineStart = FALSE;
     if (self->col > self->indentUsed[-1]) {
 	if (self->indentUsed == self->indentLast) {
-	    newLen = (self->indentLast - self->indent) + PgnScanInput_INDENT_START;
+	    newLen = (self->indentLast - self->indent) + PgnScanner_INDENT_START;
 	    newIndent = CcsRealloc(self->indent, sizeof(int) * newLen);
 	    if (!newIndent) return NULL;
 	    self->indentUsed = newIndent + (self->indentUsed - self->indent);
@@ -598,16 +598,16 @@ PgnScanInput_IndentGenerator(PgnScanInput_t * self)
 	}
 	CcsAssert(self->indentUsed < self->indentLast);
 	*self->indentUsed++ = self->col;
-	return CcsToken(self, PgnScanInput_INDENT_IN, self->pos,
+	return CcsToken(self, PgnScanner_INDENT_IN, self->pos,
 			self->col, self->line, NULL, 0);
     }
     for (curIndent = self->indentUsed - 1; self->col < *curIndent; --curIndent);
     if (self->col > *curIndent)
-	return CcsToken(self, PgnScanInput_INDENT_ERR, self->pos,
+	return CcsToken(self, PgnScanner_INDENT_ERR, self->pos,
 			self->col, self->line, NULL, 0);
     head = NULL;
     while (curIndent < self->indentUsed - 1) {
-	cur = CcsToken(self, PgnScanInput_INDENT_OUT, self->pos,
+	cur = CcsToken(self, PgnScanner_INDENT_OUT, self->pos,
 		       self->col, self->line, NULL, 0);
 	cur->next = head; head = cur;
 	--self->indentUsed;
@@ -628,7 +628,7 @@ PgnScanInput_NextToken(PgnScanInput_t * self)
 	       || self->ch == '\r'
 	       /*---- enable ----*/
 	       ) PgnScanInput_GetCh(self);
-#ifdef PgnScanInput_INDENTATION
+#ifdef PgnScanner_INDENTATION
 	if ((t = PgnScanInput_IndentGenerator(self))) return t;
 #endif
 	for (curComment = comments; curComment < commentsLast; ++curComment)
