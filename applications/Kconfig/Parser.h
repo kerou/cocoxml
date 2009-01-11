@@ -39,6 +39,7 @@ struct KcParser_s {
     char * mainmenu;
     KcSymbolTable_t * symtab;
     KcSymbolList_t * toplist;
+    CcsIncPathList_t * incdirs;
     /*---- enable ----*/
 };
 

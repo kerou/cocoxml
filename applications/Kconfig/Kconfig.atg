@@ -16,6 +16,7 @@ SECTION hIncludes
 END.
 
 SECTION cIncludes
+#include "c/IncPathList.h"
 END.
 
 COMPILER Kconfig
@@ -24,13 +25,16 @@ MEMBERS
     char * mainmenu;
     KcSymbolTable_t * symtab;
     KcSymbolList_t * toplist;
+    CcsIncPathList_t * incdirs;
 
 CONSTRUCTOR
     self->mainmenu = NULL;
     if (!(self->symtab = KcSymbolTable())) return FALSE;
     self->toplist = NULL;
+    self->incdirs = NULL;
 
 DESTRUCTOR
+    if (self->incdirs)  CcsIncPathList_Destruct(self->incdirs);
     if (self->toplist)  KcSymbolList_Destruct(self->toplist);
     KcSymbolTable_Destruct(self->symtab);
     if (self->mainmenu)  CcsFree(self->mainmenu);
@@ -63,9 +67,9 @@ Kconfig (. KcSymbolList_t * toplist = NULL; .) =
 
 SymbolListDecl<KcSymbolList_t ** symlist>
     (. KcSymbol_t * sym; .) =
-  { SymbolDecl<&sym>   (. if (*symlist == NULL) *symlist = KcSymbolList();
-                          if (sym) KcSymbolList_Append(*symlist, sym); .)
-  }
+  { SymbolDecl<&sym>    (. if (*symlist == NULL) *symlist = KcSymbolList();
+                           if (sym) KcSymbolList_Append(*symlist, sym); .)
+    | Source }
 .
 
 SymbolDecl<KcSymbol_t ** sym> (. *sym = NULL; .) =
@@ -158,6 +162,12 @@ IfDecl<KcSymbol_t ** _if_>
 MainMenuDecl<KcSymbol_t ** sym> =
   "mainmenu" string (. if (!self->mainmenu) self->mainmenu = CcsEscape(self->t->val); .)
   eol
+.
+
+Source            (. char * fname; .) =
+  "source" string (. fname = CcsStrdup(self->t->val); .)
+  eol             (. KcScanner_IncludeByName(&self->scanner, self->incdirs, fname);
+  		     CcsFree(fname); .)
 .
 
 Property<KcSymbolType_t * symtype, KcProperty_t ** prop> =
