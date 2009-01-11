@@ -414,7 +414,16 @@ Factor<CcGraph_t ** g>          (. char * name = NULL; int kind; CcsPosition_t *
 					   CcsParser_SemErrT(self, "undefined string in production");
 					   sym = self->syntax->eofSy;  /* dummy */
 				       }
-                                   }
+                                   } else {
+				       if (kind == CcsParser_str) {
+				       	   if (sym->base.type != symbol_t) {
+				               CcsParser_SemErrT(self, "%s should be terminal, but it is not.", name);
+					   } else if (((CcSymbolT_t *)sym)->tokenKind != symbol_litToken &&
+					     	      ((CcSymbolT_t *)sym)->tokenKind != symbol_fixedToken) {
+					       CcsParser_SemErrT(self, "%s should be literal, but it is not.", name);
+					   }
+				       }
+				   }
 				   CcFree(name);
                                    if (sym->base.type != symbol_t && sym->base.type != symbol_nt)
                                        CcsParser_SemErrT(self, "this symbol kind is not allowed in a production");
