@@ -36,6 +36,7 @@ struct KcScanInput_s {
     int            * indent;
     int            * indentUsed;
     int            * indentLast;
+    int              indentLimit;
 #endif
 };
 
@@ -60,6 +61,7 @@ KcScanInput_Init(KcScanInput_t * self, KcScanner_t * scanner, FILE * fp)
     self->indentUsed = self->indent;
     self->indentLast = self->indent + KcScanner_INDENT_START;
     *self->indentUsed++ = 0;
+    self->indentLimit = -1;
 #endif
     return TRUE;
 #ifdef KcScanner_INDENTATION
@@ -224,6 +226,15 @@ KcScanInput_DecRef(KcScanInput_t * self, CcsToken_t * token)
     }
 }
 
+#ifdef KcScanner_INDENTATION
+static void
+KcScanInput_IndentLimit(KcScanInput_t * self, const CcsToken_t * indentIn)
+{
+    CcsAssert(indentIn->kind == KcScanner_INDENT_IN);
+    self->indentLimit = indentIn->col;
+}
+#endif
+
 static CcsPosition_t *
 KcScanInput_GetPosition(KcScanInput_t * self, const CcsToken_t * begin,
 			 const CcsToken_t * end)
@@ -372,6 +383,15 @@ KcScanner_DecRef(KcScanner_t * self, CcsToken_t * token)
     if (token == self->dummyToken) --token->refcnt;
     else KcScanInput_DecRef(token->input, token);
 }
+
+#ifdef KcScanner_INDENTATION
+void
+KcScanner_IndentLimit(KcScanner_t * self, const CcsToken_t * indentIn)
+{
+    CcsAssert(indentIn->input == self->cur);
+    KcScanInput_IndentLimit(self->cur, indentIn);
+}
+#endif
 
 CcsPosition_t *
 KcScanner_GetPosition(KcScanner_t * self, const CcsToken_t * begin,
@@ -639,6 +659,8 @@ KcScanInput_IndentGenerator(KcScanInput_t * self)
 	}
 	return head;
     }
+    if (self->indentLimit != -1 && self->col >= self->indentLimit) return NULL;
+    self->indentLimit = -1;
     self->lineStart = FALSE;
     if (self->col > self->indentUsed[-1]) {
 	if (self->indentUsed == self->indentLast) {
