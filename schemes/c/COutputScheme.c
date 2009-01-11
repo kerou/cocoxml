@@ -209,7 +209,7 @@ COS_WriteState(CcCOutputScheme_t * self, CcOutput_t * output,
 	CcPrintf(output, "kind = %d;", state->endOf->kind);
     } else {
 	CcPrintf(output, "kind = GetKWKind(self, pos, self->pos, %d);",
-		 self->base.prefix, state->endOf->kind);
+		 state->endOf->kind);
     }
     CcPrintfL(output, " break; }");
     output->indent -= 4;

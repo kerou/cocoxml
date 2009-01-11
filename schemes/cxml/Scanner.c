@@ -674,7 +674,7 @@ CcsXmlScanInput_NextToken(CcsXmlScanInput_t * self)
 	    self->ch == '_' ||
 	    (self->ch >= 'a' && self->ch <= 'z')) {
 	    CcsXmlScanInput_GetCh(self); goto case_1;
-	} else { kind = GetKWKind(self, pos, self->pos, 134660112); break; }
+	} else { kind = GetKWKind(self, pos, self->pos, 1); break; }
     case 2: case_2:
 	if ((self->ch >= '0' && self->ch <= '9')) {
 	    CcsXmlScanInput_GetCh(self); goto case_2;
