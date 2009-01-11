@@ -54,6 +54,7 @@ void _CcsAssertFailed_(const char * vstr, const char * fname, int line);
 typedef struct CcsErrorPool_s CcsErrorPool_t;
 typedef struct CcsToken_s CcsToken_t;
 typedef struct CcsPosition_s CcsPosition_t;
+typedef struct CcsIncPathList_s CcsIncPathList_t;
 
 typedef enum {
     XSO_UnknownTag, XSO_UnknownTagEnd,
@@ -86,6 +87,11 @@ int CcsUTF8GetWidth(const char * str, size_t len);
 int CcsUnescapeCh(const char ** str, const char * stop);
 char * CcsUnescape(const char * str);
 char * CcsEscape(const char * str);
+
+/* Path operations */
+char * CcsPathJoin(char * result, size_t szresult, const char * path, ...);
+char * CcsDirname(char * result, size_t szresult, const char * path);
+char * CcsBasename(char * result, size_t szresult, const char * path);
 
 EXTC_END
 

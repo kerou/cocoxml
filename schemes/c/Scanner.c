@@ -29,7 +29,9 @@
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
 #include  <ctype.h>
+#include  <limits.h>
 #include  "Scanner.h"
+#include  "c/IncPathList.h"
 
 /*------------------------------- ScanInput --------------------------------*/
 struct CcsScanInput_s {
@@ -106,14 +108,19 @@ CcsScanInput(CcsScanner_t * scanner, FILE * fp)
 }
 
 static CcsScanInput_t *
-CcsScanInput_ByName(CcsScanner_t * scanner, const char * infn)
+CcsScanInput_ByName(CcsScanner_t * scanner, const CcsIncPathList_t * list,
+		    const char * includer, const char * infn)
 {
     FILE * fp;
     CcsScanInput_t * self;
-    if (!(fp = fopen(infn, "r"))) goto errquit0;
-    if (!(self = CcsMalloc(sizeof(CcsScanInput_t) + strlen(infn) + 1))) goto errquit1;
+    char infnpath[PATH_MAX];
+    if (!(fp = CcsIncPathList_Open(list, infnpath, sizeof(infnpath),
+				   includer, infn)))
+	goto errquit0;
+    if (!(self = CcsMalloc(sizeof(CcsScanInput_t) + strlen(infnpath) + 1)))
+	goto errquit1;
     self->next = NULL;
-    strcpy(self->fname = (char *)(self + 1), infn);
+    strcpy(self->fname = (char *)(self + 1), infnpath);
     if (!CcsScanInput_Init(self, scanner, fp)) goto errquit2;
     return self;
  errquit2:
@@ -304,7 +311,8 @@ CcsScanner_t *
 CcsScanner_ByName(CcsScanner_t * self, CcsErrorPool_t * errpool,
 		  const char * fn)
 {
-    if (!(self->cur = CcsScanInput_ByName(self, fn))) goto errquit0;
+    if (!(self->cur = CcsScanInput_ByName(self, NULL, NULL, fn)))
+	goto errquit0;
     if (!CcsScanner_Init(self, errpool)) goto errquit1;
     CcsScanInput_GetCh(self->cur);
     return self;
@@ -412,10 +420,12 @@ CcsScanner_Include(CcsScanner_t * self, FILE * fp)
 }
 
 CcsBool_t
-CcsScanner_IncludeByName(CcsScanner_t * self, const char * infn)
+CcsScanner_IncludeByName(CcsScanner_t * self, const CcsIncPathList_t * list,
+			 const char * infn)
 {
     CcsScanInput_t * input;
-    if (!(input = CcsScanInput_ByName(self, infn))) return FALSE;
+    if (!(input = CcsScanInput_ByName(self, list, self->cur->fname, infn)))
+	return FALSE;
     input->next = self->cur;
     self->cur = input;
     return TRUE;

@@ -20,7 +20,9 @@ Author: Charles Wang <charlesw123456@gmail.com>
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
 #include  <ctype.h>
+#include  <limits.h>
 #include  "Scanner.h"
+#include  "c/IncPathList.h"
 
 /*------------------------------- ScanInput --------------------------------*/
 struct PgnScanInput_s {
@@ -97,14 +99,19 @@ PgnScanInput(PgnScanner_t * scanner, FILE * fp)
 }
 
 static PgnScanInput_t *
-PgnScanInput_ByName(PgnScanner_t * scanner, const char * infn)
+PgnScanInput_ByName(PgnScanner_t * scanner, const CcsIncPathList_t * list,
+		    const char * includer, const char * infn)
 {
     FILE * fp;
     PgnScanInput_t * self;
-    if (!(fp = fopen(infn, "r"))) goto errquit0;
-    if (!(self = CcsMalloc(sizeof(PgnScanInput_t) + strlen(infn) + 1))) goto errquit1;
+    char infnpath[PATH_MAX];
+    if (!(fp = CcsIncPathList_Open(list, infnpath, sizeof(infnpath),
+				   includer, infn)))
+	goto errquit0;
+    if (!(self = CcsMalloc(sizeof(PgnScanInput_t) + strlen(infnpath) + 1)))
+	goto errquit1;
     self->next = NULL;
-    strcpy(self->fname = (char *)(self + 1), infn);
+    strcpy(self->fname = (char *)(self + 1), infnpath);
     if (!PgnScanInput_Init(self, scanner, fp)) goto errquit2;
     return self;
  errquit2:
@@ -295,7 +302,8 @@ PgnScanner_t *
 PgnScanner_ByName(PgnScanner_t * self, CcsErrorPool_t * errpool,
 		  const char * fn)
 {
-    if (!(self->cur = PgnScanInput_ByName(self, fn))) goto errquit0;
+    if (!(self->cur = PgnScanInput_ByName(self, NULL, NULL, fn)))
+	goto errquit0;
     if (!PgnScanner_Init(self, errpool)) goto errquit1;
     PgnScanInput_GetCh(self->cur);
     return self;
@@ -403,10 +411,12 @@ PgnScanner_Include(PgnScanner_t * self, FILE * fp)
 }
 
 CcsBool_t
-PgnScanner_IncludeByName(PgnScanner_t * self, const char * infn)
+PgnScanner_IncludeByName(PgnScanner_t * self, const CcsIncPathList_t * list,
+			 const char * infn)
 {
     PgnScanInput_t * input;
-    if (!(input = PgnScanInput_ByName(self, infn))) return FALSE;
+    if (!(input = PgnScanInput_ByName(self, list, self->cur->fname, infn)))
+	return FALSE;
     input->next = self->cur;
     self->cur = input;
     return TRUE;

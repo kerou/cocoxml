@@ -29,7 +29,9 @@
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
 #include  <ctype.h>
+#include  <limits.h>
 #include  "Scanner.h"
+#include  "c/IncPathList.h"
 
 /*------------------------------- ScanInput --------------------------------*/
 struct CcsXmlScanInput_s {
@@ -106,14 +108,19 @@ CcsXmlScanInput(CcsXmlScanner_t * scanner, FILE * fp)
 }
 
 static CcsXmlScanInput_t *
-CcsXmlScanInput_ByName(CcsXmlScanner_t * scanner, const char * infn)
+CcsXmlScanInput_ByName(CcsXmlScanner_t * scanner, const CcsIncPathList_t * list,
+		    const char * includer, const char * infn)
 {
     FILE * fp;
     CcsXmlScanInput_t * self;
-    if (!(fp = fopen(infn, "r"))) goto errquit0;
-    if (!(self = CcsMalloc(sizeof(CcsXmlScanInput_t) + strlen(infn) + 1))) goto errquit1;
+    char infnpath[PATH_MAX];
+    if (!(fp = CcsIncPathList_Open(list, infnpath, sizeof(infnpath),
+				   includer, infn)))
+	goto errquit0;
+    if (!(self = CcsMalloc(sizeof(CcsXmlScanInput_t) + strlen(infnpath) + 1)))
+	goto errquit1;
     self->next = NULL;
-    strcpy(self->fname = (char *)(self + 1), infn);
+    strcpy(self->fname = (char *)(self + 1), infnpath);
     if (!CcsXmlScanInput_Init(self, scanner, fp)) goto errquit2;
     return self;
  errquit2:
@@ -304,7 +311,8 @@ CcsXmlScanner_t *
 CcsXmlScanner_ByName(CcsXmlScanner_t * self, CcsErrorPool_t * errpool,
 		  const char * fn)
 {
-    if (!(self->cur = CcsXmlScanInput_ByName(self, fn))) goto errquit0;
+    if (!(self->cur = CcsXmlScanInput_ByName(self, NULL, NULL, fn)))
+	goto errquit0;
     if (!CcsXmlScanner_Init(self, errpool)) goto errquit1;
     CcsXmlScanInput_GetCh(self->cur);
     return self;
@@ -412,10 +420,12 @@ CcsXmlScanner_Include(CcsXmlScanner_t * self, FILE * fp)
 }
 
 CcsBool_t
-CcsXmlScanner_IncludeByName(CcsXmlScanner_t * self, const char * infn)
+CcsXmlScanner_IncludeByName(CcsXmlScanner_t * self, const CcsIncPathList_t * list,
+			 const char * infn)
 {
     CcsXmlScanInput_t * input;
-    if (!(input = CcsXmlScanInput_ByName(self, infn))) return FALSE;
+    if (!(input = CcsXmlScanInput_ByName(self, list, self->cur->fname, infn)))
+	return FALSE;
     input->next = self->cur;
     self->cur = input;
     return TRUE;

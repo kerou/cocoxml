@@ -66,7 +66,9 @@ KcScanner_GetPositionBetween(KcScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end);
 
 CcsBool_t KcScanner_Include(KcScanner_t * self, FILE * fp);
-CcsBool_t KcScanner_IncludeByName(KcScanner_t * self, const char * infn);
+CcsBool_t
+KcScanner_IncludeByName(KcScanner_t * self, const CcsIncPathList_t * list,
+			 const char * infn);
 
 EXTC_END
 

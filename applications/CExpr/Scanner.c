@@ -20,7 +20,9 @@ Author: Charles Wang <charlesw123456@gmail.com>
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
 #include  <ctype.h>
+#include  <limits.h>
 #include  "Scanner.h"
+#include  "c/IncPathList.h"
 
 /*------------------------------- ScanInput --------------------------------*/
 struct CExprScanInput_s {
@@ -97,14 +99,19 @@ CExprScanInput(CExprScanner_t * scanner, FILE * fp)
 }
 
 static CExprScanInput_t *
-CExprScanInput_ByName(CExprScanner_t * scanner, const char * infn)
+CExprScanInput_ByName(CExprScanner_t * scanner, const CcsIncPathList_t * list,
+		    const char * includer, const char * infn)
 {
     FILE * fp;
     CExprScanInput_t * self;
-    if (!(fp = fopen(infn, "r"))) goto errquit0;
-    if (!(self = CcsMalloc(sizeof(CExprScanInput_t) + strlen(infn) + 1))) goto errquit1;
+    char infnpath[PATH_MAX];
+    if (!(fp = CcsIncPathList_Open(list, infnpath, sizeof(infnpath),
+				   includer, infn)))
+	goto errquit0;
+    if (!(self = CcsMalloc(sizeof(CExprScanInput_t) + strlen(infnpath) + 1)))
+	goto errquit1;
     self->next = NULL;
-    strcpy(self->fname = (char *)(self + 1), infn);
+    strcpy(self->fname = (char *)(self + 1), infnpath);
     if (!CExprScanInput_Init(self, scanner, fp)) goto errquit2;
     return self;
  errquit2:
@@ -295,7 +302,8 @@ CExprScanner_t *
 CExprScanner_ByName(CExprScanner_t * self, CcsErrorPool_t * errpool,
 		  const char * fn)
 {
-    if (!(self->cur = CExprScanInput_ByName(self, fn))) goto errquit0;
+    if (!(self->cur = CExprScanInput_ByName(self, NULL, NULL, fn)))
+	goto errquit0;
     if (!CExprScanner_Init(self, errpool)) goto errquit1;
     CExprScanInput_GetCh(self->cur);
     return self;
@@ -403,10 +411,12 @@ CExprScanner_Include(CExprScanner_t * self, FILE * fp)
 }
 
 CcsBool_t
-CExprScanner_IncludeByName(CExprScanner_t * self, const char * infn)
+CExprScanner_IncludeByName(CExprScanner_t * self, const CcsIncPathList_t * list,
+			 const char * infn)
 {
     CExprScanInput_t * input;
-    if (!(input = CExprScanInput_ByName(self, infn))) return FALSE;
+    if (!(input = CExprScanInput_ByName(self, list, self->cur->fname, infn)))
+	return FALSE;
     input->next = self->cur;
     self->cur = input;
     return TRUE;

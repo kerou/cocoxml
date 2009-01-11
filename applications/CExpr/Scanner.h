@@ -73,7 +73,9 @@ CExprScanner_GetPositionBetween(CExprScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end);
 
 CcsBool_t CExprScanner_Include(CExprScanner_t * self, FILE * fp);
-CcsBool_t CExprScanner_IncludeByName(CExprScanner_t * self, const char * infn);
+CcsBool_t
+CExprScanner_IncludeByName(CExprScanner_t * self, const CcsIncPathList_t * list,
+			 const char * infn);
 
 EXTC_END
 
