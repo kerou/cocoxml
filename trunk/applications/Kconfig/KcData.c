@@ -201,6 +201,7 @@ KcSymbolTable(void)
 {
     KcSymbolTable_t * self;
     if (!(self = CcsMalloc(sizeof(KcSymbolTable_t)))) goto errquit0;
+    self->nonlist = NULL;
     if (!(self->first = CcsMalloc(sizeof(KcSymbol_t *) * KCSIZE_SYMTAB)))
 	goto errquit1;
     memset(self->first, 0, sizeof(KcSymbol_t *) * KCSIZE_SYMTAB);
@@ -215,7 +216,11 @@ KcSymbolTable(void)
 void
 KcSymbolTable_Destruct(KcSymbolTable_t * self)
 {
-    KcSymbol_t ** cur;
+    KcSymbol_t * cur0, * next0, ** cur;
+    for (cur0 = self->nonlist; cur0; cur0 = next0) {
+	next0 = cur0->next;
+	KcSymbol_Destruct(cur0);
+    }
     for (cur = self->first; cur < self->last; ++cur)
 	if (*cur) KcSymbol_Destruct(*cur);
     CcsFree(self);
@@ -249,6 +254,20 @@ KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, KcSymbol_t ** retNewSymbol,
     (*cur)->props = props;
     (*cur)->helpmsg = helpmsg;
     *retNewSymbol = *cur;
+    return NULL;
+}
+
+const char *
+KcSymbolTable_AddNoNSymbol(KcSymbolTable_t * self, KcSymbol_t ** retNewSymbol,
+			   KcSymbolType_t symtype, KcProperty_t * properties)
+{
+    KcSymbol_t * nonSymbol;
+    if (!(nonSymbol = KcSymbol(NULL))) return "Not enough memory";
+    nonSymbol->type = symtype;
+    nonSymbol->props = properties;
+    nonSymbol->next = self->nonlist;
+    self->nonlist = nonSymbol;
+    *retNewSymbol = nonSymbol;
     return NULL;
 }
 
