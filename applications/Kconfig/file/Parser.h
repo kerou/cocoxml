@@ -18,6 +18,9 @@ License: LGPLv2
 #endif
 
 /*---- hIncludes ----*/
+#ifndef  COCO_CFDATA_H
+#include "CfData.h"
+#endif
 /*---- enable ----*/
 
 EXTC_BEGIN
@@ -33,7 +36,7 @@ struct CfParser_s {
     CcsToken_t      * la;
     int               maxT;
     /*---- members ----*/
-    
+    CfValueMap_t valmap;
     /*---- enable ----*/
 };
 

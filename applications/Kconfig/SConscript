@@ -22,6 +22,7 @@ env.Program('TestKconfig', ['main.c',
                             os.path.join('desc', 'KcData.c'),
                             os.path.join('desc', 'Parser.c'),
                             os.path.join('desc', 'Scanner.c'),
+                            os.path.join('file', 'CfData.c'),
                             os.path.join('file', 'Parser.c'),
                             os.path.join('file', 'Scanner.c'),
                             lib])

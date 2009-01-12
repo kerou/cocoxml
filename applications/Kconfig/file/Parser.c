@@ -114,7 +114,7 @@ CfParser_Init(CfParser_t * self)
     self->t = self->la = NULL;
     /*---- constructor ----*/
     self->maxT = 13;
-    
+    if (!CfValueMap(&self->valmap)) return FALSE;
     /*---- enable ----*/
     return TRUE;
 }
@@ -154,7 +154,7 @@ void
 CfParser_Destruct(CfParser_t * self)
 {
     /*---- destructor ----*/
-    
+    CfValueMap_Destruct(&self->valmap);
     /*---- enable ----*/
     if (self->la) CfScanner_DecRef(&self->scanner, self->la);
     if (self->t) CfScanner_DecRef(&self->scanner, self->t);
@@ -186,20 +186,30 @@ CfParser_Line(CfParser_t * self)
 static void
 CfParser_SetConfig(CfParser_t * self)
 {
+    char * name, * str; 
     CfParser_Expect(self, 1);
+    name = CcsStrdup(self->t->val); 
     CfParser_Expect(self, 6);
     if (self->la->kind == 7) {
 	CfParser_Get(self);
+	CfValueMap_SetState(&self->valmap, name, CfYes); 
     } else if (self->la->kind == 8) {
 	CfParser_Get(self);
+	CfValueMap_SetState(&self->valmap, name, CfModule); 
     } else if (self->la->kind == 4) {
 	CfParser_Get(self);
+	str = CcsUnescape(self->t->val);
+	CfValueMap_SetString(&self->valmap, name, str);
+	CcsFree(str); 
     } else if (self->la->kind == 2) {
 	CfParser_Get(self);
+	CfValueMap_SetInt(&self->valmap, name, self->t->val); 
     } else if (self->la->kind == 3) {
 	CfParser_Get(self);
+	CfValueMap_SetHex(&self->valmap, name, self->t->val); 
     } else CfParser_SynErr(self, 15);
     CfParser_Expect(self, 5);
+    CcsFree(name); 
 }
 
 static void
@@ -208,6 +218,7 @@ CfParser_CommentOrNotSet(CfParser_t * self)
     CfParser_Expect(self, 9);
     if (self->la->kind == 1) {
 	CfParser_Get(self);
+	CfValueMap_SetState(&self->valmap, self->t->val, CfNo); 
 	CfParser_Expect(self, 10);
 	CfParser_Expect(self, 11);
 	CfParser_Expect(self, 12);
