@@ -64,20 +64,16 @@ CcSymbolTable_NewTerminalWithCheck(CcSymbolTable_t * self, const char * name,
 CcSymbol_t *
 CcSymbolTable_NewTerminal(CcSymbolTable_t * self, const char * name, int line)
 {
-    char * name0 = CcUnescape(name);
     CcObject_t * sym = CcArrayList_New(&self->terminals,
-				       (CcObject_t *)CcSymbolT(name0, line));
-    CcFree(name0);
+				       (CcObject_t *)CcSymbolT(name, line));
     return (CcSymbol_t *)sym;
 }
 
 CcSymbol_t *
 CcSymbolTable_NewPragma(CcSymbolTable_t * self, const char * name, int line)
 {
-    char * name0 = CcUnescape(name);
     CcObject_t * sym = CcArrayList_New(&self->pragmas,
 				       (CcObject_t *)CcSymbolPR(name, line));
-    CcFree(name0);
     return (CcSymbol_t *)sym;
 }
 
@@ -85,10 +81,8 @@ CcSymbol_t *
 CcSymbolTable_NewNonTerminal(CcSymbolTable_t * self,
 			     const char * name, int line)
 {
-    char * name0 = CcUnescape(name);
     CcObject_t * sym = CcArrayList_New(&self->nonterminals,
 				       (CcObject_t *)CcSymbolNT(name, line));
-    CcFree(name0);
     return (CcSymbol_t *)sym;
 }
 
@@ -96,18 +90,13 @@ CcSymbol_t *
 CcSymbolTable_FindSym(CcSymbolTable_t * self, const char * name)
 {
     CcArrayListIter_t iter; CcSymbol_t * sym;
-    char * name0 = CcUnescape(name);
     for (sym = (CcSymbol_t *)CcArrayList_First(&self->terminals, &iter);
 	 sym; sym = (CcSymbol_t *)CcArrayList_Next(&self->terminals, &iter))
-	if (!strcmp(sym->name, name0)) goto found;
+	if (!strcmp(sym->name, name)) return sym;
     for (sym = (CcSymbol_t *)CcArrayList_First(&self->nonterminals, &iter);
 	 sym; sym = (CcSymbol_t *)CcArrayList_Next(&self->nonterminals, &iter))
-	if (!strcmp(sym->name, name0)) goto found;
-    CcFree(name0);
+	if (!strcmp(sym->name, name)) return sym;
     return NULL;
- found:
-    CcFree(name0);
-    return sym;
 }
 
 CcsBool_t

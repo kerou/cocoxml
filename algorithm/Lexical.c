@@ -100,19 +100,17 @@ CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
 {
     CcGraph_t * g; CcTransition_t trans;
     const char * cur, * slast;
-    char * s = CcUnescape(str);
-    if (strlen(s) == 0)
+    if (strlen(str) == 0)
 	CcsErrorPool_Error(self->globals->errpool,
 			   t->line, t->col, "empty token not allowed");
     g = CcGraph();
-    cur = s; slast = s + strlen(s);
+    cur = str; slast = str + strlen(str);
     while (cur < slast) {
 	CcTransition(&trans, CcsUTF8GetCh(&cur, slast),
 		     trans_normal, &self->classes);
 	CcGraph_Append(g, CcEBNF_NewNode(&self->base, CcNodeTrans(0, &trans)));
 	CcTransition_Destruct(&trans);
     }
-    CcFree(s);
     return g;
 }
 

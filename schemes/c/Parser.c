@@ -657,10 +657,10 @@ CcsParser_Sym(CcsParser_t * self, char ** name, int * kind)
     } else if (self->la->kind == 3 || self->la->kind == 5) {
 	if (self->la->kind == 3) {
 	    CcsParser_Get(self);
-	    *name = CcStrdup(self->t->val); 
+	    *name = CcUnescape(self->t->val); 
 	} else {
 	    CcsParser_Get(self);
-	    *name = CcStrdup(self->t->val); 
+	    *name = CcUnescape(self->t->val); 
 	}
 	*kind = CcsParser_str;
 	if (self->lexical->ignoreCase) {
