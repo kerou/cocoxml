@@ -212,7 +212,9 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
     CcGraph_t   * g;
     char        * gramName = NULL;
     CcXmlSpec_t * xsdef;
-    CcsToken_t  * beg; 
+    CcsToken_t  * beg;
+    CcsBool_t     undef;
+    CcsBool_t     noAttrs; 
     while (self->la->kind == 14 || self->la->kind == 15) {
 	if (self->la->kind == 14) {
 	    CcsXmlParser_SchemeDecl(self);
@@ -264,7 +266,7 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
     while (self->la->kind == 1) {
 	CcsXmlParser_Get(self);
 	sym = CcSymbolTable_FindSym(self->symtab, self->t->val);
-	CcsBool_t undef = (sym == NULL);
+	undef = (sym == NULL);
 	if (undef) {
 	    sym = CcSymbolTable_NewNonTerminal(self->symtab,
 					       self->t->val, self->t->line);
@@ -278,7 +280,7 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
 	    sym->line = self->t->line;
 	}
 	CcsAssert(sym->base.type == symbol_nt);
-	CcsBool_t noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
+	noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
 	if (!noAttrs) {
 	    CcsPosition_Destruct(((CcSymbolNT_t *)sym)->attrPos);
 	    ((CcSymbolNT_t *)sym)->attrPos = NULL; 
@@ -399,9 +401,9 @@ CcsXmlParser_XmlNamespaceDecl(CcsXmlParser_t * self)
 static void
 CcsXmlParser_AttrDecl(CcsXmlParser_t * self, CcSymbolNT_t * sym)
 {
+    CcsToken_t * beg; 
     if (self->la->kind == 22) {
 	CcsXmlParser_Get(self);
-	CcsToken_t * beg;
 	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 7)) {
 	    if (CcsXmlParser_StartOf(self, 8)) {
@@ -416,7 +418,6 @@ CcsXmlParser_AttrDecl(CcsXmlParser_t * self, CcSymbolNT_t * sym)
 	CcsXmlScanner_DecRef(&self->scanner, beg); 
     } else if (self->la->kind == 24) {
 	CcsXmlParser_Get(self);
-	CcsToken_t * beg;
 	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 9)) {
 	    if (CcsXmlParser_StartOf(self, 10)) {
@@ -435,8 +436,8 @@ CcsXmlParser_AttrDecl(CcsXmlParser_t * self, CcSymbolNT_t * sym)
 static void
 CcsXmlParser_SemText(CcsXmlParser_t * self, CcsPosition_t ** pos)
 {
+    CcsToken_t * beg; 
     CcsXmlParser_Expect(self, 37);
-    CcsToken_t * beg;
     CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
     while (CcsXmlParser_StartOf(self, 11)) {
 	if (CcsXmlParser_StartOf(self, 12)) {
@@ -457,9 +458,9 @@ CcsXmlParser_SemText(CcsXmlParser_t * self, CcsPosition_t ** pos)
 static void
 CcsXmlParser_Expression(CcsXmlParser_t * self, CcGraph_t ** g)
 {
-    CcGraph_t * g2; 
+    CcGraph_t * g2; CcsBool_t first; 
     CcsXmlParser_Term(self, g);
-    CcsBool_t first = TRUE; 
+    first = TRUE; 
     while (CcsXmlParser_WeakSeparator(self, 26, 14, 13)) {
 	CcsXmlParser_Term(self, &g2);
 	if (first) { CcEBNF_MakeFirstAlt(&self->syntax->base, *g); first = FALSE; }
@@ -544,9 +545,9 @@ CcsXmlParser_Term(CcsXmlParser_t * self, CcGraph_t ** g)
 static void
 CcsXmlParser_Resolver(CcsXmlParser_t * self, CcsPosition_t ** pos)
 {
+    CcsToken_t * beg; 
     CcsXmlParser_Expect(self, 36);
     CcsXmlParser_Expect(self, 28);
-    CcsToken_t * beg;
     CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
     CcsXmlParser_Condition(self);
     *pos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
@@ -556,7 +557,12 @@ CcsXmlParser_Resolver(CcsXmlParser_t * self, CcsPosition_t ** pos)
 static void
 CcsXmlParser_Factor(CcsXmlParser_t * self, CcGraph_t ** g)
 {
-    char * name = NULL; CcsPosition_t * pos; CcsBool_t weak = FALSE; 
+    char * name = NULL;
+    CcsPosition_t * pos;
+    CcsBool_t weak = FALSE;
+    CcsBool_t undef;
+    CcSymbol_t * sym;
+    CcNode_t * p;
     *g = NULL; 
     switch (self->la->kind) {
     case 1: case 27: {
@@ -565,8 +571,8 @@ CcsXmlParser_Factor(CcsXmlParser_t * self, CcGraph_t ** g)
 	    weak = TRUE; 
 	}
 	CcsXmlParser_Sym(self, &name);
-	CcSymbol_t * sym = CcSymbolTable_FindSym(self->symtab, name);
-	CcsBool_t undef = (sym == NULL);
+	sym = CcSymbolTable_FindSym(self->symtab, name);
+	undef = (sym == NULL);
 	if (undef) { /* forward nt */
 	     sym = CcSymbolTable_NewNonTerminal(self->symtab, name, 0);
 	}
@@ -577,7 +583,7 @@ CcsXmlParser_Factor(CcsXmlParser_t * self, CcGraph_t ** g)
 	    if (sym->base.type != symbol_t)
 		CcsXmlParser_SemErrT(self, "only terminals may be weak");
 	}
-	CcNode_t * p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->line, weak);
+	p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->line, weak);
 	*g = CcGraphP(p); 
 	if (self->la->kind == 22 || self->la->kind == 24) {
 	    CcsXmlParser_Attribs(self, p);
@@ -613,20 +619,20 @@ CcsXmlParser_Factor(CcsXmlParser_t * self, CcGraph_t ** g)
     }
     case 37: {
 	CcsXmlParser_SemText(self, &pos);
-	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeSem(0));
+	p = CcEBNF_NewNode(&self->syntax->base, CcNodeSem(0));
 	((CcNodeSEM_t *)p)->pos = pos;
 	*g = CcGraphP(p); 
 	break;
     }
     case 34: {
 	CcsXmlParser_Get(self);
-	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeAny(0));
+	p = CcEBNF_NewNode(&self->syntax->base, CcNodeAny(0));
 	*g = CcGraphP(p); 
 	break;
     }
     case 35: {
 	CcsXmlParser_Get(self);
-	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeSync(0));
+	p = CcEBNF_NewNode(&self->syntax->base, CcNodeSync(0));
 	*g = CcGraphP(p);
 	break;
     }
@@ -646,9 +652,9 @@ CcsXmlParser_Sym(CcsXmlParser_t * self, char ** name)
 static void
 CcsXmlParser_Attribs(CcsXmlParser_t * self, CcNode_t * p)
 {
+    CcsToken_t * beg; 
     if (self->la->kind == 22) {
 	CcsXmlParser_Get(self);
-	CcsToken_t * beg;
 	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 7)) {
 	    if (CcsXmlParser_StartOf(self, 8)) {
@@ -663,7 +669,6 @@ CcsXmlParser_Attribs(CcsXmlParser_t * self, CcNode_t * p)
 	CcsXmlScanner_DecRef(&self->scanner, beg); 
     } else if (self->la->kind == 24) {
 	CcsXmlParser_Get(self);
-	CcsToken_t * beg;
 	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 9)) {
 	    if (CcsXmlParser_StartOf(self, 10)) {

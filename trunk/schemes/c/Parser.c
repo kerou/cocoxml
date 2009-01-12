@@ -228,6 +228,9 @@ CcsParser_Coco(CcsParser_t * self)
     char        * gramName = NULL;
     CcCharSet_t * s; 
     CcsToken_t  * beg;
+    CcsBool_t     nested;
+    CcsBool_t     undef;
+    CcsBool_t     noAttrs;
     self->tokenString = NULL; 
     while (self->la->kind == 24 || self->la->kind == 25) {
 	if (self->la->kind == 24) {
@@ -298,7 +301,7 @@ CcsParser_Coco(CcsParser_t * self)
     }
     while (self->la->kind == 15) {
 	CcsParser_Get(self);
-	CcsBool_t nested = FALSE; 
+	nested = FALSE; 
 	CcsParser_Expect(self, 16);
 	CcsParser_TokenExpr(self, &g1);
 	CcsParser_Expect(self, 17);
@@ -327,7 +330,7 @@ CcsParser_Coco(CcsParser_t * self)
     while (self->la->kind == 1) {
 	CcsParser_Get(self);
 	sym = CcSymbolTable_FindSym(self->symtab, self->t->val);
-	CcsBool_t undef = (sym == NULL);
+	undef = (sym == NULL);
 	if (undef) {
 	    sym = CcSymbolTable_NewNonTerminal(self->symtab,
 					       self->t->val, self->t->line);
@@ -341,7 +344,7 @@ CcsParser_Coco(CcsParser_t * self)
 	    sym->line = self->t->line;
 	}
 	CcsAssert(sym->base.type == symbol_nt);
-	CcsBool_t noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
+	noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
 	if (!noAttrs) {
 	    CcsPosition_Destruct(((CcSymbolNT_t *)sym)->attrPos);
 	    ((CcSymbolNT_t *)sym)->attrPos = NULL; 
@@ -416,12 +419,12 @@ CcsParser_SectionDecl(CcsParser_t * self)
 static void
 CcsParser_SetDecl(CcsParser_t * self)
 {
-    CcCharSet_t * s; 
+    CcCharSet_t * s; CcsToken_t * nameToken;
+    const char * name; CcCharClass_t * c; 
     CcsParser_Expect(self, 1);
-    CcsToken_t * nameToken;
-    const char * name = self->t->val;
+    name = self->t->val;
     CcsScanner_IncRef(&self->scanner, nameToken = self->t);
-    CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, name);
+    c = CcLexical_FindCharClassN(self->lexical, name);
     if (c != NULL)
 	CcsParser_SemErrT(self, "name '%s' declared twice", name); 
     CcsParser_Expect(self, 21);
@@ -491,9 +494,9 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ)
 static void
 CcsParser_TokenExpr(CcsParser_t * self, CcGraph_t ** g)
 {
-    CcGraph_t * g2; 
+    CcGraph_t * g2; CcsBool_t first; 
     CcsParser_TokenTerm(self, g);
-    CcsBool_t first = TRUE; 
+    first = TRUE; 
     while (CcsParser_WeakSeparator(self, 34, 9, 8)) {
 	CcsParser_TokenTerm(self, &g2);
 	if (first) { CcEBNF_MakeFirstAlt(&self->lexical->base, *g); first = FALSE; }
@@ -525,9 +528,9 @@ CcsParser_Set(CcsParser_t * self, CcCharSet_t ** s)
 static void
 CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym)
 {
+    CcsToken_t * beg; 
     if (self->la->kind == 30) {
 	CcsParser_Get(self);
-	CcsToken_t * beg;
 	CcsScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsParser_StartOf(self, 10)) {
 	    if (CcsParser_StartOf(self, 11)) {
@@ -542,7 +545,6 @@ CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym)
 	CcsScanner_DecRef(&self->scanner, beg); 
     } else if (self->la->kind == 32) {
 	CcsParser_Get(self);
-	CcsToken_t * beg;
 	CcsScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsParser_StartOf(self, 12)) {
 	    if (CcsParser_StartOf(self, 13)) {
@@ -561,8 +563,8 @@ CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym)
 static void
 CcsParser_SemText(CcsParser_t * self, CcsPosition_t ** pos)
 {
+    CcsToken_t * beg; 
     CcsParser_Expect(self, 45);
-    CcsToken_t * beg;
     CcsScanner_IncRef(&self->scanner, beg = self->la); 
     while (CcsParser_StartOf(self, 14)) {
 	if (CcsParser_StartOf(self, 15)) {
@@ -583,9 +585,9 @@ CcsParser_SemText(CcsParser_t * self, CcsPosition_t ** pos)
 static void
 CcsParser_Expression(CcsParser_t * self, CcGraph_t ** g)
 {
-    CcGraph_t * g2; 
+    CcGraph_t * g2; CcsBool_t first; 
     CcsParser_Term(self, g);
-    CcsBool_t first = TRUE; 
+    first = TRUE; 
     while (CcsParser_WeakSeparator(self, 34, 17, 16)) {
 	CcsParser_Term(self, &g2);
 	if (first) { CcEBNF_MakeFirstAlt(&self->syntax->base, *g); first = FALSE; }
@@ -597,17 +599,21 @@ CcsParser_Expression(CcsParser_t * self, CcGraph_t ** g)
 static void
 CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s)
 {
-    int n1, n2; 
+    int n1, n2;
+    CcCharClass_t * c;
+    const char * cur0;
+    int ch;
+    char * cur, * name;
+    int idx; 
     *s = CcCharSet(); 
     if (self->la->kind == 1) {
 	CcsParser_Get(self);
-	CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, self->t->val);
+	c = CcLexical_FindCharClassN(self->lexical, self->t->val);
 	if (c != NULL) CcCharSet_Or(*s, c->set);
 	else CcsParser_SemErrT(self, "undefined name '%s'", self->t->val); 
     } else if (self->la->kind == 3) {
 	CcsParser_Get(self);
-	const char * cur0; int ch;
-	char * cur, * name = CcUnescape(self->t->val);
+	name = CcUnescape(self->t->val);
 	if (self->lexical->ignoreCase) {
 	    for (cur = name; *cur; ++cur) *cur = tolower(*cur);
 	}
@@ -624,7 +630,6 @@ CcsParser_SimSet(CcsParser_t * self, CcCharSet_t ** s)
 	if (self->la->kind == 28) {
 	    CcsParser_Get(self);
 	    CcsParser_Char(self, &n2);
-	    int idx;
 	    for (idx = n1; idx <= n2; ++idx) CcCharSet_Set(*s, idx); 
 	}
     } else if (self->la->kind == 29) {
@@ -650,6 +655,7 @@ CcsParser_Char(CcsParser_t * self, int * n)
 static void
 CcsParser_Sym(CcsParser_t * self, char ** name, int * kind)
 {
+    char * cur; 
     *name = NULL; 
     if (self->la->kind == 1) {
 	CcsParser_Get(self);
@@ -664,7 +670,6 @@ CcsParser_Sym(CcsParser_t * self, char ** name, int * kind)
 	}
 	*kind = CcsParser_str;
 	if (self->lexical->ignoreCase) {
-	    char * cur;
 	    for (cur = *name; *cur; ++cur) *cur = tolower(*cur);
 	}
 	if (strchr(*name, ' '))
@@ -706,9 +711,9 @@ CcsParser_Term(CcsParser_t * self, CcGraph_t ** g)
 static void
 CcsParser_Resolver(CcsParser_t * self, CcsPosition_t ** pos)
 {
+    CcsToken_t * beg; 
     CcsParser_Expect(self, 43);
     CcsParser_Expect(self, 36);
-    CcsToken_t * beg;
     CcsScanner_IncRef(&self->scanner, beg = self->la); 
     CcsParser_Condition(self);
     *pos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
@@ -718,7 +723,13 @@ CcsParser_Resolver(CcsParser_t * self, CcsPosition_t ** pos)
 static void
 CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
 {
-    char * name = NULL; int kind; CcsPosition_t * pos; CcsBool_t weak = FALSE; 
+    char * name = NULL;
+    int kind;
+    CcsPosition_t * pos;
+    CcsBool_t weak = FALSE; 
+    CcSymbol_t * sym;
+    CcsBool_t undef;
+    CcNode_t * p;
     *g = NULL; 
     switch (self->la->kind) {
     case 1: case 3: case 5: case 35: {
@@ -727,10 +738,10 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
 	    weak = TRUE; 
 	}
 	CcsParser_Sym(self, &name, &kind);
-	CcSymbol_t * sym = CcSymbolTable_FindSym(self->symtab, name);
+	sym = CcSymbolTable_FindSym(self->symtab, name);
 	if (sym == NULL && kind == CcsParser_str)
 	    sym = (CcSymbol_t *)CcHashTable_Get(&self->lexical->literals, name);
-	CcsBool_t undef = (sym == NULL);
+	undef = (sym == NULL);
 	if (undef) {
 	    if (kind == CcsParser_id) {
 		/* forward nt */
@@ -759,7 +770,7 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
 	    if (sym->base.type != symbol_t)
 		CcsParser_SemErrT(self, "only terminals may be weak");
 	}
-	CcNode_t * p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->line, weak);
+	p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->line, weak);
 	*g = CcGraphP(p); 
 	if (self->la->kind == 30 || self->la->kind == 32) {
 	    CcsParser_Attribs(self, p);
@@ -797,20 +808,20 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
     }
     case 45: {
 	CcsParser_SemText(self, &pos);
-	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeSem(0));
+	p = CcEBNF_NewNode(&self->syntax->base, CcNodeSem(0));
 	((CcNodeSEM_t *)p)->pos = pos;
 	*g = CcGraphP(p); 
 	break;
     }
     case 29: {
 	CcsParser_Get(self);
-	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeAny(0));
+	p = CcEBNF_NewNode(&self->syntax->base, CcNodeAny(0));
 	*g = CcGraphP(p); 
 	break;
     }
     case 42: {
 	CcsParser_Get(self);
-	CcNode_t * p = CcEBNF_NewNode(&self->syntax->base, CcNodeSync(0));
+	p = CcEBNF_NewNode(&self->syntax->base, CcNodeSync(0));
 	*g = CcGraphP(p);
 	break;
     }
@@ -823,9 +834,9 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
 static void
 CcsParser_Attribs(CcsParser_t * self, CcNode_t * p)
 {
+    CcsToken_t * beg; 
     if (self->la->kind == 30) {
 	CcsParser_Get(self);
-	CcsToken_t * beg;
 	CcsScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsParser_StartOf(self, 10)) {
 	    if (CcsParser_StartOf(self, 11)) {
@@ -841,7 +852,6 @@ CcsParser_Attribs(CcsParser_t * self, CcNode_t * p)
 	CcsScanner_DecRef(&self->scanner, beg); 
     } else if (self->la->kind == 32) {
 	CcsParser_Get(self);
-	CcsToken_t * beg;
 	CcsScanner_IncRef(&self->scanner, beg = self->la); 
 	while (CcsParser_StartOf(self, 12)) {
 	    if (CcsParser_StartOf(self, 13)) {
@@ -896,12 +906,14 @@ CcsParser_TokenTerm(CcsParser_t * self, CcGraph_t ** g)
 static void
 CcsParser_TokenFactor(CcsParser_t * self, CcGraph_t ** g)
 {
-    char * name = NULL; int kind; CcTransition_t trans; 
+    char * name = NULL; int kind;
+    CcTransition_t trans;
+    CcCharClass_t * c; 
     *g = NULL; 
     if (self->la->kind == 1 || self->la->kind == 3 || self->la->kind == 5) {
 	CcsParser_Sym(self, &name, &kind);
 	if (kind == CcsParser_id) {
-	    CcCharClass_t * c = CcLexical_FindCharClassN(self->lexical, name);
+	    c = CcLexical_FindCharClassN(self->lexical, name);
 	    if (c == NULL) {
 		CcsParser_SemErrT(self, "undefined name");
 		c = CcLexical_NewCharClass(self->lexical, name, CcCharSet());
