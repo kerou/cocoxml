@@ -542,8 +542,8 @@ TokenFactor<CcGraph_t ** g>     (. char * name = NULL; int kind; CcTransition_t 
 Sym<char ** name, int * kind>
 =                               (. *name = NULL; .)
 ( ident                         (. *kind = CcsParser_id; *name = CcStrdup(self->t->val); .)
-| (string                       (. *name = CcStrdup(self->t->val); .)
-  | char                        (. *name = CcStrdup(self->t->val); .)
+| (string                       (. *name = CcUnescape(self->t->val); .)
+  | char                        (. *name = CcUnescape(self->t->val); .)
   )                             (. *kind = CcsParser_str;
                                    if (self->lexical->ignoreCase) {
                                        char * cur;
