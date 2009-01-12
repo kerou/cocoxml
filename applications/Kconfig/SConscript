@@ -2,10 +2,26 @@
 # Author: Charles Wang <charlesw123456@gmail.com>
 # License: GPLv2
 
+import os.path
+
 Import('env', 'lib', 'cocoexe')
 
 targets = ['Scanner.h', 'Scanner.c', 'Parser.h', 'Parser.c']
-env.Command(targets, ['Kconfig.atg'], '"%s" -g $SOURCES' % str(cocoexe[0]))
-env.Depends(targets, cocoexe)
-env.Program('TestKconfig', ['main.c', 'KcData.c',
-                            'Parser.c', 'Scanner.c', lib])
+
+descTargets = map(lambda f: os.path.join('desc', f), targets)
+env.Command(descTargets, [os.path.join('desc', 'Kconfig.atg')],
+            '"%s" -g $SOURCES' % str(cocoexe[0]))
+env.Depends(descTargets, cocoexe)
+
+fileTargets = map(lambda f: os.path.join('file', f), targets)
+env.Command(fileTargets, [os.path.join('file', 'Cfile.atg')],
+            '"%s" -g $SOURCES' % str(cocoexe[0]))
+env.Depends(fileTargets, cocoexe)
+
+env.Program('TestKconfig', ['main.c',
+                            os.path.join('desc', 'KcData.c'),
+                            os.path.join('desc', 'Parser.c'),
+                            os.path.join('desc', 'Scanner.c'),
+                            os.path.join('file', 'Parser.c'),
+                            os.path.join('file', 'Scanner.c'),
+                            lib])
