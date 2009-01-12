@@ -230,21 +230,14 @@ KcSymbol_Destruct(KcSymbol_t * self)
 #endif
 
 KcSymbolTable_t *
-KcSymbolTable(void)
+KcSymbolTable(KcSymbolTable_t * self)
 {
-    KcSymbolTable_t * self;
-    if (!(self = CcsMalloc(sizeof(KcSymbolTable_t)))) goto errquit0;
     self->nonlist = NULL;
     self->constlist = NULL;
-    if (!(self->first = CcsMalloc(sizeof(KcSymbol_t *) * KCSIZE_SYMTAB)))
-	goto errquit1;
-    memset(self->first, 0, sizeof(KcSymbol_t *) * KCSIZE_SYMTAB);
+    self->first = self->hashSpace;
+    memset(self->hashSpace, 0, sizeof(self->hashSpace));
     self->last = self->first + KCSIZE_SYMTAB;
     return self;
- errquit1:
-    CcsFree(self);
- errquit0:
-    return NULL;
 }
 
 void
@@ -261,7 +254,6 @@ KcSymbolTable_Destruct(KcSymbolTable_t * self)
     }
     for (cur = self->first; cur < self->last; ++cur)
 	if (*cur) KcSymbol_Destruct(*cur);
-    CcsFree(self);
 }
 
 static KcSymbol_t **

@@ -138,7 +138,7 @@ KcParser_Init(KcParser_t * self)
     /*---- constructor ----*/
     self->maxT = 43;
     self->mainmenu = NULL;
-    if (!(self->symtab = KcSymbolTable())) return FALSE;
+    if (!KcSymbolTable(&self->symtab)) return FALSE;
     self->toplist = NULL;
     self->incdirs = NULL;
     /*---- enable ----*/
@@ -182,7 +182,7 @@ KcParser_Destruct(KcParser_t * self)
     /*---- destructor ----*/
     if (self->incdirs)  CcsIncPathList_Destruct(self->incdirs);
     if (self->toplist)  KcSymbolList_Destruct(self->toplist);
-    KcSymbolTable_Destruct(self->symtab);
+    KcSymbolTable_Destruct(&self->symtab);
     if (self->mainmenu)  CcsFree(self->mainmenu);
     /*---- enable ----*/
     if (self->la) KcScanner_DecRef(&self->scanner, self->la);
@@ -294,7 +294,7 @@ KcParser_ConfigDecl(KcParser_t * self, KcSymbol_t ** sym)
 	KcParser_Get(self);
     }
     KcParser_Expect(self, 2);
-    if ((errmsg = KcSymbolTable_AppendSymbol(self->symtab, sym, symname,
+    if ((errmsg = KcSymbolTable_AppendSymbol(&self->symtab, sym, symname,
 					     symtype, menuOrNot, props, helpmsg))) {
 	if (props) KcPropertyList_Destruct(props);
 	if (helpmsg) CcsPosition_Destruct(helpmsg);
@@ -334,7 +334,7 @@ KcParser_MenuDecl(KcParser_t * self, KcSymbol_t ** menu)
     KcParser_SymbolListDecl(self, &symlist);
     KcParser_Expect(self, 10);
     KcParser_Expect(self, 6);
-    if ((errmsg = KcSymbolTable_AddNoNSymbol(self->symtab, menu,
+    if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, menu,
 					     KcstMenu, props))) {
 	KcParser_SemErrT(self, "Append 'menu' failed: %s.", errmsg);
 	if (props) KcPropertyList_Destruct(props);
@@ -367,7 +367,7 @@ KcParser_ChoiceDecl(KcParser_t * self, KcSymbol_t ** choice)
     KcParser_SymbolListDecl(self, &symlist);
     KcParser_Expect(self, 12);
     KcParser_Expect(self, 6);
-    if ((errmsg = KcSymbolTable_AddNoNSymbol(self->symtab, choice,
+    if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, choice,
 					     KcstChoice, props))) {
 	KcParser_SemErrT(self, "Append 'choice' failed: %s.", errmsg);
 	if (props) KcPropertyList_Destruct(props);
@@ -389,7 +389,7 @@ KcParser_CommentDecl(KcParser_t * self, KcSymbol_t ** comment)
 	KcParser_Property(self, &symtype, &props);
     }
     KcParser_Expect(self, 6);
-    if ((errmsg = KcSymbolTable_AddNoNSymbol(self->symtab, comment,
+    if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, comment,
 					     KcstComment, props))) {
 	KcParser_SemErrT(self, "Append 'comment' failed: %s.", errmsg);
 	if (_comment_) CcsFree(_comment_);
@@ -412,7 +412,7 @@ KcParser_IfDecl(KcParser_t * self, KcSymbol_t ** _if_)
     KcParser_SymbolListDecl(self, &symlist);
     KcParser_Expect(self, 15);
     KcParser_Expect(self, 6);
-    if ((errmsg = KcSymbolTable_AddNoNSymbol(self->symtab, _if_,
+    if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, _if_,
 					     KcstIf, NULL))) {
 	KcParser_SemErrT(self, "Append 'if' failed: %s.", errmsg);
 	if (ifexpr) KcExpr_Destruct(ifexpr);
@@ -655,11 +655,11 @@ KcParser_Symbol(KcParser_t * self, KcSymbol_t ** sym)
     const char * errmsg; char * unescaped; 
     if (self->la->kind == 4) {
 	KcParser_Get(self);
-	*sym = KcSymbolTable_Get(self->symtab, self->t->val); 
+	*sym = KcSymbolTable_Get(&self->symtab, self->t->val); 
     } else if (self->la->kind == 5) {
 	KcParser_Get(self);
 	unescaped = CcsUnescape(self->t->val);
-	if ((errmsg = KcSymbolTable_AddConst(self->symtab, sym, unescaped))) {
+	if ((errmsg = KcSymbolTable_AddConst(&self->symtab, sym, unescaped))) {
 	    KcParser_SemErrT(self, "Add const %s failed: %s", self->t->val, errmsg);
 	    CcsFree(unescaped);
 	} 
