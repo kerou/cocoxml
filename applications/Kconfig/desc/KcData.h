@@ -119,14 +119,19 @@ KcExpr_t * KcExpr(KcExprType_t type,
 		  KcExpr_t * exp0, KcExpr_t * exp1);
 void KcExpr_Destruct(KcExpr_t * self);
 
+#ifndef  KCSIZE_SYMTAB
+#define  KCSIZE_SYMTAB  509
+#endif
+
 typedef struct {
     KcSymbol_t  * nonlist;
     KcSymbol_t  * constlist;
     KcSymbol_t ** first;
     KcSymbol_t ** last;
+    KcSymbol_t  * hashSpace[KCSIZE_SYMTAB];
 }   KcSymbolTable_t;
 
-KcSymbolTable_t * KcSymbolTable(void);
+KcSymbolTable_t * KcSymbolTable(KcSymbolTable_t * self);
 void KcSymbolTable_Destruct(KcSymbolTable_t * self);
 
 const char *

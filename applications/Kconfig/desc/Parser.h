@@ -37,7 +37,7 @@ struct KcParser_s {
     int               maxT;
     /*---- members ----*/
     char * mainmenu;
-    KcSymbolTable_t * symtab;
+    KcSymbolTable_t symtab;
     KcSymbolList_t * toplist;
     CcsIncPathList_t * incdirs;
     /*---- enable ----*/
