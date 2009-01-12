@@ -10,6 +10,9 @@ END.
 SCHEME c Cf
 
 SECTION hIncludes
+#ifndef  COCO_CFDATA_H
+#include "CfData.h"
+#endif
 END.
 
 SECTION cIncludes
@@ -18,10 +21,13 @@ END.
 COMPILER Cfile
 
 MEMBERS
+    CfValueMap_t valmap;
 
 CONSTRUCTOR
+    if (!CfValueMap(&self->valmap)) return FALSE;
 
 DESTRUCTOR
+    CfValueMap_Destruct(&self->valmap);
 
 CHARACTERS
     letter    = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_".
@@ -48,8 +54,20 @@ Cfile = { Line }.
 
 Line = SetConfig | CommentOrNotSet | eol.
 
-SetConfig = ident '=' ('y' | 'm' | string | number | hex) eol.
+SetConfig       (. char * name, * str; .) =
+  ident         (. name = CcsStrdup(self->t->val); .)
+  '=' ('y'      (. CfValueMap_SetState(&self->valmap, name, CfYes); .)
+      | 'm'     (. CfValueMap_SetState(&self->valmap, name, CfModule); .)
+      | string  (. str = CcsUnescape(self->t->val);
+      		   CfValueMap_SetString(&self->valmap, name, str);
+		   CcsFree(str); .)
+      | number  (. CfValueMap_SetInt(&self->valmap, name, self->t->val); .)
+      | hex     (. CfValueMap_SetHex(&self->valmap, name, self->t->val); .)
+  ) eol         (. CcsFree(name); .)
+.
 
-CommentOrNotSet = '#' (ident "is" "not" "set" | { ANY }) eol.
+CommentOrNotSet =
+  '#' (ident     (. CfValueMap_SetState(&self->valmap, self->t->val, CfNo); .)
+  "is" "not" "set" | { ANY }) eol.
 
 END Cfile.
