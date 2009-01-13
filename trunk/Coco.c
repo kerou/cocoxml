@@ -89,11 +89,17 @@ main(int argc, char * argv[])
 
     parser = NULL; xmlparser = NULL;
     if (CmpExtension(atgName, ".atg")) {
-	if (!(parser = CcsParser(&u.parser, atgfp, stderr))) goto errquit1;
+	parser = !strcmp(atgName, "-") ?
+	    CcsParser(&u.parser, stdin, stderr) :
+	    CcsParser_ByName(&u.parser, atgName, stderr);
+	if (!parser) goto errquit1;
 	CcsParser_Parse(parser);
 	if (!CcGlobals_Finish(&parser->globals)) goto errquit2;
     } else if (CmpExtension(atgName, ".xatg")) {
-	if (!(xmlparser = CcsXmlParser(&u.xmlparser, atgfp, stderr))) goto errquit1;
+	xmlparser = !strcmp(atgName, "-") ?
+	    CcsXmlParser(&u.xmlparser, atgfp, stderr) :
+	    CcsXmlParser_ByName(&u.xmlparser, atgName, stderr);
+	if (!xmlparser) goto errquit1;
 	CcsXmlParser_Parse(xmlparser);
 	if (!CcGlobals_Finish(&xmlparser->globals)) goto errquit2;
     } else {
@@ -144,7 +150,6 @@ main(int argc, char * argv[])
     CcObject_VDestruct((CcObject_t *)scheme);
     if (parser) CcsParser_Destruct(parser);
     else if (xmlparser) CcsXmlParser_Destruct(xmlparser);
-    if (strcmp(atgName, "-")) fclose(atgfp);
     CcArguments_Destruct(&arguments);
     return 0;
  errquit3:
