@@ -39,6 +39,7 @@ struct CcsScanInput_s {
 
     CcsScanner_t   * scanner;
     char           * fname;
+    FILE           * fp;
     CcsBuffer_t      buffer;
 
     CcsToken_t     * busyTokenList;
@@ -68,6 +69,7 @@ static CcsBool_t
 CcsScanInput_Init(CcsScanInput_t * self, CcsScanner_t * scanner, FILE * fp)
 {
     self->scanner = scanner;
+    self->fp = fp;
     if (!CcsBuffer(&self->buffer, fp)) goto errquit0;
     self->busyTokenList = NULL;
     self->curToken = &self->busyTokenList;
@@ -123,6 +125,7 @@ CcsScanInput_ByName(CcsScanner_t * scanner, const CcsIncPathList_t * list,
 	goto errquit1;
     self->next = NULL;
     strcpy(self->fname = (char *)(self + 1), infnpath);
+    self->fp = fp;
     if (!CcsScanInput_Init(self, scanner, fp)) goto errquit2;
     return self;
  errquit2:
@@ -148,6 +151,7 @@ CcsScanInput_Destruct(CcsScanInput_t * self)
 	CcsToken_Destruct(cur);
     }
     CcsBuffer_Destruct(&self->buffer);
+    if (self->fname) fclose(self->fp);
     CcsFree(self);
 }
 
