@@ -191,7 +191,6 @@ CcxScanOper_Init(CcxScanOper_t * self, CcsErrorPool_t * errpool, FILE * infp)
     if (!(self->dummy = CcsToken(NULL, 0, self->fname, 0, 0, 0,
 				 dummyval, strlen(dummyval))))
 	goto errquit0;
-    CcxScanOper_IncRef(self, self->dummy);
     self->tokens = self->peek = NULL;
     if (!(self->textStart = CcsMalloc(SZ_TEXTBUF))) goto errquit1;
     self->textUsed = self->textStart;
