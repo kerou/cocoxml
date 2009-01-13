@@ -58,6 +58,8 @@ typedef struct {
 }  CcxParser_t;
 
 CcxParser_t * CcxParser(CcxParser_t * self, FILE * infp, FILE * errfp);
+CcxParser_t * CcxParser_ByName(CcxParser_t * self, const char * infp,
+			       FILE * errfp);
 void CcxParser_Destruct(CcxParser_t * self);
 void CcxParser_Parse(CcxParser_t * self);
 CcsBool_t CcxParser_Finish(CcxParser_t * self);
