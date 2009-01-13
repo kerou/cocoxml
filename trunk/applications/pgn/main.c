@@ -124,7 +124,6 @@ PgnGame_ShowEx(PgnGame_t * game)
 int
 main(int argc, char * argv[])
 {
-    FILE * infp;
     PgnParser_t parser;
     PgnGame_t * cur;
 
@@ -132,17 +131,16 @@ main(int argc, char * argv[])
 	fprintf(stderr, "%s PGN-FILENAME\n", argv[0]);
 	goto errquit0;
     }
-    if (!strcmp(argv[1], "-")) infp = stdin;
-    else if (!(infp = fopen(argv[1], "r"))) goto errquit0;
-    if (!PgnParser(&parser, infp, stderr)) goto errquit1;
+    if (!strcmp(argv[1], "-")) {
+	if (!PgnParser(&parser, stdout, stderr)) goto errquit0;
+    } else {
+	if (!PgnParser_ByName(&parser, argv[1], stderr)) goto errquit0;
+    }
     PgnParser_Parse(&parser);
     for (cur = parser.firstGame; cur; cur = cur->next)
 	PgnGame_ShowEx(cur);
     PgnParser_Destruct(&parser);
-    if (strcmp(argv[1], "-")) fclose(infp);
     return 0;
- errquit1:
-    if (strcmp(argv[1], "-")) fclose(infp);
  errquit0:
     return -1;
 }

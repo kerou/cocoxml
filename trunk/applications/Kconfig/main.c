@@ -21,7 +21,6 @@
 int
 main(int argc, char * argv[])
 {
-    FILE * kcfp, * cffp;
     KcParser_t kcparser;
     CfParser_t cfparser;
 
@@ -30,28 +29,25 @@ main(int argc, char * argv[])
 	goto errquit0;
     }
 
-    if (!strcmp(argv[1], "-")) kcfp = stdin;
-    else if (!(kcfp = fopen(argv[1], "r"))) goto errquit0;
-    if (!KcParser(&kcparser, kcfp, stderr)) goto errquit1;
+    if (!strcmp(argv[1], "-")) {
+	if (!KcParser(&kcparser, stdout, stderr)) goto errquit0;
+    } else {
+	if (!KcParser_ByName(&kcparser, argv[1], stderr)) goto errquit0;
+    }
     KcParser_Parse(&kcparser);
 
-    if (!strcmp(argv[2], "-")) cffp = stdin;
-    else if (!(cffp = fopen(argv[2], "r"))) goto errquit2;
-    if (!CfParser(&cfparser, cffp, stderr)) goto errquit3;
+    if (!strcmp(argv[2], "-")) {
+	if (!CfParser(&cfparser, stdout, stderr)) goto errquit1;
+    } else {
+	if (!CfParser_ByName(&cfparser, argv[2], stderr)) goto errquit1;
+    }
     CfParser_Parse(&cfparser);
 
     CfParser_Destruct(&cfparser);
-    if (strcmp(argv[2], "-")) fclose(cffp);
-
     KcParser_Destruct(&kcparser);
-    if (strcmp(argv[1], "-")) fclose(kcfp);
     return 0;
- errquit3:
-    if (strcmp(argv[2], "-")) fclose(cffp);
- errquit2:
-    KcParser_Destruct(&kcparser);
  errquit1:
-    if (strcmp(argv[1], "-")) fclose(kcfp);
+    KcParser_Destruct(&kcparser);
  errquit0:
     return -1;
 }

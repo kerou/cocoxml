@@ -20,23 +20,21 @@
 int
 main(int argc, char * argv[])
 {
-    FILE * infp;
     CExprParser_t parser;
 
     if (argc != 2) {
 	fprintf(stderr, "%s FILENAME\n", argv[0]);
 	goto errquit0;
     }
-    if (!strcmp(argv[1], "-")) infp = stdin;
-    else if (!(infp = fopen(argv[1], "r"))) goto errquit0;
-    if (!CExprParser(&parser, infp, stderr)) goto errquit1;
+    if (!strcmp(argv[1], "-")) {
+	if (!CExprParser(&parser, stdout, stderr)) goto errquit0;
+    } else {
+	if (!CExprParser_ByName(&parser, argv[1], stderr)) goto errquit0;
+    }
     CExprParser_Parse(&parser);
     printf("parser.value = %d\n", parser.value);
     CExprParser_Destruct(&parser);
-    if (strcmp(argv[1], "-")) fclose(infp);
     return 0;
- errquit1:
-    if (strcmp(argv[1], "-")) fclose(infp);
  errquit0:
     return -1;
 }
