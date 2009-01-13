@@ -80,9 +80,6 @@ void CcsXmlScanner_DecRef(CcsXmlScanner_t * self, CcsToken_t * token);
 void CcsXmlScanner_IndentLimit(CcsXmlScanner_t * self, const CcsToken_t * indentIn);
 #endif
 
-const char *
-CcsXmlScanner_GetTokenFile(CcsXmlScanner_t * self, const CcsToken_t * token);
-
 CcsPosition_t *
 CcsXmlScanner_GetPosition(CcsXmlScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end);
