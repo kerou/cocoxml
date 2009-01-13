@@ -71,7 +71,6 @@ main(int argc, char * argv[])
     CcsParser_t * parser;
     CcsXmlParser_t * xmlparser;
     const char * atgName, * schemeName;
-    FILE * atgfp;
     CcOutputScheme_t * scheme;
 
     printf("Coco/R & CocoXml (2008 ~ 2009)\n");
@@ -84,24 +83,21 @@ main(int argc, char * argv[])
 	return 0;
     }
 
-    if (!strcmp(atgName, "-")) atgfp = stdin;
-    else if (!(atgfp = fopen(atgName, "r"))) goto errquit0;
-
     parser = NULL; xmlparser = NULL;
     if (CmpExtension(atgName, ".atg")) {
 	parser = !strcmp(atgName, "-") ?
-	    CcsParser(&u.parser, stdin, stderr) :
+	    CcsParser(&u.parser, stdout, stderr) :
 	    CcsParser_ByName(&u.parser, atgName, stderr);
-	if (!parser) goto errquit1;
+	if (!parser) goto errquit0;
 	CcsParser_Parse(parser);
-	if (!CcGlobals_Finish(&parser->globals)) goto errquit2;
+	if (!CcGlobals_Finish(&parser->globals)) goto errquit1;
     } else if (CmpExtension(atgName, ".xatg")) {
 	xmlparser = !strcmp(atgName, "-") ?
-	    CcsXmlParser(&u.xmlparser, atgfp, stderr) :
+	    CcsXmlParser(&u.xmlparser, stdout, stderr) :
 	    CcsXmlParser_ByName(&u.xmlparser, atgName, stderr);
-	if (!xmlparser) goto errquit1;
+	if (!xmlparser) goto errquit0;
 	CcsXmlParser_Parse(xmlparser);
-	if (!CcGlobals_Finish(&xmlparser->globals)) goto errquit2;
+	if (!CcGlobals_Finish(&xmlparser->globals)) goto errquit1;
     } else {
 	fprintf(stderr, "The supported extension are: *.atg, *.xatg.\n");
 	goto errquit1;
@@ -117,26 +113,26 @@ main(int argc, char * argv[])
     if (!strcmp(schemeName, "dump")) {
 	if (!(scheme = (CcOutputScheme_t *)
 	      CcDumpOutputScheme(parser, xmlparser, &arguments)))
-	    goto errquit2;
+	    goto errquit1;
     } else if (parser) {
 	if (!strcmp(schemeName, "c")) {
 	    if (!(scheme = (CcOutputScheme_t *)
 		  CcCOutputScheme(parser, &arguments)))
-		goto errquit2;
+		goto errquit1;
 	} else if (!strcmp(schemeName, "csharp")) {
 	    if (!(scheme = (CcOutputScheme_t *)
 		  CcCSharpOutputScheme(parser, &arguments)))
-		goto errquit2;
+		goto errquit1;
 	}
     } else if (xmlparser) {
 	if (!strcmp(schemeName, "cxml")) {
 	    if (!(scheme = (CcOutputScheme_t *)
 		  CcCXmlOutputScheme(xmlparser, &arguments)))
-		goto errquit2;
+		goto errquit1;
 	} else if (!strcmp(schemeName, "csharpxml")) {
 	    if (!(scheme = (CcOutputScheme_t *)
 		  CcCSharpXmlOutputScheme(xmlparser, &arguments)))
-		goto errquit2;
+		goto errquit1;
 	}
     }
     if (!scheme) {
@@ -146,19 +142,17 @@ main(int argc, char * argv[])
     }
     printf("scheme '%s' is used.\n", schemeName);
     if (!CcOutputScheme_GenerateOutputs(scheme, schemeName, atgName))
-	goto errquit3;
+	goto errquit2;
     CcObject_VDestruct((CcObject_t *)scheme);
     if (parser) CcsParser_Destruct(parser);
     else if (xmlparser) CcsXmlParser_Destruct(xmlparser);
     CcArguments_Destruct(&arguments);
     return 0;
- errquit3:
-    CcObject_VDestruct((CcObject_t *)scheme);
  errquit2:
+    CcObject_VDestruct((CcObject_t *)scheme);
+ errquit1:
     if (parser) CcsParser_Destruct(parser);
     else if (xmlparser) CcsXmlParser_Destruct(xmlparser);
- errquit1:
-    fclose(atgfp);
  errquit0:
     CcArguments_Destruct(&arguments);
     return -1;
