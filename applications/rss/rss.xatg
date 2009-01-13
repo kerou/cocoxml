@@ -41,7 +41,7 @@ MEMBERS
     CcRss_t rss;
 
 CONSTRUCTOR
-    if (!CcRss(&self->rss)) goto ERRQUIT;
+    if (!CcRss(&self->rss)) return FALSE;
 
 DESTRUCTOR
     CcRss_Destruct(&self->rss);

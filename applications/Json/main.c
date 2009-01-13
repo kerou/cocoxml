@@ -20,22 +20,20 @@
 int
 main(int argc, char * argv[])
 {
-    FILE * infp;
     JsonParser_t parser;
 
     if (argc != 2) {
 	fprintf(stderr, "%s JSON-FILENAME\n", argv[0]);
 	goto errquit0;
     }
-    if (!strcmp(argv[1], "-")) infp = stdin;
-    else if (!(infp = fopen(argv[1], "r"))) goto errquit0;
-    if (!JsonParser(&parser, infp, stderr)) goto errquit1;
+    if (!strcmp(argv[1], "-")) {
+	if (!JsonParser(&parser, stdout, stderr)) goto errquit0;
+    } else {
+	if (!JsonParser_ByName(&parser, argv[1], stderr)) goto errquit0;
+    }
     JsonParser_Parse(&parser);
     JsonParser_Destruct(&parser);
-    if (strcmp(argv[1], "-")) fclose(infp);
     return 0;
- errquit1:
-    if (strcmp(argv[1], "-")) fclose(infp);
  errquit0:
     return -1;
 }

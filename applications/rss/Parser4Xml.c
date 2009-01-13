@@ -148,18 +148,41 @@ RssParser_SemErrT(RssParser_t * self, const char * format, ...)
     va_end(ap);
 }
 
-#define ERRQUIT errquit1
+static CcsBool_t
+RssParser_Init(RssParser_t * self)
+{
+    self->t = self->la = NULL;
+    /*---- constructor ----*/
+    self->maxT = 69;
+    if (!CcRss(&self->rss)) return FALSE;
+    /*---- enable ----*/
+    return TRUE;
+}
+
 RssParser_t *
 RssParser(RssParser_t * self, FILE * infp, FILE * errfp)
 {
     if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
     if (!RssScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
-    self->t = self->la = NULL;
-    /*---- constructor ----*/
-    self->maxT = 69;
-    if (!CcRss(&self->rss)) goto ERRQUIT;
-    /*---- enable ----*/
+    if (!RssParser_Init(self)) goto errquit2;
     return self;
+ errquit2:
+    RssScanner_Destruct(&self->scanner);
+ errquit1:
+    CcsErrorPool_Destruct(&self->errpool);
+ errquit0:
+    return NULL;
+}
+
+RssParser_t *
+RssParser_ByName(RssParser_t * self, const char * infn, FILE * errfp)
+{
+    if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
+    if (!RssScanner_ByName(&self->scanner, &self->errpool, infn)) goto errquit1;
+    if (!RssParser_Init(self)) goto errquit2;
+    return self;
+ errquit2:
+    RssScanner_Destruct(&self->scanner);
  errquit1:
     CcsErrorPool_Destruct(&self->errpool);
  errquit0:

@@ -52,6 +52,8 @@ typedef struct {
 }  RssParser_t;
 
 RssParser_t * RssParser(RssParser_t * self, FILE * infp, FILE * errfp);
+RssParser_t * RssParser_ByName(RssParser_t * self, const char * infp,
+			       FILE * errfp);
 void RssParser_Destruct(RssParser_t * self);
 void RssParser_Parse(RssParser_t * self);
 CcsBool_t RssParser_Finish(RssParser_t * self);
