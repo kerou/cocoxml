@@ -132,8 +132,7 @@ CcsXmlParser_SemErr(CcsXmlParser_t * self, const CcsToken_t * token,
 {
     va_list ap;
     va_start(ap, format);
-    CcsErrorPool_VError(&self->errpool, token->line, token->col,
-			format, ap);
+    CcsErrorPool_VError(&self->errpool, &token->loc, format, ap);
     va_end(ap);
 }
 
@@ -142,8 +141,7 @@ CcsXmlParser_SemErrT(CcsXmlParser_t * self, const char * format, ...)
 {
     va_list ap;
     va_start(ap, format);
-    CcsErrorPool_VError(&self->errpool, self->t->line, self->t->col,
-			format, ap);
+    CcsErrorPool_VError(&self->errpool, &self->t->loc, format, ap);
     va_end(ap);
 }
 
@@ -269,7 +267,7 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
 	undef = (sym == NULL);
 	if (undef) {
 	    sym = CcSymbolTable_NewNonTerminal(self->symtab,
-					       self->t->val, self->t->line);
+					       self->t->val, self->t->loc.line);
 	} else {
 	    if (sym->base.type == symbol_nt) {
 		if (((CcSymbolNT_t *)sym)->graph != NULL)
@@ -277,7 +275,7 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
 	    } else {
 		CcsXmlParser_SemErrT(self, "this symbol kind not allowed on left side of production");
 	    }
-	    sym->line = self->t->line;
+	    sym->line = self->t->loc.line;
 	}
 	CcsAssert(sym->base.type == symbol_nt);
 	noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
@@ -521,7 +519,7 @@ CcsXmlParser_Term(CcsXmlParser_t * self, CcGraph_t ** g)
 	if (self->la->kind == 36) {
 	    CcsXmlParser_Resolver(self, &pos);
 	    rslv = CcEBNF_NewNode(&self->syntax->base,
-				  CcNodeRslvP(self->la->line, pos));
+				  CcNodeRslvP(self->la->loc.line, pos));
 	    *g = CcGraphP(rslv); 
 	}
 	CcsXmlParser_Factor(self, &g2);
@@ -583,7 +581,7 @@ CcsXmlParser_Factor(CcsXmlParser_t * self, CcGraph_t ** g)
 	    if (sym->base.type != symbol_t)
 		CcsXmlParser_SemErrT(self, "only terminals may be weak");
 	}
-	p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->line, weak);
+	p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->loc.line, weak);
 	*g = CcGraphP(p); 
 	if (self->la->kind == 22 || self->la->kind == 24) {
 	    CcsXmlParser_Attribs(self, p);

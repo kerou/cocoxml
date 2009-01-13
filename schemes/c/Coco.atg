@@ -157,7 +157,7 @@ Coco                            (. CcSymbol_t  * sym;
                                    undef = (sym == NULL);
 				   if (undef) {
 				       sym = CcSymbolTable_NewNonTerminal(self->symtab,
-									  self->t->val, self->t->line);
+									  self->t->val, self->t->loc.line);
                                    } else {
 				       if (sym->base.type == symbol_nt) {
 					   if (((CcSymbolNT_t *)sym)->graph != NULL)
@@ -165,7 +165,7 @@ Coco                            (. CcSymbol_t  * sym;
 				       } else {
 					   CcsParser_SemErrT(self, "this symbol kind not allowed on left side of production");
 				       }
-				       sym->line = self->t->line;
+				       sym->line = self->t->loc.line;
                                    }
 				   CcsAssert(sym->base.type == symbol_nt);
                                    noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
@@ -305,10 +305,10 @@ TokenDecl<const CcObjectType_t * typ> (. char * name = NULL; int kind; CcSymbol_
 				   if (sym != NULL) {
 				       CcsParser_SemErrT(self, "name '%s' declared twice", name);
                                    } else if (typ == symbol_t) {
-				       sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
+				       sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->loc.line);
 				       ((CcSymbolT_t *)sym)->tokenKind = symbol_fixedToken;
 				   } else if (typ == symbol_pr) {
-				       sym = CcSymbolTable_NewPragma(self->symtab, name, self->t->line);
+				       sym = CcSymbolTable_NewPragma(self->symtab, name, self->t->loc.line);
 				       ((CcSymbolPR_t *)sym)->tokenKind = symbol_fixedToken;
 				       ((CcSymbolPR_t *)sym)->semPos = NULL;
                                    }
@@ -380,7 +380,7 @@ Term<CcGraph_t ** g>            (. CcGraph_t * g2; CcsPosition_t * pos; CcNode_t
 =
   ( [
   Resolver<.&pos.>              (. rslv = CcEBNF_NewNode(&self->syntax->base,
-							 CcNodeRslvP(self->la->line, pos));
+							 CcNodeRslvP(self->la->loc.line, pos));
                                    *g = CcGraphP(rslv); .)
   ]
   Factor<&g2>                   (. if (rslv == NULL) *g = g2;
@@ -418,7 +418,7 @@ Factor<CcGraph_t ** g>          (. char * name = NULL;
 				           /* forward nt */
                                            sym = CcSymbolTable_NewNonTerminal(self->symtab, name, 0);
 				       } else if (self->genScanner) {
-					   sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
+					   sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->loc.line);
 					   CcLexical_MatchLiteral(self->lexical, self->t, sym->name, sym);
 				       } else {  /* undefined string in production */
 					   CcsParser_SemErrT(self, "undefined string in production");
@@ -442,7 +442,7 @@ Factor<CcGraph_t ** g>          (. char * name = NULL;
 				           CcsParser_SemErrT(self, "only terminals may be weak");
 				   }
 
-				   p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->line, weak);
+				   p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->loc.line, weak);
 				   *g = CcGraphP(p); .)
   [ Attribs<p>                  (. if (kind != CcsParser_id)
                                        CcsParser_SemErrT(self, "a literal must not have attributes"); .)

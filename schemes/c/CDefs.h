@@ -51,6 +51,7 @@ typedef int CcsBool_t;
 void _CcsAssertFailed_(const char * vstr, const char * fname, int line);
 
 /* C Scheme types */
+typedef struct CcsLocation_s CcsLocation_t;
 typedef struct CcsErrorPool_s CcsErrorPool_t;
 typedef struct CcsToken_s CcsToken_t;
 typedef struct CcsPosition_s CcsPosition_t;

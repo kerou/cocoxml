@@ -407,7 +407,7 @@ CcSyntax_CompDeletableSymbols(CcSyntax_t * self)
     for (sym = (CcSymbolNT_t *)CcArrayList_First(ntarr, &iter);
 	 sym; sym = (CcSymbolNT_t *)CcArrayList_Next(ntarr, &iter)) {
 	if (sym->deletable) 
-	    CcsErrorPool_Warning(self->globals->errpool, 0, 0,
+	    CcsErrorPool_Warning(self->globals->errpool, NULL,
 				 " %s deletable", sym->base.name);
     }
 }

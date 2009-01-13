@@ -93,8 +93,7 @@ CfParser_SemErr(CfParser_t * self, const CcsToken_t * token,
 {
     va_list ap;
     va_start(ap, format);
-    CcsErrorPool_VError(&self->errpool, token->line, token->col,
-			format, ap);
+    CcsErrorPool_VError(&self->errpool, &token->loc, format, ap);
     va_end(ap);
 }
 
@@ -103,8 +102,7 @@ CfParser_SemErrT(CfParser_t * self, const char * format, ...)
 {
     va_list ap;
     va_start(ap, format);
-    CcsErrorPool_VError(&self->errpool, self->t->line, self->t->col,
-			format, ap);
+    CcsErrorPool_VError(&self->errpool, &self->t->loc, format, ap);
     va_end(ap);
 }
 

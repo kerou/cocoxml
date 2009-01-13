@@ -44,8 +44,9 @@ main(int argc, char * argv[])
 	if (t) CcsScanner_DecRef(&scanner, t);
 	t = la;
 	if (t) {
-	    printf("CcsToken(%d,%d): kind = %d pos = %d: [%s]\n",
-		   t->line, t->col, t->kind, t->pos, t->val);
+	    printf("CcsToken(%s:%d,%d): kind = %d pos = %d: [%s]\n",
+		   t->loc.fname, t->loc.line, t->loc.col,
+		   t->kind, t->pos, t->val);
 	}
 	la = CcsScanner_Scan(&scanner);
 	if (la->kind == scanner.eofSym) break;

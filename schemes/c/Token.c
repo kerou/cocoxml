@@ -24,18 +24,19 @@
 #include  "Token.h"
 
 CcsToken_t *
-CcsToken(void * input, int kind, int pos, int col, int line,
-	 const char * val, size_t vallen)
+CcsToken(void * input, int kind, const char * fname, int pos,
+	 int col, int line, const char * val, size_t vallen)
 {
     CcsToken_t * self;
     if (!(self = CcsMalloc(sizeof(CcsToken_t) + vallen + 1))) return NULL;
+    self->next = NULL;
     self->input = input;
     self->refcnt = 1;
-    self->next = NULL;
     self->kind = kind;
+    self->loc.fname = fname;
     self->pos = pos;
-    self->col = col;
-    self->line = line;
+    self->loc.col = col;
+    self->loc.line = line;
     self->val = (char *)(self + 1);
     if (vallen > 0) memcpy(self->val, val, vallen);
     self->val[vallen] = 0;

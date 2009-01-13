@@ -42,6 +42,18 @@ CcxScanner(CcxScanner_t * self, CcsErrorPool_t * errpool, FILE * infp)
     return (CcxScanner_t *)CcxScanOper(&self->base, errpool, infp);
 }
 
+CcxScanner_t *
+CcxScanner_ByName(CcxScanner_t * self, CcsErrorPool_t * errpool,
+		  const char * infn)
+{
+    /*---- kindUnknownNS ----*/
+    self->base.kindUnknownNS = -1;
+    /*---- enable ----*/
+    self->base.firstXmlSpec = XmlSpecList;
+    self->base.numXmlSpecs = sizeof(XmlSpecList) / sizeof(XmlSpecList[0]);
+    return (CcxScanner_t *)CcxScanOper_ByName(&self->base, errpool, infn);
+}
+
 void
 CcxScanner_Destruct(CcxScanner_t * self)
 {
