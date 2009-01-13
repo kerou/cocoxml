@@ -122,16 +122,39 @@ CcxParser_SemErrT(CcxParser_t * self, const char * format, ...)
     va_end(ap);
 }
 
-#define ERRQUIT errquit1
+static CcsBool_t
+CcxParser_Init(CcxParser_t * self)
+{
+    self->t = self->la = NULL;
+    /*---- constructor ----*/
+    /*---- enable ----*/
+    return TRUE;
+}
+
 CcxParser_t *
 CcxParser(CcxParser_t * self, FILE * infp, FILE * errfp)
 {
     if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
     if (!CcxScanner(&self->scanner, &self->errpool, infp)) goto errquit1;
-    self->t = self->la = NULL;
-    /*---- constructor ----*/
-    /*---- enable ----*/
+    if (!CcxParser_Init(self)) goto errquit2;
     return self;
+ errquit2:
+    CcxScanner_Destruct(&self->scanner);
+ errquit1:
+    CcsErrorPool_Destruct(&self->errpool);
+ errquit0:
+    return NULL;
+}
+
+CcxParser_t *
+CcxParser_ByName(CcxParser_t * self, const char * infn, FILE * errfp)
+{
+    if (!CcsErrorPool(&self->errpool, errfp)) goto errquit0;
+    if (!CcxScanner_ByName(&self->scanner, &self->errpool, infn)) goto errquit1;
+    if (!CcxParser_Init(self)) goto errquit2;
+    return self;
+ errquit2:
+    CcxScanner_Destruct(&self->scanner);
  errquit1:
     CcsErrorPool_Destruct(&self->errpool);
  errquit0:
