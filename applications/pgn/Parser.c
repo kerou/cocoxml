@@ -168,8 +168,8 @@ PgnParser_Destruct(PgnParser_t * self)
     /*---- destructor ----*/
     PgnGame_t * cur, * next;
     for (cur = self->firstGame; cur; cur = next) {
-    next = cur->next;
-    PgnGame_Destruct(cur);
+	next = cur->next;
+	PgnGame_Destruct(cur);
     }
     /*---- enable ----*/
     if (self->la) PgnScanner_DecRef(&self->scanner, self->la);
@@ -256,22 +256,22 @@ PgnParser_Game(PgnParser_t * self, PgnGame_t ** game)
 	PgnParser_Expect(self, 18);
     }
     *game = PgnGame(&PgnStandardStart,
-    values[0], values[1], values[2], values[3], values[4],
-    values[5], values[6], values[7], values[8]);
+		    values[0], values[1], values[2], values[3], values[4],
+		    values[5], values[6], values[7], values[8]);
     if (!(*game)->Result && values[9]) {
-    (*game)->Result = values[9]; values[9] = NULL;
+	(*game)->Result = values[9]; values[9] = NULL;
     }
     for (index = 0; index < sizeof(values) / sizeof(values[0]); ++index)
-    if (values[index]) { CcsFree(values[index]); values[index] = NULL; } 
+	if (values[index]) { CcsFree(values[index]); values[index] = NULL; } 
     while (self->la->kind == 1) {
 	PgnParser_ARound(self, *game);
     }
     PgnParser_Expect(self, 3);
     if (!(*game)->resultInfo)
-    (*game)->resultInfo = CcsStrdup(self->t->val); 
+       (*game)->resultInfo = CcsStrdup(self->t->val); 
     PgnParser_ResultStr(self, &values[9]);
     if (!(*game)->Result && values[9]) {
-    (*game)->Result = values[9]; values[9] = NULL;
+	(*game)->Result = values[9]; values[9] = NULL;
     }
     if (values[9]) CcsFree(values[9]); 
 }
@@ -284,19 +284,19 @@ PgnParser_ARound(PgnParser_t * self, PgnGame_t * game)
     PgnParser_Expect(self, 19);
     PgnParser_Move(self, &move, TRUE);
     if (!PgnGame_AppendMove(game, move)) {
-    PgnParser_SemErr(self, self->t,
-    "Invalid move '%s' encountered or not enough memory.",
-    move->value);
-    PgnMove_Destruct(move);
+	PgnParser_SemErr(self, self->t,
+			 "Invalid move '%s' encountered or not enough memory.",
+			 move->value);
+	PgnMove_Destruct(move);
     } 
     if (self->la->kind == 4 || self->la->kind == 5 || self->la->kind == 6) {
 	PgnParser_Move(self, &move, FALSE);
 	if (!PgnGame_AppendMove(game, move)) {
-	fprintf(stderr, "Error: %s\n", move->value);
-	PgnParser_SemErr(self, self->t,
-	"Invalid move '%s' encountered or not enough memory.",
-	move->value);
-	PgnMove_Destruct(move);
+	    fprintf(stderr, "Error: %s\n", move->value);
+	    PgnParser_SemErr(self, self->t,
+			     "Invalid move '%s' encountered or not enough memory.",
+			     move->value);
+	    PgnMove_Destruct(move);
 	} 
     }
 }
