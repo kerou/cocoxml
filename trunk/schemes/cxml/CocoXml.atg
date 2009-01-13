@@ -125,7 +125,7 @@ CocoXml                         (. CcSymbol_t  * sym;
                                    undef = (sym == NULL);
 				   if (undef) {
 				       sym = CcSymbolTable_NewNonTerminal(self->symtab,
-									  self->t->val, self->t->line);
+									  self->t->val, self->t->loc.line);
                                    } else {
 				       if (sym->base.type == symbol_nt) {
 					   if (((CcSymbolNT_t *)sym)->graph != NULL)
@@ -133,7 +133,7 @@ CocoXml                         (. CcSymbol_t  * sym;
 				       } else {
 					   CcsXmlParser_SemErrT(self, "this symbol kind not allowed on left side of production");
 				       }
-				       sym->line = self->t->line;
+				       sym->line = self->t->loc.line;
                                    }
 				   CcsAssert(sym->base.type == symbol_nt);
                                    noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
@@ -287,7 +287,7 @@ Term<CcGraph_t ** g>            (. CcGraph_t * g2; CcsPosition_t * pos; CcNode_t
 =
   ( [
   Resolver<.&pos.>              (. rslv = CcEBNF_NewNode(&self->syntax->base,
-							 CcNodeRslvP(self->la->line, pos));
+							 CcNodeRslvP(self->la->loc.line, pos));
                                    *g = CcGraphP(rslv); .)
   ]
   Factor<&g2>                   (. if (rslv == NULL) *g = g2;
@@ -328,7 +328,7 @@ Factor<CcGraph_t ** g>          (. char * name = NULL;
 				           CcsXmlParser_SemErrT(self, "only terminals may be weak");
 				   }
 
-				   p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->line, weak);
+				   p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->loc.line, weak);
 				   *g = CcGraphP(p); .)
   [ Attribs<p>
   ]                             (. if (undef) {

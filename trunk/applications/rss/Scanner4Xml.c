@@ -90,6 +90,18 @@ RssScanner(RssScanner_t * self, CcsErrorPool_t * errpool, FILE * infp)
     return (RssScanner_t *)CcxScanOper(&self->base, errpool, infp);
 }
 
+RssScanner_t *
+RssScanner_ByName(RssScanner_t * self, CcsErrorPool_t * errpool,
+		  const char * infn)
+{
+    /*---- kindUnknownNS ----*/
+    self->base.kindUnknownNS = -1;
+    /*---- enable ----*/
+    self->base.firstXmlSpec = XmlSpecList;
+    self->base.numXmlSpecs = sizeof(XmlSpecList) / sizeof(XmlSpecList[0]);
+    return (RssScanner_t *)CcxScanOper_ByName(&self->base, errpool, infn);
+}
+
 void
 RssScanner_Destruct(RssScanner_t * self)
 {

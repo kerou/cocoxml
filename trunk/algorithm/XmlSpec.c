@@ -72,7 +72,7 @@ CcXmlSpec_SetOption(CcXmlSpec_t * self, const CcsToken_t * token)
 	    CcBitArray_Set(&self->options, option, TRUE);
 	    return;
 	}
-    CcsErrorPool_Error(self->globals->errpool, token->line, token->col,
+    CcsErrorPool_Error(self->globals->errpool, &token->loc,
 		       "Unrecognized option '%s' encountered.", token->val);
 }
 
@@ -80,8 +80,7 @@ typedef struct {
     CcObject_t base;
     char * tokenName;
     char * name;
-    int line;
-    int col;
+    CcsLocation_t loc;
 }  CcXmlData_t;
 
 static void
@@ -103,8 +102,7 @@ CcXmlData(const char * tokenName, const CcsToken_t * token)
     CcXmlData_t * self = (CcXmlData_t *)CcObject(&XmlDataType);
     self->tokenName = CcUnescape(tokenName);
     self->name = CcUnescape(token->val);
-    self->line = token->line;
-    self->col = token->col;
+    memcpy(&self->loc, &token->loc, sizeof(token->loc));
     return (CcObject_t *)self;
 }
 
@@ -138,25 +136,25 @@ CcXmlSpec_MakeTerminals(const CcXmlSpec_t * self, CcGlobals_t * globals)
 
     for (data = (const CcXmlData_t *)CcArrayList_FirstC(&self->Tags, &iter);
 	 data; data = (const CcXmlData_t *)CcArrayList_NextC(&self->Tags, &iter)) {
-	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->tokenName, data->line))
-	    CcsErrorPool_Error(globals->errpool, data->line, data->col,
+	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->tokenName, data->loc.line))
+	    CcsErrorPool_Error(globals->errpool, &data->loc,
 			       "Symbol %s is defined twice.\n", data->tokenName);
 	snprintf(EndTag, sizeof(EndTag), "END_%s", data->tokenName);
-	if (!CcSymbolTable_NewTerminalWithCheck(symtab, EndTag, data->line))
-	    CcsErrorPool_Error(globals->errpool, data->line, data->col,
+	if (!CcSymbolTable_NewTerminalWithCheck(symtab, EndTag, data->loc.line))
+	    CcsErrorPool_Error(globals->errpool, &data->loc,
 			       "Symbol %s is defined twice.\n", EndTag);
     }
 
     for (data = (const CcXmlData_t *)CcArrayList_FirstC(&self->Attrs, &iter);
 	 data; data = (const CcXmlData_t *)CcArrayList_NextC(&self->Attrs, &iter))
-	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->tokenName, data->line))
-	    CcsErrorPool_Error(globals->errpool, data->line, data->col,
+	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->tokenName, data->loc.line))
+	    CcsErrorPool_Error(globals->errpool, &data->loc,
 			       "Symbol %s is defined twice.\n", data->tokenName);
 	
     for (data = (const CcXmlData_t *)CcArrayList_FirstC(&self->PInstructions, &iter);
 	 data; data = (const CcXmlData_t *)CcArrayList_NextC(&self->PInstructions, &iter))
-	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->tokenName, data->line))
-	    CcsErrorPool_Error(globals->errpool, data->line, data->col,
+	if (!CcSymbolTable_NewTerminalWithCheck(symtab, data->tokenName, data->loc.line))
+	    CcsErrorPool_Error(globals->errpool, &data->loc,
 			       "Symbol %s is defined twice.\n", data->tokenName);
 }
 

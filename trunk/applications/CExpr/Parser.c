@@ -115,8 +115,7 @@ CExprParser_SemErr(CExprParser_t * self, const CcsToken_t * token,
 {
     va_list ap;
     va_start(ap, format);
-    CcsErrorPool_VError(&self->errpool, token->line, token->col,
-			format, ap);
+    CcsErrorPool_VError(&self->errpool, &token->loc, format, ap);
     va_end(ap);
 }
 
@@ -125,8 +124,7 @@ CExprParser_SemErrT(CExprParser_t * self, const char * format, ...)
 {
     va_list ap;
     va_start(ap, format);
-    CcsErrorPool_VError(&self->errpool, self->t->line, self->t->col,
-			format, ap);
+    CcsErrorPool_VError(&self->errpool, &self->t->loc, format, ap);
     va_end(ap);
 }
 

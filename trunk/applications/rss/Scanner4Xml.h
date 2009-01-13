@@ -36,6 +36,9 @@ typedef struct {
 
 RssScanner_t *
 RssScanner(RssScanner_t * self, CcsErrorPool_t * errpool, FILE * infp);
+RssScanner_t *
+RssScanner_ByName(RssScanner_t * self, CcsErrorPool_t * errpool,
+		  const char * infn);
 void RssScanner_Destruct(RssScanner_t * self);
 
 EXTC_END

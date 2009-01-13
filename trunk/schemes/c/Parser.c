@@ -143,8 +143,7 @@ CcsParser_SemErr(CcsParser_t * self, const CcsToken_t * token,
 {
     va_list ap;
     va_start(ap, format);
-    CcsErrorPool_VError(&self->errpool, token->line, token->col,
-			format, ap);
+    CcsErrorPool_VError(&self->errpool, &token->loc, format, ap);
     va_end(ap);
 }
 
@@ -153,8 +152,7 @@ CcsParser_SemErrT(CcsParser_t * self, const char * format, ...)
 {
     va_list ap;
     va_start(ap, format);
-    CcsErrorPool_VError(&self->errpool, self->t->line, self->t->col,
-			format, ap);
+    CcsErrorPool_VError(&self->errpool, &self->t->loc, format, ap);
     va_end(ap);
 }
 
@@ -333,7 +331,7 @@ CcsParser_Coco(CcsParser_t * self)
 	undef = (sym == NULL);
 	if (undef) {
 	    sym = CcSymbolTable_NewNonTerminal(self->symtab,
-					       self->t->val, self->t->line);
+					       self->t->val, self->t->loc.line);
 	} else {
 	    if (sym->base.type == symbol_nt) {
 		if (((CcSymbolNT_t *)sym)->graph != NULL)
@@ -341,7 +339,7 @@ CcsParser_Coco(CcsParser_t * self)
 	    } else {
 		CcsParser_SemErrT(self, "this symbol kind not allowed on left side of production");
 	    }
-	    sym->line = self->t->line;
+	    sym->line = self->t->loc.line;
 	}
 	CcsAssert(sym->base.type == symbol_nt);
 	noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
@@ -445,10 +443,10 @@ CcsParser_TokenDecl(CcsParser_t * self, const CcObjectType_t * typ)
     if (sym != NULL) {
 	CcsParser_SemErrT(self, "name '%s' declared twice", name);
     } else if (typ == symbol_t) {
-	sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
+	sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->loc.line);
 	((CcSymbolT_t *)sym)->tokenKind = symbol_fixedToken;
     } else if (typ == symbol_pr) {
-	sym = CcSymbolTable_NewPragma(self->symtab, name, self->t->line);
+	sym = CcSymbolTable_NewPragma(self->symtab, name, self->t->loc.line);
 	((CcSymbolPR_t *)sym)->tokenKind = symbol_fixedToken;
 	((CcSymbolPR_t *)sym)->semPos = NULL;
     }
@@ -687,7 +685,7 @@ CcsParser_Term(CcsParser_t * self, CcGraph_t ** g)
 	if (self->la->kind == 43) {
 	    CcsParser_Resolver(self, &pos);
 	    rslv = CcEBNF_NewNode(&self->syntax->base,
-				  CcNodeRslvP(self->la->line, pos));
+				  CcNodeRslvP(self->la->loc.line, pos));
 	    *g = CcGraphP(rslv); 
 	}
 	CcsParser_Factor(self, &g2);
@@ -747,7 +745,7 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
 		/* forward nt */
 		sym = CcSymbolTable_NewNonTerminal(self->symtab, name, 0);
 	    } else if (self->genScanner) {
-		sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->line);
+		sym = CcSymbolTable_NewTerminal(self->symtab, name, self->t->loc.line);
 		CcLexical_MatchLiteral(self->lexical, self->t, sym->name, sym);
 	    } else {  /* undefined string in production */
 		CcsParser_SemErrT(self, "undefined string in production");
@@ -770,7 +768,7 @@ CcsParser_Factor(CcsParser_t * self, CcGraph_t ** g)
 	    if (sym->base.type != symbol_t)
 		CcsParser_SemErrT(self, "only terminals may be weak");
 	}
-	p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->line, weak);
+	p = CcSyntax_NodeFromSymbol(self->syntax, sym, self->t->loc.line, weak);
 	*g = CcGraphP(p); 
 	if (self->la->kind == 30 || self->la->kind == 32) {
 	    CcsParser_Attribs(self, p);

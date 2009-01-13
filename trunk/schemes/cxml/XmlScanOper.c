@@ -173,7 +173,7 @@ CXS_Comment(void * self, const XML_Char * data)
 
 static const char * dummyval = "dummy";
 CcxScanOper_t *
-CcxScanOper(CcxScanOper_t * self, CcsErrorPool_t * errpool, FILE * infp)
+CcxScanOper_Init(CcxScanOper_t * self, CcsErrorPool_t * errpool, FILE * infp)
 {
     CcsAssert(infp != NULL);
     self->errpool = errpool;
@@ -188,7 +188,8 @@ CcxScanOper(CcxScanOper_t * self, CcsErrorPool_t * errpool, FILE * infp)
     XML_SetCommentHandler(self->parser, CXS_Comment);
 
     self->EOFGenerated = FALSE;
-    if (!(self->dummy = CcsToken(NULL, 0, 0, 0, 0, dummyval, strlen(dummyval))))
+    if (!(self->dummy = CcsToken(NULL, 0, self->fname, 0, 0, 0,
+				 dummyval, strlen(dummyval))))
 	goto errquit0;
     CcxScanOper_IncRef(self, self->dummy);
     self->tokens = self->peek = NULL;
@@ -207,6 +208,30 @@ CcxScanOper(CcxScanOper_t * self, CcsErrorPool_t * errpool, FILE * infp)
     return NULL;
 }
 
+CcxScanOper_t *
+CcxScanOper(CcxScanOper_t * self, CcsErrorPool_t * errpool, FILE * infp)
+{
+    self->fname = NULL;
+    return CcxScanOper_Init(self, errpool, infp);
+}
+
+CcxScanOper_t *
+CcxScanOper_ByName(CcxScanOper_t * self, CcsErrorPool_t * errpool,
+		   const char * infn)
+{
+    FILE * infp;
+    if (!(infp = fopen(infn, "r"))) goto errquit0;
+    if (!(self->fname = CcsStrdup(infn))) goto errquit1;
+    if (!CcxScanOper_Init(self, errpool, infp)) goto errquit2;
+    return self;
+ errquit2:
+    CcsFree(self->fname);
+ errquit1:
+    fclose(infp);
+ errquit0:
+    return NULL;
+}
+
 void
 CcxScanOper_Destruct(CcxScanOper_t * self)
 {
@@ -219,6 +244,10 @@ CcxScanOper_Destruct(CcxScanOper_t * self)
     }
     CcxScanOper_DecRef(self, self->dummy);
     XML_ParserFree(self->parser);
+    if (self->fname) {
+	CcsFree(self->fname);
+	fclose(self->fp);
+    }
 }
 
 CcsToken_t *
@@ -322,10 +351,10 @@ CXS_Append(CcxScanOper_t * self, CcsToken_t * last,
 {
     CcsToken_t * token;
     if (kind < 0) return last;
-    token = CcsToken(self, kind,
+    token = CcsToken(self, kind, self->fname,
 		     XML_GetCurrentByteIndex(self->parser),
-		     XML_GetCurrentColumnNumber(self->parser),
 		     XML_GetCurrentLineNumber(self->parser),
+		     XML_GetCurrentColumnNumber(self->parser),
 		     val, vallen);
     if (token == NULL) {
 	fprintf(stderr, "Not enough memory!");
@@ -358,6 +387,7 @@ CXS_UpdateKinds(CcxScanOper_t * self)
 static void
 CXS_PushSpec(CcxScanOper_t * self, const CcxSpec_t * spec, const CcxTag_t * tag)
 {
+    CcsLocation_t loc;
     const CcxScanStack_t * last = self->stack + SZ_STACK;
     ++self->cur;
     if (self->cur < last) {
@@ -367,9 +397,10 @@ CXS_PushSpec(CcxScanOper_t * self, const CcxSpec_t * spec, const CcxTag_t * tag)
 	CXS_UpdateKinds(self);
     } else {
 	self->kindText = self->kindWhitespace = self->kindComment = -1;
-	CcsErrorPool_Error(self->errpool,
-			   XML_GetCurrentLineNumber(self->parser),
-			   XML_GetCurrentColumnNumber(self->parser),
+	loc.fname = NULL;
+	loc.line = XML_GetCurrentLineNumber(self->parser);
+	loc.col = XML_GetCurrentColumnNumber(self->parser);
+	CcsErrorPool_Error(self->errpool, &loc,
 			   "XML Tag too deep(limit = %d)", SZ_STACK);
     }
 }
@@ -412,6 +443,7 @@ static void
 CXS_AppendText(CcxScanOper_t * self, const char * text, size_t len)
 {
     CcsToken_t * lastT;
+    CcsLocation_t loc;
     const char * cur, * last = text + len;
 
     if (len == 0) return;
@@ -463,9 +495,10 @@ CXS_AppendText(CcxScanOper_t * self, const char * text, size_t len)
     self->textUsed += last - text;
     return;
  nomem:
-    CcsErrorPool_Error(self->errpool,
-		       XML_GetCurrentLineNumber(self->parser),
-		       XML_GetCurrentColumnNumber(self->parser),
+    loc.fname = NULL;
+    loc.line = XML_GetCurrentLineNumber(self->parser);
+    loc.col = XML_GetCurrentColumnNumber(self->parser);
+    CcsErrorPool_Error(self->errpool, &loc,
 		       "Not enough memory, some text lost");
 }
 

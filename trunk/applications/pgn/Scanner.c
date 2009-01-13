@@ -30,6 +30,7 @@ struct PgnScanInput_s {
 
     PgnScanner_t   * scanner;
     char           * fname;
+    FILE           * fp;
     CcsBuffer_t      buffer;
 
     CcsToken_t     * busyTokenList;
@@ -59,6 +60,7 @@ static CcsBool_t
 PgnScanInput_Init(PgnScanInput_t * self, PgnScanner_t * scanner, FILE * fp)
 {
     self->scanner = scanner;
+    self->fp = fp;
     if (!CcsBuffer(&self->buffer, fp)) goto errquit0;
     self->busyTokenList = NULL;
     self->curToken = &self->busyTokenList;
@@ -139,6 +141,7 @@ PgnScanInput_Destruct(PgnScanInput_t * self)
 	CcsToken_Destruct(cur);
     }
     CcsBuffer_Destruct(&self->buffer);
+    if (self->fname) fclose(self->fp);
     CcsFree(self);
 }
 
@@ -244,7 +247,7 @@ static void
 PgnScanInput_IndentLimit(PgnScanInput_t * self, const CcsToken_t * indentIn)
 {
     CcsAssert(indentIn->kind == PgnScanner_INDENT_IN);
-    self->indentLimit = indentIn->col;
+    self->indentLimit = indentIn->loc.col;
 }
 #endif
 
@@ -256,7 +259,7 @@ PgnScanInput_GetPosition(PgnScanInput_t * self, const CcsToken_t * begin,
     CcsAssert(self == begin->input);
     CcsAssert(self == end->input);
     len = end->pos - begin->pos;
-    return CcsPosition(begin->pos, len, begin->col,
+    return CcsPosition(begin->pos, len, begin->loc.col,
 		       CcsBuffer_GetString(&self->buffer, begin->pos, len));
 }
 
@@ -291,7 +294,7 @@ PgnScanner_Init(PgnScanner_t * self, CcsErrorPool_t * errpool) {
     self->noSym = 23;
     /*---- enable ----*/
     if (!(self->dummyToken =
-	  CcsToken(NULL, 0, 0, 0, 0, dummyval, strlen(dummyval))))
+	  CcsToken(NULL, 0, NULL, 0, 0, 0, dummyval, strlen(dummyval))))
 	return FALSE;
     return TRUE;
 }
@@ -650,8 +653,8 @@ PgnScanInput_IndentGenerator(PgnScanInput_t * self)
     if (self->ch == EoF) {
 	head = NULL;
 	while (self->indent < self->indentUsed - 1) {
-	    cur = CcsToken(self, PgnScanner_INDENT_OUT, self->pos,
-			   self->col, self->line, NULL, 0);
+	    cur = CcsToken(self, PgnScanner_INDENT_OUT, self->fname, self->pos,
+			   self->line, self->col, NULL, 0);
 	    cur->next = head; head = cur;
 	    --self->indentUsed;
 	}
@@ -671,17 +674,17 @@ PgnScanInput_IndentGenerator(PgnScanInput_t * self)
 	}
 	CcsAssert(self->indentUsed < self->indentLast);
 	*self->indentUsed++ = self->col;
-	return CcsToken(self, PgnScanner_INDENT_IN, self->pos,
-			self->col, self->line, NULL, 0);
+	return CcsToken(self, PgnScanner_INDENT_IN, self->fname, self->pos,
+			self->line, self->col, NULL, 0);
     }
     for (curIndent = self->indentUsed - 1; self->col < *curIndent; --curIndent);
     if (self->col > *curIndent)
-	return CcsToken(self, PgnScanner_INDENT_ERR, self->pos,
-			self->col, self->line, NULL, 0);
+	return CcsToken(self, PgnScanner_INDENT_ERR, self->fname, self->pos,
+			self->line, self->col, NULL, 0);
     head = NULL;
     while (curIndent < self->indentUsed - 1) {
-	cur = CcsToken(self, PgnScanner_INDENT_OUT, self->pos,
-		       self->col, self->line, NULL, 0);
+	cur = CcsToken(self, PgnScanner_INDENT_OUT, self->fname, self->pos,
+		       self->line, self->col, NULL, 0);
 	cur->next = head; head = cur;
 	--self->indentUsed;
     }
@@ -1183,7 +1186,7 @@ PgnScanInput_NextToken(PgnScanInput_t * self)
     /*---- enable ----*/
     }
     CcsAssert(kind != -2);
-    t = CcsToken(self, kind, pos, col, line,
+    t = CcsToken(self, kind, self->fname, pos, line, col,
 		 CcsBuffer_GetString(&self->buffer, pos, self->pos - pos),
 		 self->pos - pos);
     CcsBuffer_Unlock(&self->buffer);

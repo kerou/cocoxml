@@ -17,6 +17,7 @@ struct JsonScanInput_s {
 
     JsonScanner_t   * scanner;
     char           * fname;
+    FILE           * fp;
     CcsBuffer_t      buffer;
 
     CcsToken_t     * busyTokenList;
@@ -46,6 +47,7 @@ static CcsBool_t
 JsonScanInput_Init(JsonScanInput_t * self, JsonScanner_t * scanner, FILE * fp)
 {
     self->scanner = scanner;
+    self->fp = fp;
     if (!CcsBuffer(&self->buffer, fp)) goto errquit0;
     self->busyTokenList = NULL;
     self->curToken = &self->busyTokenList;
@@ -126,6 +128,7 @@ JsonScanInput_Destruct(JsonScanInput_t * self)
 	CcsToken_Destruct(cur);
     }
     CcsBuffer_Destruct(&self->buffer);
+    if (self->fname) fclose(self->fp);
     CcsFree(self);
 }
 
@@ -231,7 +234,7 @@ static void
 JsonScanInput_IndentLimit(JsonScanInput_t * self, const CcsToken_t * indentIn)
 {
     CcsAssert(indentIn->kind == JsonScanner_INDENT_IN);
-    self->indentLimit = indentIn->col;
+    self->indentLimit = indentIn->loc.col;
 }
 #endif
 
@@ -243,7 +246,7 @@ JsonScanInput_GetPosition(JsonScanInput_t * self, const CcsToken_t * begin,
     CcsAssert(self == begin->input);
     CcsAssert(self == end->input);
     len = end->pos - begin->pos;
-    return CcsPosition(begin->pos, len, begin->col,
+    return CcsPosition(begin->pos, len, begin->loc.col,
 		       CcsBuffer_GetString(&self->buffer, begin->pos, len));
 }
 
@@ -278,7 +281,7 @@ JsonScanner_Init(JsonScanner_t * self, CcsErrorPool_t * errpool) {
     self->noSym = 12;
     /*---- enable ----*/
     if (!(self->dummyToken =
-	  CcsToken(NULL, 0, 0, 0, 0, dummyval, strlen(dummyval))))
+	  CcsToken(NULL, 0, NULL, 0, 0, 0, dummyval, strlen(dummyval))))
 	return FALSE;
     return TRUE;
 }
@@ -628,8 +631,8 @@ JsonScanInput_IndentGenerator(JsonScanInput_t * self)
     if (self->ch == EoF) {
 	head = NULL;
 	while (self->indent < self->indentUsed - 1) {
-	    cur = CcsToken(self, JsonScanner_INDENT_OUT, self->pos,
-			   self->col, self->line, NULL, 0);
+	    cur = CcsToken(self, JsonScanner_INDENT_OUT, self->fname, self->pos,
+			   self->line, self->col, NULL, 0);
 	    cur->next = head; head = cur;
 	    --self->indentUsed;
 	}
@@ -649,17 +652,17 @@ JsonScanInput_IndentGenerator(JsonScanInput_t * self)
 	}
 	CcsAssert(self->indentUsed < self->indentLast);
 	*self->indentUsed++ = self->col;
-	return CcsToken(self, JsonScanner_INDENT_IN, self->pos,
-			self->col, self->line, NULL, 0);
+	return CcsToken(self, JsonScanner_INDENT_IN, self->fname, self->pos,
+			self->line, self->col, NULL, 0);
     }
     for (curIndent = self->indentUsed - 1; self->col < *curIndent; --curIndent);
     if (self->col > *curIndent)
-	return CcsToken(self, JsonScanner_INDENT_ERR, self->pos,
-			self->col, self->line, NULL, 0);
+	return CcsToken(self, JsonScanner_INDENT_ERR, self->fname, self->pos,
+			self->line, self->col, NULL, 0);
     head = NULL;
     while (curIndent < self->indentUsed - 1) {
-	cur = CcsToken(self, JsonScanner_INDENT_OUT, self->pos,
-		       self->col, self->line, NULL, 0);
+	cur = CcsToken(self, JsonScanner_INDENT_OUT, self->fname, self->pos,
+		       self->line, self->col, NULL, 0);
 	cur->next = head; head = cur;
 	--self->indentUsed;
     }
@@ -852,7 +855,7 @@ JsonScanInput_NextToken(JsonScanInput_t * self)
     /*---- enable ----*/
     }
     CcsAssert(kind != -2);
-    t = CcsToken(self, kind, pos, col, line,
+    t = CcsToken(self, kind, self->fname, pos, line, col,
 		 CcsBuffer_GetString(&self->buffer, pos, self->pos - pos),
 		 self->pos - pos);
     CcsBuffer_Unlock(&self->buffer);
