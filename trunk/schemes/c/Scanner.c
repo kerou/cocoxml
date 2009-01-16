@@ -37,6 +37,7 @@
 struct CcsScanInput_s {
     CcsScanInput_t * next;
 
+    int              refcnt;
     CcsScanner_t   * scanner;
     char           * fname;
     FILE           * fp;
@@ -68,6 +69,8 @@ static CcsToken_t * CcsScanInput_NextToken(CcsScanInput_t * self);
 static CcsBool_t
 CcsScanInput_Init(CcsScanInput_t * self, CcsScanner_t * scanner, FILE * fp)
 {
+    self->next = NULL;
+    self->refcnt = 1;
     self->scanner = scanner;
     self->fp = fp;
     if (!CcsBuffer(&self->buffer, fp)) goto errquit0;
@@ -101,7 +104,6 @@ CcsScanInput(CcsScanner_t * scanner, FILE * fp)
 {
     CcsScanInput_t * self;
     if (!(self = CcsMalloc(sizeof(CcsScanInput_t)))) goto errquit0;
-    self->next = NULL;
     self->fname = NULL;
     if (!CcsScanInput_Init(self, scanner, fp)) goto errquit1;
     return self;
@@ -123,7 +125,6 @@ CcsScanInput_ByName(CcsScanner_t * scanner, const CcsIncPathList_t * list,
 	goto errquit0;
     if (!(self = CcsMalloc(sizeof(CcsScanInput_t) + strlen(infnpath) + 1)))
 	goto errquit1;
-    self->next = NULL;
     strcpy(self->fname = (char *)(self + 1), infnpath);
     if (!CcsScanInput_Init(self, scanner, fp)) goto errquit2;
     return self;
