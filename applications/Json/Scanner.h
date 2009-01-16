@@ -49,8 +49,8 @@ CcsToken_t * JsonScanner_GetDummy(JsonScanner_t * self);
 CcsToken_t * JsonScanner_Scan(JsonScanner_t * self);
 CcsToken_t * JsonScanner_Peek(JsonScanner_t * self);
 void JsonScanner_ResetPeek(JsonScanner_t * self);
-void JsonScanner_IncRef(JsonScanner_t * self, CcsToken_t * token);
-void JsonScanner_DecRef(JsonScanner_t * self, CcsToken_t * token);
+void JsonScanner_TokenIncRef(JsonScanner_t * self, CcsToken_t * token);
+void JsonScanner_TokenDecRef(JsonScanner_t * self, CcsToken_t * token);
 #ifdef JsonScanner_INDENTATION
 /* If the col >= indentIn->col, not any IndentIn/IndentOut/IndentErr is generated.
  * Useful when we need to collect ANY text by indentation. */

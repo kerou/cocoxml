@@ -18,7 +18,7 @@ static const char * set[];
 static void
 JsonParser_Get(JsonParser_t * self)
 {
-    if (self->t) JsonScanner_DecRef(&self->scanner, self->t);
+    if (self->t) JsonScanner_TokenDecRef(&self->scanner, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = JsonScanner_Scan(&self->scanner);
@@ -157,8 +157,8 @@ JsonParser_Destruct(JsonParser_t * self)
     /*---- destructor ----*/
     
     /*---- enable ----*/
-    if (self->la) JsonScanner_DecRef(&self->scanner, self->la);
-    if (self->t) JsonScanner_DecRef(&self->scanner, self->t);
+    if (self->la) JsonScanner_TokenDecRef(&self->scanner, self->la);
+    if (self->t) JsonScanner_TokenDecRef(&self->scanner, self->t);
     JsonScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }

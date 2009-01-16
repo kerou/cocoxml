@@ -31,7 +31,7 @@ static const char * set[];
 static void
 CExprParser_Get(CExprParser_t * self)
 {
-    if (self->t) CExprScanner_DecRef(&self->scanner, self->t);
+    if (self->t) CExprScanner_TokenDecRef(&self->scanner, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = CExprScanner_Scan(&self->scanner);
@@ -176,8 +176,8 @@ CExprParser_Destruct(CExprParser_t * self)
     /*---- destructor ----*/
     
     /*---- enable ----*/
-    if (self->la) CExprScanner_DecRef(&self->scanner, self->la);
-    if (self->t) CExprScanner_DecRef(&self->scanner, self->t);
+    if (self->la) CExprScanner_TokenDecRef(&self->scanner, self->la);
+    if (self->t) CExprScanner_TokenDecRef(&self->scanner, self->t);
     CExprScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }

@@ -15,6 +15,7 @@ License: LGPLv2
 struct CfScanInput_s {
     CfScanInput_t * next;
 
+    int              refcnt;
     CfScanner_t   * scanner;
     char           * fname;
     FILE           * fp;
@@ -46,6 +47,8 @@ static CcsToken_t * CfScanInput_NextToken(CfScanInput_t * self);
 static CcsBool_t
 CfScanInput_Init(CfScanInput_t * self, CfScanner_t * scanner, FILE * fp)
 {
+    self->next = NULL;
+    self->refcnt = 1;
     self->scanner = scanner;
     self->fp = fp;
     if (!CcsBuffer(&self->buffer, fp)) goto errquit0;
@@ -79,7 +82,6 @@ CfScanInput(CfScanner_t * scanner, FILE * fp)
 {
     CfScanInput_t * self;
     if (!(self = CcsMalloc(sizeof(CfScanInput_t)))) goto errquit0;
-    self->next = NULL;
     self->fname = NULL;
     if (!CfScanInput_Init(self, scanner, fp)) goto errquit1;
     return self;
@@ -101,7 +103,6 @@ CfScanInput_ByName(CfScanner_t * scanner, const CcsIncPathList_t * list,
 	goto errquit0;
     if (!(self = CcsMalloc(sizeof(CfScanInput_t) + strlen(infnpath) + 1)))
 	goto errquit1;
-    self->next = NULL;
     strcpy(self->fname = (char *)(self + 1), infnpath);
     if (!CfScanInput_Init(self, scanner, fp)) goto errquit2;
     return self;
@@ -197,13 +198,13 @@ CfScanInput_ResetPeek(CfScanInput_t * self)
 }
 
 static void
-CfScanInput_IncRef(CfScanInput_t * self, CcsToken_t * token)
+CfScanInput_TokenIncRef(CfScanInput_t * self, CcsToken_t * token)
 {
     ++token->refcnt;
 }
 
 static void
-CfScanInput_DecRef(CfScanInput_t * self, CcsToken_t * token)
+CfScanInput_TokenDecRef(CfScanInput_t * self, CcsToken_t * token)
 {
     if (--token->refcnt > 1) return;
     CcsAssert(token->refcnt == 1);
@@ -330,7 +331,7 @@ CfScanner_Destruct(CfScanner_t * self)
 CcsToken_t *
 CfScanner_GetDummy(CfScanner_t * self)
 {
-    CfScanner_IncRef(self, self->dummyToken);
+    CfScanner_TokenIncRef(self, self->dummyToken);
     return self->dummyToken;
 }
 
@@ -342,7 +343,7 @@ CfScanner_Scan(CfScanner_t * self)
 	token = CfScanInput_Scan(self->cur);
 	if (token->kind != self->eofSym) break;
 	if (self->cur->next == NULL) break;
-	CfScanInput_DecRef(token->input, token);
+	CfScanInput_TokenDecRef(token->input, token);
 	next = self->cur->next;
 	CfScanInput_Destruct(self->cur);
 	self->cur = next;
@@ -359,7 +360,7 @@ CfScanner_Peek(CfScanner_t * self)
 	token = CfScanInput_Peek(self->cur);
 	if (token->kind != self->eofSym) break;
 	if (cur->next == NULL) break;
-	CfScanInput_DecRef(token->input, token);
+	CfScanInput_TokenDecRef(token->input, token);
 	cur = cur->next;
     }
     return token;
@@ -374,17 +375,17 @@ CfScanner_ResetPeek(CfScanner_t * self)
 }
 
 void
-CfScanner_IncRef(CfScanner_t * self, CcsToken_t * token)
+CfScanner_TokenIncRef(CfScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) ++token->refcnt;
-    else CfScanInput_IncRef(token->input, token);
+    else CfScanInput_TokenIncRef(token->input, token);
 }
 
 void
-CfScanner_DecRef(CfScanner_t * self, CcsToken_t * token)
+CfScanner_TokenDecRef(CfScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) --token->refcnt;
-    else CfScanInput_DecRef(token->input, token);
+    else CfScanInput_TokenDecRef(token->input, token);
 }
 
 #ifdef CfScanner_INDENTATION

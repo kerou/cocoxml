@@ -102,17 +102,17 @@ CocoXml                         (. CcSymbol_t  * sym;
   { SchemeDecl | SectionDecl }
   "COMPILER"
   ident                         (. gramName = CcStrdup(self->t->val); .)
-  [ "MEMBERS"                   (. CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
+  [ "MEMBERS"                   (. CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); .)
     { ANY }                     (. self->syntax->members = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
-      	  			   CcsXmlScanner_DecRef(&self->scanner, beg); .)
+      	  			   CcsXmlScanner_TokenDecRef(&self->scanner, beg); .)
     ]
-  [ "CONSTRUCTOR"               (. CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
+  [ "CONSTRUCTOR"               (. CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); .)
     { ANY }			(. self->syntax->constructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
-      	  			   CcsXmlScanner_DecRef(&self->scanner, beg); .)
+      	  			   CcsXmlScanner_TokenDecRef(&self->scanner, beg); .)
     ]
-  [ "DESTRUCTOR"                (. CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
+  [ "DESTRUCTOR"                (. CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); .)
     { ANY }			(. self->syntax->destructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
-      	  			   CcsXmlScanner_DecRef(&self->scanner, beg); .)
+      	  			   CcsXmlScanner_TokenDecRef(&self->scanner, beg); .)
     ]
 
   XmlSpecDecl<&xsdef>           (. CcXmlSpecMap_Add(self->xmlspecmap, "", xsdef); .)
@@ -183,10 +183,10 @@ SchemeDecl
 SectionDecl       (. char * secname; CcsToken_t * beg; .)
 =
   "SECTION" ident (. secname = CcStrdup(self->t->val);
-  	    	     CcsXmlScanner_IncRef(&self->scanner, beg = self->t); .)
+  	    	     CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->t); .)
   { ANY }         (. CcGlobals_NewSection(&self->globals, secname,
     		     			  CcsXmlScanner_GetPositionBetween(&self->scanner, beg, self->la));
-		     CcsXmlScanner_DecRef(&self->scanner, beg);
+		     CcsXmlScanner_TokenDecRef(&self->scanner, beg);
 		     CcFree(secname); .)
   "END" '.'
 .
@@ -253,18 +253,18 @@ XmlPIDecl<CcXmlSpec_t * xsdef>     (. char * target; .)
 
 AttrDecl<CcSymbolNT_t * sym>    (. CcsToken_t * beg; .)
 =
-  '<'                           (. CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
+  '<'                           (. CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); .)
   { ANY
   | badString                   (. CcsXmlParser_SemErrT(self, "bad string in attributes"); .)
   }
   '>'                           (. sym->attrPos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
-  				   CcsXmlScanner_DecRef(&self->scanner, beg); .)
-| "<."                          (. CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
+  				   CcsXmlScanner_TokenDecRef(&self->scanner, beg); .)
+| "<."                          (. CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); .)
   { ANY
   | badString                   (. CcsXmlParser_SemErrT(self, "bad string in attributes"); .)
   }
   ".>"                          (. sym->attrPos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
-     				   CcsXmlScanner_DecRef(&self->scanner, beg); .)
+     				   CcsXmlScanner_TokenDecRef(&self->scanner, beg); .)
 .
 
 /*------------------------------------------------------------------------------------*/
@@ -358,9 +358,9 @@ Factor<CcGraph_t ** g>          (. char * name = NULL;
 
 Resolver<CcsPosition_t ** pos>   (. CcsToken_t * beg; .)
 =
-  "IF" "("                       (. CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
+  "IF" "("                       (. CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); .)
   Condition                      (. *pos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
-                                    CcsXmlScanner_DecRef(&self->scanner, beg); .)
+                                    CcsXmlScanner_TokenDecRef(&self->scanner, beg); .)
 .
 
 /*------------------------------------------------------------------------------------*/
@@ -378,32 +378,32 @@ Sym<char ** name>
 
 Attribs<CcNode_t * p>           (. CcsToken_t * beg; .)
 =
-  '<'                           (. CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
+  '<'                           (. CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); .)
   { ANY 
   | badString                   (. CcsXmlParser_SemErrT(self, "bad string in attributes"); .)
   }
   '>'                           (. CcNode_SetPosition(p, CcsXmlScanner_GetPosition(&self->scanner, beg, self->t));
-                                   CcsXmlScanner_DecRef(&self->scanner, beg); .)
-| "<."                          (. CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
+                                   CcsXmlScanner_TokenDecRef(&self->scanner, beg); .)
+| "<."                          (. CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); .)
   { ANY 
   | badString                   (. CcsXmlParser_SemErrT(self, "bad string in attributes"); .)
   }
   ".>"                          (. CcNode_SetPosition(p, CcsXmlScanner_GetPosition(&self->scanner,
                                                                                 beg, self->t));
-                                   CcsXmlScanner_DecRef(&self->scanner, beg); .)
+                                   CcsXmlScanner_TokenDecRef(&self->scanner, beg); .)
 .
 
 /*------------------------------------------------------------------------------------*/
 
 SemText<CcsPosition_t ** pos>   (. CcsToken_t * beg; .)
 =
-  "(."                          (. CcsXmlScanner_IncRef(&self->scanner, beg = self->la); .)
+  "(."                          (. CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); .)
   { ANY
   | badString                   (. CcsXmlParser_SemErrT(self, "bad string in semantic action"); .)
   | "(."                        (. CcsXmlParser_SemErrT(self, "missing end of previous semantic action"); .)
   }
   ".)"                          (. *pos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
-                                   CcsXmlScanner_DecRef(&self->scanner, beg); .)
+                                   CcsXmlScanner_TokenDecRef(&self->scanner, beg); .)
 .
 
 /*------------------------------------------------------------------------------------*/

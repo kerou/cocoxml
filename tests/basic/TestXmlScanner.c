@@ -69,7 +69,7 @@ main(int argc, char * argv[])
     CcsXmlScanner(&scanner, NULL, infp);
     t = NULL; la = CcsXmlScanner_GetDummy(&scanner);
     for (;;) {
-	if (t) CcsXmlScanner_DecRef(&scanner, t);
+	if (t) CcsXmlScanner_TokenDecRef(&scanner, t);
 	t = la;
 	if (t) {
 	    printf("t->kind = %d val = (%s)\n",
@@ -78,8 +78,8 @@ main(int argc, char * argv[])
 	la = CcsXmlScanner_Scan(&scanner);
 	if (la == NULL) break;
     }
-    if (t) CcsXmlScanner_DecRef(&scanner, t);
-    if (la) CcsXmlScanner_DecRef(&scanner, la);
+    if (t) CcsXmlScanner_TokenDecRef(&scanner, t);
+    if (la) CcsXmlScanner_TokenDecRef(&scanner, la);
     CcsXmlScanner_Destruct(&scanner);
     fclose(infp);
     return 0;

@@ -28,6 +28,7 @@ Author: Charles Wang <charlesw123456@gmail.com>
 struct CExprScanInput_s {
     CExprScanInput_t * next;
 
+    int              refcnt;
     CExprScanner_t   * scanner;
     char           * fname;
     FILE           * fp;
@@ -59,6 +60,8 @@ static CcsToken_t * CExprScanInput_NextToken(CExprScanInput_t * self);
 static CcsBool_t
 CExprScanInput_Init(CExprScanInput_t * self, CExprScanner_t * scanner, FILE * fp)
 {
+    self->next = NULL;
+    self->refcnt = 1;
     self->scanner = scanner;
     self->fp = fp;
     if (!CcsBuffer(&self->buffer, fp)) goto errquit0;
@@ -92,7 +95,6 @@ CExprScanInput(CExprScanner_t * scanner, FILE * fp)
 {
     CExprScanInput_t * self;
     if (!(self = CcsMalloc(sizeof(CExprScanInput_t)))) goto errquit0;
-    self->next = NULL;
     self->fname = NULL;
     if (!CExprScanInput_Init(self, scanner, fp)) goto errquit1;
     return self;
@@ -114,7 +116,6 @@ CExprScanInput_ByName(CExprScanner_t * scanner, const CcsIncPathList_t * list,
 	goto errquit0;
     if (!(self = CcsMalloc(sizeof(CExprScanInput_t) + strlen(infnpath) + 1)))
 	goto errquit1;
-    self->next = NULL;
     strcpy(self->fname = (char *)(self + 1), infnpath);
     if (!CExprScanInput_Init(self, scanner, fp)) goto errquit2;
     return self;
@@ -210,13 +211,13 @@ CExprScanInput_ResetPeek(CExprScanInput_t * self)
 }
 
 static void
-CExprScanInput_IncRef(CExprScanInput_t * self, CcsToken_t * token)
+CExprScanInput_TokenIncRef(CExprScanInput_t * self, CcsToken_t * token)
 {
     ++token->refcnt;
 }
 
 static void
-CExprScanInput_DecRef(CExprScanInput_t * self, CcsToken_t * token)
+CExprScanInput_TokenDecRef(CExprScanInput_t * self, CcsToken_t * token)
 {
     if (--token->refcnt > 1) return;
     CcsAssert(token->refcnt == 1);
@@ -343,7 +344,7 @@ CExprScanner_Destruct(CExprScanner_t * self)
 CcsToken_t *
 CExprScanner_GetDummy(CExprScanner_t * self)
 {
-    CExprScanner_IncRef(self, self->dummyToken);
+    CExprScanner_TokenIncRef(self, self->dummyToken);
     return self->dummyToken;
 }
 
@@ -355,7 +356,7 @@ CExprScanner_Scan(CExprScanner_t * self)
 	token = CExprScanInput_Scan(self->cur);
 	if (token->kind != self->eofSym) break;
 	if (self->cur->next == NULL) break;
-	CExprScanInput_DecRef(token->input, token);
+	CExprScanInput_TokenDecRef(token->input, token);
 	next = self->cur->next;
 	CExprScanInput_Destruct(self->cur);
 	self->cur = next;
@@ -372,7 +373,7 @@ CExprScanner_Peek(CExprScanner_t * self)
 	token = CExprScanInput_Peek(self->cur);
 	if (token->kind != self->eofSym) break;
 	if (cur->next == NULL) break;
-	CExprScanInput_DecRef(token->input, token);
+	CExprScanInput_TokenDecRef(token->input, token);
 	cur = cur->next;
     }
     return token;
@@ -387,17 +388,17 @@ CExprScanner_ResetPeek(CExprScanner_t * self)
 }
 
 void
-CExprScanner_IncRef(CExprScanner_t * self, CcsToken_t * token)
+CExprScanner_TokenIncRef(CExprScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) ++token->refcnt;
-    else CExprScanInput_IncRef(token->input, token);
+    else CExprScanInput_TokenIncRef(token->input, token);
 }
 
 void
-CExprScanner_DecRef(CExprScanner_t * self, CcsToken_t * token)
+CExprScanner_TokenDecRef(CExprScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) --token->refcnt;
-    else CExprScanInput_DecRef(token->input, token);
+    else CExprScanInput_TokenDecRef(token->input, token);
 }
 
 #ifdef CExprScanner_INDENTATION

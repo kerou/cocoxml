@@ -220,13 +220,13 @@ CcsScanInput_ResetPeek(CcsScanInput_t * self)
 }
 
 static void
-CcsScanInput_IncRef(CcsScanInput_t * self, CcsToken_t * token)
+CcsScanInput_TokenIncRef(CcsScanInput_t * self, CcsToken_t * token)
 {
     ++token->refcnt;
 }
 
 static void
-CcsScanInput_DecRef(CcsScanInput_t * self, CcsToken_t * token)
+CcsScanInput_TokenDecRef(CcsScanInput_t * self, CcsToken_t * token)
 {
     if (--token->refcnt > 1) return;
     CcsAssert(token->refcnt == 1);
@@ -353,7 +353,7 @@ CcsScanner_Destruct(CcsScanner_t * self)
 CcsToken_t *
 CcsScanner_GetDummy(CcsScanner_t * self)
 {
-    CcsScanner_IncRef(self, self->dummyToken);
+    CcsScanner_TokenIncRef(self, self->dummyToken);
     return self->dummyToken;
 }
 
@@ -365,7 +365,7 @@ CcsScanner_Scan(CcsScanner_t * self)
 	token = CcsScanInput_Scan(self->cur);
 	if (token->kind != self->eofSym) break;
 	if (self->cur->next == NULL) break;
-	CcsScanInput_DecRef(token->input, token);
+	CcsScanInput_TokenDecRef(token->input, token);
 	next = self->cur->next;
 	CcsScanInput_Destruct(self->cur);
 	self->cur = next;
@@ -382,7 +382,7 @@ CcsScanner_Peek(CcsScanner_t * self)
 	token = CcsScanInput_Peek(self->cur);
 	if (token->kind != self->eofSym) break;
 	if (cur->next == NULL) break;
-	CcsScanInput_DecRef(token->input, token);
+	CcsScanInput_TokenDecRef(token->input, token);
 	cur = cur->next;
     }
     return token;
@@ -397,17 +397,17 @@ CcsScanner_ResetPeek(CcsScanner_t * self)
 }
 
 void
-CcsScanner_IncRef(CcsScanner_t * self, CcsToken_t * token)
+CcsScanner_TokenIncRef(CcsScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) ++token->refcnt;
-    else CcsScanInput_IncRef(token->input, token);
+    else CcsScanInput_TokenIncRef(token->input, token);
 }
 
 void
-CcsScanner_DecRef(CcsScanner_t * self, CcsToken_t * token)
+CcsScanner_TokenDecRef(CcsScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) --token->refcnt;
-    else CcsScanInput_DecRef(token->input, token);
+    else CcsScanInput_TokenDecRef(token->input, token);
 }
 
 #ifdef CcsScanner_INDENTATION

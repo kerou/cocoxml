@@ -41,7 +41,7 @@ main(int argc, char * argv[])
     CcsScanner(&scanner, NULL, infp);
     t = NULL; la = CcsScanner_GetDummy(&scanner);
     for (;;) {
-	if (t) CcsScanner_DecRef(&scanner, t);
+	if (t) CcsScanner_TokenDecRef(&scanner, t);
 	t = la;
 	if (t) {
 	    printf("CcsToken(%s:%d,%d): kind = %d pos = %d: [%s]\n",
@@ -51,8 +51,8 @@ main(int argc, char * argv[])
 	la = CcsScanner_Scan(&scanner);
 	if (la->kind == scanner.eofSym) break;
     }
-    if (t) CcsScanner_DecRef(&scanner, t);
-    if (la) CcsScanner_DecRef(&scanner, la);
+    if (t) CcsScanner_TokenDecRef(&scanner, t);
+    if (la) CcsScanner_TokenDecRef(&scanner, la);
     CcsScanner_Destruct(&scanner);
     fclose(infp);
     return 0;

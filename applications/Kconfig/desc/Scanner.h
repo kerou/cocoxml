@@ -55,8 +55,8 @@ CcsToken_t * KcScanner_GetDummy(KcScanner_t * self);
 CcsToken_t * KcScanner_Scan(KcScanner_t * self);
 CcsToken_t * KcScanner_Peek(KcScanner_t * self);
 void KcScanner_ResetPeek(KcScanner_t * self);
-void KcScanner_IncRef(KcScanner_t * self, CcsToken_t * token);
-void KcScanner_DecRef(KcScanner_t * self, CcsToken_t * token);
+void KcScanner_TokenIncRef(KcScanner_t * self, CcsToken_t * token);
+void KcScanner_TokenDecRef(KcScanner_t * self, CcsToken_t * token);
 #ifdef KcScanner_INDENTATION
 /* If the col >= indentIn->col, not any IndentIn/IndentOut/IndentErr is generated.
  * Useful when we need to collect ANY text by indentation. */

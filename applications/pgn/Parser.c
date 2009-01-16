@@ -31,7 +31,7 @@ static const char * set[];
 static void
 PgnParser_Get(PgnParser_t * self)
 {
-    if (self->t) PgnScanner_DecRef(&self->scanner, self->t);
+    if (self->t) PgnScanner_TokenDecRef(&self->scanner, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = PgnScanner_Scan(&self->scanner);
@@ -172,8 +172,8 @@ PgnParser_Destruct(PgnParser_t * self)
 	PgnGame_Destruct(cur);
     }
     /*---- enable ----*/
-    if (self->la) PgnScanner_DecRef(&self->scanner, self->la);
-    if (self->t) PgnScanner_DecRef(&self->scanner, self->t);
+    if (self->la) PgnScanner_TokenDecRef(&self->scanner, self->la);
+    if (self->t) PgnScanner_TokenDecRef(&self->scanner, self->t);
     PgnScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }

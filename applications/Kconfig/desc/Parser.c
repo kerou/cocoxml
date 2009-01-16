@@ -19,7 +19,7 @@ static const char * set[];
 static void
 KcParser_Get(KcParser_t * self)
 {
-    if (self->t) KcScanner_DecRef(&self->scanner, self->t);
+    if (self->t) KcScanner_TokenDecRef(&self->scanner, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = KcScanner_Scan(&self->scanner);
@@ -183,8 +183,8 @@ KcParser_Destruct(KcParser_t * self)
     KcSymbolTable_Destruct(&self->symtab);
     if (self->mainmenu)  CcsFree(self->mainmenu);
     /*---- enable ----*/
-    if (self->la) KcScanner_DecRef(&self->scanner, self->la);
-    if (self->t) KcScanner_DecRef(&self->scanner, self->t);
+    if (self->la) KcScanner_TokenDecRef(&self->scanner, self->la);
+    if (self->t) KcScanner_TokenDecRef(&self->scanner, self->t);
     KcScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }
@@ -478,13 +478,13 @@ KcParser_Help(KcParser_t * self, CcsPosition_t ** pos)
     KcParser_Expect(self, 6);
     KcParser_Expect(self, 1);
     KcScanner_IndentLimit(&self->scanner, self->t);
-    KcScanner_IncRef(&self->scanner, beg = self->la); 
+    KcScanner_TokenIncRef(&self->scanner, beg = self->la); 
     while (KcParser_StartOf(self, 4)) {
 	KcParser_Get(self);
     }
     KcParser_Expect(self, 2);
     *pos = KcScanner_GetPosition(&self->scanner, beg, self->t);
-    KcScanner_DecRef(&self->scanner, beg); 
+    KcScanner_TokenDecRef(&self->scanner, beg); 
 }
 
 static void

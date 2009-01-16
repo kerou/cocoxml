@@ -15,6 +15,7 @@ License: LGPLv2
 struct KcScanInput_s {
     KcScanInput_t * next;
 
+    int              refcnt;
     KcScanner_t   * scanner;
     char           * fname;
     FILE           * fp;
@@ -46,6 +47,8 @@ static CcsToken_t * KcScanInput_NextToken(KcScanInput_t * self);
 static CcsBool_t
 KcScanInput_Init(KcScanInput_t * self, KcScanner_t * scanner, FILE * fp)
 {
+    self->next = NULL;
+    self->refcnt = 1;
     self->scanner = scanner;
     self->fp = fp;
     if (!CcsBuffer(&self->buffer, fp)) goto errquit0;
@@ -79,7 +82,6 @@ KcScanInput(KcScanner_t * scanner, FILE * fp)
 {
     KcScanInput_t * self;
     if (!(self = CcsMalloc(sizeof(KcScanInput_t)))) goto errquit0;
-    self->next = NULL;
     self->fname = NULL;
     if (!KcScanInput_Init(self, scanner, fp)) goto errquit1;
     return self;
@@ -101,7 +103,6 @@ KcScanInput_ByName(KcScanner_t * scanner, const CcsIncPathList_t * list,
 	goto errquit0;
     if (!(self = CcsMalloc(sizeof(KcScanInput_t) + strlen(infnpath) + 1)))
 	goto errquit1;
-    self->next = NULL;
     strcpy(self->fname = (char *)(self + 1), infnpath);
     if (!KcScanInput_Init(self, scanner, fp)) goto errquit2;
     return self;
@@ -197,13 +198,13 @@ KcScanInput_ResetPeek(KcScanInput_t * self)
 }
 
 static void
-KcScanInput_IncRef(KcScanInput_t * self, CcsToken_t * token)
+KcScanInput_TokenIncRef(KcScanInput_t * self, CcsToken_t * token)
 {
     ++token->refcnt;
 }
 
 static void
-KcScanInput_DecRef(KcScanInput_t * self, CcsToken_t * token)
+KcScanInput_TokenDecRef(KcScanInput_t * self, CcsToken_t * token)
 {
     if (--token->refcnt > 1) return;
     CcsAssert(token->refcnt == 1);
@@ -330,7 +331,7 @@ KcScanner_Destruct(KcScanner_t * self)
 CcsToken_t *
 KcScanner_GetDummy(KcScanner_t * self)
 {
-    KcScanner_IncRef(self, self->dummyToken);
+    KcScanner_TokenIncRef(self, self->dummyToken);
     return self->dummyToken;
 }
 
@@ -342,7 +343,7 @@ KcScanner_Scan(KcScanner_t * self)
 	token = KcScanInput_Scan(self->cur);
 	if (token->kind != self->eofSym) break;
 	if (self->cur->next == NULL) break;
-	KcScanInput_DecRef(token->input, token);
+	KcScanInput_TokenDecRef(token->input, token);
 	next = self->cur->next;
 	KcScanInput_Destruct(self->cur);
 	self->cur = next;
@@ -359,7 +360,7 @@ KcScanner_Peek(KcScanner_t * self)
 	token = KcScanInput_Peek(self->cur);
 	if (token->kind != self->eofSym) break;
 	if (cur->next == NULL) break;
-	KcScanInput_DecRef(token->input, token);
+	KcScanInput_TokenDecRef(token->input, token);
 	cur = cur->next;
     }
     return token;
@@ -374,17 +375,17 @@ KcScanner_ResetPeek(KcScanner_t * self)
 }
 
 void
-KcScanner_IncRef(KcScanner_t * self, CcsToken_t * token)
+KcScanner_TokenIncRef(KcScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) ++token->refcnt;
-    else KcScanInput_IncRef(token->input, token);
+    else KcScanInput_TokenIncRef(token->input, token);
 }
 
 void
-KcScanner_DecRef(KcScanner_t * self, CcsToken_t * token)
+KcScanner_TokenDecRef(KcScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) --token->refcnt;
-    else KcScanInput_DecRef(token->input, token);
+    else KcScanInput_TokenDecRef(token->input, token);
 }
 
 #ifdef KcScanner_INDENTATION

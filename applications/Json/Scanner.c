@@ -15,6 +15,7 @@ License: LGPLv2
 struct JsonScanInput_s {
     JsonScanInput_t * next;
 
+    int              refcnt;
     JsonScanner_t   * scanner;
     char           * fname;
     FILE           * fp;
@@ -46,6 +47,8 @@ static CcsToken_t * JsonScanInput_NextToken(JsonScanInput_t * self);
 static CcsBool_t
 JsonScanInput_Init(JsonScanInput_t * self, JsonScanner_t * scanner, FILE * fp)
 {
+    self->next = NULL;
+    self->refcnt = 1;
     self->scanner = scanner;
     self->fp = fp;
     if (!CcsBuffer(&self->buffer, fp)) goto errquit0;
@@ -79,7 +82,6 @@ JsonScanInput(JsonScanner_t * scanner, FILE * fp)
 {
     JsonScanInput_t * self;
     if (!(self = CcsMalloc(sizeof(JsonScanInput_t)))) goto errquit0;
-    self->next = NULL;
     self->fname = NULL;
     if (!JsonScanInput_Init(self, scanner, fp)) goto errquit1;
     return self;
@@ -101,7 +103,6 @@ JsonScanInput_ByName(JsonScanner_t * scanner, const CcsIncPathList_t * list,
 	goto errquit0;
     if (!(self = CcsMalloc(sizeof(JsonScanInput_t) + strlen(infnpath) + 1)))
 	goto errquit1;
-    self->next = NULL;
     strcpy(self->fname = (char *)(self + 1), infnpath);
     if (!JsonScanInput_Init(self, scanner, fp)) goto errquit2;
     return self;
@@ -197,13 +198,13 @@ JsonScanInput_ResetPeek(JsonScanInput_t * self)
 }
 
 static void
-JsonScanInput_IncRef(JsonScanInput_t * self, CcsToken_t * token)
+JsonScanInput_TokenIncRef(JsonScanInput_t * self, CcsToken_t * token)
 {
     ++token->refcnt;
 }
 
 static void
-JsonScanInput_DecRef(JsonScanInput_t * self, CcsToken_t * token)
+JsonScanInput_TokenDecRef(JsonScanInput_t * self, CcsToken_t * token)
 {
     if (--token->refcnt > 1) return;
     CcsAssert(token->refcnt == 1);
@@ -330,7 +331,7 @@ JsonScanner_Destruct(JsonScanner_t * self)
 CcsToken_t *
 JsonScanner_GetDummy(JsonScanner_t * self)
 {
-    JsonScanner_IncRef(self, self->dummyToken);
+    JsonScanner_TokenIncRef(self, self->dummyToken);
     return self->dummyToken;
 }
 
@@ -342,7 +343,7 @@ JsonScanner_Scan(JsonScanner_t * self)
 	token = JsonScanInput_Scan(self->cur);
 	if (token->kind != self->eofSym) break;
 	if (self->cur->next == NULL) break;
-	JsonScanInput_DecRef(token->input, token);
+	JsonScanInput_TokenDecRef(token->input, token);
 	next = self->cur->next;
 	JsonScanInput_Destruct(self->cur);
 	self->cur = next;
@@ -359,7 +360,7 @@ JsonScanner_Peek(JsonScanner_t * self)
 	token = JsonScanInput_Peek(self->cur);
 	if (token->kind != self->eofSym) break;
 	if (cur->next == NULL) break;
-	JsonScanInput_DecRef(token->input, token);
+	JsonScanInput_TokenDecRef(token->input, token);
 	cur = cur->next;
     }
     return token;
@@ -374,17 +375,17 @@ JsonScanner_ResetPeek(JsonScanner_t * self)
 }
 
 void
-JsonScanner_IncRef(JsonScanner_t * self, CcsToken_t * token)
+JsonScanner_TokenIncRef(JsonScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) ++token->refcnt;
-    else JsonScanInput_IncRef(token->input, token);
+    else JsonScanInput_TokenIncRef(token->input, token);
 }
 
 void
-JsonScanner_DecRef(JsonScanner_t * self, CcsToken_t * token)
+JsonScanner_TokenDecRef(JsonScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) --token->refcnt;
-    else JsonScanInput_DecRef(token->input, token);
+    else JsonScanInput_TokenDecRef(token->input, token);
 }
 
 #ifdef JsonScanner_INDENTATION
