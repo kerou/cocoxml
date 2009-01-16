@@ -134,6 +134,37 @@ CfScanInput_Destruct(CfScanInput_t * self)
 }
 
 static void
+CfScanInput_IncRef(CfScanInput_t * self)
+{
+    ++self->refcnt;
+}
+
+static void
+CfScanInput_DecRef(CfScanInput_t * self)
+{
+    if (--self->refcnt > 0) return;
+    CfScanInput_Destruct(self);
+}
+
+static CcsToken_t *
+CfScanInput_NewToken0(CfScanInput_t * self, int kind,
+		       int pos, int line, int col,
+		       const char * val, size_t vallen)
+{
+    CcsToken_t * t;
+    if ((t = CcsToken(self, kind, self->fname, pos, line, col, val, vallen)))
+	CfScanInput_IncRef(self);
+    return t;
+}
+#ifdef CfScanner_INDENTATION
+static CcsToken_t *
+CfScanInput_NewToken(CfScanInput_t * self, int kind)
+{
+    return CfScanInput_NewToken0(self, kind, self->pos,
+				  self->line, self->col, NULL, 0);
+}
+#endif
+static void
 CfScanInput_GetCh(CfScanInput_t * self)
 {
     if (self->oldEols > 0) {
@@ -219,6 +250,12 @@ CfScanInput_TokenDecRef(CfScanInput_t * self, CcsToken_t * token)
 	    self->peekToken = &self->busyTokenList;
 	self->busyTokenList = token->next;
 	CcsToken_Destruct(token);
+	if (self->refcnt > 1) CfScanInput_DecRef(self);
+	else {
+	    CcsAssert(self->busyTokenList == NULL);
+	    CfScanInput_DecRef(self);
+	    return;
+	}
 	token = self->busyTokenList;
     }
     /* Adjust CcsBuffer busy pointer */
@@ -321,6 +358,8 @@ CfScanner_Destruct(CfScanner_t * self)
     CfScanInput_t * cur, * next;
     for (cur = self->cur; cur; cur = next) {
 	next = cur->next;
+	/* May be trigged by .atg semantic code. */
+	CcsAssert(cur->refcnt == 1);
 	CfScanInput_Destruct(cur);
     }
     /* May be trigged by .atg semantic code. */
@@ -345,7 +384,7 @@ CfScanner_Scan(CfScanner_t * self)
 	if (self->cur->next == NULL) break;
 	CfScanInput_TokenDecRef(token->input, token);
 	next = self->cur->next;
-	CfScanInput_Destruct(self->cur);
+	CfScanInput_DecRef(self->cur);
 	self->cur = next;
     }
     return token;
@@ -632,8 +671,7 @@ CfScanInput_IndentGenerator(CfScanInput_t * self)
     if (self->ch == EoF) {
 	head = NULL;
 	while (self->indent < self->indentUsed - 1) {
-	    cur = CcsToken(self, CfScanner_INDENT_OUT, self->fname, self->pos,
-			   self->line, self->col, NULL, 0);
+	    cur = CfScanInput_NewToken(self, CfScanner_INDENT_OUT);
 	    cur->next = head; head = cur;
 	    --self->indentUsed;
 	}
@@ -653,17 +691,14 @@ CfScanInput_IndentGenerator(CfScanInput_t * self)
 	}
 	CcsAssert(self->indentUsed < self->indentLast);
 	*self->indentUsed++ = self->col;
-	return CcsToken(self, CfScanner_INDENT_IN, self->fname, self->pos,
-			self->line, self->col, NULL, 0);
+	return CfScanInput_NewToken(self, CfScanner_INDENT_IN);
     }
     for (curIndent = self->indentUsed - 1; self->col < *curIndent; --curIndent);
     if (self->col > *curIndent)
-	return CcsToken(self, CfScanner_INDENT_ERR, self->fname, self->pos,
-			self->line, self->col, NULL, 0);
+	return CfScanInput_NewToken(self, CfScanner_INDENT_ERR);
     head = NULL;
     while (curIndent < self->indentUsed - 1) {
-	cur = CcsToken(self, CfScanner_INDENT_OUT, self->fname, self->pos,
-		       self->line, self->col, NULL, 0);
+	cur = CfScanInput_NewToken(self, CfScanner_INDENT_OUT);
 	cur->next = head; head = cur;
 	--self->indentUsed;
     }
@@ -807,9 +842,10 @@ CfScanInput_NextToken(CfScanInput_t * self)
     /*---- enable ----*/
     }
     CcsAssert(kind != -2);
-    t = CcsToken(self, kind, self->fname, pos, line, col,
-		 CcsBuffer_GetString(&self->buffer, pos, self->pos - pos),
-		 self->pos - pos);
+    t = CfScanInput_NewToken0(self, kind, pos, line, col,
+			       CcsBuffer_GetString(&self->buffer,
+						   pos, self->pos - pos),
+			       self->pos - pos);
     CcsBuffer_Unlock(&self->buffer);
     return t;
 }
