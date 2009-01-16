@@ -18,7 +18,7 @@ static const char * set[];
 static void
 CfParser_Get(CfParser_t * self)
 {
-    if (self->t) CfScanner_DecRef(&self->scanner, self->t);
+    if (self->t) CfScanner_TokenDecRef(&self->scanner, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = CfScanner_Scan(&self->scanner);
@@ -154,8 +154,8 @@ CfParser_Destruct(CfParser_t * self)
     /*---- destructor ----*/
     CfValueMap_Destruct(&self->valmap);
     /*---- enable ----*/
-    if (self->la) CfScanner_DecRef(&self->scanner, self->la);
-    if (self->t) CfScanner_DecRef(&self->scanner, self->t);
+    if (self->la) CfScanner_TokenDecRef(&self->scanner, self->la);
+    if (self->t) CfScanner_TokenDecRef(&self->scanner, self->t);
     CfScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }

@@ -37,6 +37,7 @@
 struct CcsXmlScanInput_s {
     CcsXmlScanInput_t * next;
 
+    int              refcnt;
     CcsXmlScanner_t   * scanner;
     char           * fname;
     FILE           * fp;
@@ -68,6 +69,8 @@ static CcsToken_t * CcsXmlScanInput_NextToken(CcsXmlScanInput_t * self);
 static CcsBool_t
 CcsXmlScanInput_Init(CcsXmlScanInput_t * self, CcsXmlScanner_t * scanner, FILE * fp)
 {
+    self->next = NULL;
+    self->refcnt = 1;
     self->scanner = scanner;
     self->fp = fp;
     if (!CcsBuffer(&self->buffer, fp)) goto errquit0;
@@ -101,7 +104,6 @@ CcsXmlScanInput(CcsXmlScanner_t * scanner, FILE * fp)
 {
     CcsXmlScanInput_t * self;
     if (!(self = CcsMalloc(sizeof(CcsXmlScanInput_t)))) goto errquit0;
-    self->next = NULL;
     self->fname = NULL;
     if (!CcsXmlScanInput_Init(self, scanner, fp)) goto errquit1;
     return self;
@@ -123,7 +125,6 @@ CcsXmlScanInput_ByName(CcsXmlScanner_t * scanner, const CcsIncPathList_t * list,
 	goto errquit0;
     if (!(self = CcsMalloc(sizeof(CcsXmlScanInput_t) + strlen(infnpath) + 1)))
 	goto errquit1;
-    self->next = NULL;
     strcpy(self->fname = (char *)(self + 1), infnpath);
     if (!CcsXmlScanInput_Init(self, scanner, fp)) goto errquit2;
     return self;
@@ -219,13 +220,13 @@ CcsXmlScanInput_ResetPeek(CcsXmlScanInput_t * self)
 }
 
 static void
-CcsXmlScanInput_IncRef(CcsXmlScanInput_t * self, CcsToken_t * token)
+CcsXmlScanInput_TokenIncRef(CcsXmlScanInput_t * self, CcsToken_t * token)
 {
     ++token->refcnt;
 }
 
 static void
-CcsXmlScanInput_DecRef(CcsXmlScanInput_t * self, CcsToken_t * token)
+CcsXmlScanInput_TokenDecRef(CcsXmlScanInput_t * self, CcsToken_t * token)
 {
     if (--token->refcnt > 1) return;
     CcsAssert(token->refcnt == 1);
@@ -352,7 +353,7 @@ CcsXmlScanner_Destruct(CcsXmlScanner_t * self)
 CcsToken_t *
 CcsXmlScanner_GetDummy(CcsXmlScanner_t * self)
 {
-    CcsXmlScanner_IncRef(self, self->dummyToken);
+    CcsXmlScanner_TokenIncRef(self, self->dummyToken);
     return self->dummyToken;
 }
 
@@ -364,7 +365,7 @@ CcsXmlScanner_Scan(CcsXmlScanner_t * self)
 	token = CcsXmlScanInput_Scan(self->cur);
 	if (token->kind != self->eofSym) break;
 	if (self->cur->next == NULL) break;
-	CcsXmlScanInput_DecRef(token->input, token);
+	CcsXmlScanInput_TokenDecRef(token->input, token);
 	next = self->cur->next;
 	CcsXmlScanInput_Destruct(self->cur);
 	self->cur = next;
@@ -381,7 +382,7 @@ CcsXmlScanner_Peek(CcsXmlScanner_t * self)
 	token = CcsXmlScanInput_Peek(self->cur);
 	if (token->kind != self->eofSym) break;
 	if (cur->next == NULL) break;
-	CcsXmlScanInput_DecRef(token->input, token);
+	CcsXmlScanInput_TokenDecRef(token->input, token);
 	cur = cur->next;
     }
     return token;
@@ -396,17 +397,17 @@ CcsXmlScanner_ResetPeek(CcsXmlScanner_t * self)
 }
 
 void
-CcsXmlScanner_IncRef(CcsXmlScanner_t * self, CcsToken_t * token)
+CcsXmlScanner_TokenIncRef(CcsXmlScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) ++token->refcnt;
-    else CcsXmlScanInput_IncRef(token->input, token);
+    else CcsXmlScanInput_TokenIncRef(token->input, token);
 }
 
 void
-CcsXmlScanner_DecRef(CcsXmlScanner_t * self, CcsToken_t * token)
+CcsXmlScanner_TokenDecRef(CcsXmlScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) --token->refcnt;
-    else CcsXmlScanInput_DecRef(token->input, token);
+    else CcsXmlScanInput_TokenDecRef(token->input, token);
 }
 
 #ifdef CcsXmlScanner_INDENTATION

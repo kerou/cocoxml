@@ -49,7 +49,7 @@ static const char * set[];
 static void
 CcsParser_Get(CcsParser_t * self)
 {
-    if (self->t) CcsScanner_DecRef(&self->scanner, self->t);
+    if (self->t) CcsScanner_TokenDecRef(&self->scanner, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = CcsScanner_Scan(&self->scanner);
@@ -211,8 +211,8 @@ CcsParser_Destruct(CcsParser_t * self)
 	CcFree(self->tokenString);
     CcGlobals_Destruct(&self->globals);
     /*---- enable ----*/
-    if (self->la) CcsScanner_DecRef(&self->scanner, self->la);
-    if (self->t) CcsScanner_DecRef(&self->scanner, self->t);
+    if (self->la) CcsScanner_TokenDecRef(&self->scanner, self->la);
+    if (self->t) CcsScanner_TokenDecRef(&self->scanner, self->t);
     CcsScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }
@@ -243,30 +243,30 @@ CcsParser_Coco(CcsParser_t * self)
     gramName = CcStrdup(self->t->val); 
     if (self->la->kind == 7) {
 	CcsParser_Get(self);
-	CcsScanner_IncRef(&self->scanner, beg = self->la); 
+	CcsScanner_TokenIncRef(&self->scanner, beg = self->la); 
 	while (CcsParser_StartOf(self, 1)) {
 	    CcsParser_Get(self);
 	}
 	self->syntax->members = CcsScanner_GetPosition(&self->scanner, beg, self->la);
-	CcsScanner_DecRef(&self->scanner, beg); 
+	CcsScanner_TokenDecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 8) {
 	CcsParser_Get(self);
-	CcsScanner_IncRef(&self->scanner, beg = self->la); 
+	CcsScanner_TokenIncRef(&self->scanner, beg = self->la); 
 	while (CcsParser_StartOf(self, 2)) {
 	    CcsParser_Get(self);
 	}
 	self->syntax->constructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
-	CcsScanner_DecRef(&self->scanner, beg); 
+	CcsScanner_TokenDecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 9) {
 	CcsParser_Get(self);
-	CcsScanner_IncRef(&self->scanner, beg = self->la); 
+	CcsScanner_TokenIncRef(&self->scanner, beg = self->la); 
 	while (CcsParser_StartOf(self, 3)) {
 	    CcsParser_Get(self);
 	}
 	self->syntax->destructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
-	CcsScanner_DecRef(&self->scanner, beg); 
+	CcsScanner_TokenDecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 10) {
 	CcsParser_Get(self);
@@ -402,13 +402,13 @@ CcsParser_SectionDecl(CcsParser_t * self)
     CcsParser_Expect(self, 25);
     CcsParser_Expect(self, 1);
     secname = CcStrdup(self->t->val);
-    CcsScanner_IncRef(&self->scanner, beg = self->t); 
+    CcsScanner_TokenIncRef(&self->scanner, beg = self->t); 
     while (CcsParser_StartOf(self, 6)) {
 	CcsParser_Get(self);
     }
     CcGlobals_NewSection(&self->globals, secname,
 			 CcsScanner_GetPositionBetween(&self->scanner, beg, self->la));
-    CcsScanner_DecRef(&self->scanner, beg);
+    CcsScanner_TokenDecRef(&self->scanner, beg);
     CcFree(secname); 
     CcsParser_Expect(self, 23);
     CcsParser_Expect(self, 22);
@@ -421,7 +421,7 @@ CcsParser_SetDecl(CcsParser_t * self)
     const char * name; CcCharClass_t * c; 
     CcsParser_Expect(self, 1);
     name = self->t->val;
-    CcsScanner_IncRef(&self->scanner, nameToken = self->t);
+    CcsScanner_TokenIncRef(&self->scanner, nameToken = self->t);
     c = CcLexical_FindCharClassN(self->lexical, name);
     if (c != NULL)
 	CcsParser_SemErrT(self, "name '%s' declared twice", name); 
@@ -430,7 +430,7 @@ CcsParser_SetDecl(CcsParser_t * self)
     if (CcCharSet_Elements(s) == 0)
 	CcsParser_SemErrT(self, "character set must not be empty");
     CcLexical_NewCharClass(self->lexical, name, s);
-    CcsScanner_DecRef(&self->scanner, nameToken); 
+    CcsScanner_TokenDecRef(&self->scanner, nameToken); 
     CcsParser_Expect(self, 22);
 }
 
@@ -529,7 +529,7 @@ CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym)
     CcsToken_t * beg; 
     if (self->la->kind == 30) {
 	CcsParser_Get(self);
-	CcsScanner_IncRef(&self->scanner, beg = self->la); 
+	CcsScanner_TokenIncRef(&self->scanner, beg = self->la); 
 	while (CcsParser_StartOf(self, 10)) {
 	    if (CcsParser_StartOf(self, 11)) {
 		CcsParser_Get(self);
@@ -540,10 +540,10 @@ CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym)
 	}
 	CcsParser_Expect(self, 31);
 	sym->attrPos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
-	CcsScanner_DecRef(&self->scanner, beg); 
+	CcsScanner_TokenDecRef(&self->scanner, beg); 
     } else if (self->la->kind == 32) {
 	CcsParser_Get(self);
-	CcsScanner_IncRef(&self->scanner, beg = self->la); 
+	CcsScanner_TokenIncRef(&self->scanner, beg = self->la); 
 	while (CcsParser_StartOf(self, 12)) {
 	    if (CcsParser_StartOf(self, 13)) {
 		CcsParser_Get(self);
@@ -554,7 +554,7 @@ CcsParser_AttrDecl(CcsParser_t * self, CcSymbolNT_t * sym)
 	}
 	CcsParser_Expect(self, 33);
 	sym->attrPos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
-	CcsScanner_DecRef(&self->scanner, beg); 
+	CcsScanner_TokenDecRef(&self->scanner, beg); 
     } else CcsParser_SynErr(self, 51);
 }
 
@@ -563,7 +563,7 @@ CcsParser_SemText(CcsParser_t * self, CcsPosition_t ** pos)
 {
     CcsToken_t * beg; 
     CcsParser_Expect(self, 45);
-    CcsScanner_IncRef(&self->scanner, beg = self->la); 
+    CcsScanner_TokenIncRef(&self->scanner, beg = self->la); 
     while (CcsParser_StartOf(self, 14)) {
 	if (CcsParser_StartOf(self, 15)) {
 	    CcsParser_Get(self);
@@ -577,7 +577,7 @@ CcsParser_SemText(CcsParser_t * self, CcsPosition_t ** pos)
     }
     CcsParser_Expect(self, 46);
     *pos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
-    CcsScanner_DecRef(&self->scanner, beg); 
+    CcsScanner_TokenDecRef(&self->scanner, beg); 
 }
 
 static void
@@ -712,10 +712,10 @@ CcsParser_Resolver(CcsParser_t * self, CcsPosition_t ** pos)
     CcsToken_t * beg; 
     CcsParser_Expect(self, 43);
     CcsParser_Expect(self, 36);
-    CcsScanner_IncRef(&self->scanner, beg = self->la); 
+    CcsScanner_TokenIncRef(&self->scanner, beg = self->la); 
     CcsParser_Condition(self);
     *pos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
-    CcsScanner_DecRef(&self->scanner, beg); 
+    CcsScanner_TokenDecRef(&self->scanner, beg); 
 }
 
 static void
@@ -835,7 +835,7 @@ CcsParser_Attribs(CcsParser_t * self, CcNode_t * p)
     CcsToken_t * beg; 
     if (self->la->kind == 30) {
 	CcsParser_Get(self);
-	CcsScanner_IncRef(&self->scanner, beg = self->la); 
+	CcsScanner_TokenIncRef(&self->scanner, beg = self->la); 
 	while (CcsParser_StartOf(self, 10)) {
 	    if (CcsParser_StartOf(self, 11)) {
 		CcsParser_Get(self);
@@ -847,10 +847,10 @@ CcsParser_Attribs(CcsParser_t * self, CcNode_t * p)
 	CcsParser_Expect(self, 31);
 	CcNode_SetPosition(p, CcsScanner_GetPosition(&self->scanner,
 						     beg, self->t));
-	CcsScanner_DecRef(&self->scanner, beg); 
+	CcsScanner_TokenDecRef(&self->scanner, beg); 
     } else if (self->la->kind == 32) {
 	CcsParser_Get(self);
-	CcsScanner_IncRef(&self->scanner, beg = self->la); 
+	CcsScanner_TokenIncRef(&self->scanner, beg = self->la); 
 	while (CcsParser_StartOf(self, 12)) {
 	    if (CcsParser_StartOf(self, 13)) {
 		CcsParser_Get(self);
@@ -862,7 +862,7 @@ CcsParser_Attribs(CcsParser_t * self, CcNode_t * p)
 	CcsParser_Expect(self, 33);
 	CcNode_SetPosition(p, CcsScanner_GetPosition(&self->scanner,
 						     beg, self->t));
-	CcsScanner_DecRef(&self->scanner, beg); 
+	CcsScanner_TokenDecRef(&self->scanner, beg); 
     } else CcsParser_SynErr(self, 56);
 }
 

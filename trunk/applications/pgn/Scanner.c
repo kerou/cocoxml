@@ -28,6 +28,7 @@ Author: Charles Wang <charlesw123456@gmail.com>
 struct PgnScanInput_s {
     PgnScanInput_t * next;
 
+    int              refcnt;
     PgnScanner_t   * scanner;
     char           * fname;
     FILE           * fp;
@@ -59,6 +60,8 @@ static CcsToken_t * PgnScanInput_NextToken(PgnScanInput_t * self);
 static CcsBool_t
 PgnScanInput_Init(PgnScanInput_t * self, PgnScanner_t * scanner, FILE * fp)
 {
+    self->next = NULL;
+    self->refcnt = 1;
     self->scanner = scanner;
     self->fp = fp;
     if (!CcsBuffer(&self->buffer, fp)) goto errquit0;
@@ -92,7 +95,6 @@ PgnScanInput(PgnScanner_t * scanner, FILE * fp)
 {
     PgnScanInput_t * self;
     if (!(self = CcsMalloc(sizeof(PgnScanInput_t)))) goto errquit0;
-    self->next = NULL;
     self->fname = NULL;
     if (!PgnScanInput_Init(self, scanner, fp)) goto errquit1;
     return self;
@@ -114,7 +116,6 @@ PgnScanInput_ByName(PgnScanner_t * scanner, const CcsIncPathList_t * list,
 	goto errquit0;
     if (!(self = CcsMalloc(sizeof(PgnScanInput_t) + strlen(infnpath) + 1)))
 	goto errquit1;
-    self->next = NULL;
     strcpy(self->fname = (char *)(self + 1), infnpath);
     if (!PgnScanInput_Init(self, scanner, fp)) goto errquit2;
     return self;
@@ -210,13 +211,13 @@ PgnScanInput_ResetPeek(PgnScanInput_t * self)
 }
 
 static void
-PgnScanInput_IncRef(PgnScanInput_t * self, CcsToken_t * token)
+PgnScanInput_TokenIncRef(PgnScanInput_t * self, CcsToken_t * token)
 {
     ++token->refcnt;
 }
 
 static void
-PgnScanInput_DecRef(PgnScanInput_t * self, CcsToken_t * token)
+PgnScanInput_TokenDecRef(PgnScanInput_t * self, CcsToken_t * token)
 {
     if (--token->refcnt > 1) return;
     CcsAssert(token->refcnt == 1);
@@ -343,7 +344,7 @@ PgnScanner_Destruct(PgnScanner_t * self)
 CcsToken_t *
 PgnScanner_GetDummy(PgnScanner_t * self)
 {
-    PgnScanner_IncRef(self, self->dummyToken);
+    PgnScanner_TokenIncRef(self, self->dummyToken);
     return self->dummyToken;
 }
 
@@ -355,7 +356,7 @@ PgnScanner_Scan(PgnScanner_t * self)
 	token = PgnScanInput_Scan(self->cur);
 	if (token->kind != self->eofSym) break;
 	if (self->cur->next == NULL) break;
-	PgnScanInput_DecRef(token->input, token);
+	PgnScanInput_TokenDecRef(token->input, token);
 	next = self->cur->next;
 	PgnScanInput_Destruct(self->cur);
 	self->cur = next;
@@ -372,7 +373,7 @@ PgnScanner_Peek(PgnScanner_t * self)
 	token = PgnScanInput_Peek(self->cur);
 	if (token->kind != self->eofSym) break;
 	if (cur->next == NULL) break;
-	PgnScanInput_DecRef(token->input, token);
+	PgnScanInput_TokenDecRef(token->input, token);
 	cur = cur->next;
     }
     return token;
@@ -387,17 +388,17 @@ PgnScanner_ResetPeek(PgnScanner_t * self)
 }
 
 void
-PgnScanner_IncRef(PgnScanner_t * self, CcsToken_t * token)
+PgnScanner_TokenIncRef(PgnScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) ++token->refcnt;
-    else PgnScanInput_IncRef(token->input, token);
+    else PgnScanInput_TokenIncRef(token->input, token);
 }
 
 void
-PgnScanner_DecRef(PgnScanner_t * self, CcsToken_t * token)
+PgnScanner_TokenDecRef(PgnScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) --token->refcnt;
-    else PgnScanInput_DecRef(token->input, token);
+    else PgnScanInput_TokenDecRef(token->input, token);
 }
 
 #ifdef PgnScanner_INDENTATION

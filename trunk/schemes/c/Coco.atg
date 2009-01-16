@@ -117,17 +117,17 @@ Coco                            (. CcSymbol_t  * sym;
   { SchemeDecl | SectionDecl }
   "COMPILER"                    (. self->genScanner = TRUE; .)
   ident                         (. gramName = CcStrdup(self->t->val); .)
-  [ "MEMBERS"                   (. CcsScanner_IncRef(&self->scanner, beg = self->la); .)
+  [ "MEMBERS"                   (. CcsScanner_TokenIncRef(&self->scanner, beg = self->la); .)
     { ANY }                     (. self->syntax->members = CcsScanner_GetPosition(&self->scanner, beg, self->la);
-      	  			   CcsScanner_DecRef(&self->scanner, beg); .)
+      	  			   CcsScanner_TokenDecRef(&self->scanner, beg); .)
     ]
-  [ "CONSTRUCTOR"               (. CcsScanner_IncRef(&self->scanner, beg = self->la); .)
+  [ "CONSTRUCTOR"               (. CcsScanner_TokenIncRef(&self->scanner, beg = self->la); .)
     { ANY }			(. self->syntax->constructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
-      	  			   CcsScanner_DecRef(&self->scanner, beg); .)
+      	  			   CcsScanner_TokenDecRef(&self->scanner, beg); .)
     ]
-  [ "DESTRUCTOR"                (. CcsScanner_IncRef(&self->scanner, beg = self->la); .)
+  [ "DESTRUCTOR"                (. CcsScanner_TokenIncRef(&self->scanner, beg = self->la); .)
     { ANY }			(. self->syntax->destructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
-      	  			   CcsScanner_DecRef(&self->scanner, beg); .)
+      	  			   CcsScanner_TokenDecRef(&self->scanner, beg); .)
     ]
   [ "IGNORECASE"                (. self->lexical->ignoreCase = TRUE; .) ]   /* pdt */
   [ "INDENTATIONS"              (. self->lexical->indentUsed = TRUE;
@@ -217,10 +217,10 @@ SchemeDecl
 SectionDecl       (. char * secname; CcsToken_t * beg; .)
 =
   "SECTION" ident (. secname = CcStrdup(self->t->val);
-  	    	     CcsScanner_IncRef(&self->scanner, beg = self->t); .)
+  	    	     CcsScanner_TokenIncRef(&self->scanner, beg = self->t); .)
   { ANY }         (. CcGlobals_NewSection(&self->globals, secname,
     		     			  CcsScanner_GetPositionBetween(&self->scanner, beg, self->la));
-		     CcsScanner_DecRef(&self->scanner, beg);
+		     CcsScanner_TokenDecRef(&self->scanner, beg);
 		     CcFree(secname); .)
   "END" '.'
 .
@@ -231,14 +231,14 @@ SetDecl                         (. CcCharSet_t * s; CcsToken_t * nameToken;
 				   const char * name; CcCharClass_t * c; .)
 =
   ident                         (. name = self->t->val;
-				   CcsScanner_IncRef(&self->scanner, nameToken = self->t);
+				   CcsScanner_TokenIncRef(&self->scanner, nameToken = self->t);
 				   c = CcLexical_FindCharClassN(self->lexical, name);
 				   if (c != NULL)
 				       CcsParser_SemErrT(self, "name '%s' declared twice", name); .)
   '=' Set<&s>                   (. if (CcCharSet_Elements(s) == 0)
 				       CcsParser_SemErrT(self, "character set must not be empty");
 				   CcLexical_NewCharClass(self->lexical, name, s);
-				   CcsScanner_DecRef(&self->scanner, nameToken); .)
+				   CcsScanner_TokenDecRef(&self->scanner, nameToken); .)
   '.'
 .
 
@@ -346,18 +346,18 @@ TokenDecl<const CcObjectType_t * typ> (. char * name = NULL; int kind; CcSymbol_
 
 AttrDecl<CcSymbolNT_t * sym>    (. CcsToken_t * beg; .)
 =
-  '<'                           (. CcsScanner_IncRef(&self->scanner, beg = self->la); .)
+  '<'                           (. CcsScanner_TokenIncRef(&self->scanner, beg = self->la); .)
   { ANY
   | badString                   (. CcsParser_SemErrT(self, "bad string in attributes"); .)
   }
   '>'                           (. sym->attrPos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
-  				   CcsScanner_DecRef(&self->scanner, beg); .)
-| "<."                          (. CcsScanner_IncRef(&self->scanner, beg = self->la); .)
+  				   CcsScanner_TokenDecRef(&self->scanner, beg); .)
+| "<."                          (. CcsScanner_TokenIncRef(&self->scanner, beg = self->la); .)
   { ANY
   | badString                   (. CcsParser_SemErrT(self, "bad string in attributes"); .)
   }
   ".>"                          (. sym->attrPos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
-     				   CcsScanner_DecRef(&self->scanner, beg); .)
+     				   CcsScanner_TokenDecRef(&self->scanner, beg); .)
 .
 
 /*------------------------------------------------------------------------------------*/
@@ -473,9 +473,9 @@ Factor<CcGraph_t ** g>          (. char * name = NULL;
 
 Resolver<CcsPosition_t ** pos>   (. CcsToken_t * beg; .)
 =
-  "IF" "("                       (. CcsScanner_IncRef(&self->scanner, beg = self->la); .)
+  "IF" "("                       (. CcsScanner_TokenIncRef(&self->scanner, beg = self->la); .)
   Condition                      (. *pos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
-                                    CcsScanner_DecRef(&self->scanner, beg); .)
+                                    CcsScanner_TokenDecRef(&self->scanner, beg); .)
 .
 
 /*------------------------------------------------------------------------------------*/
@@ -568,33 +568,33 @@ Sym<char ** name, int * kind>   (. char * cur; .)
 
 Attribs<CcNode_t * p>           (. CcsToken_t * beg; .)
 =
-  '<'                           (. CcsScanner_IncRef(&self->scanner, beg = self->la); .)
+  '<'                           (. CcsScanner_TokenIncRef(&self->scanner, beg = self->la); .)
   { ANY 
   | badString                   (. CcsParser_SemErrT(self, "bad string in attributes"); .)
   }
   '>'                           (. CcNode_SetPosition(p, CcsScanner_GetPosition(&self->scanner,
                                                                                 beg, self->t));
-                                   CcsScanner_DecRef(&self->scanner, beg); .)
-| "<."                          (. CcsScanner_IncRef(&self->scanner, beg = self->la); .)
+                                   CcsScanner_TokenDecRef(&self->scanner, beg); .)
+| "<."                          (. CcsScanner_TokenIncRef(&self->scanner, beg = self->la); .)
   { ANY 
   | badString                   (. CcsParser_SemErrT(self, "bad string in attributes"); .)
   }
   ".>"                          (. CcNode_SetPosition(p, CcsScanner_GetPosition(&self->scanner,
                                                                                 beg, self->t));
-                                   CcsScanner_DecRef(&self->scanner, beg); .)
+                                   CcsScanner_TokenDecRef(&self->scanner, beg); .)
 .
 
 /*------------------------------------------------------------------------------------*/
 
 SemText<CcsPosition_t ** pos>   (. CcsToken_t * beg; .)
 =
-  "(."                          (. CcsScanner_IncRef(&self->scanner, beg = self->la); .)
+  "(."                          (. CcsScanner_TokenIncRef(&self->scanner, beg = self->la); .)
   { ANY
   | badString                   (. CcsParser_SemErrT(self, "bad string in semantic action"); .)
   | "(."                        (. CcsParser_SemErrT(self, "missing end of previous semantic action"); .)
   }
   ".)"                          (. *pos = CcsScanner_GetPosition(&self->scanner, beg, self->t);
-                                   CcsScanner_DecRef(&self->scanner, beg); .)
+                                   CcsScanner_TokenDecRef(&self->scanner, beg); .)
 .
 
 /*------------------------------------------------------------------------------------*/

@@ -43,7 +43,7 @@ static const char * set[];
 static void
 CcsXmlParser_Get(CcsXmlParser_t * self)
 {
-    if (self->t) CcsXmlScanner_DecRef(&self->scanner, self->t);
+    if (self->t) CcsXmlScanner_TokenDecRef(&self->scanner, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = CcsXmlScanner_Scan(&self->scanner);
@@ -196,8 +196,8 @@ CcsXmlParser_Destruct(CcsXmlParser_t * self)
     /*---- destructor ----*/
     CcGlobals_Destruct(&self->globals);
     /*---- enable ----*/
-    if (self->la) CcsXmlScanner_DecRef(&self->scanner, self->la);
-    if (self->t) CcsXmlScanner_DecRef(&self->scanner, self->t);
+    if (self->la) CcsXmlScanner_TokenDecRef(&self->scanner, self->la);
+    if (self->t) CcsXmlScanner_TokenDecRef(&self->scanner, self->t);
     CcsXmlScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }
@@ -225,30 +225,30 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
     gramName = CcStrdup(self->t->val); 
     if (self->la->kind == 7) {
 	CcsXmlParser_Get(self);
-	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
+	CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 1)) {
 	    CcsXmlParser_Get(self);
 	}
 	self->syntax->members = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
-	CcsXmlScanner_DecRef(&self->scanner, beg); 
+	CcsXmlScanner_TokenDecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 8) {
 	CcsXmlParser_Get(self);
-	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
+	CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 2)) {
 	    CcsXmlParser_Get(self);
 	}
 	self->syntax->constructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
-	CcsXmlScanner_DecRef(&self->scanner, beg); 
+	CcsXmlScanner_TokenDecRef(&self->scanner, beg); 
     }
     if (self->la->kind == 9) {
 	CcsXmlParser_Get(self);
-	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
+	CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 3)) {
 	    CcsXmlParser_Get(self);
 	}
 	self->syntax->destructor = CcsXmlScanner_GetPosition(&self->scanner, beg, self->la);
-	CcsXmlScanner_DecRef(&self->scanner, beg); 
+	CcsXmlScanner_TokenDecRef(&self->scanner, beg); 
     }
     CcsXmlParser_XmlSpecDecl(self, &xsdef);
     CcXmlSpecMap_Add(self->xmlspecmap, "", xsdef); 
@@ -336,13 +336,13 @@ CcsXmlParser_SectionDecl(CcsXmlParser_t * self)
     CcsXmlParser_Expect(self, 15);
     CcsXmlParser_Expect(self, 1);
     secname = CcStrdup(self->t->val);
-    CcsXmlScanner_IncRef(&self->scanner, beg = self->t); 
+    CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->t); 
     while (CcsXmlParser_StartOf(self, 6)) {
 	CcsXmlParser_Get(self);
     }
     CcGlobals_NewSection(&self->globals, secname,
 			 CcsXmlScanner_GetPositionBetween(&self->scanner, beg, self->la));
-    CcsXmlScanner_DecRef(&self->scanner, beg);
+    CcsXmlScanner_TokenDecRef(&self->scanner, beg);
     CcFree(secname); 
     CcsXmlParser_Expect(self, 13);
     CcsXmlParser_Expect(self, 12);
@@ -402,7 +402,7 @@ CcsXmlParser_AttrDecl(CcsXmlParser_t * self, CcSymbolNT_t * sym)
     CcsToken_t * beg; 
     if (self->la->kind == 22) {
 	CcsXmlParser_Get(self);
-	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
+	CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 7)) {
 	    if (CcsXmlParser_StartOf(self, 8)) {
 		CcsXmlParser_Get(self);
@@ -413,10 +413,10 @@ CcsXmlParser_AttrDecl(CcsXmlParser_t * self, CcSymbolNT_t * sym)
 	}
 	CcsXmlParser_Expect(self, 23);
 	sym->attrPos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
-	CcsXmlScanner_DecRef(&self->scanner, beg); 
+	CcsXmlScanner_TokenDecRef(&self->scanner, beg); 
     } else if (self->la->kind == 24) {
 	CcsXmlParser_Get(self);
-	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
+	CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 9)) {
 	    if (CcsXmlParser_StartOf(self, 10)) {
 		CcsXmlParser_Get(self);
@@ -427,7 +427,7 @@ CcsXmlParser_AttrDecl(CcsXmlParser_t * self, CcSymbolNT_t * sym)
 	}
 	CcsXmlParser_Expect(self, 25);
 	sym->attrPos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
-	CcsXmlScanner_DecRef(&self->scanner, beg); 
+	CcsXmlScanner_TokenDecRef(&self->scanner, beg); 
     } else CcsXmlParser_SynErr(self, 41);
 }
 
@@ -436,7 +436,7 @@ CcsXmlParser_SemText(CcsXmlParser_t * self, CcsPosition_t ** pos)
 {
     CcsToken_t * beg; 
     CcsXmlParser_Expect(self, 37);
-    CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
+    CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); 
     while (CcsXmlParser_StartOf(self, 11)) {
 	if (CcsXmlParser_StartOf(self, 12)) {
 	    CcsXmlParser_Get(self);
@@ -450,7 +450,7 @@ CcsXmlParser_SemText(CcsXmlParser_t * self, CcsPosition_t ** pos)
     }
     CcsXmlParser_Expect(self, 38);
     *pos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
-    CcsXmlScanner_DecRef(&self->scanner, beg); 
+    CcsXmlScanner_TokenDecRef(&self->scanner, beg); 
 }
 
 static void
@@ -546,10 +546,10 @@ CcsXmlParser_Resolver(CcsXmlParser_t * self, CcsPosition_t ** pos)
     CcsToken_t * beg; 
     CcsXmlParser_Expect(self, 36);
     CcsXmlParser_Expect(self, 28);
-    CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
+    CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); 
     CcsXmlParser_Condition(self);
     *pos = CcsXmlScanner_GetPosition(&self->scanner, beg, self->t);
-    CcsXmlScanner_DecRef(&self->scanner, beg); 
+    CcsXmlScanner_TokenDecRef(&self->scanner, beg); 
 }
 
 static void
@@ -653,7 +653,7 @@ CcsXmlParser_Attribs(CcsXmlParser_t * self, CcNode_t * p)
     CcsToken_t * beg; 
     if (self->la->kind == 22) {
 	CcsXmlParser_Get(self);
-	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
+	CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 7)) {
 	    if (CcsXmlParser_StartOf(self, 8)) {
 		CcsXmlParser_Get(self);
@@ -664,10 +664,10 @@ CcsXmlParser_Attribs(CcsXmlParser_t * self, CcNode_t * p)
 	}
 	CcsXmlParser_Expect(self, 23);
 	CcNode_SetPosition(p, CcsXmlScanner_GetPosition(&self->scanner, beg, self->t));
-	CcsXmlScanner_DecRef(&self->scanner, beg); 
+	CcsXmlScanner_TokenDecRef(&self->scanner, beg); 
     } else if (self->la->kind == 24) {
 	CcsXmlParser_Get(self);
-	CcsXmlScanner_IncRef(&self->scanner, beg = self->la); 
+	CcsXmlScanner_TokenIncRef(&self->scanner, beg = self->la); 
 	while (CcsXmlParser_StartOf(self, 9)) {
 	    if (CcsXmlParser_StartOf(self, 10)) {
 		CcsXmlParser_Get(self);
@@ -679,7 +679,7 @@ CcsXmlParser_Attribs(CcsXmlParser_t * self, CcNode_t * p)
 	CcsXmlParser_Expect(self, 25);
 	CcNode_SetPosition(p, CcsXmlScanner_GetPosition(&self->scanner,
 						     beg, self->t));
-	CcsXmlScanner_DecRef(&self->scanner, beg); 
+	CcsXmlScanner_TokenDecRef(&self->scanner, beg); 
     } else CcsXmlParser_SynErr(self, 44);
 }
 
