@@ -51,12 +51,12 @@ CfValueMap(CfValueMap_t * self)
 void
 CfValueMap_Destruct(CfValueMap_t * self)
 {
-    CfValue_t ** cur, ** cur0, ** next0;
+    CfValue_t ** cur, * cur0, * next0;
     for (cur = self->first; cur < self->last; ++cur) {
 	if (*cur == NULL) continue;
-	for (cur0 = cur; *cur0; cur0 = next0) {
-	    next0 = &(*cur0)->next;
-	    CfValue_Destruct(*cur0);
+	for (cur0 = *cur; cur0; cur0 = next0) {
+	    next0 = cur0->next;
+	    CfValue_Destruct(cur0);
 	}
     }
 }

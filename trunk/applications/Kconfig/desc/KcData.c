@@ -16,10 +16,13 @@
   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 -------------------------------------------------------------------------*/
 #include  "KcData.h"
+#include  "c/Position.h"
 
 static void
 KcProperty_Destruct(KcProperty_t * self)
 {
+    if (self->expr)  KcExpr_Destruct(self->expr);
+    if (self->ifexpr)  KcExpr_Destruct(self->ifexpr);
     CcsFree(self);
 }
 
@@ -44,7 +47,7 @@ AppendProperty(KcProperty_t ** props, KcProperty_t * prop)
 
 const char *
 KcProperty_AppendPrompt(KcProperty_t ** props, const char * prompt,
-			KcExpr_t * expr)
+			KcExpr_t * ifexpr)
 {
     KcProperty_t * self;
     size_t promptlen = prompt ? strlen(prompt) + 1 : 0;
@@ -57,6 +60,7 @@ KcProperty_AppendPrompt(KcProperty_t ** props, const char * prompt,
 	self->str = (char *)(self + 1);
 	strcpy(self->str, prompt);
     }
+    self->ifexpr = ifexpr;
     return AppendProperty(props, self);
 }
 
@@ -222,6 +226,7 @@ KcSymbol_Destruct(KcSymbol_t * self)
 	break;
     default: break;
     }
+    if (self->helpmsg) CcsPosition_Destruct(self->helpmsg);
     CcsFree(self);
 }
 
