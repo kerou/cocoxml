@@ -118,7 +118,7 @@ PgnScanner_Destruct(PgnScanner_t * self)
 	/* May be trigged by .atg semantic code. */
 	CcsAssert(cur->refcnt == 1);
 #ifdef PgnScanner_INDENTATION
-	CcsIndent_Destruct((CcsIndent_t *)(self->cur + 1));
+	CcsIndent_Destruct((CcsIndent_t *)(cur + 1));
 #endif
 	CcsScanInput_Destruct(cur);
     }
@@ -216,6 +216,12 @@ PgnScanner_Include(PgnScanner_t * self, FILE * fp, CcsToken_t ** token)
 {
     CcsScanInput_t * input;
     if (!(input = CcsScanInput(self, &Scanner_Info, fp))) return FALSE;
+#ifdef PgnScanner_INDENTATION
+    if (!CcsIndent_Init((CcsIndent_t *)(input + 1), &Scanner_IndentInfo)) {
+	CcsScanInput_Destruct(input);
+	return FALSE;
+    }
+#endif
     CcsScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
@@ -232,6 +238,12 @@ PgnScanner_IncludeByName(PgnScanner_t * self, const CcsIncPathList_t * list,
     if (!(input = CcsScanInput_ByName(self, &Scanner_Info,
 				      list, self->cur->fname, infn)))
 	return FALSE;
+#ifdef PgnScanner_INDENTATION
+    if (!CcsIndent_Init((CcsIndent_t *)(input + 1), &Scanner_IndentInfo)) {
+	CcsScanInput_Destruct(input);
+	return FALSE;
+    }
+#endif
     CcsScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;

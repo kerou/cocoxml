@@ -316,9 +316,6 @@ KcParser_MenuDecl(KcParser_t * self, KcSymbol_t ** menu)
 	CcsFree(prompt);
     } 
     KcParser_Expect(self, 6);
-    while (self->la->kind == 6) {
-	KcParser_Get(self);
-    }
     if (self->la->kind == 1) {
 	KcParser_Get(self);
 	while (KcParser_StartOf(self, 3)) {
@@ -351,9 +348,6 @@ KcParser_ChoiceDecl(KcParser_t * self, KcSymbol_t ** choice)
     KcSymbolList_t * symlist = NULL; 
     KcParser_Expect(self, 11);
     KcParser_Expect(self, 6);
-    while (self->la->kind == 6) {
-	KcParser_Get(self);
-    }
     if (self->la->kind == 1) {
 	KcParser_Get(self);
 	while (KcParser_StartOf(self, 3)) {
@@ -409,9 +403,6 @@ KcParser_IfDecl(KcParser_t * self, KcSymbol_t ** _if_)
     KcParser_Expect(self, 14);
     KcParser_Expr(self, &ifexpr);
     KcParser_Expect(self, 6);
-    while (self->la->kind == 6) {
-	KcParser_Get(self);
-    }
     KcParser_SymbolListDecl(self, &symlist);
     KcParser_Expect(self, 15);
     KcParser_Expect(self, 6);
