@@ -259,7 +259,7 @@ KcParser_Source(KcParser_t * self)
 	KcParser_SemErrT(self, "Not enough memroy."); 
     KcParser_Expect(self, 6);
     if (fname) {
-	if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname))
+	if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname, &self->la))
 	    KcParser_SemErrT(self, "Can not include '%s'.", fname);
 	CcsFree(fname);
     } 

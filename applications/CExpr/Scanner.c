@@ -218,6 +218,20 @@ CExprScanInput_Scan(CExprScanInput_t * self)
     return cur;
 }
 
+static void
+CExprScanInput_WithDraw(CExprScanInput_t * self, CcsToken_t * token)
+{
+    CcsToken_t ** cur;
+    CcsAssert(self == token->input);
+    CcsAssert(token->refcnt > 1);
+    CcsAssert(&token->next == self->curToken);
+    for (cur = &self->busyTokenList; *cur != token; cur = &(*cur)->next)
+	CcsAssert(*cur != NULL);
+    --token->refcnt;
+    if (self->peekToken == self->curToken) self->peekToken = cur;
+    self->curToken = cur;
+}
+
 static CcsToken_t *
 CExprScanInput_Peek(CExprScanInput_t * self)
 {
@@ -464,24 +478,30 @@ CExprScanner_GetPositionBetween(CExprScanner_t * self, const CcsToken_t * begin,
 }
 
 CcsBool_t
-CExprScanner_Include(CExprScanner_t * self, FILE * fp)
+CExprScanner_Include(CExprScanner_t * self, FILE * fp, CcsToken_t ** token)
 {
     CExprScanInput_t * input;
     if (!(input = CExprScanInput(self, fp))) return FALSE;
+    CExprScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
+    CExprScanInput_GetCh(input);
+    *token = CExprScanInput_Scan(self->cur);
     return TRUE;
 }
 
 CcsBool_t
 CExprScanner_IncludeByName(CExprScanner_t * self, const CcsIncPathList_t * list,
-			 const char * infn)
+			 const char * infn, CcsToken_t ** token)
 {
     CExprScanInput_t * input;
     if (!(input = CExprScanInput_ByName(self, list, self->cur->fname, infn)))
 	return FALSE;
+    CExprScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
+    CExprScanInput_GetCh(input);
+    *token = CExprScanInput_Scan(self->cur);
     return TRUE;
 }
 

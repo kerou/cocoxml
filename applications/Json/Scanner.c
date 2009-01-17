@@ -205,6 +205,20 @@ JsonScanInput_Scan(JsonScanInput_t * self)
     return cur;
 }
 
+static void
+JsonScanInput_WithDraw(JsonScanInput_t * self, CcsToken_t * token)
+{
+    CcsToken_t ** cur;
+    CcsAssert(self == token->input);
+    CcsAssert(token->refcnt > 1);
+    CcsAssert(&token->next == self->curToken);
+    for (cur = &self->busyTokenList; *cur != token; cur = &(*cur)->next)
+	CcsAssert(*cur != NULL);
+    --token->refcnt;
+    if (self->peekToken == self->curToken) self->peekToken = cur;
+    self->curToken = cur;
+}
+
 static CcsToken_t *
 JsonScanInput_Peek(JsonScanInput_t * self)
 {
@@ -451,24 +465,30 @@ JsonScanner_GetPositionBetween(JsonScanner_t * self, const CcsToken_t * begin,
 }
 
 CcsBool_t
-JsonScanner_Include(JsonScanner_t * self, FILE * fp)
+JsonScanner_Include(JsonScanner_t * self, FILE * fp, CcsToken_t ** token)
 {
     JsonScanInput_t * input;
     if (!(input = JsonScanInput(self, fp))) return FALSE;
+    JsonScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
+    JsonScanInput_GetCh(input);
+    *token = JsonScanInput_Scan(self->cur);
     return TRUE;
 }
 
 CcsBool_t
 JsonScanner_IncludeByName(JsonScanner_t * self, const CcsIncPathList_t * list,
-			 const char * infn)
+			 const char * infn, CcsToken_t ** token)
 {
     JsonScanInput_t * input;
     if (!(input = JsonScanInput_ByName(self, list, self->cur->fname, infn)))
 	return FALSE;
+    JsonScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
+    JsonScanInput_GetCh(input);
+    *token = JsonScanInput_Scan(self->cur);
     return TRUE;
 }
 

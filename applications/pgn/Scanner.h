@@ -77,10 +77,11 @@ CcsPosition_t *
 PgnScanner_GetPositionBetween(PgnScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end);
 
-CcsBool_t PgnScanner_Include(PgnScanner_t * self, FILE * fp);
+CcsBool_t
+PgnScanner_Include(PgnScanner_t * self, FILE * fp, CcsToken_t ** token);
 CcsBool_t
 PgnScanner_IncludeByName(PgnScanner_t * self, const CcsIncPathList_t * list,
-			 const char * infn);
+			 const char * infn, CcsToken_t ** token);
 
 EXTC_END
 
