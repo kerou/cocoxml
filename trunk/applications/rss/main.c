@@ -67,7 +67,7 @@ main(int argc, char * argv[])
 	return -1;
     }
     if (!strcmp(argv[1], "-")) {
-	if (!RssParser(&parser, stdout, stderr)) goto errquit0;
+	if (!RssParser(&parser, stdin, stderr)) goto errquit0;
     } else {
 	if (!RssParser_ByName(&parser, argv[1], stderr)) goto errquit0;
     }

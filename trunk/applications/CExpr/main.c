@@ -27,7 +27,7 @@ main(int argc, char * argv[])
 	goto errquit0;
     }
     if (!strcmp(argv[1], "-")) {
-	if (!CExprParser(&parser, stdout, stderr)) goto errquit0;
+	if (!CExprParser(&parser, stdin, stderr)) goto errquit0;
     } else {
 	if (!CExprParser_ByName(&parser, argv[1], stderr)) goto errquit0;
     }
