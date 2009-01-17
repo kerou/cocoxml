@@ -330,12 +330,14 @@ KcParser_MenuDecl(KcParser_t * self, KcSymbol_t ** menu)
     KcParser_Expect(self, 10);
     KcParser_Expect(self, 6);
     if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, menu,
-					     KcstMenu, props))) {
+					     KcstMenu, props, helpmsg))) {
 	KcParser_SemErrT(self, "Append 'menu' failed: %s.", errmsg);
 	if (props) KcPropertyList_Destruct(props);
 	if (helpmsg) CcsPosition_Destruct(helpmsg);
 	if (symlist) KcSymbolList_Destruct(symlist);
-    } else (*menu)->u._menu_ = symlist; 
+    } else {
+	(*menu)->subs = symlist;
+    } 
 }
 
 static void
@@ -362,12 +364,14 @@ KcParser_ChoiceDecl(KcParser_t * self, KcSymbol_t ** choice)
     KcParser_Expect(self, 12);
     KcParser_Expect(self, 6);
     if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, choice,
-					     KcstChoice, props))) {
+					     KcstChoice, props, helpmsg))) {
 	KcParser_SemErrT(self, "Append 'choice' failed: %s.", errmsg);
 	if (props) KcPropertyList_Destruct(props);
 	if (helpmsg) CcsPosition_Destruct(helpmsg);
 	if (symlist) KcSymbolList_Destruct(symlist);
-    } else (*choice)->u._choice_ = symlist; 
+    } else {
+	(*choice)->subs = symlist;
+    } 
 }
 
 static void
@@ -386,12 +390,14 @@ KcParser_CommentDecl(KcParser_t * self, KcSymbol_t ** comment)
     }
     KcParser_Expect(self, 6);
     if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, comment,
-					     KcstComment, props))) {
+					     KcstComment, props, helpmsg))) {
 	KcParser_SemErrT(self, "Append 'comment' failed: %s.", errmsg);
 	if (_comment_) CcsFree(_comment_);
 	if (props) KcPropertyList_Destruct(props);
 	if (helpmsg) CcsPosition_Destruct(helpmsg);
-    } else (*comment)->u._comment_ = _comment_; 
+    } else {
+	(*comment)->_string_ = _comment_;
+    } 
 }
 
 static void
@@ -407,10 +413,14 @@ KcParser_IfDecl(KcParser_t * self, KcSymbol_t ** _if_)
     KcParser_Expect(self, 15);
     KcParser_Expect(self, 6);
     if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, _if_,
-					     KcstIf, NULL))) {
+					     KcstIf, NULL, NULL))) {
 	KcParser_SemErrT(self, "Append 'if' failed: %s.", errmsg);
 	if (ifexpr) KcExpr_Destruct(ifexpr);
-    } else (*_if_)->u._ifexpr_ = ifexpr; 
+	if (symlist) KcSymbolList_Destruct(symlist);
+    } else {
+	(*_if_)->ifexpr = ifexpr;
+	(*_if_)->subs = symlist;
+    } 
 }
 
 static void

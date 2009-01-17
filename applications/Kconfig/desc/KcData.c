@@ -162,14 +162,14 @@ KcSymbol(const char * symname)
 static const char *
 KcSetBool(KcSymbol_t * self, const char * value)
 {
-    self->u._bool_ = *value == 'y' || *value == 'Y' ? KcYes : KcNo;
+    self->_int_ = *value == 'y' || *value == 'Y' ? KcYes : KcNo;
     return NULL;
 }
 
 static const char *
 KcSetTristate(KcSymbol_t * self, const char * value)
 {
-    self->u._tristate_ = *value == 'y' || *value == 'Y' ? KcYes :
+    self->_int_ = *value == 'y' || *value == 'Y' ? KcYes :
 	*value == 'm' || *value == 'M' ? KcModule : KcNo;
     return NULL;
 }
@@ -177,29 +177,29 @@ KcSetTristate(KcSymbol_t * self, const char * value)
 static const char *
 KcSetString(KcSymbol_t * self, const char * value)
 {
-    if (self->type == KcstString && self->u._string_) CcsFree(self->u._string_);
-    return self->u._string_ = CcsStrdup(value) ? NULL : "Not enough memory";
+    if (self->type == KcstString && self->_string_) CcsFree(self->_string_);
+    return self->_string_ = CcsStrdup(value) ? NULL : "Not enough memory";
 }
 
 static const char *
 KcSetHex(KcSymbol_t * self, const char * value)
 {
     const char * cur;
-    self->u._hex_ = 0;
+    self->_hex_ = 0;
     for (cur = value; *cur; ++cur)
 	if (*cur >= '0' && *cur <= '9')
-	    self->u._hex_ = (self->u._hex_ << 4) + (*cur - '0');
+	    self->_hex_ = (self->_hex_ << 4) + (*cur - '0');
 	else if (*cur >= 'A' && *cur <= 'Z')
-	    self->u._hex_ = (self->u._hex_ << 4) + (*cur - 'A' + 10);
+	    self->_hex_ = (self->_hex_ << 4) + (*cur - 'A' + 10);
 	else if (*cur >= 'a' && *cur <= 'z')
-	    self->u._hex_ = (self->u._hex_ << 4) + (*cur - 'a' + 10);
+	    self->_hex_ = (self->_hex_ << 4) + (*cur - 'a' + 10);
     return NULL;
 }
 
 static const char *
 KcSetInt(KcSymbol_t * self, const char * value)
 {
-    self->u._int_ = atoi(value);
+    self->_int_ = atoi(value);
     return NULL;
 }
 
@@ -207,26 +207,15 @@ static void
 KcSymbol_Destruct(KcSymbol_t * self)
 {
     KcProperty_t * cur, * next;
+
+    if (self->helpmsg) CcsPosition_Destruct(self->helpmsg);
     for (cur = self->props; cur; cur = next) {
 	next = cur->next;
 	KcProperty_Destruct(cur);
     }
-    switch (self->type) {
-    case KcstString: if (self->u._string_) CcsFree(self->u._string_);
-	break;
-    case KcstMenu: if (self->u._menu_) KcSymbolList_Destruct(self->u._menu_);
-	break;
-    case KcstChoice: if (self->u._choice_) KcSymbolList_Destruct(self->u._choice_);
-	break;
-    case KcstComment: if (self->u._comment_) CcsFree(self->u._comment_);
-	break;
-    case KcstIf: if (self->u._ifexpr_) KcExpr_Destruct(self->u._ifexpr_);
-	break;
-    case KcstConst: if (self->u._const_) CcsFree(self->u._const_);
-	break;
-    default: break;
-    }
-    if (self->helpmsg) CcsPosition_Destruct(self->helpmsg);
+    if (self->ifexpr) KcExpr_Destruct(self->ifexpr);
+    if (self->subs) KcSymbolList_Destruct(self->subs);
+    if (self->_string_) CcsFree(self->_string_);
     CcsFree(self);
 }
 
@@ -258,7 +247,10 @@ KcSymbolTable_Destruct(KcSymbolTable_t * self)
 	KcSymbol_Destruct(cur0);
     }
     for (cur = self->first; cur < self->last; ++cur)
-	if (*cur) KcSymbol_Destruct(*cur);
+	for (cur0 = *cur; cur0; cur0 = next0) {
+	    next0 = cur0->next;
+	    KcSymbol_Destruct(cur0);
+	}
 }
 
 static KcSymbol_t **
@@ -294,13 +286,15 @@ KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, KcSymbol_t ** retSymbol,
 
 const char *
 KcSymbolTable_AddNoNSymbol(KcSymbolTable_t * self, KcSymbol_t ** retSymbol,
-			   KcSymbolType_t symtype, KcProperty_t * properties)
+			   KcSymbolType_t symtype, KcProperty_t * properties,
+			   CcsPosition_t * helpmsg)
 {
     KcSymbol_t * nonSymbol;
     if (!(nonSymbol = KcSymbol(NULL))) return "Not enough memory";
     nonSymbol->type = symtype;
     nonSymbol->props = properties;
     nonSymbol->next = self->nonlist;
+    nonSymbol->helpmsg = helpmsg;
     self->nonlist = nonSymbol;
     *retSymbol = nonSymbol;
     return NULL;
@@ -313,7 +307,7 @@ KcSymbolTable_AddConst(KcSymbolTable_t * self, KcSymbol_t ** retSymbol,
     KcSymbol_t * constSymbol;
     if (!(constSymbol = KcSymbol(NULL))) return "Not enough memory";
     constSymbol->type = KcstConst;
-    constSymbol->u._const_ = value;
+    constSymbol->_string_ = value;
     constSymbol->next = self->constlist;
     self->constlist = constSymbol;
     *retSymbol = constSymbol;
