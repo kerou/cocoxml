@@ -127,7 +127,7 @@ CcsScanner_Destruct(CcsScanner_t * self)
 	/* May be trigged by .atg semantic code. */
 	CcsAssert(cur->refcnt == 1);
 #ifdef CcsScanner_INDENTATION
-	CcsIndent_Destruct((CcsIndent_t *)(self->cur + 1));
+	CcsIndent_Destruct((CcsIndent_t *)(cur + 1));
 #endif
 	CcsScanInput_Destruct(cur);
     }
