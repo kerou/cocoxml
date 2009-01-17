@@ -140,8 +140,11 @@ CcsScanInput_GetCh(CcsScanInput_t * self)
 CcsToken_t *
 CcsScanInput_NewToken(CcsScanInput_t * self, int kind)
 {
-    return CcsToken(self, kind, self->fname, self->pos,
-		    self->line, self->col, NULL, 0);
+    CcsToken_t * t;
+    t = CcsToken(self, kind, self->fname, self->pos,
+		 self->line, self->col, NULL, 0);
+    if (t) CcsScanInput_IncRef(self);
+    return t;
 }
 
 CcsToken_t *
