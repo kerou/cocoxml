@@ -35,10 +35,6 @@
 #include "c/Token.h"
 #endif
 
-#ifndef  COCO_BUFFER_H
-#include "c/Buffer.h"
-#endif
-
 #ifndef  COCO_POSITION_H
 #include "c/Position.h"
 #endif
@@ -51,15 +47,11 @@ EXTC_BEGIN
 #define CcsXmlScanner_KEYWORD_USED
 /*---- enable ----*/
 
-typedef struct CcsXmlScanInput_s CcsXmlScanInput_t;
 typedef struct CcsXmlScanner_s CcsXmlScanner_t;
 struct CcsXmlScanner_s {
     CcsErrorPool_t * errpool;
-    int              eofSym;
-    int              noSym;
-    int              maxT;
     CcsToken_t     * dummyToken;
-    CcsXmlScanInput_t * cur;
+    CcsScanInput_t * cur;
 };
 
 CcsXmlScanner_t *
@@ -87,10 +79,11 @@ CcsPosition_t *
 CcsXmlScanner_GetPositionBetween(CcsXmlScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end);
 
-CcsBool_t CcsXmlScanner_Include(CcsXmlScanner_t * self, FILE * fp);
+CcsBool_t
+CcsXmlScanner_Include(CcsXmlScanner_t * self, FILE * fp, CcsToken_t ** token);
 CcsBool_t
 CcsXmlScanner_IncludeByName(CcsXmlScanner_t * self, const CcsIncPathList_t * list,
-			 const char * infn);
+			 const char * infn, CcsToken_t ** token);
 
 EXTC_END
 
