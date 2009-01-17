@@ -25,7 +25,8 @@
 #include  "IncPathList.h"
 
 CcsIncPathList_t *
-CcsIncPathList(const char * const * incpatharr, size_t numpathes)
+CcsIncPathList(CcsBool_t AbsPathUsed, CcsBool_t IncluderUsed,
+	       const char * const * incpatharr, size_t numpathes)
 {
     CcsIncPathList_t * self;
     const char * const * cur0;
@@ -38,6 +39,8 @@ CcsIncPathList(const char * const * incpatharr, size_t numpathes)
     ++totallen;
     if (!(self = CcsMalloc(sizeof(CcsIncPathList_t) + totallen)))
 	return NULL;
+    self->AbsPathUsed = AbsPathUsed;
+    self->IncluderUsed = IncluderUsed;
     self->start = cur1 = (char *)(self + 1);
     for (cur0 = incpatharr; cur0 - incpatharr < numpathes; ++cur0) {
 	strcpy(cur1, *cur0);
@@ -60,9 +63,11 @@ CcsIncPathList_Open(const CcsIncPathList_t * self, char * fnbuf, size_t szfnbuf,
     FILE * fp;
     char tmp[PATH_MAX];
     const char * cur;
-    strncpy(fnbuf, fname, szfnbuf);
-    if ((fp = fopen(fnbuf, "r"))) return fp;
-    if (includerFname) {
+    if (!self || self->AbsPathUsed) {
+	strncpy(fnbuf, fname, szfnbuf);
+	if ((fp = fopen(fnbuf, "r"))) return fp;
+    }
+    if ((!self || self->IncluderUsed) && includerFname) {
 	CcsDirname(tmp, sizeof(tmp), includerFname);
 	CcsPathJoin(fnbuf, szfnbuf, tmp, fname, NULL);
 	if ((fp = fopen(fnbuf, "r"))) return fp;
