@@ -8,6 +8,6 @@ Import('cocosrc_libobjs')
 
 libobjs.extend(map(lambda src: env.Object(src),
                    ['CDefs.c', 'ErrorPool.c', 'Buffer.c', 'Token.c',
-                    'Position.c', 'IncPathList.c']))
+                    'Position.c', 'IncPathList.c', 'Indent.c', 'ScanInput.c']))
 cocosrc_libobjs.extend(map(lambda src: env.Object(src),
                            ['Scanner.c', 'Parser.c', 'COutputScheme.c']))

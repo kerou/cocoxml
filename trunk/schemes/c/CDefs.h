@@ -56,6 +56,7 @@ typedef struct CcsErrorPool_s CcsErrorPool_t;
 typedef struct CcsToken_s CcsToken_t;
 typedef struct CcsPosition_s CcsPosition_t;
 typedef struct CcsIncPathList_s CcsIncPathList_t;
+typedef struct CcsScanInput_s CcsScanInput_t;
 
 typedef enum {
     XSO_UnknownTag, XSO_UnknownTagEnd,

@@ -26,10 +26,6 @@ Author: Charles Wang <charlesw123456@gmail.com>
 #include "c/Token.h"
 #endif
 
-#ifndef  COCO_BUFFER_H
-#include "c/Buffer.h"
-#endif
-
 #ifndef  COCO_POSITION_H
 #include "c/Position.h"
 #endif
@@ -41,15 +37,11 @@ EXTC_BEGIN
 #define PgnScanner_CASE_SENSITIVE
 /*---- enable ----*/
 
-typedef struct PgnScanInput_s PgnScanInput_t;
 typedef struct PgnScanner_s PgnScanner_t;
 struct PgnScanner_s {
     CcsErrorPool_t * errpool;
-    int              eofSym;
-    int              noSym;
-    int              maxT;
     CcsToken_t     * dummyToken;
-    PgnScanInput_t * cur;
+    CcsScanInput_t * cur;
 };
 
 PgnScanner_t *

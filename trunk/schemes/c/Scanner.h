@@ -35,10 +35,6 @@
 #include "c/Token.h"
 #endif
 
-#ifndef  COCO_BUFFER_H
-#include "c/Buffer.h"
-#endif
-
 #ifndef  COCO_POSITION_H
 #include "c/Position.h"
 #endif
@@ -51,13 +47,9 @@ EXTC_BEGIN
 #define CcsScanner_KEYWORD_USED
 /*---- enable ----*/
 
-typedef struct CcsScanInput_s CcsScanInput_t;
 typedef struct CcsScanner_s CcsScanner_t;
 struct CcsScanner_s {
     CcsErrorPool_t * errpool;
-    int              eofSym;
-    int              noSym;
-    int              maxT;
     CcsToken_t     * dummyToken;
     CcsScanInput_t * cur;
 };

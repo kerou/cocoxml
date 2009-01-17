@@ -22,6 +22,7 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "c/COutputScheme.h"
+#include  "c/Indent.h"
 #include  "lexical/Action.h"
 #include  "lexical/CharSet.h"
 #include  "lexical/Comment.h"
@@ -70,8 +71,6 @@ COS_Defines(CcCOutputScheme_t * self, CcOutput_t * output)
 	CcPrintfIL(output, "#define %sScanner_KEYWORD_USED", self->base.prefix);
     if (self->base.base.globals->lexical->indentUsed) {
 	CcPrintfIL(output, "#define %sScanner_INDENTATION", self->base.prefix);
-	CcPrintfIL(output, "#define %sScanner_INDENT_START %d",
-		   self->base.prefix, 32);
 	sym = CcSymbolTable_FindSym(&self->base.base.globals->symtab, IndentInName);
 	CcsAssert(sym != NULL);
 	CcPrintfIL(output, "#define %sScanner_INDENT_IN %d", self->base.prefix,
@@ -90,11 +89,15 @@ COS_Defines(CcCOutputScheme_t * self, CcOutput_t * output)
 static CcsBool_t
 COS_Declarations(CcCOutputScheme_t * self, CcOutput_t * output)
 {
-    CcPrintfIL(output, "self->eofSym = %d;",
+    int addSpace = 0;
+    if (self->base.base.globals->lexical->indentUsed)
+	addSpace += sizeof(CcsIndent_t);
+    CcPrintfIL(output, "%d, /* additionalSpace */", addSpace);
+    CcPrintfIL(output, "%d, /* eofSym */",
 	       self->base.base.globals->syntax.eofSy->kind);
-    CcPrintfIL(output, "self->maxT = %d;",
+    CcPrintfIL(output, "%d, /* maxT */",
 	       self->base.base.globals->symtab.terminals.Count - 1);
-    CcPrintfIL(output, "self->noSym = %d;",
+    CcPrintfIL(output, "%d, /* noSym */",
 	       self->base.base.globals->syntax.noSy->kind);
     return TRUE;
 }
@@ -154,10 +157,10 @@ COS_Scan1(CcCOutputScheme_t * self, CcOutput_t * output)
     for (curRange = self->base.base.globals->lexical->ignored->head;
 	 curRange; curRange = curRange->next) {
 	if (curRange->from == curRange->to)
-	    CcPrintfIL(output, "|| self->ch == %s",
+	    CcPrintfIL(output, "|| input->ch == %s",
 		       CharRepr(buf0 ,sizeof(buf0), curRange->from));
 	else
-	    CcPrintfIL(output, "|| (self->ch >= %s && self->ch <= %s)",
+	    CcPrintfIL(output, "|| (input->ch >= %s && input->ch <= %s)",
 		       CharRepr(buf0 ,sizeof(buf0), curRange->from),
 		       CharRepr(buf1 ,sizeof(buf1), curRange->to));
     }
@@ -185,18 +188,18 @@ COS_WriteState(CcCOutputScheme_t * self, CcOutput_t * output,
 	for (curRange = s->head; curRange; curRange = curRange->next) {
 	    if (curRange != s->head) CcPrintfI(output, "    ");
 	    if (curRange->from == curRange->to)
-		CcPrintf(output,"self->ch == %s",
+		CcPrintf(output,"input->ch == %s",
 			CharRepr(buf0, sizeof(buf0), curRange->from));
 	    else
-		CcPrintf(output, "(self->ch >= %s && self->ch <= %s)",
+		CcPrintf(output, "(input->ch >= %s && input->ch <= %s)",
 			 CharRepr(buf0, sizeof(buf0), curRange->from),
 			 CharRepr(buf1, sizeof(buf1), curRange->to));
 	    if (curRange->next) CcPrintfL(output, " ||");
 	}
 	CcPrintfL(output, ") {");
 	output->indent += 4;
-	CcPrintfIL(output, "%sScanInput_GetCh(self); goto case_%d;",
-		   self->base.prefix, action->target->state->base.index);
+	CcPrintfIL(output, "CcsGetCh(input); goto case_%d;",
+		   action->target->state->base.index);
 	output->indent -= 4;
 	CcCharSet_Destruct(s);
     }
@@ -204,11 +207,11 @@ COS_WriteState(CcCOutputScheme_t * self, CcOutput_t * output,
     if (state->firstAction == NULL) CcPrintfI(output, "{ ");
     else CcPrintfI(output, "} else { ");
     if (state->endOf == NULL) {
-	CcPrintf(output, "kind = self->scanner->noSym;");
+	CcPrintf(output, "kind = Scanner_Info.noSym;");
     } else if (CcSymbol_GetTokenKind(state->endOf) != symbol_classLitToken) {
 	CcPrintf(output, "kind = %d;", state->endOf->kind);
     } else {
-	CcPrintf(output, "kind = GetKWKind(self, pos, self->pos, %d);",
+	CcPrintf(output, "kind = GetKWKind(input, pos, input->pos, %d);",
 		 state->endOf->kind);
     }
     CcPrintfL(output, " break; }");

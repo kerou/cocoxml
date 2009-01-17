@@ -24,7 +24,7 @@
 #include  "Token.h"
 
 CcsToken_t *
-CcsToken(void * input, int kind, const char * fname, int pos,
+CcsToken(CcsScanInput_t * input, int kind, const char * fname, int pos,
 	 int line, int col, const char * val, size_t vallen)
 {
     CcsToken_t * self;

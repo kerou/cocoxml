@@ -13,10 +13,6 @@ License: LGPLv2
 #include "c/Token.h"
 #endif
 
-#ifndef  COCO_BUFFER_H
-#include "c/Buffer.h"
-#endif
-
 #ifndef  COCO_POSITION_H
 #include "c/Position.h"
 #endif
@@ -28,15 +24,11 @@ EXTC_BEGIN
 #define JsonScanner_CASE_SENSITIVE
 /*---- enable ----*/
 
-typedef struct JsonScanInput_s JsonScanInput_t;
 typedef struct JsonScanner_s JsonScanner_t;
 struct JsonScanner_s {
     CcsErrorPool_t * errpool;
-    int              eofSym;
-    int              noSym;
-    int              maxT;
     CcsToken_t     * dummyToken;
-    JsonScanInput_t * cur;
+    CcsScanInput_t * cur;
 };
 
 JsonScanner_t *
