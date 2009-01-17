@@ -255,11 +255,14 @@ KcParser_Source(KcParser_t * self)
     char * fname; 
     KcParser_Expect(self, 17);
     KcParser_Expect(self, 5);
-    fname = CcsStrdup(self->t->val); 
+    if (!(fname = CcsUnescape(self->t->val)))
+	KcParser_SemErrT(self, "Not enough memroy."); 
     KcParser_Expect(self, 6);
-    if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname))
-	KcParser_SemErrT(self, "Can not include '%s'.", fname);
-    CcsFree(fname); 
+    if (fname) {
+	if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname))
+	    KcParser_SemErrT(self, "Can not include '%s'.", fname);
+	CcsFree(fname);
+    } 
 }
 
 static void
