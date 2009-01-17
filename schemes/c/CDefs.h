@@ -39,7 +39,7 @@
 
 EXTC_BEGIN
 
-typedef int CcsBool_t;
+typedef char CcsBool_t;
 #define FALSE 0
 #define TRUE  1
 
