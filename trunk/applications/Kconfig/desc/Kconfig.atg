@@ -69,12 +69,12 @@ SymbolListDecl<KcSymbolList_t ** symlist>
     (. KcSymbol_t * sym; .) =
   { SymbolDecl<&sym>    (. if (*symlist == NULL) *symlist = KcSymbolList();
                            if (sym) KcSymbolList_Append(*symlist, sym); .)
-    | Source }
+    | Source | eol }
 .
 
 SymbolDecl<KcSymbol_t ** sym> (. *sym = NULL; .) =
-  (ConfigDecl<sym> | MenuDecl<sym> | ChoiceDecl<sym> | CommentDecl<sym> |
-   IfDecl<sym> | MainMenuDecl<sym>) { eol }
+  ConfigDecl<sym> | MenuDecl<sym> | ChoiceDecl<sym> | CommentDecl<sym> |
+  IfDecl<sym> | MainMenuDecl<sym>
 .
 
 ConfigDecl<KcSymbol_t ** sym>

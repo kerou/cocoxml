@@ -225,6 +225,12 @@ CcsScanner_Include(CcsScanner_t * self, FILE * fp, CcsToken_t ** token)
 {
     CcsScanInput_t * input;
     if (!(input = CcsScanInput(self, &Scanner_Info, fp))) return FALSE;
+#ifdef CcsScanner_INDENTATION
+    if (!CcsIndent_Init((CcsIndent_t *)(input + 1), &Scanner_IndentInfo)) {
+	CcsScanInput_Destruct(input);
+	return FALSE;
+    }
+#endif
     CcsScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
@@ -241,6 +247,12 @@ CcsScanner_IncludeByName(CcsScanner_t * self, const CcsIncPathList_t * list,
     if (!(input = CcsScanInput_ByName(self, &Scanner_Info,
 				      list, self->cur->fname, infn)))
 	return FALSE;
+#ifdef CcsScanner_INDENTATION
+    if (!CcsIndent_Init((CcsIndent_t *)(input + 1), &Scanner_IndentInfo)) {
+	CcsScanInput_Destruct(input);
+	return FALSE;
+    }
+#endif
     CcsScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
