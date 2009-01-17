@@ -132,7 +132,7 @@ main(int argc, char * argv[])
 	goto errquit0;
     }
     if (!strcmp(argv[1], "-")) {
-	if (!PgnParser(&parser, stdout, stderr)) goto errquit0;
+	if (!PgnParser(&parser, stdin, stderr)) goto errquit0;
     } else {
 	if (!PgnParser_ByName(&parser, argv[1], stderr)) goto errquit0;
     }

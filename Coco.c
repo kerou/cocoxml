@@ -86,14 +86,14 @@ main(int argc, char * argv[])
     parser = NULL; xmlparser = NULL;
     if (CmpExtension(atgName, ".atg")) {
 	parser = !strcmp(atgName, "-") ?
-	    CcsParser(&u.parser, stdout, stderr) :
+	    CcsParser(&u.parser, stdin, stderr) :
 	    CcsParser_ByName(&u.parser, atgName, stderr);
 	if (!parser) goto errquit0;
 	CcsParser_Parse(parser);
 	if (!CcGlobals_Finish(&parser->globals)) goto errquit1;
     } else if (CmpExtension(atgName, ".xatg")) {
 	xmlparser = !strcmp(atgName, "-") ?
-	    CcsXmlParser(&u.xmlparser, stdout, stderr) :
+	    CcsXmlParser(&u.xmlparser, stdin, stderr) :
 	    CcsXmlParser_ByName(&u.xmlparser, atgName, stderr);
 	if (!xmlparser) goto errquit0;
 	CcsXmlParser_Parse(xmlparser);

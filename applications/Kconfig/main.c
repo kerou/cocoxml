@@ -34,13 +34,13 @@ main(int argc, char * argv[])
 
     CcsDirname(configdir, sizeof(configdir), argv[2]);
     if (!strcmp(argv[1], "-")) {
-	if (!KcParser(&kcparser, stdout, stderr)) goto errquit0;
+	if (!KcParser(&kcparser, stdin, stderr)) goto errquit0;
     } else {
 	if (!KcParser_ByName(&kcparser, argv[1], stderr)) goto errquit0;
     }
     kcparser.incdirs = CcsIncPathListV(FALSE, FALSE, configdir, NULL);
     if (!strcmp(argv[2], "-")) {
-	if (!CfParser(&cfparser, stdout, stderr)) goto errquit1;
+	if (!CfParser(&cfparser, stdin, stderr)) goto errquit1;
     } else {
 	if (!CfParser_ByName(&cfparser, argv[2], stderr)) goto errquit1;
     }
