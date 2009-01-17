@@ -49,6 +49,36 @@ CcsIncPathList(CcsBool_t AbsPathUsed, CcsBool_t IncluderUsed,
     *cur1 = 0;
     return self;
 }
+CcsIncPathList_t *
+CcsIncPathListV(CcsBool_t AbsPathUsed, CcsBool_t IncluderUsed,
+		const char * incpath, ...)
+{
+    CcsIncPathList_t * self;
+    const char * cur0;
+    va_list ap;
+    size_t totallen;
+    char * cur1;
+
+    totallen = 0;
+    va_start(ap, incpath);
+    for (cur0 = incpath; cur0; cur0 = va_arg(ap, const char *))
+	totallen = strlen(cur0) + 1;
+    ++totallen;
+    va_end(ap);
+    if (!(self = CcsMalloc(sizeof(CcsIncPathList_t) + totallen)))
+	return NULL;
+    self->AbsPathUsed = AbsPathUsed;
+    self->IncluderUsed = IncluderUsed;
+    self->start = cur1 = (char *)(self + 1);
+    va_start(ap, incpath);
+    for (cur0 = incpath; cur0; cur0 = va_arg(ap, const char *)) {
+	strcpy(cur1, cur0);
+	cur1 += strlen(cur1) + 1;
+    }
+    va_end(ap);
+    *cur1 = 0;
+    return self;
+}
 
 void
 CcsIncPathList_Destruct(CcsIncPathList_t * self)
