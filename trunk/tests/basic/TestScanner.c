@@ -22,6 +22,7 @@
   Coco/R itself) does not fall under the GNU General Public License.
 -------------------------------------------------------------------------*/
 #include  "c/Scanner.h"
+#include  "c/ScanInput.h"
 
 int
 main(int argc, char * argv[])
@@ -49,7 +50,7 @@ main(int argc, char * argv[])
 		   t->kind, t->pos, t->val);
 	}
 	la = CcsScanner_Scan(&scanner);
-	if (la->kind == scanner.eofSym) break;
+	if (la->kind == scanner.cur->info->eofSym) break;
     }
     if (t) CcsScanner_TokenDecRef(&scanner, t);
     if (la) CcsScanner_TokenDecRef(&scanner, la);

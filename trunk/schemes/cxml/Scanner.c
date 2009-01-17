@@ -29,280 +29,43 @@
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
 #include  <ctype.h>
-#include  <limits.h>
 #include  "Scanner.h"
-#include  "c/IncPathList.h"
+#include  "c/ScanInput.h"
+#include  "c/Indent.h"
 
-/*------------------------------- ScanInput --------------------------------*/
-struct CcsXmlScanInput_s {
-    CcsXmlScanInput_t * next;
+static CcsToken_t * CcsXmlScanner_Skip(void * scanner, CcsScanInput_t * input);
+static int CcsXmlScanner_Kind(void * scanner, CcsScanInput_t * input);
 
-    int              refcnt;
-    CcsXmlScanner_t   * scanner;
-    char           * fname;
-    FILE           * fp;
-    CcsBuffer_t      buffer;
-
-    CcsToken_t     * busyTokenList;
-    CcsToken_t    ** curToken;
-    CcsToken_t    ** peekToken;
-
-    int              ch;
-    int              chBytes;
-    int              pos;
-    int              line;
-    int              col;
-    int              oldEols;
-    int              oldEolsEOL;
-
-#ifdef CcsXmlScanner_INDENTATION
-    CcsBool_t        lineStart;
-    int            * indent;
-    int            * indentUsed;
-    int            * indentLast;
-    int              indentLimit;
-#endif
+static const CcsSI_Info_t Scanner_Info = {
+    /*---- declarations ----*/
+    0, /* additionalSpace */
+    0, /* eofSym */
+    39, /* maxT */
+    39, /* noSym */
+    /*---- enable ----*/
+    CcsXmlScanner_Skip,
+    CcsXmlScanner_Kind
 };
 
-static CcsToken_t * CcsXmlScanInput_NextToken(CcsXmlScanInput_t * self);
-
-static CcsBool_t
-CcsXmlScanInput_Init(CcsXmlScanInput_t * self, CcsXmlScanner_t * scanner, FILE * fp)
-{
-    self->next = NULL;
-    self->refcnt = 1;
-    self->scanner = scanner;
-    self->fp = fp;
-    if (!CcsBuffer(&self->buffer, fp)) goto errquit0;
-    self->busyTokenList = NULL;
-    self->curToken = &self->busyTokenList;
-    self->peekToken = &self->busyTokenList;
-
-    self->ch = 0; self->chBytes = 0;
-    self->pos = 0; self->line = 1; self->col = 0;
-    self->oldEols = 0; self->oldEolsEOL = 0;
 #ifdef CcsXmlScanner_INDENTATION
-    self->lineStart = TRUE;
-    if (!(self->indent = CcsMalloc(sizeof(int) * CcsXmlScanner_INDENT_START)))
-	goto errquit1;
-    self->indentUsed = self->indent;
-    self->indentLast = self->indent + CcsXmlScanner_INDENT_START;
-    *self->indentUsed++ = 0;
-    self->indentLimit = -1;
-#endif
-    return TRUE;
-#ifdef CcsXmlScanner_INDENTATION
- errquit1:
-    CcsBuffer_Destruct(&self->buffer);
-#endif
- errquit0:
-    return FALSE;
-}
-
-static CcsXmlScanInput_t *
-CcsXmlScanInput(CcsXmlScanner_t * scanner, FILE * fp)
+static const CcsIndentInfo_t Scanner_IndentInfo = {
+    CcsXmlScanner_INDENT_IN, CcsXmlScanner_INDENT_OUT, CcsXmlScanner_INDENT_ERR
+};
+static void CcsGetCh(CcsScanInput_t * si)
 {
-    CcsXmlScanInput_t * self;
-    if (!(self = CcsMalloc(sizeof(CcsXmlScanInput_t)))) goto errquit0;
-    self->fname = NULL;
-    if (!CcsXmlScanInput_Init(self, scanner, fp)) goto errquit1;
-    return self;
- errquit1:
-    CcsFree(self);
- errquit0:
-    return NULL;
+    CcsIndent_t * indent = (CcsIndent_t *)(si + 1);
+    if (si->oldEols == 0 && si->ch == '\n') indent->lineStart = TRUE;
+    CcsScanInput_GetCh(si);
 }
-
-static CcsXmlScanInput_t *
-CcsXmlScanInput_ByName(CcsXmlScanner_t * scanner, const CcsIncPathList_t * list,
-		    const char * includer, const char * infn)
-{
-    FILE * fp;
-    CcsXmlScanInput_t * self;
-    char infnpath[PATH_MAX];
-    if (!(fp = CcsIncPathList_Open(list, infnpath, sizeof(infnpath),
-				   includer, infn)))
-	goto errquit0;
-    if (!(self = CcsMalloc(sizeof(CcsXmlScanInput_t) + strlen(infnpath) + 1)))
-	goto errquit1;
-    strcpy(self->fname = (char *)(self + 1), infnpath);
-    if (!CcsXmlScanInput_Init(self, scanner, fp)) goto errquit2;
-    return self;
- errquit2:
-    CcsFree(self);
- errquit1:
-    fclose(fp);
- errquit0:
-    return NULL;
-}
-
-static void
-CcsXmlScanInput_Destruct(CcsXmlScanInput_t * self)
-{
-    CcsToken_t * cur, * next;
-
-#ifdef CcsXmlScanner_INDENTATION
-    CcsFree(self->indent);
-#endif
-    for (cur = self->busyTokenList; cur; cur = next) {
-	/* May be trigged by .atg semantic code. */
-	CcsAssert(cur->refcnt == 1);
-	next = cur->next;
-	CcsToken_Destruct(cur);
-    }
-    CcsBuffer_Destruct(&self->buffer);
-    if (self->fname) fclose(self->fp);
-    CcsFree(self);
-}
-
-static void
-CcsXmlScanInput_GetCh(CcsXmlScanInput_t * self)
-{
-    if (self->oldEols > 0) {
-	self->ch = '\n'; --self->oldEols; self->oldEolsEOL = 1;
-    } else {
-	if (self->ch == '\n') {
-	    if (self->oldEolsEOL) self->oldEolsEOL = 0;
-	    else {
-		++self->line; self->col = 0;
-	    }
-#ifdef CcsXmlScanner_INDENTATION
-	    self->lineStart = TRUE;
-#endif
-	} else if (self->ch == '\t') {
-	    self->col += 8 - self->col % 8;
-	} else {
-	    /* FIX ME: May be the width of some specical character
-	     * is NOT self->chBytes. */
-	    self->col += self->chBytes;
-	}
-	self->ch = CcsBuffer_Read(&self->buffer, &self->chBytes);
-	self->pos = CcsBuffer_GetPos(&self->buffer);
-    }
-}
-
-static CcsToken_t *
-CcsXmlScanInput_Scan(CcsXmlScanInput_t * self)
-{
-    CcsToken_t * cur;
-    if (*self->curToken == NULL) {
-	*self->curToken = CcsXmlScanInput_NextToken(self);
-	if (self->curToken == &self->busyTokenList)
-	    CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
-    }
-    cur = *self->curToken;
-    self->peekToken = self->curToken = &cur->next;
-    ++cur->refcnt;
-    return cur;
-}
-
-static CcsToken_t *
-CcsXmlScanInput_Peek(CcsXmlScanInput_t * self)
-{
-    CcsToken_t * cur;
-    do {
-	if (*self->peekToken == NULL) {
-	    *self->peekToken = CcsXmlScanInput_NextToken(self);
-	    if (self->peekToken == &self->busyTokenList)
-		CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
-	}
-	cur = *self->peekToken;
-	self->peekToken = &cur->next;
-    } while (cur->kind > self->scanner->maxT); /* Skip pragmas */
-    ++cur->refcnt;
-    return cur;
-}
-
-static void
-CcsXmlScanInput_ResetPeek(CcsXmlScanInput_t * self)
-{
-    self->peekToken = self->curToken;
-}
-
-static void
-CcsXmlScanInput_TokenIncRef(CcsXmlScanInput_t * self, CcsToken_t * token)
-{
-    ++token->refcnt;
-}
-
-static void
-CcsXmlScanInput_TokenDecRef(CcsXmlScanInput_t * self, CcsToken_t * token)
-{
-    if (--token->refcnt > 1) return;
-    CcsAssert(token->refcnt == 1);
-    if (token != self->busyTokenList) return;
-    /* Detach all tokens which is refered by self->busyTokenList only. */
-    while (token && token->refcnt <= 1) {
-	CcsAssert(token->refcnt == 1);
-	/* Detach token. */
-	if (self->curToken == &token->next)
-	    self->curToken = &self->busyTokenList;
-	if (self->peekToken == &token->next)
-	    self->peekToken = &self->busyTokenList;
-	self->busyTokenList = token->next;
-	CcsToken_Destruct(token);
-	token = self->busyTokenList;
-    }
-    /* Adjust CcsBuffer busy pointer */
-    if (self->busyTokenList) {
-	CcsAssert(self->busyTokenList->refcnt > 1);
-	CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
-    } else {
-	CcsBuffer_ClearBusy(&self->buffer);
-    }
-}
-
-#ifdef CcsXmlScanner_INDENTATION
-static void
-CcsXmlScanInput_IndentLimit(CcsXmlScanInput_t * self, const CcsToken_t * indentIn)
-{
-    CcsAssert(indentIn->kind == CcsXmlScanner_INDENT_IN);
-    self->indentLimit = indentIn->loc.col;
-}
+#else
+#define CcsGetCh(si)  CcsScanInput_GetCh(si)
 #endif
 
-static CcsPosition_t *
-CcsXmlScanInput_GetPosition(CcsXmlScanInput_t * self, const CcsToken_t * begin,
-			 const CcsToken_t * end)
-{
-    int len;
-    CcsAssert(self == begin->input);
-    CcsAssert(self == end->input);
-    len = end->pos - begin->pos;
-    return CcsPosition(begin->pos, len, begin->loc.col,
-		       CcsBuffer_GetString(&self->buffer, begin->pos, len));
-}
-
-static CcsPosition_t *
-CcsXmlScanInput_GetPositionBetween(CcsXmlScanInput_t * self,
-				const CcsToken_t * begin,
-				const CcsToken_t * end)
-{
-    int begpos, len;
-    CcsAssert(self == begin->input);
-    CcsAssert(self == end->input);
-    begpos = begin->pos + strlen(begin->val);
-    len = end->pos - begpos;
-    const char * start = CcsBuffer_GetString(&self->buffer, begpos, len);
-    const char * cur, * last = start + len;
-
-    /* Skip the leading spaces. */
-    for (cur = start; cur < last; ++cur)
-	if (*cur != ' ' && *cur != '\t' && *cur != '\r' && *cur != '\n') break;
-    return CcsPosition(begpos + (cur - start), last - cur, 0, cur);
-}
-
-/*------------------------------- Scanner --------------------------------*/
 static const char * dummyval = "dummy";
 
 static CcsBool_t
 CcsXmlScanner_Init(CcsXmlScanner_t * self, CcsErrorPool_t * errpool) {
     self->errpool = errpool;
-    /*---- declarations ----*/
-    self->eofSym = 0;
-    self->maxT = 39;
-    self->noSym = 39;
-    /*---- enable ----*/
     if (!(self->dummyToken =
 	  CcsToken(NULL, 0, NULL, 0, 0, 0, dummyval, strlen(dummyval))))
 	return FALSE;
@@ -312,12 +75,21 @@ CcsXmlScanner_Init(CcsXmlScanner_t * self, CcsErrorPool_t * errpool) {
 CcsXmlScanner_t *
 CcsXmlScanner(CcsXmlScanner_t * self, CcsErrorPool_t * errpool, FILE * fp)
 {
-    if (!(self->cur = CcsXmlScanInput(self, fp))) goto errquit0;
-    if (!CcsXmlScanner_Init(self, errpool)) goto errquit1;
-    CcsXmlScanInput_GetCh(self->cur);
+    if (!(self->cur = CcsScanInput(self, &Scanner_Info, fp)))
+	goto errquit0;
+#ifdef CcsXmlScanner_INDENTATION
+    if (!CcsIndent_Init((CcsIndent_t *)(self->cur + 1), &Scanner_IndentInfo))
+	goto errquit1;
+#endif
+    if (!CcsXmlScanner_Init(self, errpool)) goto errquit2;
+    CcsGetCh(self->cur);
     return self;
+ errquit2:
+#ifdef CcsXmlScanner_INDENTATION
+    CcsIndent_Destruct((CcsIndent_t *)(self->cur + 1));
  errquit1:
-    CcsXmlScanInput_Destruct(self->cur);
+#endif
+    CcsScanInput_Destruct(self->cur);
  errquit0:
     return NULL;
 }
@@ -326,13 +98,22 @@ CcsXmlScanner_t *
 CcsXmlScanner_ByName(CcsXmlScanner_t * self, CcsErrorPool_t * errpool,
 		  const char * fn)
 {
-    if (!(self->cur = CcsXmlScanInput_ByName(self, NULL, NULL, fn)))
+    if (!(self->cur =
+	  CcsScanInput_ByName(self, &Scanner_Info, NULL, NULL, fn)))
 	goto errquit0;
-    if (!CcsXmlScanner_Init(self, errpool)) goto errquit1;
-    CcsXmlScanInput_GetCh(self->cur);
+#ifdef CcsXmlScanner_INDENTATION
+    if (!CcsIndent_Init((CcsIndent_t *)(self->cur + 1), &Scanner_IndentInfo))
+	goto errquit1;
+#endif
+    if (!CcsXmlScanner_Init(self, errpool)) goto errquit2;
+    CcsGetCh(self->cur);
     return self;
+ errquit2:
+#ifdef CcsXmlScanner_INDENTATION
+    CcsIndent_Destruct((CcsIndent_t *)(self->cur + 1));
  errquit1:
-    CcsXmlScanInput_Destruct(self->cur);
+#endif
+    CcsScanInput_Destruct(self->cur);
  errquit0:
     return NULL;
 }
@@ -340,10 +121,15 @@ CcsXmlScanner_ByName(CcsXmlScanner_t * self, CcsErrorPool_t * errpool,
 void
 CcsXmlScanner_Destruct(CcsXmlScanner_t * self)
 {
-    CcsXmlScanInput_t * cur, * next;
+    CcsScanInput_t * cur, * next;
     for (cur = self->cur; cur; cur = next) {
 	next = cur->next;
-	CcsXmlScanInput_Destruct(cur);
+	/* May be trigged by .atg semantic code. */
+	CcsAssert(cur->refcnt == 1);
+#ifdef CcsXmlScanner_INDENTATION
+	CcsIndent_Destruct((CcsIndent_t *)(self->cur + 1));
+#endif
+	CcsScanInput_Destruct(cur);
     }
     /* May be trigged by .atg semantic code. */
     CcsAssert(self->dummyToken->refcnt == 1);
@@ -360,14 +146,14 @@ CcsXmlScanner_GetDummy(CcsXmlScanner_t * self)
 CcsToken_t *
 CcsXmlScanner_Scan(CcsXmlScanner_t * self)
 {
-    CcsToken_t * token; CcsXmlScanInput_t * next;
+    CcsToken_t * token; CcsScanInput_t * next;
     for (;;) {
-	token = CcsXmlScanInput_Scan(self->cur);
-	if (token->kind != self->eofSym) break;
+	token = CcsScanInput_Scan(self->cur);
+	if (token->kind != Scanner_Info.eofSym) break;
 	if (self->cur->next == NULL) break;
-	CcsXmlScanInput_TokenDecRef(token->input, token);
+	CcsScanInput_TokenDecRef(token->input, token);
 	next = self->cur->next;
-	CcsXmlScanInput_Destruct(self->cur);
+	CcsScanInput_DecRef(self->cur);
 	self->cur = next;
     }
     return token;
@@ -376,13 +162,13 @@ CcsXmlScanner_Scan(CcsXmlScanner_t * self)
 CcsToken_t *
 CcsXmlScanner_Peek(CcsXmlScanner_t * self)
 {
-    CcsToken_t * token; CcsXmlScanInput_t * cur;
+    CcsToken_t * token; CcsScanInput_t * cur;
     cur = self->cur;
     for (;;) {
-	token = CcsXmlScanInput_Peek(self->cur);
-	if (token->kind != self->eofSym) break;
+	token = CcsScanInput_Peek(self->cur);
+	if (token->kind != Scanner_Info.eofSym) break;
 	if (cur->next == NULL) break;
-	CcsXmlScanInput_TokenDecRef(token->input, token);
+	CcsScanInput_TokenDecRef(token->input, token);
 	cur = cur->next;
     }
     return token;
@@ -391,23 +177,23 @@ CcsXmlScanner_Peek(CcsXmlScanner_t * self)
 void
 CcsXmlScanner_ResetPeek(CcsXmlScanner_t * self)
 {
-    CcsXmlScanInput_t * cur;
+    CcsScanInput_t * cur;
     for (cur = self->cur; cur; cur = cur->next)
-	CcsXmlScanInput_ResetPeek(cur);
+	CcsScanInput_ResetPeek(cur);
 }
 
 void
 CcsXmlScanner_TokenIncRef(CcsXmlScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) ++token->refcnt;
-    else CcsXmlScanInput_TokenIncRef(token->input, token);
+    else CcsScanInput_TokenIncRef(token->input, token);
 }
 
 void
 CcsXmlScanner_TokenDecRef(CcsXmlScanner_t * self, CcsToken_t * token)
 {
     if (token == self->dummyToken) --token->refcnt;
-    else CcsXmlScanInput_TokenDecRef(token->input, token);
+    else CcsScanInput_TokenDecRef(token->input, token);
 }
 
 #ifdef CcsXmlScanner_INDENTATION
@@ -415,7 +201,8 @@ void
 CcsXmlScanner_IndentLimit(CcsXmlScanner_t * self, const CcsToken_t * indentIn)
 {
     CcsAssert(indentIn->input == self->cur);
-    CcsXmlScanInput_IndentLimit(self->cur, indentIn);
+    CcsAssert(indentIn->kind == CcsXmlScanner_INDENT_IN);
+    CcsIndent_SetLimit((CcsIndent_t *)(self->cur + 1), indentIn);
 }
 #endif
 
@@ -423,40 +210,46 @@ CcsPosition_t *
 CcsXmlScanner_GetPosition(CcsXmlScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end)
 {
-    return CcsXmlScanInput_GetPosition(begin->input, begin, end);
+    return CcsScanInput_GetPosition(begin->input, begin, end);
 }
 
 CcsPosition_t *
 CcsXmlScanner_GetPositionBetween(CcsXmlScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end)
 {
-    return CcsXmlScanInput_GetPositionBetween(begin->input, begin, end);
+    return CcsScanInput_GetPositionBetween(begin->input, begin, end);
 }
 
 CcsBool_t
-CcsXmlScanner_Include(CcsXmlScanner_t * self, FILE * fp)
+CcsXmlScanner_Include(CcsXmlScanner_t * self, FILE * fp, CcsToken_t ** token)
 {
-    CcsXmlScanInput_t * input;
-    if (!(input = CcsXmlScanInput(self, fp))) return FALSE;
+    CcsScanInput_t * input;
+    if (!(input = CcsScanInput(self, &Scanner_Info, fp))) return FALSE;
+    CcsScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
+    CcsGetCh(input);
+    *token = CcsScanInput_Scan(self->cur);
     return TRUE;
 }
 
 CcsBool_t
 CcsXmlScanner_IncludeByName(CcsXmlScanner_t * self, const CcsIncPathList_t * list,
-			 const char * infn)
+			 const char * infn, CcsToken_t ** token)
 {
-    CcsXmlScanInput_t * input;
-    if (!(input = CcsXmlScanInput_ByName(self, list, self->cur->fname, infn)))
+    CcsScanInput_t * input;
+    if (!(input = CcsScanInput_ByName(self, &Scanner_Info,
+				      list, self->cur->fname, infn)))
 	return FALSE;
+    CcsScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
+    CcsGetCh(input);
+    *token = CcsScanInput_Scan(self->cur);
     return TRUE;
 }
 
-/*------------------------------- ScanInput --------------------------------*/
-/* All the following things are used by CcsXmlScanInput_NextToken. */
+/* All the following things are used by CcsScanInput_NextToken. */
 typedef struct {
     int keyFrom;
     int keyTo;
@@ -561,48 +354,13 @@ Identifier2KWKind(const char * key, size_t keylen, int defaultVal)
 }
 
 static int
-GetKWKind(CcsXmlScanInput_t * self, int start, int end, int defaultVal)
+GetKWKind(CcsScanInput_t * self, int start, int end, int defaultVal)
 {
     return Identifier2KWKind(CcsBuffer_GetString(&self->buffer,
 						 start, end - start),
 			     end - start, defaultVal);
 }
 #endif /* CcsXmlScanner_KEYWORD_USED */
-
-typedef struct {
-    int ch, chBytes;
-    int pos, line, col;
-}  SLock_t;
-static void
-CcsXmlScanInput_LockCh(CcsXmlScanInput_t * self, SLock_t * slock)
-{
-    slock->ch = self->ch;
-    slock->chBytes = self->chBytes;
-    slock->pos = self->pos;
-    slock->line = self->line;
-    slock->col = self->col;
-    CcsBuffer_Lock(&self->buffer);
-}
-static void
-CcsXmlScanInput_UnlockCh(CcsXmlScanInput_t * self, SLock_t * slock)
-{
-    CcsBuffer_Unlock(&self->buffer);
-}
-static void
-CcsXmlScanInput_ResetCh(CcsXmlScanInput_t * self, SLock_t * slock)
-{
-    self->ch = slock->ch;
-    self->chBytes = slock->chBytes;
-    self->pos = slock->pos;
-    self->line = slock->line;
-    CcsBuffer_LockReset(&self->buffer);
-}
-
-typedef struct {
-    int start[2];
-    int end[2];
-    CcsBool_t nested;
-}  CcsComment_t;
 
 static const CcsComment_t comments[] = {
 /*---- comments ----*/
@@ -613,200 +371,105 @@ static const CcsComment_t comments[] = {
 static const CcsComment_t * commentsLast =
     comments + sizeof(comments) / sizeof(comments[0]);
 
-static CcsBool_t
-CcsXmlScanInput_Comment(CcsXmlScanInput_t * self, const CcsComment_t * c)
+static CcsToken_t *
+CcsXmlScanner_Skip(void * scanner, CcsScanInput_t * input)
 {
-    SLock_t slock;
-    int level = 1, line0 = self->line;
-
-    if (c->start[1]) {
-	CcsXmlScanInput_LockCh(self, &slock); CcsXmlScanInput_GetCh(self);
-	if (self->ch != c->start[1]) {
-	    CcsXmlScanInput_ResetCh(self, &slock);
-	    return FALSE;
-	}
-	CcsXmlScanInput_UnlockCh(self, &slock);
-    }
-    CcsXmlScanInput_GetCh(self);
-    for (;;) {
-	if (self->ch == c->end[0]) {
-	    if (c->end[1] == 0) {
-		if (--level == 0) break;
-	    } else {
-		CcsXmlScanInput_LockCh(self, &slock); CcsXmlScanInput_GetCh(self);
-		if (self->ch == c->end[1]) {
-		    CcsXmlScanInput_UnlockCh(self, &slock);
-		    if (--level == 0) break;
-		} else {
-		    CcsXmlScanInput_ResetCh(self, &slock);
-		}
-	    }
-	} else if (c->nested && self->ch == c->start[0]) {
-	    if (c->start[1] == 0) {
-		++level;
-	    } else {
-		CcsXmlScanInput_LockCh(self, &slock); CcsXmlScanInput_GetCh(self);
-		if (self->ch == c->start[1]) {
-		    CcsXmlScanInput_UnlockCh(self, &slock);
-		    ++level;
-		} else {
-		    CcsXmlScanInput_ResetCh(self, &slock);
-		}
-	    }
-	} else if (self->ch == EoF) {
-	    return TRUE;
-	}
-	CcsXmlScanInput_GetCh(self);
-    }
-    self->oldEols = self->line - line0;
-    CcsXmlScanInput_GetCh(self);
-    return TRUE;
-}
-
 #ifdef CcsXmlScanner_INDENTATION
-static CcsToken_t *
-CcsXmlScanInput_IndentGenerator(CcsXmlScanInput_t * self)
-{
-    int newLen; int * newIndent, * curIndent;
-    CcsToken_t * head, * cur;
-
-    if (!self->lineStart) return NULL;
-    CcsAssert(self->indent < self->indentUsed);
-    /* Skip blank lines. */
-    if (self->ch == '\r' || self->ch == '\n') return NULL;
-    /* Dump all required IndentOut when EoF encountered. */
-    if (self->ch == EoF) {
-	head = NULL;
-	while (self->indent < self->indentUsed - 1) {
-	    cur = CcsToken(self, CcsXmlScanner_INDENT_OUT, self->fname, self->pos,
-			   self->line, self->col, NULL, 0);
-	    cur->next = head; head = cur;
-	    --self->indentUsed;
-	}
-	return head;
-    }
-    if (self->indentLimit != -1 && self->col >= self->indentLimit) return NULL;
-    self->indentLimit = -1;
-    self->lineStart = FALSE;
-    if (self->col > self->indentUsed[-1]) {
-	if (self->indentUsed == self->indentLast) {
-	    newLen = (self->indentLast - self->indent) + CcsXmlScanner_INDENT_START;
-	    newIndent = CcsRealloc(self->indent, sizeof(int) * newLen);
-	    if (!newIndent) return NULL;
-	    self->indentUsed = newIndent + (self->indentUsed - self->indent);
-	    self->indentLast = newIndent + newLen;
-	    self->indent = newIndent;
-	}
-	CcsAssert(self->indentUsed < self->indentLast);
-	*self->indentUsed++ = self->col;
-	return CcsToken(self, CcsXmlScanner_INDENT_IN, self->fname, self->pos,
-			self->line, self->col, NULL, 0);
-    }
-    for (curIndent = self->indentUsed - 1; self->col < *curIndent; --curIndent);
-    if (self->col > *curIndent)
-	return CcsToken(self, CcsXmlScanner_INDENT_ERR, self->fname, self->pos,
-			self->line, self->col, NULL, 0);
-    head = NULL;
-    while (curIndent < self->indentUsed - 1) {
-	cur = CcsToken(self, CcsXmlScanner_INDENT_OUT, self->fname, self->pos,
-		       self->line, self->col, NULL, 0);
-	cur->next = head; head = cur;
-	--self->indentUsed;
-    }
-    return head;
-}
+    CcsToken_t * t;
 #endif
-
-static CcsToken_t *
-CcsXmlScanInput_NextToken(CcsXmlScanInput_t * self)
-{
-    int pos, line, col, state, kind; CcsToken_t * t;
     const CcsComment_t * curComment;
     for (;;) {
-	while (self->ch == ' '
+	while (input->ch == ' '
 	       /*---- scan1 ----*/
-	       || (self->ch >= '\t' && self->ch <= '\n')
-	       || self->ch == '\r'
+	       || (input->ch >= '\t' && input->ch <= '\n')
+	       || input->ch == '\r'
 	       /*---- enable ----*/
-	       ) CcsXmlScanInput_GetCh(self);
+	       )  CcsGetCh(input);
 #ifdef CcsXmlScanner_INDENTATION
-	if ((t = CcsXmlScanInput_IndentGenerator(self))) return t;
+	if ((t = CcsIndent_Generator((CcsIndent_t *)(input + 1), input)))
+	    return t;
 #endif
 	for (curComment = comments; curComment < commentsLast; ++curComment)
-	    if (self->ch == curComment->start[0] &&
-		CcsXmlScanInput_Comment(self, curComment)) break;
+	    if (input->ch == curComment->start[0] &&
+		CcsScanInput_Comment(input, curComment)) break;
 	if (curComment >= commentsLast) break;
     }
-    pos = self->pos; line = self->line; col = self->col;
-    CcsBuffer_Lock(&self->buffer);
-    state = Char2State(self->ch);
-    CcsXmlScanInput_GetCh(self);
+    return NULL;
+}
+
+static int CcsXmlScanner_Kind(void * scanner, CcsScanInput_t * input)
+{
+    int kind, pos, state;
+
+    pos = input->pos;
+    state = Char2State(input->ch);
+    CcsGetCh(input);
     kind = -2; /* Avoid gcc warning */
     switch (state) {
-    case -1: kind = self->scanner->eofSym; break;
-    case 0: kind = self->scanner->noSym; break;
+    case -1: kind = Scanner_Info.eofSym; break;
+    case 0: kind = Scanner_Info.noSym; break;
     /*---- scan3 ----*/
     case 1: case_1:
-	if ((self->ch >= '0' && self->ch <= '9') ||
-	    (self->ch >= 'A' && self->ch <= 'Z') ||
-	    self->ch == '_' ||
-	    (self->ch >= 'a' && self->ch <= 'z')) {
-	    CcsXmlScanInput_GetCh(self); goto case_1;
-	} else { kind = GetKWKind(self, pos, self->pos, 1); break; }
+	if ((input->ch >= '0' && input->ch <= '9') ||
+	    (input->ch >= 'A' && input->ch <= 'Z') ||
+	    input->ch == '_' ||
+	    (input->ch >= 'a' && input->ch <= 'z')) {
+	    CcsGetCh(input); goto case_1;
+	} else { kind = GetKWKind(input, pos, input->pos, 1); break; }
     case 2: case_2:
-	if ((self->ch >= '0' && self->ch <= '9')) {
-	    CcsXmlScanInput_GetCh(self); goto case_2;
+	if ((input->ch >= '0' && input->ch <= '9')) {
+	    CcsGetCh(input); goto case_2;
 	} else { kind = 2; break; }
     case 3: case_3:
 	{ kind = 3; break; }
     case 4: case_4:
 	{ kind = 4; break; }
     case 5:
-	if ((self->ch >= 0 && self->ch <= '\t') ||
-	    (self->ch >= '\v' && self->ch <= '\f') ||
-	    (self->ch >= 14 && self->ch <= '&') ||
-	    (self->ch >= '(' && self->ch <= '[') ||
-	    (self->ch >= ']' && self->ch <= 65535)) {
-	    CcsXmlScanInput_GetCh(self); goto case_6;
-	} else if (self->ch == '\\') {
-	    CcsXmlScanInput_GetCh(self); goto case_7;
-	} else { kind = self->scanner->noSym; break; }
+	if ((input->ch >= 0 && input->ch <= '\t') ||
+	    (input->ch >= '\v' && input->ch <= '\f') ||
+	    (input->ch >= 14 && input->ch <= '&') ||
+	    (input->ch >= '(' && input->ch <= '[') ||
+	    (input->ch >= ']' && input->ch <= 65535)) {
+	    CcsGetCh(input); goto case_6;
+	} else if (input->ch == '\\') {
+	    CcsGetCh(input); goto case_7;
+	} else { kind = Scanner_Info.noSym; break; }
     case 6: case_6:
-	if (self->ch == '\'') {
-	    CcsXmlScanInput_GetCh(self); goto case_9;
-	} else { kind = self->scanner->noSym; break; }
+	if (input->ch == '\'') {
+	    CcsGetCh(input); goto case_9;
+	} else { kind = Scanner_Info.noSym; break; }
     case 7: case_7:
-	if ((self->ch >= ' ' && self->ch <= '~')) {
-	    CcsXmlScanInput_GetCh(self); goto case_8;
-	} else { kind = self->scanner->noSym; break; }
+	if ((input->ch >= ' ' && input->ch <= '~')) {
+	    CcsGetCh(input); goto case_8;
+	} else { kind = Scanner_Info.noSym; break; }
     case 8: case_8:
-	if ((self->ch >= '0' && self->ch <= '9') ||
-	    (self->ch >= 'a' && self->ch <= 'f')) {
-	    CcsXmlScanInput_GetCh(self); goto case_8;
-	} else if (self->ch == '\'') {
-	    CcsXmlScanInput_GetCh(self); goto case_9;
-	} else { kind = self->scanner->noSym; break; }
+	if ((input->ch >= '0' && input->ch <= '9') ||
+	    (input->ch >= 'a' && input->ch <= 'f')) {
+	    CcsGetCh(input); goto case_8;
+	} else if (input->ch == '\'') {
+	    CcsGetCh(input); goto case_9;
+	} else { kind = Scanner_Info.noSym; break; }
     case 9: case_9:
 	{ kind = 5; break; }
     case 10: case_10:
-	if ((self->ch >= 0 && self->ch <= '\t') ||
-	    (self->ch >= '\v' && self->ch <= '\f') ||
-	    (self->ch >= 14 && self->ch <= '!') ||
-	    (self->ch >= '#' && self->ch <= '[') ||
-	    (self->ch >= ']' && self->ch <= 65535)) {
-	    CcsXmlScanInput_GetCh(self); goto case_10;
-	} else if (self->ch == '"') {
-	    CcsXmlScanInput_GetCh(self); goto case_3;
-	} else if (self->ch == '\\') {
-	    CcsXmlScanInput_GetCh(self); goto case_11;
-	} else if (self->ch == '\n' ||
-	    self->ch == '\r') {
-	    CcsXmlScanInput_GetCh(self); goto case_4;
-	} else { kind = self->scanner->noSym; break; }
+	if ((input->ch >= 0 && input->ch <= '\t') ||
+	    (input->ch >= '\v' && input->ch <= '\f') ||
+	    (input->ch >= 14 && input->ch <= '!') ||
+	    (input->ch >= '#' && input->ch <= '[') ||
+	    (input->ch >= ']' && input->ch <= 65535)) {
+	    CcsGetCh(input); goto case_10;
+	} else if (input->ch == '"') {
+	    CcsGetCh(input); goto case_3;
+	} else if (input->ch == '\\') {
+	    CcsGetCh(input); goto case_11;
+	} else if (input->ch == '\n' ||
+	    input->ch == '\r') {
+	    CcsGetCh(input); goto case_4;
+	} else { kind = Scanner_Info.noSym; break; }
     case 11: case_11:
-	if ((self->ch >= ' ' && self->ch <= '~')) {
-	    CcsXmlScanInput_GetCh(self); goto case_10;
-	} else { kind = self->scanner->noSym; break; }
+	if ((input->ch >= ' ' && input->ch <= '~')) {
+	    CcsGetCh(input); goto case_10;
+	} else { kind = Scanner_Info.noSym; break; }
     case 12:
 	{ kind = 11; break; }
     case 13:
@@ -832,25 +495,20 @@ CcsXmlScanInput_NextToken(CcsXmlScanInput_t * self)
     case 23: case_23:
 	{ kind = 38; break; }
     case 24:
-	if (self->ch == '>') {
-	    CcsXmlScanInput_GetCh(self); goto case_15;
-	} else if (self->ch == ')') {
-	    CcsXmlScanInput_GetCh(self); goto case_23;
+	if (input->ch == '>') {
+	    CcsGetCh(input); goto case_15;
+	} else if (input->ch == ')') {
+	    CcsGetCh(input); goto case_23;
 	} else { kind = 12; break; }
     case 25:
-	if (self->ch == '.') {
-	    CcsXmlScanInput_GetCh(self); goto case_14;
+	if (input->ch == '.') {
+	    CcsGetCh(input); goto case_14;
 	} else { kind = 22; break; }
     case 26:
-	if (self->ch == '.') {
-	    CcsXmlScanInput_GetCh(self); goto case_22;
+	if (input->ch == '.') {
+	    CcsGetCh(input); goto case_22;
 	} else { kind = 28; break; }
     /*---- enable ----*/
     }
-    CcsAssert(kind != -2);
-    t = CcsToken(self, kind, self->fname, pos, line, col,
-		 CcsBuffer_GetString(&self->buffer, pos, self->pos - pos),
-		 self->pos - pos);
-    CcsBuffer_Unlock(&self->buffer);
-    return t;
+    return kind;
 }
