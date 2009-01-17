@@ -31,11 +31,14 @@
 EXTC_BEGIN
 
 struct CcsIncPathList_s {
+    CcsBool_t AbsPathUsed;
+    CcsBool_t IncluderUsed;
     char * start;
 };
 
 CcsIncPathList_t *
-CcsIncPathList(const char * const * incpatharr, size_t numpathes);
+CcsIncPathList(CcsBool_t AbsPathUsed, CcsBool_t IncluderUsed,
+	       const char * const * incpatharr, size_t numpathes);
 void CcsIncPathList_Destruct(CcsIncPathList_t * self);
 
 FILE *
