@@ -80,18 +80,11 @@ struct KcSymbol_s {
     KcSymbol_t * next;
     char * symname;
     CcsBool_t menuOrNot;
-    union {
-	int _bool_;
-	int _tristate_;
-	char * _string_;
-	unsigned _hex_;
-	int _int_;
-	KcSymbolList_t * _menu_;
-	KcSymbolList_t * _choice_;
-	char * _comment_;
-	KcExpr_t * _ifexpr_;
-	char * _const_;
-    } u;
+    int _int_;
+    char * _string_;
+    unsigned _hex_;
+    KcSymbolList_t * subs;
+    KcExpr_t * ifexpr;
     KcProperty_t * props;
     CcsPosition_t * helpmsg;
 };
@@ -142,7 +135,8 @@ KcSymbolTable_AppendSymbol(KcSymbolTable_t * self, KcSymbol_t ** retSymbol,
 
 const char *
 KcSymbolTable_AddNoNSymbol(KcSymbolTable_t * self, KcSymbol_t ** retSymbol,
-			   KcSymbolType_t symtype, KcProperty_t * properties);
+			   KcSymbolType_t symtype, KcProperty_t * properties,
+			   CcsPosition_t * helpmsg);
 
 const char *
 KcSymbolTable_AddConst(KcSymbolTable_t * self, KcSymbol_t ** retSymbol,

@@ -111,12 +111,14 @@ MenuDecl<KcSymbol_t ** menu>
   eol [ IndentIn { Property<&symtype, &props, &helpmsg> } { eol } IndentOut ]
   SymbolListDecl<&symlist> "endmenu" eol
     (. if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, menu,
-	   	       	 			KcstMenu, props))) {
+	   	       	 			KcstMenu, props, helpmsg))) {
 	   KcParser_SemErrT(self, "Append 'menu' failed: %s.", errmsg);
 	   if (props) KcPropertyList_Destruct(props);
 	   if (helpmsg) CcsPosition_Destruct(helpmsg);
 	   if (symlist) KcSymbolList_Destruct(symlist);
-       } else (*menu)->u._menu_ = symlist; .)
+       } else {
+	   (*menu)->subs = symlist;
+       } .)
 .
 
 ChoiceDecl<KcSymbol_t ** choice>
@@ -128,12 +130,14 @@ ChoiceDecl<KcSymbol_t ** choice>
   "choice" eol [ IndentIn { Property<&symtype, &props, &helpmsg> } { eol } IndentOut ]
   SymbolListDecl<&symlist> "endchoice" eol
     (. if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, choice,
-       	  	     				KcstChoice, props))) {
+       	  	     				KcstChoice, props, helpmsg))) {
 	   KcParser_SemErrT(self, "Append 'choice' failed: %s.", errmsg);
 	   if (props) KcPropertyList_Destruct(props);
 	   if (helpmsg) CcsPosition_Destruct(helpmsg);
 	   if (symlist) KcSymbolList_Destruct(symlist);
-       } else (*choice)->u._choice_ = symlist; .)
+       } else {
+           (*choice)->subs = symlist;
+       } .)
 .
 
 CommentDecl<KcSymbol_t ** comment>
@@ -145,12 +149,14 @@ CommentDecl<KcSymbol_t ** comment>
   "comment" stringT  (. _comment_ = CcsEscape(self->t->val); .)
   { Property<&symtype, &props, &helpmsg> } eol
     (. if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, comment,
-  	    	      	 	    		KcstComment, props))) {
+  	    	      	 	    		KcstComment, props, helpmsg))) {
 	   KcParser_SemErrT(self, "Append 'comment' failed: %s.", errmsg);
 	   if (_comment_) CcsFree(_comment_);
 	   if (props) KcPropertyList_Destruct(props);
 	   if (helpmsg) CcsPosition_Destruct(helpmsg);
-       } else (*comment)->u._comment_ = _comment_; .)
+       } else {
+           (*comment)->_string_ = _comment_;
+       } .)
 .
 
 IfDecl<KcSymbol_t ** _if_>
@@ -159,10 +165,14 @@ IfDecl<KcSymbol_t ** _if_>
        KcSymbolList_t * symlist = NULL; .) =
   "if" Expr<&ifexpr> eol SymbolListDecl<&symlist> "endif" eol
     (. if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, _if_,
-       	  	     				KcstIf, NULL))) {
+       	  	     				KcstIf, NULL, NULL))) {
 	   KcParser_SemErrT(self, "Append 'if' failed: %s.", errmsg);
 	   if (ifexpr) KcExpr_Destruct(ifexpr);
-       } else (*_if_)->u._ifexpr_ = ifexpr; .)
+	   if (symlist) KcSymbolList_Destruct(symlist);
+       } else {
+           (*_if_)->ifexpr = ifexpr;
+	   (*_if_)->subs = symlist;
+       } .)
 .
 
 MainMenuDecl<KcSymbol_t ** sym> =
