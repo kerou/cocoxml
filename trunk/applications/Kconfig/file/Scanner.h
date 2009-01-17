@@ -64,10 +64,11 @@ CcsPosition_t *
 CfScanner_GetPositionBetween(CfScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end);
 
-CcsBool_t CfScanner_Include(CfScanner_t * self, FILE * fp);
+CcsBool_t
+CfScanner_Include(CfScanner_t * self, FILE * fp, CcsToken_t ** token);
 CcsBool_t
 CfScanner_IncludeByName(CfScanner_t * self, const CcsIncPathList_t * list,
-			 const char * infn);
+			 const char * infn, CcsToken_t ** token);
 
 EXTC_END
 

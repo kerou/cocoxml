@@ -218,6 +218,20 @@ PgnScanInput_Scan(PgnScanInput_t * self)
     return cur;
 }
 
+static void
+PgnScanInput_WithDraw(PgnScanInput_t * self, CcsToken_t * token)
+{
+    CcsToken_t ** cur;
+    CcsAssert(self == token->input);
+    CcsAssert(token->refcnt > 1);
+    CcsAssert(&token->next == self->curToken);
+    for (cur = &self->busyTokenList; *cur != token; cur = &(*cur)->next)
+	CcsAssert(*cur != NULL);
+    --token->refcnt;
+    if (self->peekToken == self->curToken) self->peekToken = cur;
+    self->curToken = cur;
+}
+
 static CcsToken_t *
 PgnScanInput_Peek(PgnScanInput_t * self)
 {
@@ -464,24 +478,30 @@ PgnScanner_GetPositionBetween(PgnScanner_t * self, const CcsToken_t * begin,
 }
 
 CcsBool_t
-PgnScanner_Include(PgnScanner_t * self, FILE * fp)
+PgnScanner_Include(PgnScanner_t * self, FILE * fp, CcsToken_t ** token)
 {
     PgnScanInput_t * input;
     if (!(input = PgnScanInput(self, fp))) return FALSE;
+    PgnScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
+    PgnScanInput_GetCh(input);
+    *token = PgnScanInput_Scan(self->cur);
     return TRUE;
 }
 
 CcsBool_t
 PgnScanner_IncludeByName(PgnScanner_t * self, const CcsIncPathList_t * list,
-			 const char * infn)
+			 const char * infn, CcsToken_t ** token)
 {
     PgnScanInput_t * input;
     if (!(input = PgnScanInput_ByName(self, list, self->cur->fname, infn)))
 	return FALSE;
+    PgnScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
+    PgnScanInput_GetCh(input);
+    *token = PgnScanInput_Scan(self->cur);
     return TRUE;
 }
 

@@ -168,7 +168,7 @@ Source             (. char * fname; .) =
   "source" stringT (. if (!(fname = CcsUnescape(self->t->val)))
   	   	          KcParser_SemErrT(self, "Not enough memroy."); .)
   eol              (. if (fname) {
-    		          if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname))
+    		          if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname, &self->la))
   		              KcParser_SemErrT(self, "Can not include '%s'.", fname);
   		          CcsFree(fname);
 		      } .)
