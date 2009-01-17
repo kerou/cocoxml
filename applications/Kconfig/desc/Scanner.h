@@ -13,10 +13,6 @@ License: LGPLv2
 #include "c/Token.h"
 #endif
 
-#ifndef  COCO_BUFFER_H
-#include "c/Buffer.h"
-#endif
-
 #ifndef  COCO_POSITION_H
 #include "c/Position.h"
 #endif
@@ -28,21 +24,16 @@ EXTC_BEGIN
 #define KcScanner_CASE_SENSITIVE
 #define KcScanner_KEYWORD_USED
 #define KcScanner_INDENTATION
-#define KcScanner_INDENT_START 32
 #define KcScanner_INDENT_IN 1
 #define KcScanner_INDENT_OUT 2
 #define KcScanner_INDENT_ERR 3
 /*---- enable ----*/
 
-typedef struct KcScanInput_s KcScanInput_t;
 typedef struct KcScanner_s KcScanner_t;
 struct KcScanner_s {
     CcsErrorPool_t * errpool;
-    int              eofSym;
-    int              noSym;
-    int              maxT;
     CcsToken_t     * dummyToken;
-    KcScanInput_t * cur;
+    CcsScanInput_t * cur;
 };
 
 KcScanner_t *

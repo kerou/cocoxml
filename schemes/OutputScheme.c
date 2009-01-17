@@ -230,7 +230,7 @@ CheckMark(const char * lnbuf, const char * startMark, const char * endMark,
 }
 
 static const char * const suffixes[] = {
-    "Parser", "Scanner", "ScanInput", NULL
+    "Parser", "Scanner", NULL
 };
 
 static void

@@ -13,10 +13,6 @@ License: LGPLv2
 #include "c/Token.h"
 #endif
 
-#ifndef  COCO_BUFFER_H
-#include "c/Buffer.h"
-#endif
-
 #ifndef  COCO_POSITION_H
 #include "c/Position.h"
 #endif
@@ -28,15 +24,11 @@ EXTC_BEGIN
 #define CfScanner_CASE_SENSITIVE
 /*---- enable ----*/
 
-typedef struct CfScanInput_s CfScanInput_t;
 typedef struct CfScanner_s CfScanner_t;
 struct CfScanner_s {
     CcsErrorPool_t * errpool;
-    int              eofSym;
-    int              noSym;
-    int              maxT;
     CcsToken_t     * dummyToken;
-    CfScanInput_t * cur;
+    CcsScanInput_t * cur;
 };
 
 CfScanner_t *
