@@ -201,8 +201,8 @@ TypeDefine<KcSymbolType_t * symtype, KcProperty_t ** prop>
   | "int"              (. *symtype = KcstInt; .)
   ) [ stringT          (. prompt = CcsEscape(self->t->val); .)
   [ "if" Expr<&expr> ] (. if (prompt) {
-  		     	    KcProperty_AppendPrompt(prop, prompt, expr);
-			    CcsFree(prompt);
+  		     	      KcProperty_AppendPrompt(prop, prompt, expr);
+			      CcsFree(prompt);
 			  } .)
   ] eol
 .

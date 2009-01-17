@@ -506,8 +506,8 @@ KcParser_TypeDefine(KcParser_t * self, KcSymbolType_t * symtype, KcProperty_t **
 	    KcParser_Expr(self, &expr);
 	}
 	if (prompt) {
-	  KcProperty_AppendPrompt(prop, prompt, expr);
-	  CcsFree(prompt);
+	    KcProperty_AppendPrompt(prop, prompt, expr);
+	    CcsFree(prompt);
 	} 
     }
     KcParser_Expect(self, 6);
