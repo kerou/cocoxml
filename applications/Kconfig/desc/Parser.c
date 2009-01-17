@@ -207,8 +207,10 @@ KcParser_SymbolListDecl(KcParser_t * self, KcSymbolList_t ** symlist)
 	    KcParser_SymbolDecl(self, &sym);
 	    if (*symlist == NULL) *symlist = KcSymbolList();
 	    if (sym) KcSymbolList_Append(*symlist, sym); 
-	} else {
+	} else if (self->la->kind == 17) {
 	    KcParser_Source(self);
+	} else {
+	    KcParser_Get(self);
 	}
     }
 }
@@ -243,9 +245,6 @@ KcParser_SymbolDecl(KcParser_t * self, KcSymbol_t ** sym)
 	break;
     }
     default: KcParser_SynErr(self, 44); break;
-    }
-    while (self->la->kind == 6) {
-	KcParser_Get(self);
     }
 }
 
@@ -808,7 +807,7 @@ static const char * set[] = {
     /*---- InitSet ----*/
     /*    5    0    5    0    5    0    5    0    */
     "*............................................", /* 0 */
-    ".......***.*.**.**...........................", /* 1 */
+    "......****.*.**.**...........................", /* 1 */
     ".......***.*.**.*............................", /* 2 */
     "..................**********.***...**........", /* 3 */
     ".*.*****************************************."  /* 4 */
