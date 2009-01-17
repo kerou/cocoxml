@@ -165,10 +165,13 @@ MainMenuDecl<KcSymbol_t ** sym> =
 .
 
 Source             (. char * fname; .) =
-  "source" stringT (. fname = CcsStrdup(self->t->val); .)
-  eol              (. if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname))
-  		          KcParser_SemErrT(self, "Can not include '%s'.", fname);
-  		      CcsFree(fname); .)
+  "source" stringT (. if (!(fname = CcsUnescape(self->t->val)))
+  	   	          KcParser_SemErrT(self, "Not enough memroy."); .)
+  eol              (. if (fname) {
+    		          if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname))
+  		              KcParser_SemErrT(self, "Can not include '%s'.", fname);
+  		          CcsFree(fname);
+		      } .)
 .
 
 Property<KcSymbolType_t * symtype, KcProperty_t ** prop> =
