@@ -51,9 +51,14 @@ CfValueMap(CfValueMap_t * self)
 void
 CfValueMap_Destruct(CfValueMap_t * self)
 {
-    CfValue_t ** cur;
-    for (cur = self->first; cur < self->last; ++cur)
-	if (*cur) CfValue_Destruct(*cur);
+    CfValue_t ** cur, ** cur0, ** next0;
+    for (cur = self->first; cur < self->last; ++cur) {
+	if (*cur == NULL) continue;
+	for (cur0 = cur; *cur0; cur0 = next0) {
+	    next0 = &(*cur0)->next;
+	    CfValue_Destruct(*cur0);
+	}
+    }
 }
 
 static CfValue_t **
@@ -102,11 +107,11 @@ CfValueMap_SetString(CfValueMap_t * self, const char * name,
     CfValue_t ** cur = CfValueMap_Search(self, name);
     if (*cur != NULL) {
 	CcsAssert(strcmp(name, (*cur)->name));
-	if ((*cur)->type != CfvtInt) return "Type conflict, string required";
+	if ((*cur)->type != CfvtString) return "Type conflict, string required";
     } else if (!((*cur) = CcsMalloc(sizeof(CfValue_t) + strlen(name) + 1))) {
 	return "Not enough memory";
     } else {
-	(*cur)->type = CfvtInt;
+	(*cur)->type = CfvtString;
 	(*cur)->next = NULL;
 	(*cur)->name = (char *)((*cur) + 1);
 	strcpy((*cur)->name, name);
