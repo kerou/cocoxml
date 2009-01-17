@@ -39,6 +39,9 @@ struct CcsIncPathList_s {
 CcsIncPathList_t *
 CcsIncPathList(CcsBool_t AbsPathUsed, CcsBool_t IncluderUsed,
 	       const char * const * incpatharr, size_t numpathes);
+CcsIncPathList_t *
+CcsIncPathListV(CcsBool_t AbsPathUsed, CcsBool_t IncluderUsed,
+		const char * incpath, ...);
 void CcsIncPathList_Destruct(CcsIncPathList_t * self);
 
 FILE *
