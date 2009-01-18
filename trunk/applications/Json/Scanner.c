@@ -335,10 +335,11 @@ JsonScanner_Skip(void * scanner, CcsScanInput_t * input)
 #endif
     const CcsComment_t * curComment;
     for (;;) {
-	while (input->ch == ' '
+	while (
 	       /*---- scan1 ----*/
-	       || (input->ch >= '\t' && input->ch <= '\n')
+	       (input->ch >= '\t' && input->ch <= '\n')
 	       || input->ch == '\r'
+	       || input->ch == ' '
 	       /*---- enable ----*/
 	       )  CcsGetCh(input);
 #ifdef JsonScanner_INDENTATION
