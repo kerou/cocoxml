@@ -63,7 +63,7 @@ JsonScanner(JsonScanner_t * self, CcsErrorPool_t * errpool, FILE * fp)
     CcsGetCh(self->cur);
     return self;
  errquit1:
-    CcsScanInput_Destruct(self->cur);
+    CcsScanInput_Detach(self->cur);
  errquit0:
     return NULL;
 }
@@ -79,7 +79,7 @@ JsonScanner_ByName(JsonScanner_t * self, CcsErrorPool_t * errpool,
     CcsGetCh(self->cur);
     return self;
  errquit1:
-    CcsScanInput_Destruct(self->cur);
+    CcsScanInput_Detach(self->cur);
  errquit0:
     return NULL;
 }
@@ -90,9 +90,10 @@ JsonScanner_Destruct(JsonScanner_t * self)
     CcsScanInput_t * cur, * next;
     for (cur = self->cur; cur; cur = next) {
 	next = cur->next;
-	/* May be trigged by .atg semantic code. */
-	CcsAssert(cur->refcnt == 1);
-	CcsScanInput_Destruct(cur);
+	/* May be trigged by .atg/.xatg. */
+	CcsAssert(cur->busyFirst == NULL);
+	CcsAssert(cur->busyLast == NULL);
+	CcsScanInput_Detach(cur);
     }
     /* May be trigged by .atg semantic code. */
     CcsAssert(self->dummyToken->refcnt == 1);
@@ -116,33 +117,10 @@ JsonScanner_Scan(JsonScanner_t * self)
 	if (self->cur->next == NULL) break;
 	CcsScanInput_TokenDecRef(token->input, token);
 	next = self->cur->next;
-	CcsScanInput_DecRef(self->cur);
+	CcsScanInput_Detach(self->cur);
 	self->cur = next;
     }
     return token;
-}
-
-CcsToken_t *
-JsonScanner_Peek(JsonScanner_t * self)
-{
-    CcsToken_t * token; CcsScanInput_t * cur;
-    cur = self->cur;
-    for (;;) {
-	token = CcsScanInput_Peek(self->cur);
-	if (token->kind != Scanner_Info.eofSym) break;
-	if (cur->next == NULL) break;
-	CcsScanInput_TokenDecRef(token->input, token);
-	cur = cur->next;
-    }
-    return token;
-}
-
-void
-JsonScanner_ResetPeek(JsonScanner_t * self)
-{
-    CcsScanInput_t * cur;
-    for (cur = self->cur; cur; cur = cur->next)
-	CcsScanInput_ResetPeek(cur);
 }
 
 void
@@ -159,16 +137,6 @@ JsonScanner_TokenDecRef(JsonScanner_t * self, CcsToken_t * token)
     else CcsScanInput_TokenDecRef(token->input, token);
 }
 
-#ifdef JsonScanner_INDENTATION
-void
-JsonScanner_IndentLimit(JsonScanner_t * self, const CcsToken_t * indentIn)
-{
-    CcsAssert(indentIn->input == self->cur);
-    CcsAssert(indentIn->kind == JsonScanner_INDENT_IN);
-    CcsIndent_SetLimit((CcsIndent_t *)(self->cur + 1), indentIn);
-}
-#endif
-
 CcsPosition_t *
 JsonScanner_GetPosition(JsonScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end)
@@ -182,6 +150,38 @@ JsonScanner_GetPositionBetween(JsonScanner_t * self, const CcsToken_t * begin,
 {
     return CcsScanInput_GetPositionBetween(begin->input, begin, end);
 }
+
+CcsToken_t *
+JsonScanner_Peek(JsonScanner_t * self)
+{
+    CcsToken_t * token; CcsScanInput_t * cur;
+    cur = self->cur;
+    for (;;) {
+	token = CcsScanInput_Peek(self->cur);
+	if (token->kind != Scanner_Info.eofSym) break;
+	if (cur->next == NULL) break;
+	cur = cur->next;
+    }
+    return token;
+}
+
+void
+JsonScanner_ResetPeek(JsonScanner_t * self)
+{
+    CcsScanInput_t * cur;
+    for (cur = self->cur; cur; cur = cur->next)
+	CcsScanInput_ResetPeek(cur);
+}
+
+#ifdef JsonScanner_INDENTATION
+void
+JsonScanner_IndentLimit(JsonScanner_t * self, const CcsToken_t * indentIn)
+{
+    CcsAssert(indentIn->input == self->cur);
+    CcsAssert(indentIn->kind == JsonScanner_INDENT_IN);
+    CcsIndent_SetLimit((CcsIndent_t *)(self->cur + 1), indentIn);
+}
+#endif
 
 CcsBool_t
 JsonScanner_Include(JsonScanner_t * self, FILE * fp, CcsToken_t ** token)
@@ -307,7 +307,7 @@ static CcsBool_t
 JsonScanner_AddInit(void * additional, void * scanner)
 {
 #ifdef JsonScanner_INDENTATION
-    if (!CcsIndent_Init(additional, &JsonScanner_IndentInfo)) return FALSE;
+    if (!CcsIndent_Init(additional, &Scanner_IndentInfo)) return FALSE;
 #endif
     return TRUE;
 }

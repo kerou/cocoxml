@@ -31,14 +31,12 @@ CcsScanInput_Init(CcsScanInput_t * self, void * scanner,
 		  const CcsSI_Info_t * info, FILE * fp)
 {
     self->next = NULL;
-    self->refcnt = 1;
     self->scanner = scanner;
     self->info = info;
     self->fp = fp;
     if (!CcsBuffer(&self->buffer, fp)) goto errquit0;
-    self->busyTokenList = NULL;
-    self->curToken = &self->busyTokenList;
-    self->peekToken = &self->busyTokenList;
+    self->busyFirst = self->busyLast = NULL;
+    self->readyFirst = self->readyLast = NULL;
 
     self->ch = 0; self->chBytes = 0;
     self->pos = 0; self->line = 1; self->col = 0;
@@ -92,14 +90,17 @@ CcsScanInput_ByName(void * scanner, const CcsSI_Info_t * info,
     return NULL;
 }
 
-void
+static void
 CcsScanInput_Destruct(CcsScanInput_t * self)
 {
     CcsToken_t * cur, * next;
+
+    CcsAssert(self->scanner == NULL);
+    /* May be trigged by .atg semantic code. */
+    CcsAssert(self->busyFirst == NULL && self->busyLast == NULL);
     if (self->info->additionalDestruct)
 	self->info->additionalDestruct(self + 1);
-    for (cur = self->busyTokenList; cur; cur = next) {
-	/* May be trigged by .atg semantic code. */
+    for (cur = self->readyFirst; cur; cur = next) {
 	CcsAssert(cur->refcnt == 1);
 	next = cur->next;
 	CcsToken_Destruct(cur);
@@ -107,19 +108,6 @@ CcsScanInput_Destruct(CcsScanInput_t * self)
     CcsBuffer_Destruct(&self->buffer);
     if (self->fname) fclose(self->fp);
     CcsFree(self);
-}
-
-static void
-CcsScanInput_IncRef(CcsScanInput_t * self)
-{
-    ++self->refcnt;
-}
-
-void
-CcsScanInput_DecRef(CcsScanInput_t * self)
-{
-    if (--self->refcnt > 0) return;
-    CcsScanInput_Destruct(self);
 }
 
 void
@@ -148,63 +136,81 @@ CcsScanInput_GetCh(CcsScanInput_t * self)
 CcsToken_t *
 CcsScanInput_NewToken(CcsScanInput_t * self, int kind)
 {
-    CcsToken_t * t;
-    t = CcsToken(self, kind, self->fname, self->pos,
-		 self->line, self->col, NULL, 0);
-    if (t) CcsScanInput_IncRef(self);
-    return t;
+    return CcsToken(self, kind, self->fname, self->pos,
+		    self->line, self->col, NULL, 0);
+}
+
+void
+CcsScanInput_Detach(CcsScanInput_t * self)
+{
+    self->scanner = NULL;
+    if (self->busyFirst == NULL) CcsScanInput_Destruct(self);
+}
+
+static void
+CcsScanInput_AdjustBusy(CcsScanInput_t * self)
+{
+    if (self->busyFirst) {
+	CcsAssert(self->busyFirst->refcnt > 1);
+	CcsBuffer_SetBusy(&self->buffer, self->busyFirst->pos);
+    } else if (self->readyFirst) {
+	CcsAssert(self->readyFirst->refcnt == 1);
+	CcsBuffer_SetBusy(&self->buffer, self->readyFirst->pos);
+    } else {
+	CcsBuffer_ClearBusy(&self->buffer);
+	if (!self->scanner) CcsScanInput_Destruct(self);
+    }
 }
 
 CcsToken_t *
 CcsScanInput_Scan(CcsScanInput_t * self)
 {
     CcsToken_t * cur;
-    if (*self->curToken == NULL) {
-	*self->curToken = CcsScanInput_NextToken(self);
-	if (self->curToken == &self->busyTokenList)
-	    CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
+    /* Get a token from ready list or generate a new one. */
+    if (self->readyFirst == NULL) {
+	if (!(cur = CcsScanInput_NextToken(self))) return NULL;
+    } else {
+	cur = self->readyFirst;
+	self->readyFirst = cur->next;
+	if (self->readyPeek == cur) self->readyPeek = self->readyFirst;
+	if (self->readyLast == cur) self->readyLast = NULL;
+	cur->next = NULL;
     }
-    cur = *self->curToken;
-    self->peekToken = self->curToken = &cur->next;
-    ++cur->refcnt;
+    /* Append to the busy list. */
+    if (self->busyLast) {
+	self->busyLast->next = cur;
+	self->busyLast = cur;
+    } else {
+	self->busyFirst = self->busyLast = cur;
+	CcsBuffer_SetBusy(&self->buffer, cur->pos);
+    }
+    /* Adjust refcnt */
+    CcsAssert(cur->refcnt == 1);
+    ++cur->refcnt; /* 2 */
     return cur;
 }
 
 void
 CcsScanInput_WithDraw(CcsScanInput_t * self, CcsToken_t * token)
 {
-    CcsToken_t ** cur;
-    CcsAssert(self == token->input);
-    CcsAssert(token->refcnt > 1);
-    CcsAssert(&token->next == self->curToken);
-    for (cur = &self->busyTokenList; *cur != token; cur = &(*cur)->next)
-	CcsAssert(*cur != NULL);
-    --token->refcnt;
-    if (self->peekToken == self->curToken) self->peekToken = cur;
-    self->curToken = cur;
-}
-
-CcsToken_t *
-CcsScanInput_Peek(CcsScanInput_t * self)
-{
-    CcsToken_t * cur;
-    do {
-	if (*self->peekToken == NULL) {
-	    *self->peekToken = CcsScanInput_NextToken(self);
-	    if (self->peekToken == &self->busyTokenList)
-		CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
-	}
-	cur = *self->peekToken;
-	self->peekToken = &cur->next;
-    } while (cur->kind > self->info->maxT); /* Skip pragmas */
-    ++cur->refcnt;
-    return cur;
-}
-
-void
-CcsScanInput_ResetPeek(CcsScanInput_t * self)
-{
-    self->peekToken = self->curToken;
+    CcsToken_t * prev, * cur;
+    /* Check the validation of token, might be caused by .atg/.xatg. */
+    CcsAssert(token == self->busyLast);
+    CcsAssert(token->refcnt == 2);
+    /* Detach the last token in busy list. */
+    prev = NULL;
+    for (cur = self->busyFirst; cur != token; cur = cur->next)
+	prev = cur;
+    self->busyLast = prev;
+    if (self->busyLast == NULL) self->busyFirst = NULL;
+    else self->busyLast->next = NULL;
+    /* Attach to the beginning of readyList. */
+    if (self->readyPeek == self->readyFirst) self->readyPeek = token;
+    if (self->readyLast == NULL) self->readyLast = token;
+    token->next = self->readyFirst;
+    self->readyFirst = token;
+    /* Adjust refcnt */
+    --token->refcnt; /* 1 */
 }
 
 void
@@ -216,34 +222,26 @@ CcsScanInput_TokenIncRef(CcsScanInput_t * self, CcsToken_t * token)
 void
 CcsScanInput_TokenDecRef(CcsScanInput_t * self, CcsToken_t * token)
 {
+    CcsToken_t * prev, * cur;
     if (--token->refcnt > 1) return;
     CcsAssert(token->refcnt == 1);
-    if (token != self->busyTokenList) return;
-    /* Detach all tokens which is refered by self->busyTokenList only. */
+    prev = NULL;
+    for (cur = self->busyFirst; cur != token; cur = cur->next) {
+	/* token must in busy list, might be caused by .atg/.xatg. */
+	CcsAssert(cur);
+	prev = cur;
+    }
+    if (token != self->busyFirst) return;
+    /* Clear the useless tokens in the head of busy list. */
     while (token && token->refcnt <= 1) {
 	CcsAssert(token->refcnt == 1);
-	/* Detach token. */
-	if (self->curToken == &token->next)
-	    self->curToken = &self->busyTokenList;
-	if (self->peekToken == &token->next)
-	    self->peekToken = &self->busyTokenList;
-	self->busyTokenList = token->next;
+	self->busyFirst = token->next;
+	if (self->busyFirst == NULL) self->busyLast = NULL;
 	CcsToken_Destruct(token);
-	if (self->refcnt > 1) CcsScanInput_DecRef(self);
-	else {
-	    CcsAssert(self->busyTokenList == NULL);
-	    CcsScanInput_DecRef(self);
-	    return;
-	}
-	token = self->busyTokenList;
+	token = self->busyFirst;
     }
     /* Adjust CcsBuffer busy pointer */
-    if (self->busyTokenList) {
-	CcsAssert(self->busyTokenList->refcnt > 1);
-	CcsBuffer_SetBusy(&self->buffer, self->busyTokenList->pos);
-    } else {
-	CcsBuffer_ClearBusy(&self->buffer);
-    }
+    CcsScanInput_AdjustBusy(self);
 }
 
 CcsPosition_t *
@@ -277,6 +275,32 @@ CcsScanInput_GetPositionBetween(CcsScanInput_t * self,
     return CcsPosition(begpos + (cur - start), last - cur, 0, cur);
 }
 
+CcsToken_t *
+CcsScanInput_Peek(CcsScanInput_t * self)
+{
+    CcsToken_t * cur;
+    if (self->readyPeek) {
+	cur = self->readyPeek; self->readyPeek = cur->next;
+	return cur;
+    }
+    if (!(cur = CcsScanInput_NextToken(self))) return NULL;
+    if (self->readyLast) {
+	self->readyLast->next = cur;
+	self->readyLast = cur;
+    } else {
+	self->readyFirst = self->readyLast = cur;
+	if (self->busyFirst == NULL)
+	    CcsBuffer_SetBusy(&self->buffer, self->readyFirst->pos);
+    }
+    return cur;
+}
+
+void
+CcsScanInput_ResetPeek(CcsScanInput_t * self)
+{
+    self->readyPeek = self->readyFirst;
+}
+
 static CcsToken_t *
 CcsScanInput_NextToken(CcsScanInput_t * self)
 {
@@ -289,7 +313,6 @@ CcsScanInput_NextToken(CcsScanInput_t * self)
     t = CcsToken(self, kind, self->fname, pos, line, col,
 		 CcsBuffer_GetString(&self->buffer, pos, self->pos - pos),
 		 self->pos - pos);
-    if (t) CcsScanInput_IncRef(self);
     CcsBuffer_Unlock(&self->buffer);
     return t;
 }
