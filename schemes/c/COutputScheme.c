@@ -155,16 +155,21 @@ COS_Scan1(CcCOutputScheme_t * self, CcOutput_t * output)
     const CcRange_t * curRange;
     char buf0[8], buf1[8];
     const char * oper = "";
-    for (curRange = self->base.base.globals->lexical->ignored->head;
-	 curRange; curRange = curRange->next) {
-	if (curRange->from == curRange->to)
-	    CcPrintfIL(output, "%sinput->ch == %s", oper,
-		       CharRepr(buf0 ,sizeof(buf0), curRange->from));
-	else
-	    CcPrintfIL(output, "%s(input->ch >= %s && input->ch <= %s)", oper,
-		       CharRepr(buf0 ,sizeof(buf0), curRange->from),
-		       CharRepr(buf1 ,sizeof(buf1), curRange->to));
-	oper = "|| ";
+    CcCharSet_t * ignored = self->base.base.globals->lexical->ignored;
+
+    if (ignored->head == NULL) {
+	CcPrintfIL(output, "FALSE");
+    } else {
+	for (curRange = ignored->head; curRange; curRange = curRange->next) {
+	    if (curRange->from == curRange->to)
+		CcPrintfIL(output, "%sinput->ch == %s", oper,
+			   CharRepr(buf0 ,sizeof(buf0), curRange->from));
+	    else
+		CcPrintfIL(output, "%s(input->ch >= %s && input->ch <= %s)", oper,
+			   CharRepr(buf0 ,sizeof(buf0), curRange->from),
+			   CharRepr(buf1 ,sizeof(buf1), curRange->to));
+	    oper = "|| ";
+	}
     }
     return TRUE;
 }
