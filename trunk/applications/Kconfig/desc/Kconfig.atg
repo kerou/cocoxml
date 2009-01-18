@@ -204,6 +204,7 @@ Property<KcSymbolType_t * symtype, KcProperty_t ** prop, CcsPosition_t ** helpms
 TypeDefine<KcSymbolType_t * symtype, KcProperty_t ** prop>
     (. char * prompt; KcExpr_t * expr = NULL; .) =
   ( "bool"             (. *symtype = KcstBool; .)
+  | "boolean"          (. *symtype = KcstBool; .)
   | "tristate"         (. *symtype = KcstTristate; .)
   | "string"           (. *symtype = KcstString; .)
   | "hex"              (. *symtype = KcstHex; .)

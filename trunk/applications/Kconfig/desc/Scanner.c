@@ -20,8 +20,8 @@ static const CcsSI_Info_t Scanner_Info = {
     /*---- declarations ----*/
     24, /* additionalSpace */
     0, /* eofSym */
-    43, /* maxT */
-    43, /* noSym */
+    44, /* maxT */
+    44, /* noSym */
     /*---- enable ----*/
     KcScanner_AddInit,
     KcScanner_AddDestruct,
@@ -267,33 +267,34 @@ typedef struct {
 static const Identifier2KWKind_t i2kArr[] = {
     /*---- identifiers2keywordkinds ----*/
     { "bool", 18 },
+    { "boolean", 19 },
     { "choice", 11 },
     { "comment", 13 },
     { "config", 7 },
-    { "def_bool", 25 },
-    { "def_tristate", 26 },
-    { "default", 24 },
-    { "defconfig_list", 34 },
-    { "depends", 27 },
+    { "def_bool", 26 },
+    { "def_tristate", 27 },
+    { "default", 25 },
+    { "defconfig_list", 35 },
+    { "depends", 28 },
     { "endchoice", 12 },
     { "endif", 15 },
     { "endmenu", 10 },
-    { "env", 32 },
-    { "help", 35 },
-    { "hex", 21 },
+    { "env", 33 },
+    { "help", 36 },
+    { "hex", 22 },
     { "if", 14 },
-    { "int", 22 },
+    { "int", 23 },
     { "mainmenu", 16 },
     { "menu", 9 },
     { "menuconfig", 8 },
-    { "on", 28 },
-    { "option", 31 },
-    { "prompt", 23 },
-    { "range", 30 },
-    { "select", 29 },
+    { "on", 29 },
+    { "option", 32 },
+    { "prompt", 24 },
+    { "range", 31 },
+    { "select", 30 },
     { "source", 17 },
-    { "string", 20 },
-    { "tristate", 19 },
+    { "string", 21 },
+    { "tristate", 20 },
     /*---- enable ----*/
 };
 static const int i2kNum = sizeof(i2kArr) / sizeof(i2kArr[0]);
@@ -426,7 +427,7 @@ static int KcScanner_Kind(void * scanner, CcsScanInput_t * input)
     case 6: case_6:
 	{ kind = 6; break; }
     case 7:
-	{ kind = 33; break; }
+	{ kind = 34; break; }
     case 8:
 	if (input->ch == '-') {
 	    CcsGetCh(input); goto case_9;
@@ -464,29 +465,29 @@ static int KcScanner_Kind(void * scanner, CcsScanInput_t * input)
 	    CcsGetCh(input); goto case_17;
 	} else { kind = Scanner_Info.noSym; break; }
     case 17: case_17:
-	{ kind = 36; break; }
+	{ kind = 37; break; }
     case 18:
 	if (input->ch == '|') {
 	    CcsGetCh(input); goto case_19;
 	} else { kind = Scanner_Info.noSym; break; }
     case 19: case_19:
-	{ kind = 37; break; }
+	{ kind = 38; break; }
     case 20:
 	if (input->ch == '&') {
 	    CcsGetCh(input); goto case_21;
 	} else { kind = Scanner_Info.noSym; break; }
     case 21: case_21:
-	{ kind = 38; break; }
+	{ kind = 39; break; }
     case 22:
-	{ kind = 40; break; }
-    case 23:
 	{ kind = 41; break; }
-    case 24: case_24:
+    case 23:
 	{ kind = 42; break; }
+    case 24: case_24:
+	{ kind = 43; break; }
     case 25:
 	if (input->ch == '=') {
 	    CcsGetCh(input); goto case_24;
-	} else { kind = 39; break; }
+	} else { kind = 40; break; }
     /*---- enable ----*/
     }
     return kind;
