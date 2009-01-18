@@ -665,9 +665,7 @@ CcsParser_Sym(CcsParser_t * self, char ** name, int * kind)
 	*kind = CcsParser_str;
 	if (self->lexical->ignoreCase) {
 	    for (cur = *name; *cur; ++cur) *cur = tolower(*cur);
-	}
-	if (strchr(*name, ' '))
-	    CcsParser_SemErrT(self, "literal tokens \"%s\" can not contain blanks", *name); 
+	} 
     } else CcsParser_SynErr(self, 52);
     if (!*name) *name = CcStrdup("???"); 
 }
