@@ -104,10 +104,9 @@ MenuDecl<KcSymbol_t ** menu>
        CcsPosition_t * helpmsg = NULL;
        KcSymbolList_t * symlist = NULL; .) =
   "menu" stringT (. prompt = CcsUnescape(self->t->val);
-                    if ((errmsg = KcProperty_AppendPrompt(&props, prompt, NULL))) {
+                    if ((errmsg = KcProperty_AppendPrompt(&props, prompt, NULL)))
 		        KcParser_SemErrT(self, "Append prompt failed: %s.", errmsg);
-		        CcsFree(prompt);
-		    } .)
+		    CcsFree(prompt); .)
   eol [ IndentIn { Property<&symtype, &props, &helpmsg> } { eol } IndentOut ]
   SymbolListDecl<&symlist> "endmenu" eol
     (. if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, menu,

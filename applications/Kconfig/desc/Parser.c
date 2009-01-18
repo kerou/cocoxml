@@ -311,10 +311,9 @@ KcParser_MenuDecl(KcParser_t * self, KcSymbol_t ** menu)
     KcParser_Expect(self, 9);
     KcParser_Expect(self, 5);
     prompt = CcsUnescape(self->t->val);
-    if ((errmsg = KcProperty_AppendPrompt(&props, prompt, NULL))) {
+    if ((errmsg = KcProperty_AppendPrompt(&props, prompt, NULL)))
 	KcParser_SemErrT(self, "Append prompt failed: %s.", errmsg);
-	CcsFree(prompt);
-    } 
+    CcsFree(prompt); 
     KcParser_Expect(self, 6);
     if (self->la->kind == 1) {
 	KcParser_Get(self);
