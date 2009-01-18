@@ -23,30 +23,37 @@ CONSTRUCTOR
 
 DESTRUCTOR
 
+OPTIONS "space"
+
 CHARACTERS
-    digit = "0123456789".
-    cr = '\r'.
-    lf = '\n'.
+    digit  = "0123456789".
+    cr     = '\r'.
+    lf     = '\n'.
+    infoch = ANY - '+' - '-' - '@' - digit - cr - lf.
 
 TOKENS
+    infoch = infoch.
     number = digit { digit }.
-    eol = (cr lf) | lf.
+    eol    = (cr lf) | lf.
 
 PRODUCTIONS
 
-Patch = { FilePatch }.
+Patch = FilePatch { FilePatch }.
 
-FilePatch = {{ ANY } eol} FileSubLine FileAddLine Piece { Piece }.
+FilePatch = { HeadLine } FileSubLine FileAddLine Piece { Piece }.
 
-FileSubLine = "---" { ANY } eol.
-FileAddLine = "+++" { ANY } eol.
+HeadLine = infoch { ANY } eol.
 
-Piece = PieceLine { AddLine | SubLine | SameLine }.
+FileSubLine = '-' '-' '-' ' ' { ANY } eol.
+FileAddLine = '+' '+' '+' ' ' { ANY } eol.
 
-PieceLine = "@@" '-' number ',' number '+' number ',' number "@@" eol.
+Piece = PieceLine { AddLine | SubLine | SameLine | NoNewLine }.
+
+PieceLine = "@@" { ' ' } '-' number [',' number] { ' ' } '+' number [',' number] { ' ' } "@@" { ANY } eol.
 
 AddLine = '+' { ANY } eol.
 SubLine = '-' { ANY } eol.
 SameLine = ' ' { ANY } eol.
+NoNewLine = '\\' ' ' { ANY } eol.
 
 END Patch.
