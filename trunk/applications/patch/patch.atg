@@ -1,0 +1,52 @@
+SECTION license
+/*-------------------------------------------------------------------------
+ patch.atg
+ Copyright (C) 2008, Charles Wang
+ Author: Charles Wang  <charlesw123456@gmail.com>
+ License: LGPLv2
+-------------------------------------------------------------------------*/
+END.
+
+SCHEME c Patch
+
+SECTION hIncludes
+END.
+
+SECTION cIncludes
+END.
+
+COMPILER Patch
+
+MEMBERS
+
+CONSTRUCTOR
+
+DESTRUCTOR
+
+CHARACTERS
+    digit = "0123456789".
+    cr = '\r'.
+    lf = '\n'.
+
+TOKENS
+    number = digit { digit }.
+    eol = (cr lf) | lf.
+
+PRODUCTIONS
+
+Patch = { FilePatch }.
+
+FilePatch = {{ ANY } eol} FileSubLine FileAddLine Piece { Piece }.
+
+FileSubLine = "---" { ANY } eol.
+FileAddLine = "+++" { ANY } eol.
+
+Piece = PieceLine { AddLine | SubLine | SameLine }.
+
+PieceLine = "@@" '-' number ',' number '+' number ',' number "@@" eol.
+
+AddLine = '+' { ANY } eol.
+SubLine = '-' { ANY } eol.
+SameLine = ' ' { ANY } eol.
+
+END Patch.
