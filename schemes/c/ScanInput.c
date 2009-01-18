@@ -169,6 +169,11 @@ CcsScanInput_Scan(CcsScanInput_t * self)
     /* Get a token from ready list or generate a new one. */
     if (self->readyFirst == NULL) {
 	if (!(cur = CcsScanInput_NextToken(self))) return NULL;
+	if (cur->next) {
+	    self->readyFirst = self->readyPeek = self->readyLast = cur->next;
+	    while (self->readyLast->next != NULL)
+		self->readyLast = self->readyLast->next;
+	}
     } else {
 	cur = self->readyFirst;
 	self->readyFirst = cur->next;
