@@ -554,9 +554,7 @@ Sym<char ** name, int * kind>   (. char * cur; .)
   )                             (. *kind = CcsParser_str;
                                    if (self->lexical->ignoreCase) {
 				       for (cur = *name; *cur; ++cur) *cur = tolower(*cur);
-				   }
-				   if (strchr(*name, ' '))
-				       CcsParser_SemErrT(self, "literal tokens \"%s\" can not contain blanks", *name); .)
+				   } .)
 )                               (. if (!*name) *name = CcStrdup("???"); .)
 .
 
