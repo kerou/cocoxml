@@ -64,6 +64,7 @@ CcLexical(CcLexical_t * self, CcGlobals_t * globals)
     self->ignored = CcCharSet();
     self->ignoreCase = FALSE;
     self->indentUsed = FALSE;
+    self->spaceUsed = FALSE;
     CcArrayList(&self->states);
     CcArrayList(&self->classes);
     CcHashTable(&self->literals, SZ_LITERALS);
@@ -660,6 +661,7 @@ CcLexical_NewComment(CcLexical_t * self, const CcsToken_t * token,
 CcsBool_t
 CcLexical_Finish(CcLexical_t * self)
 {
+    if (!self->spaceUsed) CcCharSet_Set(self->ignored, ' ');
     if (self->dirtyLexical) CcLexical_MakeDeterministic(self);
     return TRUE;
 }

@@ -154,15 +154,17 @@ COS_Scan1(CcCOutputScheme_t * self, CcOutput_t * output)
 {
     const CcRange_t * curRange;
     char buf0[8], buf1[8];
+    const char * oper = "";
     for (curRange = self->base.base.globals->lexical->ignored->head;
 	 curRange; curRange = curRange->next) {
 	if (curRange->from == curRange->to)
-	    CcPrintfIL(output, "|| input->ch == %s",
+	    CcPrintfIL(output, "%sinput->ch == %s", oper,
 		       CharRepr(buf0 ,sizeof(buf0), curRange->from));
 	else
-	    CcPrintfIL(output, "|| (input->ch >= %s && input->ch <= %s)",
+	    CcPrintfIL(output, "%s(input->ch >= %s && input->ch <= %s)", oper,
 		       CharRepr(buf0 ,sizeof(buf0), curRange->from),
 		       CharRepr(buf1 ,sizeof(buf1), curRange->to));
+	oper = "|| ";
     }
     return TRUE;
 }
