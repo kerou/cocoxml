@@ -42,8 +42,8 @@ static const CcsSI_Info_t Scanner_Info = {
     /*---- declarations ----*/
     0, /* additionalSpace */
     0, /* eofSym */
-    47, /* maxT */
-    47, /* noSym */
+    46, /* maxT */
+    46, /* noSym */
     /*---- enable ----*/
     CcsScanner_AddInit,
     CcsScanner_AddDestruct,
@@ -294,29 +294,28 @@ typedef struct {
 
 static const Identifier2KWKind_t i2kArr[] = {
     /*---- identifiers2keywordkinds ----*/
-    { "ANY", 29 },
-    { "CHARACTERS", 12 },
-    { "COMMENTS", 15 },
+    { "ANY", 28 },
+    { "CHARACTERS", 11 },
+    { "COMMENTS", 14 },
     { "COMPILER", 6 },
     { "CONSTRUCTOR", 8 },
-    { "CONTEXT", 44 },
+    { "CONTEXT", 43 },
     { "DESTRUCTOR", 9 },
-    { "END", 23 },
-    { "FROM", 16 },
-    { "IF", 43 },
-    { "IGNORE", 19 },
-    { "IGNORECASE", 10 },
-    { "INDENTATIONS", 11 },
+    { "END", 22 },
+    { "FROM", 15 },
+    { "IF", 42 },
+    { "IGNORE", 18 },
     { "MEMBERS", 7 },
-    { "NESTED", 18 },
-    { "PRAGMAS", 14 },
-    { "PRODUCTIONS", 20 },
-    { "SCHEME", 24 },
-    { "SECTION", 25 },
-    { "SYNC", 42 },
-    { "TO", 17 },
-    { "TOKENS", 13 },
-    { "WEAK", 35 },
+    { "NESTED", 17 },
+    { "OPTIONS", 10 },
+    { "PRAGMAS", 13 },
+    { "PRODUCTIONS", 19 },
+    { "SCHEME", 23 },
+    { "SECTION", 24 },
+    { "SYNC", 41 },
+    { "TO", 16 },
+    { "TOKENS", 12 },
+    { "WEAK", 34 },
     /*---- enable ----*/
 };
 static const int i2kNum = sizeof(i2kArr) / sizeof(i2kArr[0]);
@@ -467,7 +466,7 @@ static int CcsScanner_Kind(void * scanner, CcsScanInput_t * input)
 	    input->ch == '_' ||
 	    (input->ch >= 'a' && input->ch <= 'z')) {
 	    CcsGetCh(input); goto case_10;
-	} else { kind = 48; break; }
+	} else { kind = 47; break; }
     case 11: case_11:
 	if ((input->ch >= 0 && input->ch <= '\t') ||
 	    (input->ch >= '\v' && input->ch <= '\f') ||
@@ -488,35 +487,35 @@ static int CcsScanner_Kind(void * scanner, CcsScanInput_t * input)
 	    CcsGetCh(input); goto case_11;
 	} else { kind = Scanner_Info.noSym; break; }
     case 13:
-	{ kind = 21; break; }
+	{ kind = 20; break; }
     case 14:
-	{ kind = 26; break; }
+	{ kind = 25; break; }
     case 15:
-	{ kind = 27; break; }
+	{ kind = 26; break; }
     case 16: case_16:
-	{ kind = 28; break; }
+	{ kind = 27; break; }
     case 17:
-	{ kind = 31; break; }
+	{ kind = 30; break; }
     case 18: case_18:
-	{ kind = 32; break; }
+	{ kind = 31; break; }
     case 19: case_19:
-	{ kind = 33; break; }
+	{ kind = 32; break; }
     case 20:
-	{ kind = 34; break; }
+	{ kind = 33; break; }
     case 21:
-	{ kind = 37; break; }
+	{ kind = 36; break; }
     case 22:
-	{ kind = 38; break; }
+	{ kind = 37; break; }
     case 23:
-	{ kind = 39; break; }
+	{ kind = 38; break; }
     case 24:
-	{ kind = 40; break; }
+	{ kind = 39; break; }
     case 25:
-	{ kind = 41; break; }
+	{ kind = 40; break; }
     case 26: case_26:
-	{ kind = 45; break; }
+	{ kind = 44; break; }
     case 27: case_27:
-	{ kind = 46; break; }
+	{ kind = 45; break; }
     case 28:
 	if (input->ch == '.') {
 	    CcsGetCh(input); goto case_16;
@@ -524,15 +523,15 @@ static int CcsScanner_Kind(void * scanner, CcsScanInput_t * input)
 	    CcsGetCh(input); goto case_19;
 	} else if (input->ch == ')') {
 	    CcsGetCh(input); goto case_27;
-	} else { kind = 22; break; }
+	} else { kind = 21; break; }
     case 29:
 	if (input->ch == '.') {
 	    CcsGetCh(input); goto case_18;
-	} else { kind = 30; break; }
+	} else { kind = 29; break; }
     case 30:
 	if (input->ch == '.') {
 	    CcsGetCh(input); goto case_26;
-	} else { kind = 36; break; }
+	} else { kind = 35; break; }
     /*---- enable ----*/
     }
     return kind;

@@ -95,6 +95,26 @@ CcLexical_Destruct(CcLexical_t * self)
     CcEBNF_Destruct(&self->base);
 }
 
+void CcLexical_SetOption(CcLexical_t * self, const CcsToken_t * t)
+{
+    char * val = CcUnescape(t->val);
+    CcSymbolTable_t * symtab = &self->globals->symtab;
+    if (!strcasecmp(val, "ignore case")) {
+	self->ignoreCase = TRUE;
+    } else if (!strcasecmp(val, "indentation")) {
+	self->indentUsed = TRUE;
+	CcSymbolTable_NewTerminal(symtab, IndentInName, 0);
+	CcSymbolTable_NewTerminal(symtab, IndentOutName, 0);
+	CcSymbolTable_NewTerminal(symtab, IndentErrName, 0);
+    } else if (!strcasecmp(val, "space")) {
+	self->spaceUsed = TRUE;
+    } else {
+	CcsErrorPool_Error(self->globals->errpool, &t->loc,
+			   "Unsupported option '%s' encountered.", t->val);
+    }
+    CcFree(val);
+}
+
 CcGraph_t *
 CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t)
 {
