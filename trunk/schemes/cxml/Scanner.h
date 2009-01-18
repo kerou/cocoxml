@@ -61,16 +61,10 @@ CcsXmlScanner_ByName(CcsXmlScanner_t * self, CcsErrorPool_t * errpool,
 		  const char * infn);
 void CcsXmlScanner_Destruct(CcsXmlScanner_t * self);
 CcsToken_t * CcsXmlScanner_GetDummy(CcsXmlScanner_t * self);
+
 CcsToken_t * CcsXmlScanner_Scan(CcsXmlScanner_t * self);
-CcsToken_t * CcsXmlScanner_Peek(CcsXmlScanner_t * self);
-void CcsXmlScanner_ResetPeek(CcsXmlScanner_t * self);
 void CcsXmlScanner_TokenIncRef(CcsXmlScanner_t * self, CcsToken_t * token);
 void CcsXmlScanner_TokenDecRef(CcsXmlScanner_t * self, CcsToken_t * token);
-#ifdef CcsXmlScanner_INDENTATION
-/* If the col >= indentIn->col, not any IndentIn/IndentOut/IndentErr is generated.
- * Useful when we need to collect ANY text by indentation. */
-void CcsXmlScanner_IndentLimit(CcsXmlScanner_t * self, const CcsToken_t * indentIn);
-#endif
 
 CcsPosition_t *
 CcsXmlScanner_GetPosition(CcsXmlScanner_t * self, const CcsToken_t * begin,
@@ -78,6 +72,15 @@ CcsXmlScanner_GetPosition(CcsXmlScanner_t * self, const CcsToken_t * begin,
 CcsPosition_t *
 CcsXmlScanner_GetPositionBetween(CcsXmlScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end);
+
+CcsToken_t * CcsXmlScanner_Peek(CcsXmlScanner_t * self);
+void CcsXmlScanner_ResetPeek(CcsXmlScanner_t * self);
+
+#ifdef CcsXmlScanner_INDENTATION
+/* If the col >= indentIn->col, not any IndentIn/IndentOut/IndentErr is generated.
+ * Useful when we need to collect ANY text by indentation. */
+void CcsXmlScanner_IndentLimit(CcsXmlScanner_t * self, const CcsToken_t * indentIn);
+#endif
 
 CcsBool_t
 CcsXmlScanner_Include(CcsXmlScanner_t * self, FILE * fp, CcsToken_t ** token);

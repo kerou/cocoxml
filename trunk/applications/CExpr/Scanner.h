@@ -51,16 +51,10 @@ CExprScanner_ByName(CExprScanner_t * self, CcsErrorPool_t * errpool,
 		  const char * infn);
 void CExprScanner_Destruct(CExprScanner_t * self);
 CcsToken_t * CExprScanner_GetDummy(CExprScanner_t * self);
+
 CcsToken_t * CExprScanner_Scan(CExprScanner_t * self);
-CcsToken_t * CExprScanner_Peek(CExprScanner_t * self);
-void CExprScanner_ResetPeek(CExprScanner_t * self);
 void CExprScanner_TokenIncRef(CExprScanner_t * self, CcsToken_t * token);
 void CExprScanner_TokenDecRef(CExprScanner_t * self, CcsToken_t * token);
-#ifdef CExprScanner_INDENTATION
-/* If the col >= indentIn->col, not any IndentIn/IndentOut/IndentErr is generated.
- * Useful when we need to collect ANY text by indentation. */
-void CExprScanner_IndentLimit(CExprScanner_t * self, const CcsToken_t * indentIn);
-#endif
 
 CcsPosition_t *
 CExprScanner_GetPosition(CExprScanner_t * self, const CcsToken_t * begin,
@@ -68,6 +62,15 @@ CExprScanner_GetPosition(CExprScanner_t * self, const CcsToken_t * begin,
 CcsPosition_t *
 CExprScanner_GetPositionBetween(CExprScanner_t * self, const CcsToken_t * begin,
 			      const CcsToken_t * end);
+
+CcsToken_t * CExprScanner_Peek(CExprScanner_t * self);
+void CExprScanner_ResetPeek(CExprScanner_t * self);
+
+#ifdef CExprScanner_INDENTATION
+/* If the col >= indentIn->col, not any IndentIn/IndentOut/IndentErr is generated.
+ * Useful when we need to collect ANY text by indentation. */
+void CExprScanner_IndentLimit(CExprScanner_t * self, const CcsToken_t * indentIn);
+#endif
 
 CcsBool_t
 CExprScanner_Include(CExprScanner_t * self, FILE * fp, CcsToken_t ** token);

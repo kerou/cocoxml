@@ -85,7 +85,7 @@ CcsScanner(CcsScanner_t * self, CcsErrorPool_t * errpool, FILE * fp)
     CcsGetCh(self->cur);
     return self;
  errquit1:
-    CcsScanInput_Destruct(self->cur);
+    CcsScanInput_Detach(self->cur);
  errquit0:
     return NULL;
 }
@@ -101,7 +101,7 @@ CcsScanner_ByName(CcsScanner_t * self, CcsErrorPool_t * errpool,
     CcsGetCh(self->cur);
     return self;
  errquit1:
-    CcsScanInput_Destruct(self->cur);
+    CcsScanInput_Detach(self->cur);
  errquit0:
     return NULL;
 }
@@ -112,9 +112,10 @@ CcsScanner_Destruct(CcsScanner_t * self)
     CcsScanInput_t * cur, * next;
     for (cur = self->cur; cur; cur = next) {
 	next = cur->next;
-	/* May be trigged by .atg semantic code. */
-	CcsAssert(cur->refcnt == 1);
-	CcsScanInput_Destruct(cur);
+	/* May be trigged by .atg/.xatg. */
+	CcsAssert(cur->busyFirst == NULL);
+	CcsAssert(cur->busyLast == NULL);
+	CcsScanInput_Detach(cur);
     }
     /* May be trigged by .atg semantic code. */
     CcsAssert(self->dummyToken->refcnt == 1);
@@ -138,33 +139,10 @@ CcsScanner_Scan(CcsScanner_t * self)
 	if (self->cur->next == NULL) break;
 	CcsScanInput_TokenDecRef(token->input, token);
 	next = self->cur->next;
-	CcsScanInput_DecRef(self->cur);
+	CcsScanInput_Detach(self->cur);
 	self->cur = next;
     }
     return token;
-}
-
-CcsToken_t *
-CcsScanner_Peek(CcsScanner_t * self)
-{
-    CcsToken_t * token; CcsScanInput_t * cur;
-    cur = self->cur;
-    for (;;) {
-	token = CcsScanInput_Peek(self->cur);
-	if (token->kind != Scanner_Info.eofSym) break;
-	if (cur->next == NULL) break;
-	CcsScanInput_TokenDecRef(token->input, token);
-	cur = cur->next;
-    }
-    return token;
-}
-
-void
-CcsScanner_ResetPeek(CcsScanner_t * self)
-{
-    CcsScanInput_t * cur;
-    for (cur = self->cur; cur; cur = cur->next)
-	CcsScanInput_ResetPeek(cur);
 }
 
 void
@@ -181,16 +159,6 @@ CcsScanner_TokenDecRef(CcsScanner_t * self, CcsToken_t * token)
     else CcsScanInput_TokenDecRef(token->input, token);
 }
 
-#ifdef CcsScanner_INDENTATION
-void
-CcsScanner_IndentLimit(CcsScanner_t * self, const CcsToken_t * indentIn)
-{
-    CcsAssert(indentIn->input == self->cur);
-    CcsAssert(indentIn->kind == CcsScanner_INDENT_IN);
-    CcsIndent_SetLimit((CcsIndent_t *)(self->cur + 1), indentIn);
-}
-#endif
-
 CcsPosition_t *
 CcsScanner_GetPosition(CcsScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end)
@@ -204,6 +172,38 @@ CcsScanner_GetPositionBetween(CcsScanner_t * self, const CcsToken_t * begin,
 {
     return CcsScanInput_GetPositionBetween(begin->input, begin, end);
 }
+
+CcsToken_t *
+CcsScanner_Peek(CcsScanner_t * self)
+{
+    CcsToken_t * token; CcsScanInput_t * cur;
+    cur = self->cur;
+    for (;;) {
+	token = CcsScanInput_Peek(self->cur);
+	if (token->kind != Scanner_Info.eofSym) break;
+	if (cur->next == NULL) break;
+	cur = cur->next;
+    }
+    return token;
+}
+
+void
+CcsScanner_ResetPeek(CcsScanner_t * self)
+{
+    CcsScanInput_t * cur;
+    for (cur = self->cur; cur; cur = cur->next)
+	CcsScanInput_ResetPeek(cur);
+}
+
+#ifdef CcsScanner_INDENTATION
+void
+CcsScanner_IndentLimit(CcsScanner_t * self, const CcsToken_t * indentIn)
+{
+    CcsAssert(indentIn->input == self->cur);
+    CcsAssert(indentIn->kind == CcsScanner_INDENT_IN);
+    CcsIndent_SetLimit((CcsIndent_t *)(self->cur + 1), indentIn);
+}
+#endif
 
 CcsBool_t
 CcsScanner_Include(CcsScanner_t * self, FILE * fp, CcsToken_t ** token)
