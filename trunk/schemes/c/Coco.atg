@@ -129,11 +129,7 @@ Coco                            (. CcSymbol_t  * sym;
     { ANY }			(. self->syntax->destructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
       	  			   CcsScanner_TokenDecRef(&self->scanner, beg); .)
     ]
-  [ "IGNORECASE"                (. self->lexical->ignoreCase = TRUE; .) ]   /* pdt */
-  [ "INDENTATIONS"              (. self->lexical->indentUsed = TRUE;
-    				   CcSymbolTable_NewTerminal(self->symtab, IndentInName, 0);
-				   CcSymbolTable_NewTerminal(self->symtab, IndentOutName, 0);
-				   CcSymbolTable_NewTerminal(self->symtab, IndentErrName, 0); .) ]
+  [ "OPTIONS" { string          (. CcLexical_SetOption(self->lexical, self->t); .) } ]
   [ "CHARACTERS" { SetDecl }]
   [ "TOKENS"  { TokenDecl<symbol_t> }]
   [ "PRAGMAS" { TokenDecl<symbol_pr> }]
