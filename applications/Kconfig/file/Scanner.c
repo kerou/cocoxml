@@ -11,6 +11,8 @@ License: LGPLv2
 #include  "c/ScanInput.h"
 #include  "c/Indent.h"
 
+static CcsBool_t CfScanner_AddInit(void * additional, void * scanner);
+static void CfScanner_AddDestruct(void * additional);
 static CcsToken_t * CfScanner_Skip(void * scanner, CcsScanInput_t * input);
 static int CfScanner_Kind(void * scanner, CcsScanInput_t * input);
 
@@ -21,6 +23,8 @@ static const CcsSI_Info_t Scanner_Info = {
     13, /* maxT */
     13, /* noSym */
     /*---- enable ----*/
+    CfScanner_AddInit,
+    CfScanner_AddDestruct,
     CfScanner_Skip,
     CfScanner_Kind
 };
@@ -55,18 +59,10 @@ CfScanner(CfScanner_t * self, CcsErrorPool_t * errpool, FILE * fp)
 {
     if (!(self->cur = CcsScanInput(self, &Scanner_Info, fp)))
 	goto errquit0;
-#ifdef CfScanner_INDENTATION
-    if (!CcsIndent_Init((CcsIndent_t *)(self->cur + 1), &Scanner_IndentInfo))
-	goto errquit1;
-#endif
-    if (!CfScanner_Init(self, errpool)) goto errquit2;
+    if (!CfScanner_Init(self, errpool)) goto errquit1;
     CcsGetCh(self->cur);
     return self;
- errquit2:
-#ifdef CfScanner_INDENTATION
-    CcsIndent_Destruct((CcsIndent_t *)(self->cur + 1));
  errquit1:
-#endif
     CcsScanInput_Destruct(self->cur);
  errquit0:
     return NULL;
@@ -79,18 +75,10 @@ CfScanner_ByName(CfScanner_t * self, CcsErrorPool_t * errpool,
     if (!(self->cur =
 	  CcsScanInput_ByName(self, &Scanner_Info, NULL, NULL, fn)))
 	goto errquit0;
-#ifdef CfScanner_INDENTATION
-    if (!CcsIndent_Init((CcsIndent_t *)(self->cur + 1), &Scanner_IndentInfo))
-	goto errquit1;
-#endif
-    if (!CfScanner_Init(self, errpool)) goto errquit2;
+    if (!CfScanner_Init(self, errpool)) goto errquit1;
     CcsGetCh(self->cur);
     return self;
- errquit2:
-#ifdef CfScanner_INDENTATION
-    CcsIndent_Destruct((CcsIndent_t *)(self->cur + 1));
  errquit1:
-#endif
     CcsScanInput_Destruct(self->cur);
  errquit0:
     return NULL;
@@ -104,9 +92,6 @@ CfScanner_Destruct(CfScanner_t * self)
 	next = cur->next;
 	/* May be trigged by .atg semantic code. */
 	CcsAssert(cur->refcnt == 1);
-#ifdef CfScanner_INDENTATION
-	CcsIndent_Destruct((CcsIndent_t *)(cur + 1));
-#endif
 	CcsScanInput_Destruct(cur);
     }
     /* May be trigged by .atg semantic code. */
@@ -203,12 +188,6 @@ CfScanner_Include(CfScanner_t * self, FILE * fp, CcsToken_t ** token)
 {
     CcsScanInput_t * input;
     if (!(input = CcsScanInput(self, &Scanner_Info, fp))) return FALSE;
-#ifdef CfScanner_INDENTATION
-    if (!CcsIndent_Init((CcsIndent_t *)(input + 1), &Scanner_IndentInfo)) {
-	CcsScanInput_Destruct(input);
-	return FALSE;
-    }
-#endif
     CcsScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
@@ -225,12 +204,6 @@ CfScanner_IncludeByName(CfScanner_t * self, const CcsIncPathList_t * list,
     if (!(input = CcsScanInput_ByName(self, &Scanner_Info,
 				      list, self->cur->fname, infn)))
 	return FALSE;
-#ifdef CfScanner_INDENTATION
-    if (!CcsIndent_Init((CcsIndent_t *)(input + 1), &Scanner_IndentInfo)) {
-	CcsScanInput_Destruct(input);
-	return FALSE;
-    }
-#endif
     CcsScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
@@ -329,6 +302,23 @@ GetKWKind(CcsScanInput_t * self, int start, int end, int defaultVal)
 			     end - start, defaultVal);
 }
 #endif /* CfScanner_KEYWORD_USED */
+
+static CcsBool_t
+CfScanner_AddInit(void * additional, void * scanner)
+{
+#ifdef CfScanner_INDENTATION
+    if (!CcsIndent_Init(additional, &Scanner_IndentInfo)) return FALSE;
+#endif
+    return TRUE;
+}
+
+static void
+CfScanner_AddDestruct(void * additional)
+{
+#ifdef CfScanner_INDENTATION
+    CcsIndent_Destruct(additional);
+#endif
+}
 
 static const CcsComment_t comments[] = {
 /*---- comments ----*/

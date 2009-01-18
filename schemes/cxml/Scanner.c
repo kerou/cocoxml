@@ -33,6 +33,8 @@
 #include  "c/ScanInput.h"
 #include  "c/Indent.h"
 
+static CcsBool_t CcsXmlScanner_AddInit(void * additional, void * scanner);
+static void CcsXmlScanner_AddDestruct(void * additional);
 static CcsToken_t * CcsXmlScanner_Skip(void * scanner, CcsScanInput_t * input);
 static int CcsXmlScanner_Kind(void * scanner, CcsScanInput_t * input);
 
@@ -43,6 +45,8 @@ static const CcsSI_Info_t Scanner_Info = {
     39, /* maxT */
     39, /* noSym */
     /*---- enable ----*/
+    CcsXmlScanner_AddInit,
+    CcsXmlScanner_AddDestruct,
     CcsXmlScanner_Skip,
     CcsXmlScanner_Kind
 };
@@ -77,18 +81,10 @@ CcsXmlScanner(CcsXmlScanner_t * self, CcsErrorPool_t * errpool, FILE * fp)
 {
     if (!(self->cur = CcsScanInput(self, &Scanner_Info, fp)))
 	goto errquit0;
-#ifdef CcsXmlScanner_INDENTATION
-    if (!CcsIndent_Init((CcsIndent_t *)(self->cur + 1), &Scanner_IndentInfo))
-	goto errquit1;
-#endif
-    if (!CcsXmlScanner_Init(self, errpool)) goto errquit2;
+    if (!CcsXmlScanner_Init(self, errpool)) goto errquit1;
     CcsGetCh(self->cur);
     return self;
- errquit2:
-#ifdef CcsXmlScanner_INDENTATION
-    CcsIndent_Destruct((CcsIndent_t *)(self->cur + 1));
  errquit1:
-#endif
     CcsScanInput_Destruct(self->cur);
  errquit0:
     return NULL;
@@ -101,18 +97,10 @@ CcsXmlScanner_ByName(CcsXmlScanner_t * self, CcsErrorPool_t * errpool,
     if (!(self->cur =
 	  CcsScanInput_ByName(self, &Scanner_Info, NULL, NULL, fn)))
 	goto errquit0;
-#ifdef CcsXmlScanner_INDENTATION
-    if (!CcsIndent_Init((CcsIndent_t *)(self->cur + 1), &Scanner_IndentInfo))
-	goto errquit1;
-#endif
-    if (!CcsXmlScanner_Init(self, errpool)) goto errquit2;
+    if (!CcsXmlScanner_Init(self, errpool)) goto errquit1;
     CcsGetCh(self->cur);
     return self;
- errquit2:
-#ifdef CcsXmlScanner_INDENTATION
-    CcsIndent_Destruct((CcsIndent_t *)(self->cur + 1));
  errquit1:
-#endif
     CcsScanInput_Destruct(self->cur);
  errquit0:
     return NULL;
@@ -126,9 +114,6 @@ CcsXmlScanner_Destruct(CcsXmlScanner_t * self)
 	next = cur->next;
 	/* May be trigged by .atg semantic code. */
 	CcsAssert(cur->refcnt == 1);
-#ifdef CcsXmlScanner_INDENTATION
-	CcsIndent_Destruct((CcsIndent_t *)(cur + 1));
-#endif
 	CcsScanInput_Destruct(cur);
     }
     /* May be trigged by .atg semantic code. */
@@ -225,12 +210,6 @@ CcsXmlScanner_Include(CcsXmlScanner_t * self, FILE * fp, CcsToken_t ** token)
 {
     CcsScanInput_t * input;
     if (!(input = CcsScanInput(self, &Scanner_Info, fp))) return FALSE;
-#ifdef CcsXmlScanner_INDENTATION
-    if (!CcsIndent_Init((CcsIndent_t *)(input + 1), &Scanner_IndentInfo)) {
-	CcsScanInput_Destruct(input);
-	return FALSE;
-    }
-#endif
     CcsScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
@@ -247,12 +226,6 @@ CcsXmlScanner_IncludeByName(CcsXmlScanner_t * self, const CcsIncPathList_t * lis
     if (!(input = CcsScanInput_ByName(self, &Scanner_Info,
 				      list, self->cur->fname, infn)))
 	return FALSE;
-#ifdef CcsXmlScanner_INDENTATION
-    if (!CcsIndent_Init((CcsIndent_t *)(input + 1), &Scanner_IndentInfo)) {
-	CcsScanInput_Destruct(input);
-	return FALSE;
-    }
-#endif
     CcsScanInput_WithDraw(self->cur, *token);
     input->next = self->cur;
     self->cur = input;
@@ -373,6 +346,23 @@ GetKWKind(CcsScanInput_t * self, int start, int end, int defaultVal)
 			     end - start, defaultVal);
 }
 #endif /* CcsXmlScanner_KEYWORD_USED */
+
+static CcsBool_t
+CcsXmlScanner_AddInit(void * additional, void * scanner)
+{
+#ifdef CcsXmlScanner_INDENTATION
+    if (!CcsIndent_Init(additional, &Scanner_IndentInfo)) return FALSE;
+#endif
+    return TRUE;
+}
+
+static void
+CcsXmlScanner_AddDestruct(void * additional)
+{
+#ifdef CcsXmlScanner_INDENTATION
+    CcsIndent_Destruct(additional);
+#endif
+}
 
 static const CcsComment_t comments[] = {
 /*---- comments ----*/

@@ -35,7 +35,7 @@ CcsScanInput_Init(CcsScanInput_t * self, void * scanner,
     self->scanner = scanner;
     self->info = info;
     self->fp = fp;
-    if (!CcsBuffer(&self->buffer, fp)) return FALSE;
+    if (!CcsBuffer(&self->buffer, fp)) goto errquit0;
     self->busyTokenList = NULL;
     self->curToken = &self->busyTokenList;
     self->peekToken = &self->busyTokenList;
@@ -43,7 +43,13 @@ CcsScanInput_Init(CcsScanInput_t * self, void * scanner,
     self->ch = 0; self->chBytes = 0;
     self->pos = 0; self->line = 1; self->col = 0;
     self->oldEols = 0; self->oldEolsEOL = 0;
+    if (info->additionalInit && !info->additionalInit(self + 1, scanner))
+	goto errquit1;
     return TRUE;
+ errquit1:
+    CcsBuffer_Destruct(&self->buffer);
+ errquit0:
+    return FALSE;
 }
 
 CcsScanInput_t *
@@ -90,6 +96,8 @@ void
 CcsScanInput_Destruct(CcsScanInput_t * self)
 {
     CcsToken_t * cur, * next;
+    if (self->info->additionalDestruct)
+	self->info->additionalDestruct(self + 1);
     for (cur = self->busyTokenList; cur; cur = next) {
 	/* May be trigged by .atg semantic code. */
 	CcsAssert(cur->refcnt == 1);

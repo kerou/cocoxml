@@ -43,6 +43,8 @@ typedef struct {
     int eofSym;
     int maxT;
     int noSym;
+    CcsBool_t (* additionalInit)(void * additional, void * scanner);
+    void (* additionalDestruct)(void * additional);
     CcsToken_t * (* skip)(void * scanner, CcsScanInput_t * input);
     int (* kind)(void * scanner, CcsScanInput_t * input);
 }   CcsSI_Info_t;
