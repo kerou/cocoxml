@@ -218,14 +218,21 @@ CcsEscape(const char * str)
     int len, elen;
     len = elen = strlen(str);
     for (cur = str; *cur; ++cur)
-	if (*cur < ' ') elen += 3;
+	if (*cur < ' ' || *cur == '\\' || *cur == '"' || *cur == '\'')
+	    elen += 3;
     if (!(estr = CcsMalloc(elen + 3))) return NULL;
     cur = str; ecur = estr;
     *ecur++ = '"';
     while (*cur) {
 	if (*cur >= ' ') {
-	    *ecur++ = *cur;
-	} else switch (*cur) {
+	    switch (*cur) {
+	    case '\\': *ecur++ = '\\'; *ecur++ = '\\'; break;
+	    case '\'': *ecur++ = '\\'; *ecur++ = '\''; break;
+	    case '\"': *ecur++ = '\\'; *ecur++ = '\"'; break;
+	    default: *ecur++ = *cur; break;
+	    }
+	} else {
+	    switch (*cur) {
 	    case '\a': *ecur++ = '\\'; *ecur++ = 'a'; break;
 	    case '\b': *ecur++ = '\\'; *ecur++ = 'b'; break;
 	    case '\f': *ecur++ = '\\'; *ecur++ = 'f'; break;
@@ -233,14 +240,12 @@ CcsEscape(const char * str)
 	    case '\r': *ecur++ = '\\'; *ecur++ = 'r'; break;
 	    case '\t': *ecur++ = '\\'; *ecur++ = 't'; break;
 	    case '\v': *ecur++ = '\\'; *ecur++ = 'v'; break;
-	    case '\\': *ecur++ = '\\'; *ecur++ = 'v'; break;
-	    case '\'': *ecur++ = '\\'; *ecur++ = '\''; break;
-	    case '\"': *ecur++ = '\\'; *ecur++ = '\"'; break;
 	    default: *ecur++ = '\\';
 		*ecur++ = '0';
 		*ecur++ = '0' + ((*cur & 070) >> 3);
 		*ecur++ = '0' + (*cur & 07);
 		break;
+	    }
 	}
 	++cur;
     }
