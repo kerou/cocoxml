@@ -218,6 +218,31 @@ CcsScanInput_WithDraw(CcsScanInput_t * self, CcsToken_t * token)
     --token->refcnt; /* 1 */
 }
 
+CcsBool_t
+CcsScanInput_Prepend(CcsScanInput_t * self, int kind,
+		     const char * val, size_t vallen)
+{
+    CcsToken_t * cur;
+    int pos, line, col;
+    if (self->readyFirst) {
+	pos = self->readyFirst->pos;
+	line = self->readyFirst->loc.line;
+	col = self->readyFirst->loc.col;
+    } else {
+	pos = self->pos;
+	line = self->line;
+	col = self->col;
+    }
+    if (!(cur = CcsToken(self, kind, self->fname,
+			 pos, line, col, val, vallen)))
+	return FALSE;
+    cur->next = self->readyFirst;
+    self->readyFirst = cur;
+    if (self->readyPeek == NULL) self->readyPeek = cur;
+    if (self->readyLast == NULL) self->readyLast = cur;
+    return TRUE;
+}
+
 void
 CcsScanInput_TokenIncRef(CcsScanInput_t * self, CcsToken_t * token)
 {
