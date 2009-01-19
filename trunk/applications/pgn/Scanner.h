@@ -77,6 +77,9 @@ PgnScanner_Include(PgnScanner_t * self, FILE * fp, CcsToken_t ** token);
 CcsBool_t
 PgnScanner_IncludeByName(PgnScanner_t * self, const CcsIncPathList_t * list,
 			 const char * infn, CcsToken_t ** token);
+CcsBool_t
+PgnScanner_InsertExpect(PgnScanner_t * self, int kind, const char * val,
+			size_t vallen, CcsToken_t ** token);
 
 EXTC_END
 

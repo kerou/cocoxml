@@ -77,6 +77,9 @@ CExprScanner_Include(CExprScanner_t * self, FILE * fp, CcsToken_t ** token);
 CcsBool_t
 CExprScanner_IncludeByName(CExprScanner_t * self, const CcsIncPathList_t * list,
 			 const char * infn, CcsToken_t ** token);
+CcsBool_t
+CExprScanner_InsertExpect(CExprScanner_t * self, int kind, const char * val,
+			size_t vallen, CcsToken_t ** token);
 
 EXTC_END
 

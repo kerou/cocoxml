@@ -41,8 +41,10 @@ const char * IndentInName = "IndentIn";
 const char * IndentOutName = "IndentOut";
 const char * IndentErrName = "IndentErr";
 
-/* SZ_LITERALS is a prime number, auto-extending is not supported now */
-#define  SZ_LITERALS 127
+/* SZ_ADDED_TERMINALS and SZ_LITERALS are a prime numbers,
+ * auto-extending is not supported now */
+#define  SZ_ADDED_TERMINALS 127
+#define  SZ_LITERALS        127
 
 static void
 CcLexical_GetTargetStates(CcLexical_t * self, CcAction_t * a,
@@ -65,6 +67,7 @@ CcLexical(CcLexical_t * self, CcGlobals_t * globals)
     self->ignoreCase = FALSE;
     self->indentUsed = FALSE;
     self->spaceUsed = FALSE;
+    CcHashTable(&self->addedTerminals, SZ_ADDED_TERMINALS);
     CcArrayList(&self->states);
     CcArrayList(&self->classes);
     CcHashTable(&self->literals, SZ_LITERALS);
@@ -92,28 +95,36 @@ CcLexical_Destruct(CcLexical_t * self)
     CcHashTable_Destruct(&self->literals);
     CcArrayList_Destruct(&self->classes);
     CcArrayList_Destruct(&self->states);
+    CcHashTable_Destruct(&self->addedTerminals);
     CcCharSet_Destruct(self->ignored);
     CcEBNF_Destruct(&self->base);
 }
 
 void CcLexical_SetOption(CcLexical_t * self, const CcsToken_t * t)
 {
-    char * val = CcUnescape(t->val);
     CcSymbolTable_t * symtab = &self->globals->symtab;
-    if (!strcasecmp(val, "ignore case")) {
+    if (!strcasecmp(t->val, "ignore case")) {
 	self->ignoreCase = TRUE;
-    } else if (!strcasecmp(val, "indentation")) {
+    } else if (!strcasecmp(t->val, "indentation")) {
 	self->indentUsed = TRUE;
-	CcSymbolTable_NewTerminal(symtab, IndentInName, 0);
-	CcSymbolTable_NewTerminal(symtab, IndentOutName, 0);
-	CcSymbolTable_NewTerminal(symtab, IndentErrName, 0);
-    } else if (!strcasecmp(val, "space")) {
+	CcSymbolTable_NewTerminal(symtab, IndentInName, t->loc.line);
+	CcSymbolTable_NewTerminal(symtab, IndentOutName, t->loc.line);
+	CcSymbolTable_NewTerminal(symtab, IndentErrName, t->loc.line);
+    } else if (!strcasecmp(t->val, "space")) {
 	self->spaceUsed = TRUE;
     } else {
 	CcsErrorPool_Error(self->globals->errpool, &t->loc,
 			   "Unsupported option '%s' encountered.", t->val);
     }
-    CcFree(val);
+}
+
+void CcLexical_AddTerminal(CcLexical_t * self, const CcsToken_t * t)
+{
+    CcSymbolTable_t * symtab = &self->globals->symtab;
+    CcSymbol_t * sym = CcSymbolTable_NewTerminal(symtab, t->val, t->loc.line);
+    if (!CcHashTable_Set(&self->addedTerminals, t->val, (CcObject_t *)sym))
+	CcsErrorPool_Error(self->globals->errpool, &t->loc,
+			   "Too many additional terminals, recompile Coco with enlarged additional terminal hash table.");
 }
 
 CcGraph_t *

@@ -42,10 +42,13 @@ struct CcLexical_s {
     CcEBNF_t        base;
     CcGlobals_t   * globals;
 
+    /* Options. */
     CcCharSet_t   * ignored;
     CcsBool_t       ignoreCase;
     CcsBool_t       indentUsed;
     CcsBool_t       spaceUsed;
+    /* User added terminals. */
+    CcHashTable_t   addedTerminals;
     CcArrayList_t   states;
     CcArrayList_t   classes;
     CcHashTable_t   literals;
@@ -68,6 +71,7 @@ CcLexical_t * CcLexical(CcLexical_t * self, CcGlobals_t * globals);
 void CcLexical_Destruct(CcLexical_t * self);
 
 void CcLexical_SetOption(CcLexical_t * self, const CcsToken_t * t);
+void CcLexical_AddTerminal(CcLexical_t * self, const CcsToken_t * t);
 
 CcGraph_t *
 CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t);

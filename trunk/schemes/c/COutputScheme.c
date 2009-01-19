@@ -63,25 +63,35 @@ static CcsBool_t
 COS_Defines(CcCOutputScheme_t * self, CcOutput_t * output)
 {
     CcSymbol_t * sym;
-    CcPrintfIL(output, "#define %sScanner_MAX_KEYWORD_LEN %d", self->base.prefix,
-	       CcLexical_GetMaxKeywordLength(self->base.base.globals->lexical));
-    if (!self->base.base.globals->lexical->ignoreCase)
+    CcHTIterator_t iter;
+    CcSymbolTable_t * symtab = &self->base.base.globals->symtab;
+    CcLexical_t * lexical = self->base.base.globals->lexical;
+
+    CcPrintfIL(output, "#define %sScanner_MAX_KEYWORD_LEN %d",
+	       self->base.prefix, CcLexical_GetMaxKeywordLength(lexical));
+    if (!lexical->ignoreCase)
 	CcPrintfIL(output, "#define %sScanner_CASE_SENSITIVE", self->base.prefix);
-    if (CcLexical_KeywordUsed(self->base.base.globals->lexical))
+    if (CcLexical_KeywordUsed(lexical))
 	CcPrintfIL(output, "#define %sScanner_KEYWORD_USED", self->base.prefix);
-    if (self->base.base.globals->lexical->indentUsed) {
+    if (lexical->indentUsed) {
 	CcPrintfIL(output, "#define %sScanner_INDENTATION", self->base.prefix);
-	sym = CcSymbolTable_FindSym(&self->base.base.globals->symtab, IndentInName);
+	sym = CcSymbolTable_FindSym(symtab, IndentInName);
 	CcsAssert(sym != NULL);
-	CcPrintfIL(output, "#define %sScanner_INDENT_IN %d", self->base.prefix,
-		   sym->kind);
-	sym = CcSymbolTable_FindSym(&self->base.base.globals->symtab, IndentOutName);
+	CcPrintfIL(output, "#define %sScanner_INDENT_IN %d",
+		   self->base.prefix, sym->kind);
+	sym = CcSymbolTable_FindSym(symtab, IndentOutName);
 	CcsAssert(sym != NULL);
-	CcPrintfIL(output, "#define %sScanner_INDENT_OUT %d", self->base.prefix,
-		   sym->kind);
-	sym = CcSymbolTable_FindSym(&self->base.base.globals->symtab, IndentErrName);
-	CcPrintfIL(output, "#define %sScanner_INDENT_ERR %d", self->base.prefix,
-		   sym->kind);
+	CcPrintfIL(output, "#define %sScanner_INDENT_OUT %d",
+		   self->base.prefix, sym->kind);
+	sym = CcSymbolTable_FindSym(symtab, IndentErrName);
+	CcPrintfIL(output, "#define %sScanner_INDENT_ERR %d",
+		   self->base.prefix, sym->kind);
+    }
+    CcHashTable_GetIterator(&lexical->addedTerminals, &iter);
+    while (CcHTIterator_Forward(&iter)) {
+	sym = (CcSymbol_t *)CcHTIterator_Value(&iter);
+	CcPrintfIL(output, "#define %sScanner_%s %d",
+		   self->base.prefix, CcHTIterator_Key(&iter), sym->kind);
     }
     return TRUE;
 }

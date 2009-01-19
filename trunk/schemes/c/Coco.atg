@@ -129,7 +129,8 @@ Coco                            (. CcSymbol_t  * sym;
     { ANY }			(. self->syntax->destructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
       	  			   CcsScanner_TokenDecRef(&self->scanner, beg); .)
     ]
-  [ "OPTIONS" { string          (. CcLexical_SetOption(self->lexical, self->t); .) } ]
+  [ "OPTIONS" { ident           (. CcLexical_SetOption(self->lexical, self->t); .) } ]
+  [ "TERMINALS" { ident         (. CcLexical_AddTerminal(self->lexical, self->t); .) } ]
   [ "CHARACTERS" { SetDecl }]
   [ "TOKENS"  { TokenDecl<symbol_t> }]
   [ "PRAGMAS" { TokenDecl<symbol_pr> }]
@@ -322,8 +323,9 @@ TokenDecl<const CcObjectType_t * typ> (. char * name = NULL; int kind; CcSymbol_
 				       if (CcHashTable_Get(&self->lexical->literals,
 							   self->tokenString) != NULL)
 					   CcsParser_SemErrT(self, "token string '%s' declared twice", self->tokenString);
-				       CcHashTable_Set(&self->lexical->literals,
-				                       self->tokenString, (CcObject_t *)sym);
+				       if (!CcHashTable_Set(&self->lexical->literals,
+				                            self->tokenString, (CcObject_t *)sym))
+					   CcsParser_SemErrT(self, "Too many literals, recompile Coco with enlarged literal hash table.");
 				       CcLexical_MatchLiteral(self->lexical, self->t,
 				                              self->tokenString, sym);
 				       CcFree(self->tokenString);
