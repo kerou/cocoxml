@@ -94,6 +94,9 @@ CcsToken_t * CcsScanInput_Scan(CcsScanInput_t * self);
 /* WithDraw the last returned token, cause it to be removed from busyList to
  * readyList again. refcnt of token must be 2. */
 void CcsScanInput_WithDraw(CcsScanInput_t * self, CcsToken_t * token);
+/* Prepend a new generated token at the beginning of readyList. */
+CcsBool_t CcsScanInput_Prepend(CcsScanInput_t * self, int kind,
+			       const char * val, size_t vallen);
 /* Increase the refcnt of the provided token which must be located in busyList.
  * These is used to get original text in usual. */
 void CcsScanInput_TokenIncRef(CcsScanInput_t * self, CcsToken_t * token);
