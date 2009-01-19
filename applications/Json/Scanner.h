@@ -64,6 +64,9 @@ JsonScanner_Include(JsonScanner_t * self, FILE * fp, CcsToken_t ** token);
 CcsBool_t
 JsonScanner_IncludeByName(JsonScanner_t * self, const CcsIncPathList_t * list,
 			 const char * infn, CcsToken_t ** token);
+CcsBool_t
+JsonScanner_InsertExpect(JsonScanner_t * self, int kind, const char * val,
+			size_t vallen, CcsToken_t ** token);
 
 EXTC_END
 

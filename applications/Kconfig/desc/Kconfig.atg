@@ -39,7 +39,7 @@ DESTRUCTOR
     KcSymbolTable_Destruct(&self->symtab);
     if (self->mainmenu)  CcsFree(self->mainmenu);
 
-OPTIONS "indentation"
+OPTIONS indentation
 
 CHARACTERS
     letter    = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_".

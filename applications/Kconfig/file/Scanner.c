@@ -212,6 +212,17 @@ CfScanner_IncludeByName(CfScanner_t * self, const CcsIncPathList_t * list,
     return TRUE;
 }
 
+CcsBool_t
+CfScanner_InsertExpect(CfScanner_t * self, int kind, const char * val,
+			size_t vallen, CcsToken_t ** token)
+{
+    CcsBool_t ret;
+    CcsScanInput_WithDraw(self->cur, *token);
+    ret = CcsScanInput_Prepend(self->cur, kind, val, vallen);
+    *token = CcsScanInput_Scan(self->cur);
+    return ret;
+}
+
 /* All the following things are used by CcsScanInput_NextToken. */
 typedef struct {
     int keyFrom;

@@ -64,6 +64,9 @@ CfScanner_Include(CfScanner_t * self, FILE * fp, CcsToken_t ** token);
 CcsBool_t
 CfScanner_IncludeByName(CfScanner_t * self, const CcsIncPathList_t * list,
 			 const char * infn, CcsToken_t ** token);
+CcsBool_t
+CfScanner_InsertExpect(CfScanner_t * self, int kind, const char * val,
+			size_t vallen, CcsToken_t ** token);
 
 EXTC_END
 

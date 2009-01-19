@@ -65,6 +65,9 @@ PatchScanner_Include(PatchScanner_t * self, FILE * fp, CcsToken_t ** token);
 CcsBool_t
 PatchScanner_IncludeByName(PatchScanner_t * self, const CcsIncPathList_t * list,
 			 const char * infn, CcsToken_t ** token);
+CcsBool_t
+PatchScanner_InsertExpect(PatchScanner_t * self, int kind, const char * val,
+			size_t vallen, CcsToken_t ** token);
 
 EXTC_END
 
