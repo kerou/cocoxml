@@ -350,7 +350,7 @@ CXS_Append(CcxScanOper_t * self, CcsToken_t * last,
 {
     CcsToken_t * token;
     if (kind < 0) return last;
-    token = CcsToken(self, kind, self->fname,
+    token = CcsToken(NULL, kind, self->fname,
 		     XML_GetCurrentByteIndex(self->parser),
 		     XML_GetCurrentLineNumber(self->parser),
 		     XML_GetCurrentColumnNumber(self->parser),
