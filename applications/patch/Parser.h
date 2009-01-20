@@ -33,7 +33,8 @@ struct PatchParser_s {
     CcsToken_t      * la;
     int               maxT;
     /*---- members ----*/
-    
+    int subStart, subNum;
+    int addStart, addNum;
     /*---- enable ----*/
 };
 

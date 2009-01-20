@@ -18,23 +18,29 @@ END.
 COMPILER Patch
 
 MEMBERS
+    int subStart, subNum;
+    int addStart, addNum;
 
 CONSTRUCTOR
+    self->subNum = 0;
+    self->addNum = 0;
 
 DESTRUCTOR
 
 OPTIONS space
 
+TERMINALS InPiece
+
 CHARACTERS
     digit  = "0123456789".
     cr     = '\r'.
     lf     = '\n'.
-    infoch = ANY - '+' - '-' - '@' - digit - cr - lf.
+    infoch = ANY - cr - lf - digit.
 
 TOKENS
-    infoch = infoch.
     number = digit { digit }.
     eol    = (cr lf) | lf.
+    infoch = infoch.
 
 PRODUCTIONS
 
@@ -44,16 +50,37 @@ FilePatch = { HeadLine } FileSubLine FileAddLine Piece { Piece }.
 
 HeadLine = infoch { ANY } eol.
 
-FileSubLine = '-' '-' '-' ' ' { ANY } eol.
-FileAddLine = '+' '+' '+' ' ' { ANY } eol.
+FileSubLine = "--- " { ANY } eol.
+FileAddLine = "+++ " { ANY } eol.
 
-Piece = PieceLine { AddLine | SubLine | SameLine | NoNewLine }.
+Piece = PieceTitle PieceLine { PieceLine }
+    (. if (self->subNum != 0 || self->addNum != 0)
+           PatchParser_SemErrT(self, "Patch format corrupt."); .)
+.
 
-PieceLine = "@@" { ' ' } '-' number [',' number] { ' ' } '+' number [',' number] { ' ' } "@@" { ANY } eol.
+PieceTitle =
+  "@@" ' ' { ' ' } '-' number     (. self->subStart = atoi(self->t->val); .)
+  [',' number                     (. self->subNum = atoi(self->t->val); .)
+  ] ' ' { ' ' } '+' number        (. self->addStart = atoi(self->t->val); .)
+  [',' number                     (. self->addNum = atoi(self->t->val); .)
+  ] ' ' { ' ' } "@@" { ANY } eol  (. PatchScanner_InsertExpect(&self->scanner, PatchScanner_InPiece,
+      	    	       	      	 			       NULL, 0, &self->la); .)
+.
 
-AddLine = '+' { ANY } eol.
-SubLine = '-' { ANY } eol.
-SameLine = ' ' { ANY } eol.
-NoNewLine = '\\' ' ' { ANY } eol.
+PieceLine (. char op; .) =
+  InPiece ('+' | '-' | ' ' | '\\')   (. op = *self->t->val; .)
+  { ANY } eol
+    (. switch (op) {
+       case '+': --self->addNum; break;
+       case '-': --self->subNum; break;
+       case ' ': --self->addNum; --self->subNum; break;
+       case '\\': break;
+       }
+       if (self->subNum < 0 || self->addNum < 0)
+           PatchParser_SemErrT(self, "Patch format corrupt.");
+       if (self->subNum > 0 || self->addNum > 0)
+           PatchScanner_InsertExpect(&self->scanner, PatchScanner_InPiece,
+	   			     NULL, 0, &self->la); .)
+.
 
 END Patch.

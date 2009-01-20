@@ -20,8 +20,8 @@ static const CcsSI_Info_t Scanner_Info = {
     /*---- declarations ----*/
     0, /* additionalSpace */
     0, /* eofSym */
-    10, /* maxT */
-    10, /* noSym */
+    13, /* maxT */
+    13, /* noSym */
     /*---- enable ----*/
     PatchScanner_AddInit,
     PatchScanner_AddDestruct,
@@ -233,19 +233,19 @@ typedef struct {
 static const Char2State_t c2sArr[] = {
     /*---- chars2states ----*/
     { EoF, EoF, -1 },
-    { 0, 9, 1 },	/* 0 '\t' */
-    { 10, 10, 4 },	/* '\n' '\n' */
-    { 11, 12, 1 },	/* '\v' '\f' */
-    { 13, 13, 3 },	/* '\r' '\r' */
-    { 14, 42, 1 },	/* 14 '*' */
-    { 43, 43, 6 },	/* '+' '+' */
-    { 44, 44, 1 },	/* ',' ',' */
-    { 45, 45, 5 },	/* '-' '-' */
-    { 46, 47, 1 },	/* '.' '/' */
-    { 48, 57, 2 },	/* '0' '9' */
-    { 58, 63, 1 },	/* ':' '?' */
-    { 64, 64, 7 },	/* '@' '@' */
-    { 65, 65535, 1 },	/* 'A' 65535 */
+    { 0, 9, 4 },	/* 0 '\t' */
+    { 10, 10, 3 },	/* '\n' '\n' */
+    { 11, 12, 4 },	/* '\v' '\f' */
+    { 13, 13, 2 },	/* '\r' '\r' */
+    { 14, 42, 4 },	/* 14 '*' */
+    { 43, 43, 13 },	/* '+' '+' */
+    { 44, 44, 4 },	/* ',' ',' */
+    { 45, 45, 12 },	/* '-' '-' */
+    { 46, 47, 4 },	/* '.' '/' */
+    { 48, 57, 1 },	/* '0' '9' */
+    { 58, 63, 4 },	/* ':' '?' */
+    { 64, 64, 14 },	/* '@' '@' */
+    { 65, 65535, 4 },	/* 'A' 65535 */
     /*---- enable ----*/
 };
 static const int c2sNum = sizeof(c2sArr) / sizeof(c2sArr[0]);
@@ -276,9 +276,11 @@ typedef struct {
 
 static const Identifier2KWKind_t i2kArr[] = {
     /*---- identifiers2keywordkinds ----*/
-    { " ", 5 },
-    { ",", 8 },
-    { "\\", 9 },
+    { " ", 8 },
+    { "+", 11 },
+    { ",", 10 },
+    { "-", 9 },
+    { "\\", 12 },
     /*---- enable ----*/
 };
 static const int i2kNum = sizeof(i2kArr) / sizeof(i2kArr[0]);
@@ -378,28 +380,52 @@ static int PatchScanner_Kind(void * scanner, CcsScanInput_t * input)
     case -1: kind = Scanner_Info.eofSym; break;
     case 0: kind = Scanner_Info.noSym; break;
     /*---- scan3 ----*/
-    case 1:
-	{ kind = GetKWKind(input, pos, input->pos, 1); break; }
-    case 2: case_2:
+    case 1: case_1:
 	if ((input->ch >= '0' && input->ch <= '9')) {
-	    CcsGetCh(input); goto case_2;
+	    CcsGetCh(input); goto case_1;
 	} else { kind = 2; break; }
-    case 3:
+    case 2:
 	if (input->ch == '\n') {
-	    CcsGetCh(input); goto case_4;
+	    CcsGetCh(input); goto case_3;
 	} else { kind = Scanner_Info.noSym; break; }
-    case 4: case_4:
+    case 3: case_3:
 	{ kind = 3; break; }
-    case 5:
-	{ kind = 4; break; }
-    case 6:
-	{ kind = 6; break; }
-    case 7:
-	if (input->ch == '@') {
-	    CcsGetCh(input); goto case_8;
+    case 4:
+	{ kind = GetKWKind(input, pos, input->pos, 4); break; }
+    case 5: case_5:
+	if (input->ch == '-') {
+	    CcsGetCh(input); goto case_6;
 	} else { kind = Scanner_Info.noSym; break; }
+    case 6: case_6:
+	if (input->ch == ' ') {
+	    CcsGetCh(input); goto case_7;
+	} else { kind = Scanner_Info.noSym; break; }
+    case 7: case_7:
+	{ kind = 5; break; }
     case 8: case_8:
+	if (input->ch == '+') {
+	    CcsGetCh(input); goto case_9;
+	} else { kind = Scanner_Info.noSym; break; }
+    case 9: case_9:
+	if (input->ch == ' ') {
+	    CcsGetCh(input); goto case_10;
+	} else { kind = Scanner_Info.noSym; break; }
+    case 10: case_10:
+	{ kind = 6; break; }
+    case 11: case_11:
 	{ kind = 7; break; }
+    case 12:
+	if (input->ch == '-') {
+	    CcsGetCh(input); goto case_5;
+	} else { kind = GetKWKind(input, pos, input->pos, 4); break; }
+    case 13:
+	if (input->ch == '+') {
+	    CcsGetCh(input); goto case_8;
+	} else { kind = GetKWKind(input, pos, input->pos, 4); break; }
+    case 14:
+	if (input->ch == '@') {
+	    CcsGetCh(input); goto case_11;
+	} else { kind = GetKWKind(input, pos, input->pos, 4); break; }
     /*---- enable ----*/
     }
     return kind;
