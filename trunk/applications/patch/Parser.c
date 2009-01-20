@@ -72,8 +72,8 @@ PatchParser_WeakSeparator(PatchParser_t * self, int n, int syFol, int repFol)
 static void PatchParser_Patch(PatchParser_t * self);
 static void PatchParser_FilePatch(PatchParser_t * self);
 static void PatchParser_HeadLine(PatchParser_t * self);
-static void PatchParser_FileSubLine(PatchParser_t * self);
-static void PatchParser_FileAddLine(PatchParser_t * self);
+static void PatchParser_FileSubLine(PatchParser_t * self, CcsPosition_t ** subfname);
+static void PatchParser_FileAddLine(PatchParser_t * self, CcsPosition_t ** addfname);
 static void PatchParser_Piece(PatchParser_t * self);
 static void PatchParser_PieceTitle(PatchParser_t * self);
 static void PatchParser_PieceLine(PatchParser_t * self);
@@ -115,7 +115,7 @@ PatchParser_Init(PatchParser_t * self)
 {
     self->t = self->la = NULL;
     /*---- constructor ----*/
-    self->maxT = 13;
+    self->maxT = 14;
     self->subNum = 0;
     self->addNum = 0;
     /*---- enable ----*/
@@ -170,7 +170,7 @@ static void
 PatchParser_Patch(PatchParser_t * self)
 {
     PatchParser_FilePatch(self);
-    while (self->la->kind == 4 || self->la->kind == 5) {
+    while (self->la->kind == 5 || self->la->kind == 6) {
 	PatchParser_FilePatch(self);
     }
 }
@@ -178,13 +178,14 @@ PatchParser_Patch(PatchParser_t * self)
 static void
 PatchParser_FilePatch(PatchParser_t * self)
 {
-    while (self->la->kind == 4) {
+    CcsPosition_t * subfname, * addfname; 
+    while (self->la->kind == 5) {
 	PatchParser_HeadLine(self);
     }
-    PatchParser_FileSubLine(self);
-    PatchParser_FileAddLine(self);
+    PatchParser_FileSubLine(self, &subfname);
+    PatchParser_FileAddLine(self, &addfname);
     PatchParser_Piece(self);
-    while (self->la->kind == 7) {
+    while (self->la->kind == 8) {
 	PatchParser_Piece(self);
     }
 }
@@ -192,31 +193,51 @@ PatchParser_FilePatch(PatchParser_t * self)
 static void
 PatchParser_HeadLine(PatchParser_t * self)
 {
-    PatchParser_Expect(self, 4);
-    while (PatchParser_StartOf(self, 1)) {
-	PatchParser_Get(self);
-    }
-    PatchParser_Expect(self, 3);
-}
-
-static void
-PatchParser_FileSubLine(PatchParser_t * self)
-{
     PatchParser_Expect(self, 5);
     while (PatchParser_StartOf(self, 1)) {
 	PatchParser_Get(self);
     }
-    PatchParser_Expect(self, 3);
+    PatchParser_Expect(self, 4);
 }
 
 static void
-PatchParser_FileAddLine(PatchParser_t * self)
+PatchParser_FileSubLine(PatchParser_t * self, CcsPosition_t ** subfname)
 {
+    CcsToken_t * beg; 
     PatchParser_Expect(self, 6);
-    while (PatchParser_StartOf(self, 1)) {
+    PatchScanner_TokenIncRef(&self->scanner, beg = self->la); 
+    while (PatchParser_StartOf(self, 2)) {
 	PatchParser_Get(self);
     }
-    PatchParser_Expect(self, 3);
+    *subfname = PatchScanner_GetPosition(&self->scanner, beg, self->la);
+    PatchScanner_TokenDecRef(&self->scanner, beg); 
+    if (self->la->kind == 3) {
+	PatchParser_Get(self);
+	while (PatchParser_StartOf(self, 1)) {
+	    PatchParser_Get(self);
+	}
+    }
+    PatchParser_Expect(self, 4);
+}
+
+static void
+PatchParser_FileAddLine(PatchParser_t * self, CcsPosition_t ** addfname)
+{
+    CcsToken_t * beg; 
+    PatchParser_Expect(self, 7);
+    PatchScanner_TokenIncRef(&self->scanner, beg = self->la); 
+    while (PatchParser_StartOf(self, 2)) {
+	PatchParser_Get(self);
+    }
+    *addfname = PatchScanner_GetPosition(&self->scanner, beg, self->la);
+    PatchScanner_TokenDecRef(&self->scanner, beg); 
+    if (self->la->kind == 3) {
+	PatchParser_Get(self);
+	while (PatchParser_StartOf(self, 1)) {
+	    PatchParser_Get(self);
+	}
+    }
+    PatchParser_Expect(self, 4);
 }
 
 static void
@@ -234,40 +255,40 @@ PatchParser_Piece(PatchParser_t * self)
 static void
 PatchParser_PieceTitle(PatchParser_t * self)
 {
-    PatchParser_Expect(self, 7);
     PatchParser_Expect(self, 8);
-    while (self->la->kind == 8) {
+    PatchParser_Expect(self, 9);
+    while (self->la->kind == 9) {
 	PatchParser_Get(self);
     }
-    PatchParser_Expect(self, 9);
+    PatchParser_Expect(self, 10);
     PatchParser_Expect(self, 2);
     self->subStart = atoi(self->t->val); 
-    if (self->la->kind == 10) {
+    if (self->la->kind == 11) {
 	PatchParser_Get(self);
 	PatchParser_Expect(self, 2);
 	self->subNum = atoi(self->t->val); 
     }
-    PatchParser_Expect(self, 8);
-    while (self->la->kind == 8) {
+    PatchParser_Expect(self, 9);
+    while (self->la->kind == 9) {
 	PatchParser_Get(self);
     }
-    PatchParser_Expect(self, 11);
+    PatchParser_Expect(self, 12);
     PatchParser_Expect(self, 2);
     self->addStart = atoi(self->t->val); 
-    if (self->la->kind == 10) {
+    if (self->la->kind == 11) {
 	PatchParser_Get(self);
 	PatchParser_Expect(self, 2);
 	self->addNum = atoi(self->t->val); 
     }
-    PatchParser_Expect(self, 8);
-    while (self->la->kind == 8) {
+    PatchParser_Expect(self, 9);
+    while (self->la->kind == 9) {
 	PatchParser_Get(self);
     }
-    PatchParser_Expect(self, 7);
+    PatchParser_Expect(self, 8);
     while (PatchParser_StartOf(self, 1)) {
 	PatchParser_Get(self);
     }
-    PatchParser_Expect(self, 3);
+    PatchParser_Expect(self, 4);
     PatchScanner_InsertExpect(&self->scanner, PatchScanner_InPiece,
 			      NULL, 0, &self->la); 
 }
@@ -277,20 +298,20 @@ PatchParser_PieceLine(PatchParser_t * self)
 {
     char op; 
     PatchParser_Expect(self, 1);
-    if (self->la->kind == 11) {
+    if (self->la->kind == 12) {
+	PatchParser_Get(self);
+    } else if (self->la->kind == 10) {
 	PatchParser_Get(self);
     } else if (self->la->kind == 9) {
 	PatchParser_Get(self);
-    } else if (self->la->kind == 8) {
+    } else if (self->la->kind == 13) {
 	PatchParser_Get(self);
-    } else if (self->la->kind == 12) {
-	PatchParser_Get(self);
-    } else PatchParser_SynErr(self, 14);
+    } else PatchParser_SynErr(self, 15);
     op = *self->t->val; 
     while (PatchParser_StartOf(self, 1)) {
 	PatchParser_Get(self);
     }
-    PatchParser_Expect(self, 3);
+    PatchParser_Expect(self, 4);
     switch (op) {
     case '+': --self->addNum; break;
     case '-': --self->subNum; break;
@@ -315,18 +336,19 @@ PatchParser_SynErr(PatchParser_t * self, int n)
     case 0: s = "\"" "EOF" "\" expected"; break;
     case 1: s = "\"" "InPiece" "\" expected"; break;
     case 2: s = "\"" "number" "\" expected"; break;
-    case 3: s = "\"" "eol" "\" expected"; break;
-    case 4: s = "\"" "infoch" "\" expected"; break;
-    case 5: s = "\"" "--- " "\" expected"; break;
-    case 6: s = "\"" "+++ " "\" expected"; break;
-    case 7: s = "\"" "@@" "\" expected"; break;
-    case 8: s = "\"" " " "\" expected"; break;
-    case 9: s = "\"" "-" "\" expected"; break;
-    case 10: s = "\"" "," "\" expected"; break;
-    case 11: s = "\"" "+" "\" expected"; break;
-    case 12: s = "\"" "\\" "\" expected"; break;
-    case 13: s = "\"" "???" "\" expected"; break;
-    case 14: s = "this symbol not expected in \"" "PieceLine" "\""; break;
+    case 3: s = "\"" "tab" "\" expected"; break;
+    case 4: s = "\"" "eol" "\" expected"; break;
+    case 5: s = "\"" "infoch" "\" expected"; break;
+    case 6: s = "\"" "--- " "\" expected"; break;
+    case 7: s = "\"" "+++ " "\" expected"; break;
+    case 8: s = "\"" "@@" "\" expected"; break;
+    case 9: s = "\"" " " "\" expected"; break;
+    case 10: s = "\"" "-" "\" expected"; break;
+    case 11: s = "\"" "," "\" expected"; break;
+    case 12: s = "\"" "+" "\" expected"; break;
+    case 13: s = "\"" "\\" "\" expected"; break;
+    case 14: s = "\"" "???" "\" expected"; break;
+    case 15: s = "this symbol not expected in \"" "PieceLine" "\""; break;
     /*---- enable ----*/
     default:
 	snprintf(format, sizeof(format), "error %d", n);
@@ -338,8 +360,9 @@ PatchParser_SynErr(PatchParser_t * self, int n)
 
 static const char * set[] = {
     /*---- InitSet ----*/
-    /*    5    0    */
-    "*..............", /* 0 */
-    ".**.**********."  /* 1 */
+    /*    5    0     */
+    "*...............", /* 0 */
+    ".***.**********.", /* 1 */
+    ".**..**********."  /* 2 */
     /*---- enable ----*/
 };

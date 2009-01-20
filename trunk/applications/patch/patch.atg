@@ -33,12 +33,14 @@ TERMINALS InPiece
 
 CHARACTERS
     digit  = "0123456789".
+    tab    = '\t'.
     cr     = '\r'.
     lf     = '\n'.
-    infoch = ANY - cr - lf - digit.
+    infoch = ANY - tab - cr - lf - digit.
 
 TOKENS
     number = digit { digit }.
+    tab    = tab.
     eol    = (cr lf) | lf.
     infoch = infoch.
 
@@ -46,12 +48,25 @@ PRODUCTIONS
 
 Patch = FilePatch { FilePatch }.
 
-FilePatch = { HeadLine } FileSubLine FileAddLine Piece { Piece }.
+FilePatch   (. CcsPosition_t * subfname, * addfname; .) =
+  { HeadLine } FileSubLine<&subfname> FileAddLine<&addfname> Piece { Piece }
+.
 
 HeadLine = infoch { ANY } eol.
 
-FileSubLine = "--- " { ANY } eol.
-FileAddLine = "+++ " { ANY } eol.
+FileSubLine<CcsPosition_t ** subfname> (. CcsToken_t * beg; .) =
+  "--- "    (. PatchScanner_TokenIncRef(&self->scanner, beg = self->la); .)
+  { ANY }   (. *subfname = PatchScanner_GetPosition(&self->scanner, beg, self->la);
+    	       PatchScanner_TokenDecRef(&self->scanner, beg); .)
+  [ tab { ANY }] eol
+.
+
+FileAddLine<CcsPosition_t ** addfname> (. CcsToken_t * beg; .) =
+  "+++ "    (. PatchScanner_TokenIncRef(&self->scanner, beg = self->la); .)
+  { ANY }   (. *addfname = PatchScanner_GetPosition(&self->scanner, beg, self->la);
+    	       PatchScanner_TokenDecRef(&self->scanner, beg); .)
+  [ tab { ANY }] eol
+.
 
 Piece = PieceTitle PieceLine { PieceLine }
     (. if (self->subNum != 0 || self->addNum != 0)

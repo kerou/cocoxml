@@ -20,8 +20,8 @@ static const CcsSI_Info_t Scanner_Info = {
     /*---- declarations ----*/
     0, /* additionalSpace */
     0, /* eofSym */
-    13, /* maxT */
-    13, /* noSym */
+    14, /* maxT */
+    14, /* noSym */
     /*---- enable ----*/
     PatchScanner_AddInit,
     PatchScanner_AddDestruct,
@@ -233,19 +233,20 @@ typedef struct {
 static const Char2State_t c2sArr[] = {
     /*---- chars2states ----*/
     { EoF, EoF, -1 },
-    { 0, 9, 4 },	/* 0 '\t' */
-    { 10, 10, 3 },	/* '\n' '\n' */
-    { 11, 12, 4 },	/* '\v' '\f' */
-    { 13, 13, 2 },	/* '\r' '\r' */
-    { 14, 42, 4 },	/* 14 '*' */
-    { 43, 43, 13 },	/* '+' '+' */
-    { 44, 44, 4 },	/* ',' ',' */
-    { 45, 45, 12 },	/* '-' '-' */
-    { 46, 47, 4 },	/* '.' '/' */
+    { 0, 8, 5 },	/* 0 '\b' */
+    { 9, 9, 2 },	/* '\t' '\t' */
+    { 10, 10, 4 },	/* '\n' '\n' */
+    { 11, 12, 5 },	/* '\v' '\f' */
+    { 13, 13, 3 },	/* '\r' '\r' */
+    { 14, 42, 5 },	/* 14 '*' */
+    { 43, 43, 14 },	/* '+' '+' */
+    { 44, 44, 5 },	/* ',' ',' */
+    { 45, 45, 13 },	/* '-' '-' */
+    { 46, 47, 5 },	/* '.' '/' */
     { 48, 57, 1 },	/* '0' '9' */
-    { 58, 63, 4 },	/* ':' '?' */
-    { 64, 64, 14 },	/* '@' '@' */
-    { 65, 65535, 4 },	/* 'A' 65535 */
+    { 58, 63, 5 },	/* ':' '?' */
+    { 64, 64, 15 },	/* '@' '@' */
+    { 65, 65535, 5 },	/* 'A' 65535 */
     /*---- enable ----*/
 };
 static const int c2sNum = sizeof(c2sArr) / sizeof(c2sArr[0]);
@@ -276,11 +277,11 @@ typedef struct {
 
 static const Identifier2KWKind_t i2kArr[] = {
     /*---- identifiers2keywordkinds ----*/
-    { " ", 8 },
-    { "+", 11 },
-    { ",", 10 },
-    { "-", 9 },
-    { "\\", 12 },
+    { " ", 9 },
+    { "+", 12 },
+    { ",", 11 },
+    { "-", 10 },
+    { "\\", 13 },
     /*---- enable ----*/
 };
 static const int i2kNum = sizeof(i2kArr) / sizeof(i2kArr[0]);
@@ -385,47 +386,49 @@ static int PatchScanner_Kind(void * scanner, CcsScanInput_t * input)
 	    CcsGetCh(input); goto case_1;
 	} else { kind = 2; break; }
     case 2:
-	if (input->ch == '\n') {
-	    CcsGetCh(input); goto case_3;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 3: case_3:
 	{ kind = 3; break; }
-    case 4:
-	{ kind = GetKWKind(input, pos, input->pos, 4); break; }
-    case 5: case_5:
-	if (input->ch == '-') {
-	    CcsGetCh(input); goto case_6;
+    case 3:
+	if (input->ch == '\n') {
+	    CcsGetCh(input); goto case_4;
 	} else { kind = Scanner_Info.noSym; break; }
+    case 4: case_4:
+	{ kind = 4; break; }
+    case 5:
+	{ kind = GetKWKind(input, pos, input->pos, 5); break; }
     case 6: case_6:
-	if (input->ch == ' ') {
+	if (input->ch == '-') {
 	    CcsGetCh(input); goto case_7;
 	} else { kind = Scanner_Info.noSym; break; }
     case 7: case_7:
-	{ kind = 5; break; }
-    case 8: case_8:
-	if (input->ch == '+') {
-	    CcsGetCh(input); goto case_9;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 9: case_9:
 	if (input->ch == ' ') {
+	    CcsGetCh(input); goto case_8;
+	} else { kind = Scanner_Info.noSym; break; }
+    case 8: case_8:
+	{ kind = 6; break; }
+    case 9: case_9:
+	if (input->ch == '+') {
 	    CcsGetCh(input); goto case_10;
 	} else { kind = Scanner_Info.noSym; break; }
     case 10: case_10:
-	{ kind = 6; break; }
+	if (input->ch == ' ') {
+	    CcsGetCh(input); goto case_11;
+	} else { kind = Scanner_Info.noSym; break; }
     case 11: case_11:
 	{ kind = 7; break; }
-    case 12:
-	if (input->ch == '-') {
-	    CcsGetCh(input); goto case_5;
-	} else { kind = GetKWKind(input, pos, input->pos, 4); break; }
+    case 12: case_12:
+	{ kind = 8; break; }
     case 13:
-	if (input->ch == '+') {
-	    CcsGetCh(input); goto case_8;
-	} else { kind = GetKWKind(input, pos, input->pos, 4); break; }
+	if (input->ch == '-') {
+	    CcsGetCh(input); goto case_6;
+	} else { kind = GetKWKind(input, pos, input->pos, 5); break; }
     case 14:
+	if (input->ch == '+') {
+	    CcsGetCh(input); goto case_9;
+	} else { kind = GetKWKind(input, pos, input->pos, 5); break; }
+    case 15:
 	if (input->ch == '@') {
-	    CcsGetCh(input); goto case_11;
-	} else { kind = GetKWKind(input, pos, input->pos, 4); break; }
+	    CcsGetCh(input); goto case_12;
+	} else { kind = GetKWKind(input, pos, input->pos, 5); break; }
     /*---- enable ----*/
     }
     return kind;
