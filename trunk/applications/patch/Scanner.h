@@ -23,6 +23,7 @@ EXTC_BEGIN
 #define PatchScanner_MAX_KEYWORD_LEN 1
 #define PatchScanner_CASE_SENSITIVE
 #define PatchScanner_KEYWORD_USED
+#define PatchScanner_InPiece 1
 /*---- enable ----*/
 
 typedef struct PatchScanner_s PatchScanner_t;
