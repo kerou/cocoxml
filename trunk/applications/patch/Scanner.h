@@ -45,6 +45,8 @@ CcsToken_t * PatchScanner_Scan(PatchScanner_t * self);
 void PatchScanner_TokenIncRef(PatchScanner_t * self, CcsToken_t * token);
 void PatchScanner_TokenDecRef(PatchScanner_t * self, CcsToken_t * token);
 
+const char *
+PatchScanner_GetString(PatchScanner_t * self, const CcsToken_t * begin, size_t len);
 CcsPosition_t *
 PatchScanner_GetPosition(PatchScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end);

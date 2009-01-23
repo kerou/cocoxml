@@ -137,6 +137,12 @@ PatchScanner_TokenDecRef(PatchScanner_t * self, CcsToken_t * token)
     else CcsScanInput_TokenDecRef(token->input, token);
 }
 
+const char *
+PatchScanner_GetString(PatchScanner_t * self, const CcsToken_t * begin, size_t len)
+{
+    return CcsScanInput_GetString(begin->input, begin, len);
+}
+
 CcsPosition_t *
 PatchScanner_GetPosition(PatchScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end)

@@ -10,6 +10,9 @@ END.
 SCHEME c Patch
 
 SECTION hIncludes
+#ifndef  COCO_PATCHDATA_H
+#include "PatchData.h"
+#endif
 END.
 
 SECTION cIncludes
@@ -20,12 +23,21 @@ COMPILER Patch
 MEMBERS
     int subStart, subNum;
     int addStart, addNum;
+    PatchFile_t * first, * last;
 
 CONSTRUCTOR
     self->subNum = 0;
     self->addNum = 0;
+    self->first = self->last = NULL;
 
 DESTRUCTOR
+    {
+        PatchFile_t * cur, * next;
+        for (cur = self->first; cur; cur = next) {
+	    next = cur->next;
+	    PatchFile_Destruct(cur);
+	}
+    }
 
 OPTIONS space
 
@@ -46,10 +58,19 @@ TOKENS
 
 PRODUCTIONS
 
-Patch = FilePatch { FilePatch }.
+Patch                        (. PatchFile_t * newFilePatch; .) =
+  FilePatch<&newFilePatch>   (. self->first = self->last = newFilePatch; .)
+  { FilePatch<&newFilePatch> (. self->last->next = newFilePatch; self->last = newFilePatch; .) }
+.
 
-FilePatch   (. CcsPosition_t * subfname, * addfname; .) =
-  { HeadLine } FileSubLine<&subfname> FileAddLine<&addfname> Piece { Piece }
+FilePatch<PatchFile_t ** filepatch>
+    (. CcsPosition_t * subfname, * addfname;
+       PatchPiece_t * newPiece; .)
+ = { HeadLine } FileSubLine<&subfname> FileAddLine<&addfname>
+    (. if (!(*filepatch = PatchFile(subfname->text, addfname->text)))
+          PatchParser_SemErrT(self, "Not enough memory"); .)
+   Piece<&newPiece> (. PatchFile_Append(*filepatch, newPiece); .)
+ { Piece<&newPiece> (. PatchFile_Append(*filepatch, newPiece); .) }
 .
 
 HeadLine = infoch { ANY } eol.
@@ -68,22 +89,43 @@ FileAddLine<CcsPosition_t ** addfname> (. CcsToken_t * beg; .) =
   [ tab { ANY }] eol
 .
 
-Piece = PieceTitle PieceLine { PieceLine }
+Piece<PatchPiece_t ** piece> (. int subStart, subNum, addStart, addNum;
+		      	     	CcsBool_t subLastEol, addLastEol;
+				PatchLine_t * firstLine, * lastLine, * newLine;
+				subLastEol = addLastEol = TRUE;
+				firstLine = lastLine = NULL; .) =
+  PieceTitle<&subStart, &subNum, &addStart, &addNum>
+  PieceLine<&newLine, &subLastEol, &addLastEol>
+    (. if (newLine) {
+	   if (lastLine) { lastLine->next = newLine; lastLine = newLine; } else
+	   { firstLine = lastLine = newLine; }
+       } .)
+  { PieceLine<&newLine, &subLastEol, &addLastEol>
+    (. if (newLine) {
+	   if (lastLine) { lastLine->next = newLine; lastLine = newLine; } else
+	   { firstLine = lastLine = newLine; }
+       } .)
+  }
     (. if (self->subNum != 0 || self->addNum != 0)
-           PatchParser_SemErrT(self, "Patch format corrupt."); .)
+           PatchParser_SemErrT(self, "Patch format corrupt.");
+       *piece = PatchPiece(subStart, subNum, addStart, addNum,
+       	      		   firstLine, subLastEol, addLastEol); .)
 .
 
-PieceTitle =
-  "@@" ' ' { ' ' } '-' number     (. self->subStart = atoi(self->t->val); .)
-  [',' number                     (. self->subNum = atoi(self->t->val); .)
-  ] ' ' { ' ' } '+' number        (. self->addStart = atoi(self->t->val); .)
-  [',' number                     (. self->addNum = atoi(self->t->val); .)
+PieceTitle<int * subStart, int * subNum, int * addStart, int * addNum> =
+  "@@" ' ' { ' ' } '-' number     (. self->subStart = *subStart = atoi(self->t->val); .)
+  [',' number                     (. self->subNum = *subNum = atoi(self->t->val); .)
+  ] ' ' { ' ' } '+' number        (. self->addStart = *addStart = atoi(self->t->val); .)
+  [',' number                     (. self->addNum = *addNum = atoi(self->t->val); .)
   ] ' ' { ' ' } "@@" { ANY } eol  (. PatchScanner_InsertExpect(&self->scanner, PatchScanner_InPiece,
       	    	       	      	 			       NULL, 0, &self->la); .)
 .
 
-PieceLine (. char op; .) =
-  InPiece ('+' | '-' | ' ' | '\\')   (. op = *self->t->val; .)
+PieceLine<PatchLine_t ** line, CcsBool_t * subLineEol, CcsBool_t * addLineEol>
+    (. char op; CcsToken_t * beginToken; .) =
+  InPiece ('+' | '-' | ' ' | '\\')
+    (. op = *self->t->val;
+       PatchScanner_TokenIncRef(&self->scanner, beginToken = self->t); .)
   { ANY } eol
     (. switch (op) {
        case '+': --self->addNum; break;
@@ -91,8 +133,10 @@ PieceLine (. char op; .) =
        case ' ': --self->addNum; --self->subNum; break;
        case '\\': break;
        }
+       *line = op != '\\' ? PatchLine(&self->scanner, beginToken, self->t) : NULL;
        if (self->subNum < 0 || self->addNum < 0)
            PatchParser_SemErrT(self, "Patch format corrupt.");
+       PatchScanner_TokenDecRef(&self->scanner, beginToken);
        if (self->subNum > 0 || self->addNum > 0)
            PatchScanner_InsertExpect(&self->scanner, PatchScanner_InPiece,
 	   			     NULL, 0, &self->la); .)

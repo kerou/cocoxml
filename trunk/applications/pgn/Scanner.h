@@ -56,6 +56,8 @@ CcsToken_t * PgnScanner_Scan(PgnScanner_t * self);
 void PgnScanner_TokenIncRef(PgnScanner_t * self, CcsToken_t * token);
 void PgnScanner_TokenDecRef(PgnScanner_t * self, CcsToken_t * token);
 
+const char *
+PgnScanner_GetString(PgnScanner_t * self, const CcsToken_t * begin, size_t len);
 CcsPosition_t *
 PgnScanner_GetPosition(PgnScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end);

@@ -105,6 +105,11 @@ void CcsScanInput_TokenIncRef(CcsScanInput_t * self, CcsToken_t * token);
  * CcsScanInput_TokenDecRef. */
 void CcsScanInput_TokenDecRef(CcsScanInput_t * self, CcsToken_t * token);
 
+/* Get original text for the provided tokens. This is a shortcut of
+ * CcsScanInput_GetPosition which can avoid needless memory duplication. */
+const char *
+CcsScanInput_GetString(CcsScanInput_t * self, const CcsToken_t * begin,
+		       size_t len);
 /* Get original text between the provided tokens. Both of these tokens
  * must be located in busyList. */
 CcsPosition_t *
