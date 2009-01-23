@@ -274,6 +274,14 @@ CcsScanInput_TokenDecRef(CcsScanInput_t * self, CcsToken_t * token)
     CcsScanInput_AdjustBusy(self);
 }
 
+const char *
+CcsScanInput_GetString(CcsScanInput_t * self, const CcsToken_t * begin,
+		       size_t len)
+{
+    CcsAssert(self == begin->input);
+    return CcsBuffer_GetString(&self->buffer, begin->pos, len);
+}
+
 CcsPosition_t *
 CcsScanInput_GetPosition(CcsScanInput_t * self, const CcsToken_t * begin,
 			 const CcsToken_t * end)

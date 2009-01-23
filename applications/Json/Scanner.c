@@ -137,6 +137,12 @@ JsonScanner_TokenDecRef(JsonScanner_t * self, CcsToken_t * token)
     else CcsScanInput_TokenDecRef(token->input, token);
 }
 
+const char *
+JsonScanner_GetString(JsonScanner_t * self, const CcsToken_t * begin, size_t len)
+{
+    return CcsScanInput_GetString(begin->input, begin, len);
+}
+
 CcsPosition_t *
 JsonScanner_GetPosition(JsonScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end)

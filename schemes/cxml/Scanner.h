@@ -66,6 +66,8 @@ CcsToken_t * CcsXmlScanner_Scan(CcsXmlScanner_t * self);
 void CcsXmlScanner_TokenIncRef(CcsXmlScanner_t * self, CcsToken_t * token);
 void CcsXmlScanner_TokenDecRef(CcsXmlScanner_t * self, CcsToken_t * token);
 
+const char *
+CcsXmlScanner_GetString(CcsXmlScanner_t * self, const CcsToken_t * begin, size_t len);
 CcsPosition_t *
 CcsXmlScanner_GetPosition(CcsXmlScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end);
@@ -87,6 +89,9 @@ CcsXmlScanner_Include(CcsXmlScanner_t * self, FILE * fp, CcsToken_t ** token);
 CcsBool_t
 CcsXmlScanner_IncludeByName(CcsXmlScanner_t * self, const CcsIncPathList_t * list,
 			 const char * infn, CcsToken_t ** token);
+CcsBool_t
+CcsXmlScanner_InsertExpect(CcsXmlScanner_t * self, int kind, const char * val,
+			size_t vallen, CcsToken_t ** token);
 
 EXTC_END
 

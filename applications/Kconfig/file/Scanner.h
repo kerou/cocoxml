@@ -43,6 +43,8 @@ CcsToken_t * CfScanner_Scan(CfScanner_t * self);
 void CfScanner_TokenIncRef(CfScanner_t * self, CcsToken_t * token);
 void CfScanner_TokenDecRef(CfScanner_t * self, CcsToken_t * token);
 
+const char *
+CfScanner_GetString(CfScanner_t * self, const CcsToken_t * begin, size_t len);
 CcsPosition_t *
 CfScanner_GetPosition(CfScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end);

@@ -18,6 +18,9 @@
 #endif
 
 /*---- hIncludes ----*/
+#ifndef  COCO_PATCHDATA_H
+#include "PatchData.h"
+#endif
 /*---- enable ----*/
 
 EXTC_BEGIN
@@ -35,6 +38,7 @@ struct PatchParser_s {
     /*---- members ----*/
     int subStart, subNum;
     int addStart, addNum;
+    PatchFile_t * first, * last;
     /*---- enable ----*/
 };
 

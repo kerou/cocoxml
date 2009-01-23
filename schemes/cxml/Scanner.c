@@ -159,6 +159,12 @@ CcsXmlScanner_TokenDecRef(CcsXmlScanner_t * self, CcsToken_t * token)
     else CcsScanInput_TokenDecRef(token->input, token);
 }
 
+const char *
+CcsXmlScanner_GetString(CcsXmlScanner_t * self, const CcsToken_t * begin, size_t len)
+{
+    return CcsScanInput_GetString(begin->input, begin, len);
+}
+
 CcsPosition_t *
 CcsXmlScanner_GetPosition(CcsXmlScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end)
@@ -232,6 +238,17 @@ CcsXmlScanner_IncludeByName(CcsXmlScanner_t * self, const CcsIncPathList_t * lis
     CcsGetCh(input);
     *token = CcsScanInput_Scan(self->cur);
     return TRUE;
+}
+
+CcsBool_t
+CcsXmlScanner_InsertExpect(CcsXmlScanner_t * self, int kind, const char * val,
+			size_t vallen, CcsToken_t ** token)
+{
+    CcsBool_t ret;
+    CcsScanInput_WithDraw(self->cur, *token);
+    ret = CcsScanInput_Prepend(self->cur, kind, val, vallen);
+    *token = CcsScanInput_Scan(self->cur);
+    return ret;
 }
 
 /* All the following things are used by CcsScanInput_NextToken. */

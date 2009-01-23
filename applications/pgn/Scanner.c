@@ -150,6 +150,12 @@ PgnScanner_TokenDecRef(PgnScanner_t * self, CcsToken_t * token)
     else CcsScanInput_TokenDecRef(token->input, token);
 }
 
+const char *
+PgnScanner_GetString(PgnScanner_t * self, const CcsToken_t * begin, size_t len)
+{
+    return CcsScanInput_GetString(begin->input, begin, len);
+}
+
 CcsPosition_t *
 PgnScanner_GetPosition(PgnScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end)

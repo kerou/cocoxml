@@ -70,13 +70,13 @@ PatchParser_WeakSeparator(PatchParser_t * self, int n, int syFol, int repFol)
 
 /*---- ProductionsHeader ----*/
 static void PatchParser_Patch(PatchParser_t * self);
-static void PatchParser_FilePatch(PatchParser_t * self);
+static void PatchParser_FilePatch(PatchParser_t * self, PatchFile_t ** filepatch);
 static void PatchParser_HeadLine(PatchParser_t * self);
 static void PatchParser_FileSubLine(PatchParser_t * self, CcsPosition_t ** subfname);
 static void PatchParser_FileAddLine(PatchParser_t * self, CcsPosition_t ** addfname);
-static void PatchParser_Piece(PatchParser_t * self);
-static void PatchParser_PieceTitle(PatchParser_t * self);
-static void PatchParser_PieceLine(PatchParser_t * self);
+static void PatchParser_Piece(PatchParser_t * self, PatchPiece_t ** piece);
+static void PatchParser_PieceTitle(PatchParser_t * self, int * subStart, int * subNum, int * addStart, int * addNum);
+static void PatchParser_PieceLine(PatchParser_t * self, PatchLine_t ** line, CcsBool_t * subLineEol, CcsBool_t * addLineEol);
 /*---- enable ----*/
 
 void
@@ -118,6 +118,7 @@ PatchParser_Init(PatchParser_t * self)
     self->maxT = 14;
     self->subNum = 0;
     self->addNum = 0;
+    self->first = self->last = NULL;
     /*---- enable ----*/
     return TRUE;
 }
@@ -157,7 +158,13 @@ void
 PatchParser_Destruct(PatchParser_t * self)
 {
     /*---- destructor ----*/
-    
+    {
+	PatchFile_t * cur, * next;
+	for (cur = self->first; cur; cur = next) {
+	    next = cur->next;
+	    PatchFile_Destruct(cur);
+	}
+    }
     /*---- enable ----*/
     if (self->la) PatchScanner_TokenDecRef(&self->scanner, self->la);
     if (self->t) PatchScanner_TokenDecRef(&self->scanner, self->t);
@@ -169,24 +176,32 @@ PatchParser_Destruct(PatchParser_t * self)
 static void
 PatchParser_Patch(PatchParser_t * self)
 {
-    PatchParser_FilePatch(self);
+    PatchFile_t * newFilePatch; 
+    PatchParser_FilePatch(self, &newFilePatch);
+    self->first = self->last = newFilePatch; 
     while (self->la->kind == 5 || self->la->kind == 6) {
-	PatchParser_FilePatch(self);
+	PatchParser_FilePatch(self, &newFilePatch);
+	self->last->next = newFilePatch; self->last = newFilePatch; 
     }
 }
 
 static void
-PatchParser_FilePatch(PatchParser_t * self)
+PatchParser_FilePatch(PatchParser_t * self, PatchFile_t ** filepatch)
 {
-    CcsPosition_t * subfname, * addfname; 
+    CcsPosition_t * subfname, * addfname;
+    PatchPiece_t * newPiece; 
     while (self->la->kind == 5) {
 	PatchParser_HeadLine(self);
     }
     PatchParser_FileSubLine(self, &subfname);
     PatchParser_FileAddLine(self, &addfname);
-    PatchParser_Piece(self);
+    if (!(*filepatch = PatchFile(subfname->text, addfname->text)))
+       PatchParser_SemErrT(self, "Not enough memory"); 
+    PatchParser_Piece(self, &newPiece);
+    PatchFile_Append(*filepatch, newPiece); 
     while (self->la->kind == 8) {
-	PatchParser_Piece(self);
+	PatchParser_Piece(self, &newPiece);
+	PatchFile_Append(*filepatch, newPiece); 
     }
 }
 
@@ -241,19 +256,34 @@ PatchParser_FileAddLine(PatchParser_t * self, CcsPosition_t ** addfname)
 }
 
 static void
-PatchParser_Piece(PatchParser_t * self)
+PatchParser_Piece(PatchParser_t * self, PatchPiece_t ** piece)
 {
-    PatchParser_PieceTitle(self);
-    PatchParser_PieceLine(self);
+    int subStart, subNum, addStart, addNum;
+    CcsBool_t subLastEol, addLastEol;
+    PatchLine_t * firstLine, * lastLine, * newLine;
+    subLastEol = addLastEol = TRUE;
+    firstLine = lastLine = NULL; 
+    PatchParser_PieceTitle(self, &subStart, &subNum, &addStart, &addNum);
+    PatchParser_PieceLine(self, &newLine, &subLastEol, &addLastEol);
+    if (newLine) {
+	if (lastLine) { lastLine->next = newLine; lastLine = newLine; } else
+	{ firstLine = lastLine = newLine; }
+    } 
     while (self->la->kind == 1) {
-	PatchParser_PieceLine(self);
+	PatchParser_PieceLine(self, &newLine, &subLastEol, &addLastEol);
+	if (newLine) {
+	    if (lastLine) { lastLine->next = newLine; lastLine = newLine; } else
+	    { firstLine = lastLine = newLine; }
+	} 
     }
     if (self->subNum != 0 || self->addNum != 0)
-	PatchParser_SemErrT(self, "Patch format corrupt."); 
+	PatchParser_SemErrT(self, "Patch format corrupt.");
+    *piece = PatchPiece(subStart, subNum, addStart, addNum,
+			firstLine, subLastEol, addLastEol); 
 }
 
 static void
-PatchParser_PieceTitle(PatchParser_t * self)
+PatchParser_PieceTitle(PatchParser_t * self, int * subStart, int * subNum, int * addStart, int * addNum)
 {
     PatchParser_Expect(self, 8);
     PatchParser_Expect(self, 9);
@@ -262,11 +292,11 @@ PatchParser_PieceTitle(PatchParser_t * self)
     }
     PatchParser_Expect(self, 10);
     PatchParser_Expect(self, 2);
-    self->subStart = atoi(self->t->val); 
+    self->subStart = *subStart = atoi(self->t->val); 
     if (self->la->kind == 11) {
 	PatchParser_Get(self);
 	PatchParser_Expect(self, 2);
-	self->subNum = atoi(self->t->val); 
+	self->subNum = *subNum = atoi(self->t->val); 
     }
     PatchParser_Expect(self, 9);
     while (self->la->kind == 9) {
@@ -274,11 +304,11 @@ PatchParser_PieceTitle(PatchParser_t * self)
     }
     PatchParser_Expect(self, 12);
     PatchParser_Expect(self, 2);
-    self->addStart = atoi(self->t->val); 
+    self->addStart = *addStart = atoi(self->t->val); 
     if (self->la->kind == 11) {
 	PatchParser_Get(self);
 	PatchParser_Expect(self, 2);
-	self->addNum = atoi(self->t->val); 
+	self->addNum = *addNum = atoi(self->t->val); 
     }
     PatchParser_Expect(self, 9);
     while (self->la->kind == 9) {
@@ -294,9 +324,9 @@ PatchParser_PieceTitle(PatchParser_t * self)
 }
 
 static void
-PatchParser_PieceLine(PatchParser_t * self)
+PatchParser_PieceLine(PatchParser_t * self, PatchLine_t ** line, CcsBool_t * subLineEol, CcsBool_t * addLineEol)
 {
-    char op; 
+    char op; CcsToken_t * beginToken; 
     PatchParser_Expect(self, 1);
     if (self->la->kind == 12) {
 	PatchParser_Get(self);
@@ -307,7 +337,8 @@ PatchParser_PieceLine(PatchParser_t * self)
     } else if (self->la->kind == 13) {
 	PatchParser_Get(self);
     } else PatchParser_SynErr(self, 15);
-    op = *self->t->val; 
+    op = *self->t->val;
+    PatchScanner_TokenIncRef(&self->scanner, beginToken = self->t); 
     while (PatchParser_StartOf(self, 1)) {
 	PatchParser_Get(self);
     }
@@ -318,8 +349,10 @@ PatchParser_PieceLine(PatchParser_t * self)
     case ' ': --self->addNum; --self->subNum; break;
     case '\\': break;
     }
+    *line = op != '\\' ? PatchLine(&self->scanner, beginToken, self->t) : NULL;
     if (self->subNum < 0 || self->addNum < 0)
 	PatchParser_SemErrT(self, "Patch format corrupt.");
+    PatchScanner_TokenDecRef(&self->scanner, beginToken);
     if (self->subNum > 0 || self->addNum > 0)
 	PatchScanner_InsertExpect(&self->scanner, PatchScanner_InPiece,
 				  NULL, 0, &self->la); 
