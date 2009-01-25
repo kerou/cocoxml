@@ -38,6 +38,17 @@ PatchLine_Destruct(PatchLine_t * self)
     CcsFree(self);
 }
 
+void
+PatchLineList_Destruct(PatchLine_t * self)
+{
+    PatchLine_t * next;
+    while (self) {
+	next = self->next;
+	PatchLine_Destruct(self);
+	self = next;
+    }
+}
+
 PatchPiece_t *
 PatchPiece(int subStart, int subNum, int addStart, int addNum,
 	   PatchLine_t * lines, CcsBool_t subLastEol, CcsBool_t addLastEol)
