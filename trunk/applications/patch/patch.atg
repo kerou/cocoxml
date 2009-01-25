@@ -60,7 +60,13 @@ PRODUCTIONS
 
 Patch                        (. PatchFile_t * newFilePatch; .) =
   FilePatch<&newFilePatch>   (. self->first = self->last = newFilePatch; .)
-  { FilePatch<&newFilePatch> (. self->last->next = newFilePatch; self->last = newFilePatch; .) }
+  { FilePatch<&newFilePatch> (. if (newFilePatch) {
+    			     	    if (self->last) {
+				        self->last->next = newFilePatch; self->last = newFilePatch;
+				    } else {
+				        self->first = self->last = newFilePatch;
+				    }
+				} .) }
 .
 
 FilePatch<PatchFile_t ** filepatch>
@@ -131,7 +137,10 @@ PieceLine<PatchLine_t ** line, CcsBool_t * subLineEol, CcsBool_t * addLineEol>
        case '+': --self->addNum; break;
        case '-': --self->subNum; break;
        case ' ': --self->addNum; --self->subNum; break;
-       case '\\': break;
+       case '\\':
+           if (self->subNum > 0) PatchParser_SemErrT(self, "Patch format corrupt.");
+           else  *subLineEol = TRUE;
+	   break;
        }
        *line = op != '\\' ? PatchLine(&self->scanner, beginToken, self->t) : NULL;
        if (self->subNum < 0 || self->addNum < 0)
@@ -139,7 +148,9 @@ PieceLine<PatchLine_t ** line, CcsBool_t * subLineEol, CcsBool_t * addLineEol>
        PatchScanner_TokenDecRef(&self->scanner, beginToken);
        if (self->subNum > 0 || self->addNum > 0)
            PatchScanner_InsertExpect(&self->scanner, PatchScanner_InPiece,
-	   			     NULL, 0, &self->la); .)
+				     NULL, 0, &self->la); .)
+  | "\\ No newline at end of file" { ' ' } eol
+    (. *addLineEol = TRUE; .)
 .
 
 END Patch.
