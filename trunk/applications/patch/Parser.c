@@ -202,7 +202,9 @@ PatchParser_FilePatch(PatchParser_t * self, PatchFile_t ** filepatch)
     PatchParser_FileSubLine(self, &subfname);
     PatchParser_FileAddLine(self, &addfname);
     if (!(*filepatch = PatchFile(subfname->text, addfname->text)))
-       PatchParser_SemErrT(self, "Not enough memory"); 
+       PatchParser_SemErrT(self, "Not enough memory");
+    CcsPosition_Destruct(subfname);
+    CcsPosition_Destruct(addfname); 
     PatchParser_Piece(self, &newPiece);
     PatchFile_Append(*filepatch, newPiece); 
     while (self->la->kind == 8) {
@@ -285,7 +287,8 @@ PatchParser_Piece(PatchParser_t * self, PatchPiece_t ** piece)
     if (self->subNum != 0 || self->addNum != 0)
 	PatchParser_SemErrT(self, "Patch format corrupt.");
     *piece = PatchPiece(subStart, subNum, addStart, addNum,
-			firstLine, subLastEol, addLastEol); 
+			firstLine, subLastEol, addLastEol);
+    PatchLineList_Destruct(firstLine); 
 }
 
 static void

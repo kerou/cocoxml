@@ -60,6 +60,7 @@ PatchLine_t *
 PatchLine(PatchScanner_t * scanner, CcsToken_t * beginToken,
 	  CcsToken_t * endToken);
 void PatchLine_Destruct(PatchLine_t * self);
+void PatchLineList_Destruct(PatchLine_t * self);
 
 PatchPiece_t *
 PatchPiece(int subStart, int subNum, int addStart, int addNum,

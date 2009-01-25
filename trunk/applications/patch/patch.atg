@@ -74,7 +74,9 @@ FilePatch<PatchFile_t ** filepatch>
        PatchPiece_t * newPiece; .)
  = { HeadLine } FileSubLine<&subfname> FileAddLine<&addfname>
     (. if (!(*filepatch = PatchFile(subfname->text, addfname->text)))
-          PatchParser_SemErrT(self, "Not enough memory"); .)
+          PatchParser_SemErrT(self, "Not enough memory");
+       CcsPosition_Destruct(subfname);
+       CcsPosition_Destruct(addfname); .)
    Piece<&newPiece> (. PatchFile_Append(*filepatch, newPiece); .)
  { Piece<&newPiece> (. PatchFile_Append(*filepatch, newPiece); .) }
 .
@@ -115,7 +117,8 @@ Piece<PatchPiece_t ** piece> (. int subStart, subNum, addStart, addNum;
     (. if (self->subNum != 0 || self->addNum != 0)
            PatchParser_SemErrT(self, "Patch format corrupt.");
        *piece = PatchPiece(subStart, subNum, addStart, addNum,
-       	      		   firstLine, subLastEol, addLastEol); .)
+       	      		   firstLine, subLastEol, addLastEol);
+       PatchLineList_Destruct(firstLine); .)
 .
 
 PieceTitle<int * subStart, int * subNum, int * addStart, int * addNum> =
