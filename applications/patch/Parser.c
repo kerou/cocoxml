@@ -115,7 +115,7 @@ PatchParser_Init(PatchParser_t * self)
 {
     self->t = self->la = NULL;
     /*---- constructor ----*/
-    self->maxT = 14;
+    self->maxT = 15;
     self->subNum = 0;
     self->addNum = 0;
     self->first = self->last = NULL;
@@ -181,7 +181,13 @@ PatchParser_Patch(PatchParser_t * self)
     self->first = self->last = newFilePatch; 
     while (self->la->kind == 5 || self->la->kind == 6) {
 	PatchParser_FilePatch(self, &newFilePatch);
-	self->last->next = newFilePatch; self->last = newFilePatch; 
+	if (newFilePatch) {
+	    if (self->last) {
+		self->last->next = newFilePatch; self->last = newFilePatch;
+	    } else {
+		self->first = self->last = newFilePatch;
+	    }
+	} 
     }
 }
 
@@ -269,7 +275,7 @@ PatchParser_Piece(PatchParser_t * self, PatchPiece_t ** piece)
 	if (lastLine) { lastLine->next = newLine; lastLine = newLine; } else
 	{ firstLine = lastLine = newLine; }
     } 
-    while (self->la->kind == 1) {
+    while (self->la->kind == 1 || self->la->kind == 14) {
 	PatchParser_PieceLine(self, &newLine, &subLastEol, &addLastEol);
 	if (newLine) {
 	    if (lastLine) { lastLine->next = newLine; lastLine = newLine; } else
@@ -327,35 +333,47 @@ static void
 PatchParser_PieceLine(PatchParser_t * self, PatchLine_t ** line, CcsBool_t * subLineEol, CcsBool_t * addLineEol)
 {
     char op; CcsToken_t * beginToken; 
-    PatchParser_Expect(self, 1);
-    if (self->la->kind == 12) {
+    if (self->la->kind == 1) {
 	PatchParser_Get(self);
-    } else if (self->la->kind == 10) {
+	if (self->la->kind == 12) {
+	    PatchParser_Get(self);
+	} else if (self->la->kind == 10) {
+	    PatchParser_Get(self);
+	} else if (self->la->kind == 9) {
+	    PatchParser_Get(self);
+	} else if (self->la->kind == 13) {
+	    PatchParser_Get(self);
+	} else PatchParser_SynErr(self, 16);
+	op = *self->t->val;
+	PatchScanner_TokenIncRef(&self->scanner, beginToken = self->t); 
+	while (PatchParser_StartOf(self, 1)) {
+	    PatchParser_Get(self);
+	}
+	PatchParser_Expect(self, 4);
+	switch (op) {
+	case '+': --self->addNum; break;
+	case '-': --self->subNum; break;
+	case ' ': --self->addNum; --self->subNum; break;
+	case '\\':
+	    if (self->subNum > 0) PatchParser_SemErrT(self, "Patch format corrupt.");
+	    else  *subLineEol = TRUE;
+	    break;
+	}
+	*line = op != '\\' ? PatchLine(&self->scanner, beginToken, self->t) : NULL;
+	if (self->subNum < 0 || self->addNum < 0)
+	    PatchParser_SemErrT(self, "Patch format corrupt.");
+	PatchScanner_TokenDecRef(&self->scanner, beginToken);
+	if (self->subNum > 0 || self->addNum > 0)
+	    PatchScanner_InsertExpect(&self->scanner, PatchScanner_InPiece,
+				      NULL, 0, &self->la); 
+    } else if (self->la->kind == 14) {
 	PatchParser_Get(self);
-    } else if (self->la->kind == 9) {
-	PatchParser_Get(self);
-    } else if (self->la->kind == 13) {
-	PatchParser_Get(self);
-    } else PatchParser_SynErr(self, 15);
-    op = *self->t->val;
-    PatchScanner_TokenIncRef(&self->scanner, beginToken = self->t); 
-    while (PatchParser_StartOf(self, 1)) {
-	PatchParser_Get(self);
-    }
-    PatchParser_Expect(self, 4);
-    switch (op) {
-    case '+': --self->addNum; break;
-    case '-': --self->subNum; break;
-    case ' ': --self->addNum; --self->subNum; break;
-    case '\\': break;
-    }
-    *line = op != '\\' ? PatchLine(&self->scanner, beginToken, self->t) : NULL;
-    if (self->subNum < 0 || self->addNum < 0)
-	PatchParser_SemErrT(self, "Patch format corrupt.");
-    PatchScanner_TokenDecRef(&self->scanner, beginToken);
-    if (self->subNum > 0 || self->addNum > 0)
-	PatchScanner_InsertExpect(&self->scanner, PatchScanner_InPiece,
-				  NULL, 0, &self->la); 
+	while (self->la->kind == 9) {
+	    PatchParser_Get(self);
+	}
+	PatchParser_Expect(self, 4);
+	*addLineEol = TRUE; 
+    } else PatchParser_SynErr(self, 17);
 }
 
 /*---- enable ----*/
@@ -380,8 +398,10 @@ PatchParser_SynErr(PatchParser_t * self, int n)
     case 11: s = "\"" "," "\" expected"; break;
     case 12: s = "\"" "+" "\" expected"; break;
     case 13: s = "\"" "\\" "\" expected"; break;
-    case 14: s = "\"" "???" "\" expected"; break;
-    case 15: s = "this symbol not expected in \"" "PieceLine" "\""; break;
+    case 14: s = "\"" "\\ No newline at end of file" "\" expected"; break;
+    case 15: s = "\"" "???" "\" expected"; break;
+    case 16: s = "this symbol not expected in \"" "PieceLine" "\""; break;
+    case 17: s = "this symbol not expected in \"" "PieceLine" "\""; break;
     /*---- enable ----*/
     default:
 	snprintf(format, sizeof(format), "error %d", n);
@@ -393,9 +413,9 @@ PatchParser_SynErr(PatchParser_t * self, int n)
 
 static const char * set[] = {
     /*---- InitSet ----*/
-    /*    5    0     */
-    "*...............", /* 0 */
-    ".***.**********.", /* 1 */
-    ".**..**********."  /* 2 */
+    /*    5    0    5 */
+    "*................", /* 0 */
+    ".***.***********.", /* 1 */
+    ".**..***********."  /* 2 */
     /*---- enable ----*/
 };

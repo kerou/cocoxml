@@ -60,7 +60,7 @@ PatchPiece(int subStart, int subNum, int addStart, int addNum,
     self->subLastEol = subLastEol;
     self->addLastEol = addLastEol;
     for (curline = lines; curline; curline = curline->next) {
-	len = curline->endToken - curline->beginToken;
+	len = curline->endToken->pos - curline->beginToken->pos;
 	cursrc = PatchScanner_GetString(curline->scanner, curline->beginToken, len);
 	memcpy(cur, cursrc, len);
 	cur += len;
