@@ -273,12 +273,17 @@ Option<KcProperty_t ** prop>     (. char * envname; .) =
   eol
 .
 
-Help<CcsPosition_t ** pos>	(. CcsToken_t * beg; .) =
-  ("help" | "--help---" | "---help---" | "--- help ---") eol { eol } IndentIn
-  	    		  	(. KcScanner_IndentLimit(&self->scanner, self->t);
-  	    		      	   KcScanner_TokenIncRef(&self->scanner, beg = self->la); .)
-  { ANY } IndentOut             (. *pos = CcsPosition_Link(*pos, KcScanner_GetPosition(&self->scanner, beg, self->t));
-				   KcScanner_TokenDecRef(&self->scanner, beg); .)
+Help<CcsPosition_t ** pos>	(. CcsBool_t IndentIn_ornot; CcsToken_t * beg; .) =
+  ( "help" | "--help---" | "---help---" | "--- help ---" ) eol { eol }
+  ANY                           (. IndentIn_ornot = (self->t->kind == KcScanner_INDENT_IN); 
+      				   KcScanner_IndentLimit(&self->scanner, self->t);
+  	    		      	   KcScanner_TokenIncRef(&self->scanner,
+							 beg = IndentIn_ornot ? self->la : self->t); .)
+  { ANY }   IndentOut           (. *pos = CcsPosition_Link(*pos, KcScanner_GetPosition(&self->scanner, beg, self->t));
+				   KcScanner_TokenDecRef(&self->scanner, beg);
+				   if (!IndentIn_ornot)
+				       KcScanner_InsertExpect(&self->scanner, KcScanner_INDENT_OUT,
+				       			      NULL, 0, &self->la); .)
 .
 
 Expr<KcExpr_t ** expr> =            (. KcExpr_t * expr0; .)

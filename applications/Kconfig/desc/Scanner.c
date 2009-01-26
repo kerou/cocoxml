@@ -184,7 +184,7 @@ void
 KcScanner_IndentLimit(KcScanner_t * self, const CcsToken_t * indentIn)
 {
     CcsAssert(indentIn->input == self->cur);
-    CcsAssert(indentIn->kind == KcScanner_INDENT_IN);
+    /*CcsAssert(indentIn->kind == KcScanner_INDENT_IN);*/
     CcsIndent_SetLimit((CcsIndent_t *)(self->cur + 1), indentIn);
 }
 #endif
