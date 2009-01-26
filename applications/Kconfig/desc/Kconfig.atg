@@ -47,12 +47,14 @@ CHARACTERS
     cr        = '\r'.
     lf        = '\n'.
     tab       = '\t'.
-    stringCh  = ANY - '"' - '\\' - cr - lf.
+    string0Ch = ANY - '"' - '\\' - cr - lf.
+    string1Ch = ANY - '\'' - '\\' - cr - lf.
     printable = '\x20' .. '\x7e'.
 
 TOKENS
     ident     = ( letter | digit ) { letter | digit }.
-    stringT   = '"' { stringCh | '\\' printable } '"'.
+    stringT   = ( '"' { string0Ch | '\\' printable } '"' |
+    	      	  '\'' { string1Ch | '\\' printable } '\'' ).
     eol       = (cr lf) | lf.
 
 COMMENTS FROM "#" TO lf
@@ -126,8 +128,11 @@ ChoiceDecl<KcSymbol_t ** choice>
        KcProperty_t * props = NULL;
        CcsPosition_t * helpmsg = NULL;
        KcSymbolList_t * symlist = NULL; .) =
-  "choice" eol [ IndentIn { Property<&symtype, &props, &helpmsg> } { eol } IndentOut ]
-  SymbolListDecl<&symlist> "endchoice" eol
+  "choice" eol
+  ( IndentIn { Property<&symtype, &props, &helpmsg> }
+    SymbolListDecl<&symlist> IndentOut SymbolListDecl<&symlist>
+  | SymbolListDecl<&symlist> )
+  "endchoice" eol
     (. if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, choice,
        	  	     				KcstChoice, props, helpmsg))) {
 	   KcParser_SemErrT(self, "Append 'choice' failed: %s.", errmsg);
@@ -145,8 +150,8 @@ CommentDecl<KcSymbol_t ** comment>
        KcSymbolType_t symtype;
        KcProperty_t * props = NULL;
        CcsPosition_t * helpmsg = NULL; .) =
-  "comment" stringT  (. _comment_ = CcsEscape(self->t->val); .)
-  { Property<&symtype, &props, &helpmsg> } eol
+  "comment" stringT  (. _comment_ = CcsEscape(self->t->val); .) eol
+  [ IndentIn { Property<&symtype, &props, &helpmsg> } { eol } IndentOut ]
     (. if ((errmsg = KcSymbolTable_AddNoNSymbol(&self->symtab, comment,
   	    	      	 	    		KcstComment, props, helpmsg))) {
 	   KcParser_SemErrT(self, "Append 'comment' failed: %s.", errmsg);
@@ -264,7 +269,8 @@ Option<KcProperty_t ** prop>     (. char * envname; .) =
 .
 
 Help<CcsPosition_t ** pos>              (. CcsToken_t * beg; .) =
-  ("help" | "---help---") eol IndentIn  (. KcScanner_IndentLimit(&self->scanner, self->t);
+  ("help" | "--help---" | "---help---") eol IndentIn
+  	    		  		(. KcScanner_IndentLimit(&self->scanner, self->t);
   	    		      		   KcScanner_TokenIncRef(&self->scanner, beg = self->la); .)
   { ANY } IndentOut                     (. *pos = KcScanner_GetPosition(&self->scanner, beg, self->t);
 					   KcScanner_TokenDecRef(&self->scanner, beg); .)
