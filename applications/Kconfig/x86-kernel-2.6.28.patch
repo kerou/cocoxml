@@ -31,36 +31,8 @@
  config PROC_SYSCTL
  	bool "Sysctl support (/proc/sys)" if EMBEDDED
 --- linux-2.6.28-gentoo/fs/Kconfig.orig	2009-01-26 14:03:01.000000000 +0800
-+++ linux-2.6.28-gentoo/fs/Kconfig	2009-01-26 14:05:18.000000000 +0800
-@@ -11,7 +11,6 @@
- source "fs/ext4/Kconfig"
- 
- config FS_XIP
--# execute in place
- 	bool
- 	depends on EXT2_FS_XIP
- 	default y
-@@ -20,7 +19,6 @@
- source "fs/jbd2/Kconfig"
- 
- config FS_MBCACHE
--# Meta block cache for Extended Attributes (ext2/ext3/ext4)
- 	tristate
- 	default y if EXT2_FS=y && EXT2_FS_XATTR
- 	default y if EXT3_FS=y && EXT3_FS_XATTR
-@@ -164,11 +162,6 @@
- 	  to be made available to the user in the /proc/fs/jfs/ directory.
- 
- config FS_POSIX_ACL
--# Posix ACL utility routines (for now, only ext2/ext3/jfs/reiserfs/nfs4)
--#
--# NOTE: you can implement Posix ACLs without these helpers (XFS does).
--# 	Never use this symbol for ifdefs.
--#
- 	bool
- 	default n
- 
-@@ -679,25 +672,25 @@
++++ linux-2.6.28-gentoo/fs/Kconfig	2009-01-26 15:13:03.000000000 +0800
+@@ -679,25 +679,25 @@
  	bool "sysfs file system support" if EMBEDDED
  	default y
  	help
@@ -104,7 +76,7 @@
  
  config TMPFS
  	bool "Virtual memory file system support (former shm fs)"
-@@ -726,8 +719,7 @@
+@@ -726,8 +726,7 @@
  
  config HUGETLBFS
  	bool "HugeTLB file system support"
@@ -114,16 +86,8 @@
  	help
  	  hugetlbfs is a filesystem backing for HugeTLB pages, based on
  	  ramfs. For architectures that support it, say Y here and read
-@@ -958,7 +950,6 @@
- 	  If unsure, say N.
- 
- config SQUASHFS_EMBEDDED
--
- 	bool "Additional option for memory-constrained systems" 
- 	depends on SQUASHFS
- 	default n
---- linux-2.6.28-gentoo/lib/Kconfig.debug.orig	2009-01-26 14:06:04.000000000 +0800
-+++ linux-2.6.28-gentoo/lib/Kconfig.debug	2009-01-26 14:07:24.000000000 +0800
+--- linux-2.6.28-gentoo/lib/Kconfig.debug.orig	2009-01-26 15:15:27.000000000 +0800
++++ linux-2.6.28-gentoo/lib/Kconfig.debug	2009-01-26 15:15:05.000000000 +0800
 @@ -465,8 +465,7 @@
  config DEBUG_BUGVERBOSE
  	bool "Verbose BUG() reporting (adds 70K)" if DEBUG_KERNEL && EMBEDDED
@@ -167,23 +131,6 @@
  
  config FAULT_INJECTION
  	bool "Fault-injection framework"
-@@ -761,7 +758,7 @@
- 	  to properly maintain and use. This enables checks that help
- 	  you to keep things correct.
- 
--source kernel/trace/Kconfig
-+source "kernel/trace/Kconfig"
- 
- config PROVIDE_OHCI1394_DMA_INIT
- 	bool "Remote debugging over FireWire early on boot"
-@@ -818,7 +815,6 @@
- 	depends on PRINTK
- 	select PRINTK_DEBUG
- 	help
--
- 	  Compiles debug level messages into the kernel, which would not
- 	  otherwise be available at runtime. These messages can then be
- 	  enabled/disabled on a per module basis. This mechanism implicitly
 --- linux-2.6.28-gentoo/net/dccp/Kconfig.orig	2009-01-26 13:19:37.000000000 +0800
 +++ linux-2.6.28-gentoo/net/dccp/Kconfig	2009-01-26 13:20:23.000000000 +0800
 @@ -47,16 +47,16 @@
@@ -211,24 +158,6 @@
  
  
  endmenu
---- linux-2.6.28-gentoo/net/ipv4/netfilter/Kconfig.orig	2009-01-26 13:17:35.000000000 +0800
-+++ linux-2.6.28-gentoo/net/ipv4/netfilter/Kconfig	2009-01-26 13:18:00.000000000 +0800
-@@ -136,7 +136,6 @@
- 	tristate "ULOG target support"
- 	default m if NETFILTER_ADVANCED=n
- 	---help---
--
- 	  This option enables the old IPv4-only "ipt_ULOG" implementation
- 	  which has been obsoleted by the new "nfnetlink_log" code (see
- 	  CONFIG_NETFILTER_NETLINK_LOG).
-@@ -209,7 +208,6 @@
- 	depends on NF_NAT
- 	depends on NETFILTER_ADVANCED
- 	---help---
--
- 	  This module implements an Application Layer Gateway (ALG) for
- 	  SNMP payloads.  In conjunction with NAT, it allows a network
- 	  management system to access multiple private networks with
 --- linux-2.6.28-gentoo/net/ipv4/Kconfig.orig	2009-01-26 10:11:32.000000000 +0800
 +++ linux-2.6.28-gentoo/net/ipv4/Kconfig	2009-01-26 10:13:41.000000000 +0800
 @@ -59,26 +59,26 @@
@@ -481,16 +410,6 @@
  
  choice
  	prompt "Default TCP congestion control"
---- linux-2.6.28-gentoo/net/ipv6/netfilter/Kconfig.orig	2009-01-26 13:19:23.000000000 +0800
-+++ linux-2.6.28-gentoo/net/ipv6/netfilter/Kconfig	2009-01-26 13:18:28.000000000 +0800
-@@ -25,7 +25,6 @@
- 	depends on INET && IPV6 && NETFILTER
- 	depends on NETFILTER_ADVANCED
- 	---help---
--
- 	  This option adds a queue handler to the kernel for IPv6
- 	  packets which enables users to receive the filtered packets
- 	  with QUEUE target using libipq.
 --- linux-2.6.28-gentoo/net/ieee80211/Kconfig.orig	2009-01-26 13:21:20.000000000 +0800
 +++ linux-2.6.28-gentoo/net/ieee80211/Kconfig	2009-01-26 13:22:00.000000000 +0800
 @@ -1,9 +1,9 @@
@@ -639,20 +558,8 @@
  
  endmenu
  
---- linux-2.6.28-gentoo/arch/x86/kvm/Kconfig.orig	2009-01-26 14:08:12.000000000 +0800
-+++ linux-2.6.28-gentoo/arch/x86/kvm/Kconfig	2009-01-26 14:08:30.000000000 +0800
-@@ -66,7 +66,7 @@
- 
- # OK, it's a little counter-intuitive to do this, but it puts it neatly under
- # the virtualization menu.
--source drivers/lguest/Kconfig
--source drivers/virtio/Kconfig
-+source "drivers/lguest/Kconfig"
-+source "drivers/virtio/Kconfig"
- 
- endif # VIRTUALIZATION
 --- linux-2.6.28-gentoo/arch/x86/Kconfig.orig	2009-01-26 09:42:54.000000000 +0800
-+++ linux-2.6.28-gentoo/arch/x86/Kconfig	2009-01-26 10:02:24.000000000 +0800
++++ linux-2.6.28-gentoo/arch/x86/Kconfig	2009-01-26 15:24:38.000000000 +0800
 @@ -290,9 +290,9 @@
  	  say N here, otherwise the kernel you build will not be bootable.
  
@@ -689,45 +596,8 @@
  
  config SECCOMP
  	def_bool y
-@@ -1293,7 +1293,7 @@
- 	  functions that use large-ish on-stack buffers. By enabling
- 	  this option, GCC will be asked to do this for ALL functions.
- 
--source kernel/Kconfig.hz
-+source "kernel/Kconfig.hz"
- 
- config KEXEC
- 	bool "kexec system call"
---- linux-2.6.28-gentoo/block/Kconfig.iosched.orig	2009-01-18 10:25:28.000000000 +0800
-+++ linux-2.6.28-gentoo/block/Kconfig.iosched	2009-01-18 10:34:22.000000000 +0800
-@@ -47,17 +47,17 @@
- 	  Select the I/O scheduler which will be used by default for all
- 	  block devices.
- 
--	config DEFAULT_AS
--		bool "Anticipatory" if IOSCHED_AS=y
-+config DEFAULT_AS
-+	bool "Anticipatory" if IOSCHED_AS=y
- 
--	config DEFAULT_DEADLINE
--		bool "Deadline" if IOSCHED_DEADLINE=y
-+config DEFAULT_DEADLINE
-+	bool "Deadline" if IOSCHED_DEADLINE=y
- 
--	config DEFAULT_CFQ
--		bool "CFQ" if IOSCHED_CFQ=y
-+config DEFAULT_CFQ
-+	bool "CFQ" if IOSCHED_CFQ=y
- 
--	config DEFAULT_NOOP
--		bool "No-op"
-+config DEFAULT_NOOP
-+	bool "No-op"
- 
- endchoice
- 
 --- linux-2.6.28-gentoo/block/Kconfig.orig	2009-01-18 10:25:19.000000000 +0800
-+++ linux-2.6.28-gentoo/block/Kconfig	2009-01-18 10:25:50.000000000 +0800
++++ linux-2.6.28-gentoo/block/Kconfig	2009-01-26 15:21:55.000000000 +0800
 @@ -84,14 +84,14 @@
  config BLK_DEV_INTEGRITY
  	bool "Block layer data integrity support"
@@ -750,12 +620,6 @@
  
  endif # BLOCK
  
-@@ -100,4 +100,4 @@
- 	depends on BLOCK && COMPAT
- 	default y
- 
--source block/Kconfig.iosched
-+source "block/Kconfig.iosched"
 --- linux-2.6.28-gentoo/sound/aoa/soundbus/Kconfig.orig	2009-01-26 13:57:06.000000000 +0800
 +++ linux-2.6.28-gentoo/sound/aoa/soundbus/Kconfig	2009-01-26 13:57:16.000000000 +0800
 @@ -2,13 +2,13 @@
@@ -841,16 +705,6 @@
  
  if SND_AOA
  
---- linux-2.6.28-gentoo/sound/soc/Kconfig.orig	2009-01-26 13:57:33.000000000 +0800
-+++ linux-2.6.28-gentoo/sound/soc/Kconfig	2009-01-26 13:57:44.000000000 +0800
-@@ -7,7 +7,6 @@
- 	select SND_PCM
- 	select AC97_BUS if SND_SOC_AC97_BUS
- 	---help---
--
- 	  If you want ASoC support, you should say Y here and also to the
- 	  specific driver for your SoC platform below.
- 	  
 --- linux-2.6.28-gentoo/drivers/md/Kconfig.orig	2009-01-26 13:34:20.000000000 +0800
 +++ linux-2.6.28-gentoo/drivers/md/Kconfig	2009-01-26 13:34:47.000000000 +0800
 @@ -278,16 +278,16 @@
@@ -874,42 +728,6 @@
  
  config BLK_DEV_DM_BBR
  	tristate "Bad Block Relocation Device Target (EXPERIMENTAL)"
---- linux-2.6.28-gentoo/drivers/w1/Kconfig.orig	2009-01-26 13:46:39.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/w1/Kconfig	2009-01-26 13:49:15.000000000 +0800
-@@ -16,7 +16,7 @@
- 	depends on CONNECTOR
- 	bool "Userspace communication over connector"
- 	default y
--	--- help ---
-+	---help---
- 	  This allows to communicate with userspace using connector. For more
- 	  information see <file:Documentation/connector/connector.txt>.
- 	  There are three types of messages between w1 core and userspace:
-@@ -25,7 +25,7 @@
- 	  2. Userspace commands. Includes read/write and search/alarm search commands.
- 	  3. Replies to userspace commands.
- 
--source drivers/w1/masters/Kconfig
--source drivers/w1/slaves/Kconfig
-+source "drivers/w1/masters/Kconfig"
-+source "drivers/w1/slaves/Kconfig"
- 
- endif # W1
---- linux-2.6.28-gentoo/drivers/i2c/Kconfig.orig	2009-01-26 13:45:16.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/i2c/Kconfig	2009-01-26 13:45:35.000000000 +0800
-@@ -52,9 +52,9 @@
- 
- 	  In doubt, say Y.
- 
--source drivers/i2c/algos/Kconfig
--source drivers/i2c/busses/Kconfig
--source drivers/i2c/chips/Kconfig
-+source "drivers/i2c/algos/Kconfig"
-+source "drivers/i2c/busses/Kconfig"
-+source "drivers/i2c/chips/Kconfig"
- 
- config I2C_DEBUG_CORE
- 	bool "I2C Core debugging messages"
 --- linux-2.6.28-gentoo/drivers/gpu/drm/Kconfig.orig	2009-01-26 13:52:15.000000000 +0800
 +++ linux-2.6.28-gentoo/drivers/gpu/drm/Kconfig	2009-01-26 13:53:09.000000000 +0800
 @@ -52,7 +52,6 @@
@@ -1336,16 +1154,8 @@
 +	  The driver can be compiled as a module and will be named
 +	  "hostap_cs.ko".
 --- linux-2.6.28-gentoo/drivers/net/wireless/Kconfig.orig	2009-01-26 13:36:39.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/net/wireless/Kconfig	2009-01-26 13:37:34.000000000 +0800
-@@ -428,7 +428,6 @@
- 	tristate "Symbol Spectrum24 Trilogy PCMCIA card support"
- 	depends on PCMCIA && HERMES
- 	---help---
--
- 	  This is a driver for 802.11b cards using RAM-loadable Symbol
- 	  firmware, such as Symbol Wireless Networker LA4100, CompactFlash
- 	  cards by Socket Communications and Intel PRO/Wireless 2011B.
-@@ -443,7 +442,7 @@
++++ linux-2.6.28-gentoo/drivers/net/wireless/Kconfig	2009-01-26 15:19:51.000000000 +0800
+@@ -443,7 +443,7 @@
        select WIRELESS_EXT
        select FW_LOADER
        select CRC32
@@ -1354,7 +1164,7 @@
          A driver 802.11b wireless cards based on the Atmel fast-vnet
          chips. This driver supports standard Linux wireless extensions.
  
-@@ -457,7 +456,7 @@
+@@ -457,7 +457,7 @@
  config PCI_ATMEL
        tristate "Atmel at76c506 PCI cards"
        depends on ATMEL && PCI
@@ -1363,7 +1173,7 @@
          Enable support for PCI and mini-PCI cards containing the
          Atmel at76c506 chip.
  
-@@ -495,7 +494,7 @@
+@@ -495,7 +495,7 @@
        tristate "Planet WL3501 PCMCIA cards"
        depends on EXPERIMENTAL && PCMCIA && WLAN_80211
        select WIRELESS_EXT
@@ -1473,16 +1283,6 @@
  	  laptop.
  
  config MTD_NAND_CS553X
---- linux-2.6.28-gentoo/drivers/spi/Kconfig.orig	2009-01-26 13:45:49.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/spi/Kconfig	2009-01-26 13:46:18.000000000 +0800
-@@ -40,7 +40,6 @@
- #
- 
- config SPI_MASTER
--#	boolean "SPI Master Support"
- 	boolean
- 	default SPI
- 	help
 --- linux-2.6.28-gentoo/drivers/acpi/Kconfig.orig	2009-01-26 10:09:04.000000000 +0800
 +++ linux-2.6.28-gentoo/drivers/acpi/Kconfig	2009-01-26 10:09:46.000000000 +0800
 @@ -364,7 +364,7 @@
@@ -2113,16 +1913,6 @@
  	  A DVB-S silicon tuner module. Say Y when you want to support this tuner.
  
  config DVB_STV0299
---- linux-2.6.28-gentoo/drivers/media/video/pvrusb2/Kconfig.orig	2009-01-26 13:51:09.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/media/video/pvrusb2/Kconfig	2009-01-26 13:51:25.000000000 +0800
-@@ -45,7 +45,6 @@
- 	select MEDIA_TUNER_SIMPLE if !MEDIA_TUNER_CUSTOMIZE
- 	select MEDIA_TUNER_TDA8290 if !DVB_FE_CUSTOMIZE
- 	---help---
--
- 	  This option enables a DVB interface for the pvrusb2 driver.
- 	  If your device does not support digital television, this
- 	  feature will have no affect on the driver's operation.
 --- linux-2.6.28-gentoo/drivers/video/Kconfig.orig	2009-01-26 13:54:02.000000000 +0800
 +++ linux-2.6.28-gentoo/drivers/video/Kconfig	2009-01-26 13:55:33.000000000 +0800
 @@ -298,7 +298,6 @@
@@ -2232,16 +2022,6 @@
  	help
  	  Say Y here if you want to query SMBIOS/DMI system identification
  	  information from userspace through /sys/class/dmi/id/ or if you want
---- linux-2.6.28-gentoo/drivers/watchdog/Kconfig.orig	2009-01-26 13:50:00.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/watchdog/Kconfig	2009-01-26 13:50:10.000000000 +0800
-@@ -521,7 +521,6 @@
- 	tristate "SBC8360 Watchdog Timer"
- 	depends on X86
- 	---help---
--
- 	  This is the driver for the hardware watchdog on the SBC8360 Single
- 	  Board Computer produced by Axiomtek Co., Ltd. (www.axiomtek.com).
- 
 --- linux-2.6.28-gentoo/drivers/pcmcia/Kconfig.orig	2009-01-26 10:10:33.000000000 +0800
 +++ linux-2.6.28-gentoo/drivers/pcmcia/Kconfig	2009-01-26 10:11:10.000000000 +0800
 @@ -215,9 +215,7 @@
@@ -2267,19 +2047,6 @@
  	---help---
  	  You should say Y here if you have a PC-style parallel port. All
  	  IBM PC compatible computers and some Alphas have PC-style
---- linux-2.6.28-gentoo/security/Kconfig.orig	2009-01-26 14:07:40.000000000 +0800
-+++ linux-2.6.28-gentoo/security/Kconfig	2009-01-26 14:07:55.000000000 +0800
-@@ -123,8 +123,8 @@
- 	  /proc/sys/vm/mmap_min_addr tunable.
- 
- 
--source security/selinux/Kconfig
--source security/smack/Kconfig
-+source "security/selinux/Kconfig"
-+source "security/smack/Kconfig"
- 
- endmenu
- 
 --- linux-2.6.28-gentoo/kernel/power/Kconfig.orig	2009-01-26 10:07:06.000000000 +0800
 +++ linux-2.6.28-gentoo/kernel/power/Kconfig	2009-01-26 10:08:44.000000000 +0800
 @@ -23,16 +23,16 @@
