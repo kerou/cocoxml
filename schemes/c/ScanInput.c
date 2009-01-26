@@ -40,7 +40,9 @@ CcsScanInput_Init(CcsScanInput_t * self, void * scanner,
 
     self->ch = 0; self->chBytes = 0;
     self->pos = 0; self->line = 1; self->col = 0;
-    self->oldEols = 0; self->oldEolsEOL = 0;
+    self->inComment = FALSE;
+    self->numCommentEols = 0;
+    self->chAfterComment = NoChr;
     if (info->additionalInit && !info->additionalInit(self + 1, scanner))
 	goto errquit1;
     return TRUE;
@@ -113,24 +115,29 @@ CcsScanInput_Destruct(CcsScanInput_t * self)
 void
 CcsScanInput_GetCh(CcsScanInput_t * self)
 {
-    if (self->oldEols > 0) {
-	self->ch = '\n'; --self->oldEols; self->oldEolsEOL = 1;
-    } else {
-	if (self->ch == '\n') {
-	    if (self->oldEolsEOL) self->oldEolsEOL = 0;
-	    else {
-		++self->line; self->col = 0;
-	    }
-	} else if (self->ch == '\t') {
-	    self->col += 8 - self->col % 8;
-	} else {
-	    /* FIX ME: May be the width of some specical character
-	     * is NOT self->chBytes. */
-	    self->col += self->chBytes;
+    if (self->inComment == FALSE) {
+	if (self->numCommentEols > 0) {
+	    self->ch = '\n';
+	    --self->numCommentEols;
+	    return;
+	} else if (self->chAfterComment != NoChr) {
+	    self->ch = self->chAfterComment;
+	    self->chAfterComment = NoChr;
+	    return;
 	}
-	self->ch = CcsBuffer_Read(&self->buffer, &self->chBytes);
-	self->pos = CcsBuffer_GetPos(&self->buffer);
     }
+    if (self->ch == '\n') {
+	if (self->inComment) ++self->numCommentEols;
+	++self->line; self->col = 0;
+    } else if (self->ch == '\t') {
+	self->col += 8 - self->col % 8;
+    } else {
+	/* FIX ME: May be the width of some specical character
+	 * is NOT self->chBytes. */
+	self->col += self->chBytes;
+    }
+    self->ch = CcsBuffer_Read(&self->buffer, &self->chBytes);
+    self->pos = CcsBuffer_GetPos(&self->buffer);
 }
 
 CcsToken_t *
@@ -388,12 +395,19 @@ CcsBool_t
 CcsScanInput_Comment(CcsScanInput_t * self, const CcsComment_t * c)
 {
     SLock_t slock;
-    int level = 1, line0 = self->line;
+    int level = 1;
 
+    CcsAssert(self->inComment == FALSE &&
+	      self->numCommentEols == 0 &&
+	      self->chAfterComment == NoChr);
+    self->inComment = TRUE;
     if (c->start[1]) {
 	CcsScanInput_LockCh(self, &slock); CcsScanInput_GetCh(self);
 	if (self->ch != c->start[1]) {
 	    CcsScanInput_ResetCh(self, &slock);
+	    self->inComment = FALSE;
+	    self->numCommentEols = 0;
+	    self->chAfterComment = NoChr;
 	    return FALSE;
 	}
 	CcsScanInput_UnlockCh(self, &slock);
@@ -402,12 +416,18 @@ CcsScanInput_Comment(CcsScanInput_t * self, const CcsComment_t * c)
     for (;;) {
 	if (self->ch == c->end[0]) {
 	    if (c->end[1] == 0) {
-		if (--level == 0) break;
+		if (--level == 0) {
+		    CcsScanInput_GetCh(self);
+		    break;
+		}
 	    } else {
 		CcsScanInput_LockCh(self, &slock); CcsScanInput_GetCh(self);
 		if (self->ch == c->end[1]) {
 		    CcsScanInput_UnlockCh(self, &slock);
-		    if (--level == 0) break;
+		    if (--level == 0) {
+			CcsScanInput_GetCh(self);
+			break;
+		    }
 		} else {
 		    CcsScanInput_ResetCh(self, &slock);
 		}
@@ -425,11 +445,13 @@ CcsScanInput_Comment(CcsScanInput_t * self, const CcsComment_t * c)
 		}
 	    }
 	} else if (self->ch == EoF) {
-	    return TRUE;
+	    break;
 	}
 	CcsScanInput_GetCh(self);
     }
-    self->oldEols = self->line - line0;
+    CcsAssert(self->chAfterComment == NoChr);
+    self->chAfterComment = self->ch;
+    self->inComment = FALSE;
     CcsScanInput_GetCh(self);
     return TRUE;
 }
