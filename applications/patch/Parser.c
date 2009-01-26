@@ -115,7 +115,7 @@ PatchParser_Init(PatchParser_t * self)
 {
     self->t = self->la = NULL;
     /*---- constructor ----*/
-    self->maxT = 15;
+    self->maxT = 18;
     self->subNum = 0;
     self->addNum = 0;
     self->first = self->last = NULL;
@@ -201,6 +201,7 @@ PatchParser_FilePatch(PatchParser_t * self, PatchFile_t ** filepatch)
     }
     PatchParser_FileSubLine(self, &subfname);
     PatchParser_FileAddLine(self, &addfname);
+    fprintf(stderr, "Scanning: %s %s\n", subfname->text, addfname->text);
     if (!(*filepatch = PatchFile(subfname->text, addfname->text)))
        PatchParser_SemErrT(self, "Not enough memory");
     CcsPosition_Destruct(subfname);
@@ -277,7 +278,7 @@ PatchParser_Piece(PatchParser_t * self, PatchPiece_t ** piece)
 	if (lastLine) { lastLine->next = newLine; lastLine = newLine; } else
 	{ firstLine = lastLine = newLine; }
     } 
-    while (self->la->kind == 1 || self->la->kind == 14) {
+    while (self->la->kind == 1 || self->la->kind == 17) {
 	PatchParser_PieceLine(self, &newLine, &subLastEol, &addLastEol);
 	if (newLine) {
 	    if (lastLine) { lastLine->next = newLine; lastLine = newLine; } else
@@ -301,7 +302,8 @@ PatchParser_PieceTitle(PatchParser_t * self, int * subStart, int * subNum, int *
     }
     PatchParser_Expect(self, 10);
     PatchParser_Expect(self, 2);
-    self->subStart = *subStart = atoi(self->t->val); 
+    self->subStart = *subStart = atoi(self->t->val);
+    self->subNum = *subNum = 0; 
     if (self->la->kind == 11) {
 	PatchParser_Get(self);
 	PatchParser_Expect(self, 2);
@@ -313,7 +315,8 @@ PatchParser_PieceTitle(PatchParser_t * self, int * subStart, int * subNum, int *
     }
     PatchParser_Expect(self, 12);
     PatchParser_Expect(self, 2);
-    self->addStart = *addStart = atoi(self->t->val); 
+    self->addStart = *addStart = atoi(self->t->val);
+    self->addNum = *addNum = 0; 
     if (self->la->kind == 11) {
 	PatchParser_Get(self);
 	PatchParser_Expect(self, 2);
@@ -338,15 +341,41 @@ PatchParser_PieceLine(PatchParser_t * self, PatchLine_t ** line, CcsBool_t * sub
     char op; CcsToken_t * beginToken; 
     if (self->la->kind == 1) {
 	PatchParser_Get(self);
-	if (self->la->kind == 12) {
+	switch (self->la->kind) {
+	case 12: {
 	    PatchParser_Get(self);
-	} else if (self->la->kind == 10) {
+	    break;
+	}
+	case 10: {
 	    PatchParser_Get(self);
-	} else if (self->la->kind == 9) {
+	    break;
+	}
+	case 9: {
 	    PatchParser_Get(self);
-	} else if (self->la->kind == 13) {
+	    break;
+	}
+	case 13: {
 	    PatchParser_Get(self);
-	} else PatchParser_SynErr(self, 16);
+	    break;
+	}
+	case 14: {
+	    PatchParser_Get(self);
+	    break;
+	}
+	case 15: {
+	    PatchParser_Get(self);
+	    break;
+	}
+	case 16: {
+	    PatchParser_Get(self);
+	    break;
+	}
+	case 17: {
+	    PatchParser_Get(self);
+	    break;
+	}
+	default: PatchParser_SynErr(self, 19); break;
+	}
 	op = *self->t->val;
 	PatchScanner_TokenIncRef(&self->scanner, beginToken = self->t); 
 	while (PatchParser_StartOf(self, 1)) {
@@ -369,14 +398,14 @@ PatchParser_PieceLine(PatchParser_t * self, PatchLine_t ** line, CcsBool_t * sub
 	if (self->subNum > 0 || self->addNum > 0)
 	    PatchScanner_InsertExpect(&self->scanner, PatchScanner_InPiece,
 				      NULL, 0, &self->la); 
-    } else if (self->la->kind == 14) {
+    } else if (self->la->kind == 17) {
 	PatchParser_Get(self);
 	while (self->la->kind == 9) {
 	    PatchParser_Get(self);
 	}
 	PatchParser_Expect(self, 4);
-	*addLineEol = TRUE; 
-    } else PatchParser_SynErr(self, 17);
+	*addLineEol = TRUE; *line = NULL; 
+    } else PatchParser_SynErr(self, 20);
 }
 
 /*---- enable ----*/
@@ -400,11 +429,14 @@ PatchParser_SynErr(PatchParser_t * self, int n)
     case 10: s = "\"" "-" "\" expected"; break;
     case 11: s = "\"" "," "\" expected"; break;
     case 12: s = "\"" "+" "\" expected"; break;
-    case 13: s = "\"" "\\" "\" expected"; break;
-    case 14: s = "\"" "\\ No newline at end of file" "\" expected"; break;
-    case 15: s = "\"" "???" "\" expected"; break;
-    case 16: s = "this symbol not expected in \"" "PieceLine" "\""; break;
-    case 17: s = "this symbol not expected in \"" "PieceLine" "\""; break;
+    case 13: s = "\"" "++" "\" expected"; break;
+    case 14: s = "\"" "--" "\" expected"; break;
+    case 15: s = "\"" "+++" "\" expected"; break;
+    case 16: s = "\"" "---" "\" expected"; break;
+    case 17: s = "\"" "\\ No newline at end of file" "\" expected"; break;
+    case 18: s = "\"" "???" "\" expected"; break;
+    case 19: s = "this symbol not expected in \"" "PieceLine" "\""; break;
+    case 20: s = "this symbol not expected in \"" "PieceLine" "\""; break;
     /*---- enable ----*/
     default:
 	snprintf(format, sizeof(format), "error %d", n);
@@ -416,9 +448,9 @@ PatchParser_SynErr(PatchParser_t * self, int n)
 
 static const char * set[] = {
     /*---- InitSet ----*/
-    /*    5    0    5 */
-    "*................", /* 0 */
-    ".***.***********.", /* 1 */
-    ".**..***********."  /* 2 */
+    /*    5    0    5    */
+    "*...................", /* 0 */
+    ".***.**************.", /* 1 */
+    ".**..**************."  /* 2 */
     /*---- enable ----*/
 };

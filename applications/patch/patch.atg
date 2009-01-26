@@ -73,7 +73,8 @@ FilePatch<PatchFile_t ** filepatch>
     (. CcsPosition_t * subfname, * addfname;
        PatchPiece_t * newPiece; .)
  = { HeadLine } FileSubLine<&subfname> FileAddLine<&addfname>
-    (. if (!(*filepatch = PatchFile(subfname->text, addfname->text)))
+    (. fprintf(stderr, "Scanning: %s %s\n", subfname->text, addfname->text);
+       if (!(*filepatch = PatchFile(subfname->text, addfname->text)))
           PatchParser_SemErrT(self, "Not enough memory");
        CcsPosition_Destruct(subfname);
        CcsPosition_Destruct(addfname); .)
@@ -122,9 +123,11 @@ Piece<PatchPiece_t ** piece> (. int subStart, subNum, addStart, addNum;
 .
 
 PieceTitle<int * subStart, int * subNum, int * addStart, int * addNum> =
-  "@@" ' ' { ' ' } '-' number     (. self->subStart = *subStart = atoi(self->t->val); .)
+  "@@" ' ' { ' ' } '-' number     (. self->subStart = *subStart = atoi(self->t->val);
+       	       	       		     self->subNum = *subNum = 0; .)
   [',' number                     (. self->subNum = *subNum = atoi(self->t->val); .)
-  ] ' ' { ' ' } '+' number        (. self->addStart = *addStart = atoi(self->t->val); .)
+  ] ' ' { ' ' } '+' number        (. self->addStart = *addStart = atoi(self->t->val);
+      	      	    		     self->addNum = *addNum = 0; .)
   [',' number                     (. self->addNum = *addNum = atoi(self->t->val); .)
   ] ' ' { ' ' } "@@" { ANY } eol  (. PatchScanner_InsertExpect(&self->scanner, PatchScanner_InPiece,
       	    	       	      	 			       NULL, 0, &self->la); .)
@@ -132,7 +135,7 @@ PieceTitle<int * subStart, int * subNum, int * addStart, int * addNum> =
 
 PieceLine<PatchLine_t ** line, CcsBool_t * subLineEol, CcsBool_t * addLineEol>
     (. char op; CcsToken_t * beginToken; .) =
-  InPiece ('+' | '-' | ' ' | '\\')
+  InPiece ('+' | '-' | ' ' | "++" | "--" | "+++" | "---" | "\\ No newline at end of file")
     (. op = *self->t->val;
        PatchScanner_TokenIncRef(&self->scanner, beginToken = self->t); .)
   { ANY } eol
@@ -153,7 +156,7 @@ PieceLine<PatchLine_t ** line, CcsBool_t * subLineEol, CcsBool_t * addLineEol>
            PatchScanner_InsertExpect(&self->scanner, PatchScanner_InPiece,
 				     NULL, 0, &self->la); .)
   | "\\ No newline at end of file" { ' ' } eol
-    (. *addLineEol = TRUE; .)
+    (. *addLineEol = TRUE; *line = NULL; .)
 .
 
 END Patch.
