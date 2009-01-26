@@ -42,6 +42,8 @@ void CcsPosition_Destruct(CcsPosition_t * self);
 
 CcsPosition_t * CcsPosition_Clone(const CcsPosition_t * pos);
 
+CcsPosition_t * CcsPosition_Link(CcsPosition_t * pos0, CcsPosition_t * pos1);
+
 const char *
 CcsPosition_Dump(CcsPosition_t * self, char * buf, size_t szbuf);
 
