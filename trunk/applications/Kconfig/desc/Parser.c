@@ -678,7 +678,7 @@ KcParser_Help(KcParser_t * self, CcsPosition_t ** pos)
 	KcParser_Get(self);
     }
     KcParser_Expect(self, 2);
-    *pos = KcScanner_GetPosition(&self->scanner, beg, self->t);
+    *pos = CcsPosition_Link(*pos, KcScanner_GetPosition(&self->scanner, beg, self->t));
     KcScanner_TokenDecRef(&self->scanner, beg); 
 }
 
