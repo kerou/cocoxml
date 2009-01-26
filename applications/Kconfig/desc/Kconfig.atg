@@ -52,7 +52,7 @@ CHARACTERS
     printable = '\x20' .. '\x7e'.
 
 TOKENS
-    ident     = ( letter | digit ) { letter | digit }.
+    ident     = ( letter | [ '+' | '-' ] digit ) { letter | digit }.
     stringT   = ( '"' { string0Ch | '\\' printable } '"' |
     	      	  '\'' { string1Ch | '\\' printable } '\'' ).
     eol       = (cr lf) | lf.
