@@ -71,8 +71,9 @@ struct CcsScanInput_s {
     int                  pos;
     int                  line;
     int                  col;
-    int                  oldEols;
-    int                  oldEolsEOL;
+    CcsBool_t            inComment;
+    int                  numCommentEols;
+    int                  chAfterComment;
 };
 
 CcsScanInput_t *

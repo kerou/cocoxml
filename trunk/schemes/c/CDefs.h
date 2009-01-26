@@ -83,6 +83,7 @@ char * _CcsStrdup_(const char * str, const char * fname, int line);
 #define COCO_WCHAR_MAX 65535
 #define EoF            -1
 #define ErrorChr       -2
+#define NoChr          -3
 
 int CcsUTF8GetCh(const char ** str, const char * stop);
 int CcsUTF8GetWidth(const char * str, size_t len);
