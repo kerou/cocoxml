@@ -676,7 +676,7 @@ KcParser_Option(KcParser_t * self, KcProperty_t ** prop)
 static void
 KcParser_Help(KcParser_t * self, CcsPosition_t ** pos)
 {
-    CcsToken_t * beg; 
+    CcsBool_t IndentIn_ornot; CcsToken_t * beg; 
     if (self->la->kind == 36) {
 	KcParser_Get(self);
     } else if (self->la->kind == 37) {
@@ -690,15 +690,20 @@ KcParser_Help(KcParser_t * self, CcsPosition_t ** pos)
     while (self->la->kind == 6) {
 	KcParser_Get(self);
     }
-    KcParser_Expect(self, 1);
+    KcParser_Get(self);
+    IndentIn_ornot = (self->t->kind == KcScanner_INDENT_IN); 
     KcScanner_IndentLimit(&self->scanner, self->t);
-    KcScanner_TokenIncRef(&self->scanner, beg = self->la); 
+    KcScanner_TokenIncRef(&self->scanner,
+			  beg = IndentIn_ornot ? self->la : self->t); 
     while (KcParser_StartOf(self, 7)) {
 	KcParser_Get(self);
     }
     KcParser_Expect(self, 2);
     *pos = CcsPosition_Link(*pos, KcScanner_GetPosition(&self->scanner, beg, self->t));
-    KcScanner_TokenDecRef(&self->scanner, beg); 
+    KcScanner_TokenDecRef(&self->scanner, beg);
+    if (!IndentIn_ornot)
+	KcScanner_InsertExpect(&self->scanner, KcScanner_INDENT_OUT,
+			       NULL, 0, &self->la); 
 }
 
 static void
