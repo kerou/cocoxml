@@ -1,0 +1,2405 @@
+--- linux-2.6.28-gentoo/fs/dlm/Kconfig.orig	2009-01-26 14:05:31.000000000 +0800
++++ linux-2.6.28-gentoo/fs/dlm/Kconfig	2009-01-26 14:05:43.000000000 +0800
+@@ -5,13 +5,13 @@
+ 	select CONFIGFS_FS
+ 	select IP_SCTP
+ 	help
+-	A general purpose distributed lock manager for kernel or userspace
+-	applications.
++	  A general purpose distributed lock manager for kernel or userspace
++	  applications.
+ 
+ config DLM_DEBUG
+ 	bool "DLM debugging"
+ 	depends on DLM
+ 	help
+-	Under the debugfs mount point, the name of each lockspace will
+-	appear as a file in the "dlm" directory.  The output is the
+-	list of resource and locks the local node knows about.
++	  Under the debugfs mount point, the name of each lockspace will
++	  appear as a file in the "dlm" directory.  The output is the
++	  list of resource and locks the local node knows about.
+--- linux-2.6.28-gentoo/fs/proc/Kconfig.orig	2009-01-26 14:03:50.000000000 +0800
++++ linux-2.6.28-gentoo/fs/proc/Kconfig	2009-01-26 14:04:04.000000000 +0800
+@@ -37,7 +37,7 @@
+         depends on PROC_FS && CRASH_DUMP
+ 	default y
+         help
+-        Exports the dump image of crashed kernel in ELF format.
++          Exports the dump image of crashed kernel in ELF format.
+ 
+ config PROC_SYSCTL
+ 	bool "Sysctl support (/proc/sys)" if EMBEDDED
+--- linux-2.6.28-gentoo/fs/Kconfig.orig	2009-01-26 14:03:01.000000000 +0800
++++ linux-2.6.28-gentoo/fs/Kconfig	2009-01-26 14:05:18.000000000 +0800
+@@ -11,7 +11,6 @@
+ source "fs/ext4/Kconfig"
+ 
+ config FS_XIP
+-# execute in place
+ 	bool
+ 	depends on EXT2_FS_XIP
+ 	default y
+@@ -20,7 +19,6 @@
+ source "fs/jbd2/Kconfig"
+ 
+ config FS_MBCACHE
+-# Meta block cache for Extended Attributes (ext2/ext3/ext4)
+ 	tristate
+ 	default y if EXT2_FS=y && EXT2_FS_XATTR
+ 	default y if EXT3_FS=y && EXT3_FS_XATTR
+@@ -164,11 +162,6 @@
+ 	  to be made available to the user in the /proc/fs/jfs/ directory.
+ 
+ config FS_POSIX_ACL
+-# Posix ACL utility routines (for now, only ext2/ext3/jfs/reiserfs/nfs4)
+-#
+-# NOTE: you can implement Posix ACLs without these helpers (XFS does).
+-# 	Never use this symbol for ifdefs.
+-#
+ 	bool
+ 	default n
+ 
+@@ -679,25 +672,25 @@
+ 	bool "sysfs file system support" if EMBEDDED
+ 	default y
+ 	help
+-	The sysfs filesystem is a virtual filesystem that the kernel uses to
+-	export internal kernel objects, their attributes, and their
+-	relationships to one another.
+-
+-	Users can use sysfs to ascertain useful information about the running
+-	kernel, such as the devices the kernel has discovered on each bus and
+-	which driver each is bound to. sysfs can also be used to tune devices
+-	and other kernel subsystems.
+-
+-	Some system agents rely on the information in sysfs to operate.
+-	/sbin/hotplug uses device and object attributes in sysfs to assist in
+-	delegating policy decisions, like persistently naming devices.
+-
+-	sysfs is currently used by the block subsystem to mount the root
+-	partition.  If sysfs is disabled you must specify the boot device on
+-	the kernel boot command line via its major and minor numbers.  For
+-	example, "root=03:01" for /dev/hda1.
++	  The sysfs filesystem is a virtual filesystem that the kernel uses to
++	  export internal kernel objects, their attributes, and their
++	  relationships to one another.
++
++	  Users can use sysfs to ascertain useful information about the running
++	  kernel, such as the devices the kernel has discovered on each bus and
++	  which driver each is bound to. sysfs can also be used to tune devices
++	  and other kernel subsystems.
++
++	  Some system agents rely on the information in sysfs to operate.
++	  /sbin/hotplug uses device and object attributes in sysfs to assist in
++	  delegating policy decisions, like persistently naming devices.
++
++	  sysfs is currently used by the block subsystem to mount the root
++	  partition.  If sysfs is disabled you must specify the boot device on
++	  the kernel boot command line via its major and minor numbers.  For
++	  example, "root=03:01" for /dev/hda1.
+ 
+-	Designers of embedded systems may wish to say N here to conserve space.
++	  Designers of embedded systems may wish to say N here to conserve space.
+ 
+ config TMPFS
+ 	bool "Virtual memory file system support (former shm fs)"
+@@ -726,8 +719,7 @@
+ 
+ config HUGETLBFS
+ 	bool "HugeTLB file system support"
+-	depends on X86 || IA64 || PPC64 || SPARC64 || (SUPERH && MMU) || \
+-		   (S390 && 64BIT) || BROKEN
++	depends on X86 || IA64 || PPC64 || SPARC64 || (SUPERH && MMU) || (S390 && 64BIT) || BROKEN
+ 	help
+ 	  hugetlbfs is a filesystem backing for HugeTLB pages, based on
+ 	  ramfs. For architectures that support it, say Y here and read
+@@ -958,7 +950,6 @@
+ 	  If unsure, say N.
+ 
+ config SQUASHFS_EMBEDDED
+-
+ 	bool "Additional option for memory-constrained systems" 
+ 	depends on SQUASHFS
+ 	default n
+--- linux-2.6.28-gentoo/lib/Kconfig.debug.orig	2009-01-26 14:06:04.000000000 +0800
++++ linux-2.6.28-gentoo/lib/Kconfig.debug	2009-01-26 14:07:24.000000000 +0800
+@@ -465,8 +465,7 @@
+ config DEBUG_BUGVERBOSE
+ 	bool "Verbose BUG() reporting (adds 70K)" if DEBUG_KERNEL && EMBEDDED
+ 	depends on BUG
+-	depends on ARM || AVR32 || M32R || M68K || SPARC32 || SPARC64 || \
+-		   FRV || SUPERH || GENERIC_BUG || BLACKFIN || MN10300
++	depends on ARM || AVR32 || M32R || M68K || SPARC32 || SPARC64 || FRV || SUPERH || GENERIC_BUG || BLACKFIN || MN10300
+ 	default !EMBEDDED
+ 	help
+ 	  Say Y here to make BUG() panics output the file name and line number
+@@ -547,9 +546,7 @@
+ 
+ config FRAME_POINTER
+ 	bool "Compile the kernel with frame pointers"
+-	depends on DEBUG_KERNEL && \
+-		(X86 || CRIS || M68K || M68KNOMMU || FRV || UML || S390 || \
+-		 AVR32 || SUPERH || BLACKFIN || MN10300)
++	depends on DEBUG_KERNEL && (X86 || CRIS || M68K || M68KNOMMU || FRV || UML || S390 || AVR32 || SUPERH || BLACKFIN || MN10300)
+ 	default y if DEBUG_INFO && UML
+ 	help
+ 	  If you say Y here the resulting kernel image will be slightly larger
+@@ -680,14 +677,14 @@
+ 	depends on BLOCK
+ 	default n
+ 	help
+-	This module enables testing of the different dumping mechanisms by
+-	inducing system failures at predefined crash points.
+-	If you don't need it: say N
+-	Choose M here to compile this code as a module. The module will be
+-	called lkdtm.
++	  This module enables testing of the different dumping mechanisms by
++	  inducing system failures at predefined crash points.
++	  If you don't need it: say N
++	  Choose M here to compile this code as a module. The module will be
++	  called lkdtm.
+ 
+-	Documentation on how to use the module can be found in
+-	drivers/misc/lkdtm.c
++	  Documentation on how to use the module can be found in
++	  drivers/misc/lkdtm.c
+ 
+ config FAULT_INJECTION
+ 	bool "Fault-injection framework"
+@@ -761,7 +758,7 @@
+ 	  to properly maintain and use. This enables checks that help
+ 	  you to keep things correct.
+ 
+-source kernel/trace/Kconfig
++source "kernel/trace/Kconfig"
+ 
+ config PROVIDE_OHCI1394_DMA_INIT
+ 	bool "Remote debugging over FireWire early on boot"
+@@ -818,7 +815,6 @@
+ 	depends on PRINTK
+ 	select PRINTK_DEBUG
+ 	help
+-
+ 	  Compiles debug level messages into the kernel, which would not
+ 	  otherwise be available at runtime. These messages can then be
+ 	  enabled/disabled on a per module basis. This mechanism implicitly
+--- linux-2.6.28-gentoo/net/dccp/Kconfig.orig	2009-01-26 13:19:37.000000000 +0800
++++ linux-2.6.28-gentoo/net/dccp/Kconfig	2009-01-26 13:20:23.000000000 +0800
+@@ -47,16 +47,16 @@
+ 	tristate "DCCP connection probing"
+ 	depends on PROC_FS && KPROBES
+ 	---help---
+-	This module allows for capturing the changes to DCCP connection
+-	state in response to incoming packets. It is used for debugging
+-	DCCP congestion avoidance modules. If you don't understand
+-	what was just said, you don't need it: say N.
++	  This module allows for capturing the changes to DCCP connection
++	  state in response to incoming packets. It is used for debugging
++	  DCCP congestion avoidance modules. If you don't understand
++	  what was just said, you don't need it: say N.
+ 
+-	Documentation on how to use DCCP connection probing can be found
+-	at http://linux-net.osdl.org/index.php/DccpProbe
++	  Documentation on how to use DCCP connection probing can be found
++	  at http://linux-net.osdl.org/index.php/DccpProbe
+ 
+-	To compile this code as a module, choose M here: the
+-	module will be called dccp_probe.
++	  To compile this code as a module, choose M here: the
++	  module will be called dccp_probe.
+ 
+ 
+ endmenu
+--- linux-2.6.28-gentoo/net/ipv4/netfilter/Kconfig.orig	2009-01-26 13:17:35.000000000 +0800
++++ linux-2.6.28-gentoo/net/ipv4/netfilter/Kconfig	2009-01-26 13:18:00.000000000 +0800
+@@ -136,7 +136,6 @@
+ 	tristate "ULOG target support"
+ 	default m if NETFILTER_ADVANCED=n
+ 	---help---
+-
+ 	  This option enables the old IPv4-only "ipt_ULOG" implementation
+ 	  which has been obsoleted by the new "nfnetlink_log" code (see
+ 	  CONFIG_NETFILTER_NETLINK_LOG).
+@@ -209,7 +208,6 @@
+ 	depends on NF_NAT
+ 	depends on NETFILTER_ADVANCED
+ 	---help---
+-
+ 	  This module implements an Application Layer Gateway (ALG) for
+ 	  SNMP payloads.  In conjunction with NAT, it allows a network
+ 	  management system to access multiple private networks with
+--- linux-2.6.28-gentoo/net/ipv4/Kconfig.orig	2009-01-26 10:11:32.000000000 +0800
++++ linux-2.6.28-gentoo/net/ipv4/Kconfig	2009-01-26 10:13:41.000000000 +0800
+@@ -59,26 +59,26 @@
+ config ASK_IP_FIB_HASH
+ 	bool "FIB_HASH"
+ 	---help---
+-	Current FIB is very proven and good enough for most users.
++	  Current FIB is very proven and good enough for most users.
+ 
+ config IP_FIB_TRIE
+ 	bool "FIB_TRIE"
+ 	---help---
+-	Use new experimental LC-trie as FIB lookup algorithm. 
+-        This improves lookup performance if you have a large
+-	number of routes.
+-
+-	LC-trie is a longest matching prefix lookup algorithm which
+-	performs better than FIB_HASH for large routing tables.
+-	But, it consumes more memory and is more complex.
++	  Use new experimental LC-trie as FIB lookup algorithm. 
++          This improves lookup performance if you have a large
++	  number of routes.
++
++	  LC-trie is a longest matching prefix lookup algorithm which
++	  performs better than FIB_HASH for large routing tables.
++	  But, it consumes more memory and is more complex.
+ 	
+-	LC-trie is described in:
++	  LC-trie is described in:
+ 	
+- 	IP-address lookup using LC-tries. Stefan Nilsson and Gunnar Karlsson
+- 	IEEE Journal on Selected Areas in Communications, 17(6):1083-1092, June 1999
+-	An experimental study of compression methods for dynamic tries
+- 	Stefan Nilsson and Matti Tikkanen. Algorithmica, 33(1):19-33, 2002.
+- 	http://www.nada.kth.se/~snilsson/public/papers/dyntrie2/
++ 	  IP-address lookup using LC-tries. Stefan Nilsson and Gunnar Karlsson
++ 	  IEEE Journal on Selected Areas in Communications, 17(6):1083-1092, June 1999
++	  An experimental study of compression methods for dynamic tries
++ 	  Stefan Nilsson and Matti Tikkanen. Algorithmica, 33(1):19-33, 2002.
++ 	  http://www.nada.kth.se/~snilsson/public/papers/dyntrie2/
+        
+ endchoice
+ 
+@@ -439,112 +439,112 @@
+ 	tristate "Binary Increase Congestion (BIC) control"
+ 	default m
+ 	---help---
+-	BIC-TCP is a sender-side only change that ensures a linear RTT
+-	fairness under large windows while offering both scalability and
+-	bounded TCP-friendliness. The protocol combines two schemes
+-	called additive increase and binary search increase. When the
+-	congestion window is large, additive increase with a large
+-	increment ensures linear RTT fairness as well as good
+-	scalability. Under small congestion windows, binary search
+-	increase provides TCP friendliness.
+-	See http://www.csc.ncsu.edu/faculty/rhee/export/bitcp/
++	  BIC-TCP is a sender-side only change that ensures a linear RTT
++	  fairness under large windows while offering both scalability and
++	  bounded TCP-friendliness. The protocol combines two schemes
++	  called additive increase and binary search increase. When the
++	  congestion window is large, additive increase with a large
++	  increment ensures linear RTT fairness as well as good
++	  scalability. Under small congestion windows, binary search
++	  increase provides TCP friendliness.
++	  See http://www.csc.ncsu.edu/faculty/rhee/export/bitcp/
+ 
+ config TCP_CONG_CUBIC
+ 	tristate "CUBIC TCP"
+ 	default y
+ 	---help---
+-	This is version 2.0 of BIC-TCP which uses a cubic growth function
+-	among other techniques.
+-	See http://www.csc.ncsu.edu/faculty/rhee/export/bitcp/cubic-paper.pdf
++	  This is version 2.0 of BIC-TCP which uses a cubic growth function
++	  among other techniques.
++	  See http://www.csc.ncsu.edu/faculty/rhee/export/bitcp/cubic-paper.pdf
+ 
+ config TCP_CONG_WESTWOOD
+ 	tristate "TCP Westwood+"
+ 	default m
+ 	---help---
+-	TCP Westwood+ is a sender-side only modification of the TCP Reno
+-	protocol stack that optimizes the performance of TCP congestion
+-	control. It is based on end-to-end bandwidth estimation to set
+-	congestion window and slow start threshold after a congestion
+-	episode. Using this estimation, TCP Westwood+ adaptively sets a
+-	slow start threshold and a congestion window which takes into
+-	account the bandwidth used  at the time congestion is experienced.
+-	TCP Westwood+ significantly increases fairness wrt TCP Reno in
+-	wired networks and throughput over wireless links.
++	  TCP Westwood+ is a sender-side only modification of the TCP Reno
++	  protocol stack that optimizes the performance of TCP congestion
++	  control. It is based on end-to-end bandwidth estimation to set
++	  congestion window and slow start threshold after a congestion
++	  episode. Using this estimation, TCP Westwood+ adaptively sets a
++	  slow start threshold and a congestion window which takes into
++	  account the bandwidth used  at the time congestion is experienced.
++	  TCP Westwood+ significantly increases fairness wrt TCP Reno in
++	  wired networks and throughput over wireless links.
+ 
+ config TCP_CONG_HTCP
+         tristate "H-TCP"
+         default m
+ 	---help---
+-	H-TCP is a send-side only modifications of the TCP Reno
+-	protocol stack that optimizes the performance of TCP
+-	congestion control for high speed network links. It uses a
+-	modeswitch to change the alpha and beta parameters of TCP Reno
+-	based on network conditions and in a way so as to be fair with
+-	other Reno and H-TCP flows.
++	  H-TCP is a send-side only modifications of the TCP Reno
++	  protocol stack that optimizes the performance of TCP
++	  congestion control for high speed network links. It uses a
++	  modeswitch to change the alpha and beta parameters of TCP Reno
++	  based on network conditions and in a way so as to be fair with
++	  other Reno and H-TCP flows.
+ 
+ config TCP_CONG_HSTCP
+ 	tristate "High Speed TCP"
+ 	depends on EXPERIMENTAL
+ 	default n
+ 	---help---
+-	Sally Floyd's High Speed TCP (RFC 3649) congestion control.
+-	A modification to TCP's congestion control mechanism for use
+-	with large congestion windows. A table indicates how much to
+-	increase the congestion window by when an ACK is received.
+- 	For more detail	see http://www.icir.org/floyd/hstcp.html
++	  Sally Floyd's High Speed TCP (RFC 3649) congestion control.
++	  A modification to TCP's congestion control mechanism for use
++	  with large congestion windows. A table indicates how much to
++	  increase the congestion window by when an ACK is received.
++ 	  For more detail see http://www.icir.org/floyd/hstcp.html
+ 
+ config TCP_CONG_HYBLA
+ 	tristate "TCP-Hybla congestion control algorithm"
+ 	depends on EXPERIMENTAL
+ 	default n
+ 	---help---
+-	TCP-Hybla is a sender-side only change that eliminates penalization of
+-	long-RTT, large-bandwidth connections, like when satellite legs are
+-	involved, especially when sharing a common bottleneck with normal
+-	terrestrial connections.
++	  TCP-Hybla is a sender-side only change that eliminates penalization of
++	  long-RTT, large-bandwidth connections, like when satellite legs are
++	  involved, especially when sharing a common bottleneck with normal
++	  terrestrial connections.
+ 
+ config TCP_CONG_VEGAS
+ 	tristate "TCP Vegas"
+ 	depends on EXPERIMENTAL
+ 	default n
+ 	---help---
+-	TCP Vegas is a sender-side only change to TCP that anticipates
+-	the onset of congestion by estimating the bandwidth. TCP Vegas
+-	adjusts the sending rate by modifying the congestion
+-	window. TCP Vegas should provide less packet loss, but it is
+-	not as aggressive as TCP Reno.
++	  TCP Vegas is a sender-side only change to TCP that anticipates
++	  the onset of congestion by estimating the bandwidth. TCP Vegas
++	  adjusts the sending rate by modifying the congestion
++	  window. TCP Vegas should provide less packet loss, but it is
++	  not as aggressive as TCP Reno.
+ 
+ config TCP_CONG_SCALABLE
+ 	tristate "Scalable TCP"
+ 	depends on EXPERIMENTAL
+ 	default n
+ 	---help---
+-	Scalable TCP is a sender-side only change to TCP which uses a
+-	MIMD congestion control algorithm which has some nice scaling
+-	properties, though is known to have fairness issues.
+-	See http://www.deneholme.net/tom/scalable/
++	  Scalable TCP is a sender-side only change to TCP which uses a
++	  MIMD congestion control algorithm which has some nice scaling
++	  properties, though is known to have fairness issues.
++	  See http://www.deneholme.net/tom/scalable/
+ 
+ config TCP_CONG_LP
+ 	tristate "TCP Low Priority"
+ 	depends on EXPERIMENTAL
+ 	default n
+ 	---help---
+-	TCP Low Priority (TCP-LP), a distributed algorithm whose goal is
+-	to utilize only the excess network bandwidth as compared to the
+-	``fair share`` of bandwidth as targeted by TCP.
+-	See http://www-ece.rice.edu/networks/TCP-LP/
++	  TCP Low Priority (TCP-LP), a distributed algorithm whose goal is
++	  to utilize only the excess network bandwidth as compared to the
++	  ``fair share`` of bandwidth as targeted by TCP.
++	  See http://www-ece.rice.edu/networks/TCP-LP/
+ 
+ config TCP_CONG_VENO
+ 	tristate "TCP Veno"
+ 	depends on EXPERIMENTAL
+ 	default n
+ 	---help---
+-	TCP Veno is a sender-side only enhancement of TCP to obtain better
+-	throughput over wireless networks. TCP Veno makes use of state
+-	distinguishing to circumvent the difficult judgment of the packet loss
+-	type. TCP Veno cuts down less congestion window in response to random
+-	loss packets.
+-	See http://www.ntu.edu.sg/home5/ZHOU0022/papers/CPFu03a.pdf
++	  TCP Veno is a sender-side only enhancement of TCP to obtain better
++	  throughput over wireless networks. TCP Veno makes use of state
++	  distinguishing to circumvent the difficult judgment of the packet loss
++	  type. TCP Veno cuts down less congestion window in response to random
++	  loss packets.
++	  See http://www.ntu.edu.sg/home5/ZHOU0022/papers/CPFu03a.pdf
+ 
+ config TCP_CONG_YEAH
+ 	tristate "YeAH TCP"
+@@ -552,27 +552,27 @@
+ 	select TCP_CONG_VEGAS
+ 	default n
+ 	---help---
+-	YeAH-TCP is a sender-side high-speed enabled TCP congestion control
+-	algorithm, which uses a mixed loss/delay approach to compute the
+-	congestion window. It's design goals target high efficiency,
+-	internal, RTT and Reno fairness, resilience to link loss while
+-	keeping network elements load as low as possible.
++	  YeAH-TCP is a sender-side high-speed enabled TCP congestion control
++	  algorithm, which uses a mixed loss/delay approach to compute the
++	  congestion window. It's design goals target high efficiency,
++	  internal, RTT and Reno fairness, resilience to link loss while
++	  keeping network elements load as low as possible.
+ 
+-	For further details look here:
+-	  http://wil.cs.caltech.edu/pfldnet2007/paper/YeAH_TCP.pdf
++	  For further details look here:
++	    http://wil.cs.caltech.edu/pfldnet2007/paper/YeAH_TCP.pdf
+ 
+ config TCP_CONG_ILLINOIS
+ 	tristate "TCP Illinois"
+ 	depends on EXPERIMENTAL
+ 	default n
+ 	---help---
+-	TCP-Illinois is a sender-side modification of TCP Reno for
+-	high speed long delay links. It uses round-trip-time to
+-	adjust the alpha and beta parameters to achieve a higher average
+-	throughput and maintain fairness.
++	  TCP-Illinois is a sender-side modification of TCP Reno for
++	  high speed long delay links. It uses round-trip-time to
++	  adjust the alpha and beta parameters to achieve a higher average
++	  throughput and maintain fairness.
+ 
+-	For further details see:
+-	  http://www.ews.uiuc.edu/~shaoliu/tcpillinois/index.html
++	  For further details see:
++	    http://www.ews.uiuc.edu/~shaoliu/tcpillinois/index.html
+ 
+ choice
+ 	prompt "Default TCP congestion control"
+--- linux-2.6.28-gentoo/net/ipv6/netfilter/Kconfig.orig	2009-01-26 13:19:23.000000000 +0800
++++ linux-2.6.28-gentoo/net/ipv6/netfilter/Kconfig	2009-01-26 13:18:28.000000000 +0800
+@@ -25,7 +25,6 @@
+ 	depends on INET && IPV6 && NETFILTER
+ 	depends on NETFILTER_ADVANCED
+ 	---help---
+-
+ 	  This option adds a queue handler to the kernel for IPv6
+ 	  packets which enables users to receive the filtered packets
+ 	  with QUEUE target using libipq.
+--- linux-2.6.28-gentoo/net/ieee80211/Kconfig.orig	2009-01-26 13:21:20.000000000 +0800
++++ linux-2.6.28-gentoo/net/ieee80211/Kconfig	2009-01-26 13:22:00.000000000 +0800
+@@ -1,9 +1,9 @@
+ config IEEE80211
+ 	tristate "Generic IEEE 802.11 Networking Stack (DEPRECATED)"
+ 	---help---
+-	This option enables the hardware independent IEEE 802.11
+-	networking stack.  This component is deprecated in favor of the
+-	mac80211 component.
++	  This option enables the hardware independent IEEE 802.11
++	  networking stack.  This component is deprecated in favor of the
++	  mac80211 component.
+ 
+ config IEEE80211_DEBUG
+ 	bool "Enable full debugging output"
+@@ -36,11 +36,11 @@
+ 	select CRYPTO_ECB
+ 	select CRC32
+ 	---help---
+-	Include software based cipher suites in support of IEEE
+-	802.11's WEP.  This is needed for WEP as well as 802.1x.
++	  Include software based cipher suites in support of IEEE
++	  802.11's WEP.  This is needed for WEP as well as 802.1x.
+ 
+-	This can be compiled as a module and it will be called
+-	"ieee80211_crypt_wep".
++	  This can be compiled as a module and it will be called
++	  "ieee80211_crypt_wep".
+ 
+ config IEEE80211_CRYPT_CCMP
+ 	tristate "IEEE 802.11i CCMP support"
+@@ -48,12 +48,12 @@
+ 	select CRYPTO
+ 	select CRYPTO_AES
+ 	---help---
+-	Include software based cipher suites in support of IEEE 802.11i
+-	(aka TGi, WPA, WPA2, WPA-PSK, etc.) for use with CCMP enabled
+-	networks.
++	  Include software based cipher suites in support of IEEE 802.11i
++	  (aka TGi, WPA, WPA2, WPA-PSK, etc.) for use with CCMP enabled
++	  networks.
+ 
+-	This can be compiled as a module and it will be called
+-	"ieee80211_crypt_ccmp".
++	  This can be compiled as a module and it will be called
++	  "ieee80211_crypt_ccmp".
+ 
+ config IEEE80211_CRYPT_TKIP
+ 	tristate "IEEE 802.11i TKIP encryption"
+@@ -64,10 +64,10 @@
+ 	select CRYPTO_ECB
+ 	select CRC32
+ 	---help---
+-	Include software based cipher suites in support of IEEE 802.11i
+-	(aka TGi, WPA, WPA2, WPA-PSK, etc.) for use with TKIP enabled
+-	networks.
++	  Include software based cipher suites in support of IEEE 802.11i
++	  (aka TGi, WPA, WPA2, WPA-PSK, etc.) for use with TKIP enabled
++	  networks.
+ 
+-	This can be compiled as a module and it will be called
+-	"ieee80211_crypt_tkip".
++	  This can be compiled as a module and it will be called
++	  "ieee80211_crypt_tkip".
+ 
+--- linux-2.6.28-gentoo/net/netfilter/Kconfig.orig	2009-01-26 10:14:57.000000000 +0800
++++ linux-2.6.28-gentoo/net/netfilter/Kconfig	2009-01-26 10:18:18.000000000 +0800
+@@ -610,11 +610,11 @@
+ 	tristate '"iprange" address range match support'
+ 	depends on NETFILTER_ADVANCED
+ 	---help---
+-	This option adds a "iprange" match, which allows you to match based on
+-	an IP address range. (Normal iptables only matches on single addresses
+-	with an optional mask.)
++	  This option adds a "iprange" match, which allows you to match based on
++	  an IP address range. (Normal iptables only matches on single addresses
++	  with an optional mask.)
+ 
+-	If unsure, say M.
++	  If unsure, say M.
+ 
+ config NETFILTER_XT_MATCH_LENGTH
+ 	tristate '"length" match support'
+@@ -668,9 +668,9 @@
+ 	tristate '"owner" match support'
+ 	depends on NETFILTER_ADVANCED
+ 	---help---
+-	Socket owner matching allows you to match locally-generated packets
+-	based on who created the socket: the user or group. It is also
+-	possible to check whether a socket actually exists.
++	  Socket owner matching allows you to match locally-generated packets
++	  based on who created the socket: the user or group. It is also
++	  possible to check whether a socket actually exists.
+ 
+ config NETFILTER_XT_MATCH_POLICY
+ 	tristate 'IPsec "policy" match support'
+@@ -743,18 +743,18 @@
+ 	tristate '"recent" match support'
+ 	depends on NETFILTER_ADVANCED
+ 	---help---
+-	This match is used for creating one or many lists of recently
+-	used addresses and then matching against that/those list(s).
++	  This match is used for creating one or many lists of recently
++	  used addresses and then matching against that/those list(s).
+ 
+-	Short options are available by using 'iptables -m recent -h'
+-	Official Website: <http://snowman.net/projects/ipt_recent/>
++	  Short options are available by using 'iptables -m recent -h'
++	  Official Website: <http://snowman.net/projects/ipt_recent/>
+ 
+ config NETFILTER_XT_MATCH_RECENT_PROC_COMPAT
+ 	bool 'Enable obsolete /proc/net/ipt_recent'
+ 	depends on NETFILTER_XT_MATCH_RECENT && PROC_FS
+ 	---help---
+-	This option enables the old /proc/net/ipt_recent interface,
+-	which has been obsoleted by /proc/net/xt_recent.
++	  This option enables the old /proc/net/ipt_recent interface,
++	  which has been obsoleted by /proc/net/xt_recent.
+ 
+ config NETFILTER_XT_MATCH_SCTP
+ 	tristate  '"sctp" protocol match support (EXPERIMENTAL)'
+--- linux-2.6.28-gentoo/net/Kconfig.orig	2009-01-26 10:13:58.000000000 +0800
++++ linux-2.6.28-gentoo/net/Kconfig	2009-01-26 13:21:02.000000000 +0800
+@@ -213,16 +213,16 @@
+ 	tristate "TCP connection probing"
+ 	depends on INET && EXPERIMENTAL && PROC_FS && KPROBES
+ 	---help---
+-	This module allows for capturing the changes to TCP connection
+-	state in response to incoming packets. It is used for debugging
+-	TCP congestion avoidance modules. If you don't understand
+-	what was just said, you don't need it: say N.
++	  This module allows for capturing the changes to TCP connection
++	  state in response to incoming packets. It is used for debugging
++	  TCP congestion avoidance modules. If you don't understand
++	  what was just said, you don't need it: say N.
+ 
+-	Documentation on how to use TCP connection probing can be found
+-	at http://linux-net.osdl.org/index.php/TcpProbe
++	  Documentation on how to use TCP connection probing can be found
++	  at http://linux-net.osdl.org/index.php/TcpProbe
+ 
+-	To compile this code as a module, choose M here: the
+-	module will be called tcp_probe.
++	  To compile this code as a module, choose M here: the
++	  module will be called tcp_probe.
+ 
+ endmenu
+ 
+--- linux-2.6.28-gentoo/arch/x86/kvm/Kconfig.orig	2009-01-26 14:08:12.000000000 +0800
++++ linux-2.6.28-gentoo/arch/x86/kvm/Kconfig	2009-01-26 14:08:30.000000000 +0800
+@@ -66,7 +66,7 @@
+ 
+ # OK, it's a little counter-intuitive to do this, but it puts it neatly under
+ # the virtualization menu.
+-source drivers/lguest/Kconfig
+-source drivers/virtio/Kconfig
++source "drivers/lguest/Kconfig"
++source "drivers/virtio/Kconfig"
+ 
+ endif # VIRTUALIZATION
+--- linux-2.6.28-gentoo/arch/x86/Kconfig.orig	2009-01-26 09:42:54.000000000 +0800
++++ linux-2.6.28-gentoo/arch/x86/Kconfig	2009-01-26 10:02:24.000000000 +0800
+@@ -290,9 +290,9 @@
+ 	  say N here, otherwise the kernel you build will not be bootable.
+ 
+ config X86_GENERICARCH
+-       bool "Generic architecture"
++	bool "Generic architecture"
+ 	depends on X86_32
+-       help
++	help
+           This option compiles in the NUMAQ, Summit, bigsmp, ES7000, default
+ 	  subarchitectures.  It is intended for a generic binary kernel.
+ 	  if you select them all, kernel will probe it one by one. and will
+@@ -1243,15 +1243,15 @@
+ 	bool "EFI runtime service support"
+ 	depends on ACPI
+ 	---help---
+-	This enables the kernel to use EFI runtime services that are
+-	available (such as the EFI variable services).
++	  This enables the kernel to use EFI runtime services that are
++	  available (such as the EFI variable services).
+ 
+-	This option is only useful on systems that have EFI firmware.
+-  	In addition, you should use the latest ELILO loader available
+-  	at <http://elilo.sourceforge.net> in order to take advantage
+-  	of EFI runtime services. However, even with this option, the
+-  	resultant kernel should continue to boot on existing non-EFI
+-  	platforms.
++	  This option is only useful on systems that have EFI firmware.
++  	  In addition, you should use the latest ELILO loader available
++  	  at <http://elilo.sourceforge.net> in order to take advantage
++  	  of EFI runtime services. However, even with this option, the
++  	  resultant kernel should continue to boot on existing non-EFI
++  	  platforms.
+ 
+ config SECCOMP
+ 	def_bool y
+@@ -1293,7 +1293,7 @@
+ 	  functions that use large-ish on-stack buffers. By enabling
+ 	  this option, GCC will be asked to do this for ALL functions.
+ 
+-source kernel/Kconfig.hz
++source "kernel/Kconfig.hz"
+ 
+ config KEXEC
+ 	bool "kexec system call"
+--- linux-2.6.28-gentoo/block/Kconfig.iosched.orig	2009-01-18 10:25:28.000000000 +0800
++++ linux-2.6.28-gentoo/block/Kconfig.iosched	2009-01-18 10:34:22.000000000 +0800
+@@ -47,17 +47,17 @@
+ 	  Select the I/O scheduler which will be used by default for all
+ 	  block devices.
+ 
+-	config DEFAULT_AS
+-		bool "Anticipatory" if IOSCHED_AS=y
++config DEFAULT_AS
++	bool "Anticipatory" if IOSCHED_AS=y
+ 
+-	config DEFAULT_DEADLINE
+-		bool "Deadline" if IOSCHED_DEADLINE=y
++config DEFAULT_DEADLINE
++	bool "Deadline" if IOSCHED_DEADLINE=y
+ 
+-	config DEFAULT_CFQ
+-		bool "CFQ" if IOSCHED_CFQ=y
++config DEFAULT_CFQ
++	bool "CFQ" if IOSCHED_CFQ=y
+ 
+-	config DEFAULT_NOOP
+-		bool "No-op"
++config DEFAULT_NOOP
++	bool "No-op"
+ 
+ endchoice
+ 
+--- linux-2.6.28-gentoo/block/Kconfig.orig	2009-01-18 10:25:19.000000000 +0800
++++ linux-2.6.28-gentoo/block/Kconfig	2009-01-18 10:25:50.000000000 +0800
+@@ -84,14 +84,14 @@
+ config BLK_DEV_INTEGRITY
+ 	bool "Block layer data integrity support"
+ 	---help---
+-	Some storage devices allow extra information to be
+-	stored/retrieved to help protect the data.  The block layer
+-	data integrity option provides hooks which can be used by
+-	filesystems to ensure better data integrity.
++	  Some storage devices allow extra information to be
++	  stored/retrieved to help protect the data.  The block layer
++	  data integrity option provides hooks which can be used by
++	  filesystems to ensure better data integrity.
+ 
+-	Say yes here if you have a storage device that provides the
+-	T10/SCSI Data Integrity Field or the T13/ATA External Path
+-	Protection.  If in doubt, say N.
++	  Say yes here if you have a storage device that provides the
++	  T10/SCSI Data Integrity Field or the T13/ATA External Path
++	  Protection.  If in doubt, say N.
+ 
+ endif # BLOCK
+ 
+@@ -100,4 +100,4 @@
+ 	depends on BLOCK && COMPAT
+ 	default y
+ 
+-source block/Kconfig.iosched
++source "block/Kconfig.iosched"
+--- linux-2.6.28-gentoo/sound/aoa/soundbus/Kconfig.orig	2009-01-26 13:57:06.000000000 +0800
++++ linux-2.6.28-gentoo/sound/aoa/soundbus/Kconfig	2009-01-26 13:57:16.000000000 +0800
+@@ -2,13 +2,13 @@
+ 	tristate "Apple Soundbus support"
+ 	select SND_PCM
+ 	---help---
+-	This option enables the generic driver for the soundbus
+-	support on Apple machines.
++	  This option enables the generic driver for the soundbus
++	  support on Apple machines.
+ 	
+-	It is required for the sound bus implementations.
++	  It is required for the sound bus implementations.
+ 
+ config SND_AOA_SOUNDBUS_I2S
+ 	tristate "I2S bus support"
+ 	depends on SND_AOA_SOUNDBUS && PCI
+ 	---help---
+-	This option enables support for Apple I2S busses.
++	  This option enables support for Apple I2S busses.
+--- linux-2.6.28-gentoo/sound/aoa/fabrics/Kconfig.orig	2009-01-26 13:56:19.000000000 +0800
++++ linux-2.6.28-gentoo/sound/aoa/fabrics/Kconfig	2009-01-26 13:56:29.000000000 +0800
+@@ -3,9 +3,9 @@
+ 	select SND_AOA_SOUNDBUS
+ 	select SND_AOA_SOUNDBUS_I2S
+ 	---help---
+-	This enables the layout-id fabric for the Apple Onboard
+-	Audio driver, the module holding it all together
+-	based on the device-tree's layout-id property.
++	  This enables the layout-id fabric for the Apple Onboard
++	  Audio driver, the module holding it all together
++	  based on the device-tree's layout-id property.
+ 	
+-	If you are unsure and have a later Apple machine,
+-	compile it as a module.
++	  If you are unsure and have a later Apple machine,
++	  compile it as a module.
+--- linux-2.6.28-gentoo/sound/aoa/codecs/Kconfig.orig	2009-01-26 13:56:41.000000000 +0800
++++ linux-2.6.28-gentoo/sound/aoa/codecs/Kconfig	2009-01-26 13:56:57.000000000 +0800
+@@ -3,9 +3,9 @@
+ 	select I2C
+ 	select I2C_POWERMAC
+ 	---help---
+-	This option enables support for the Onyx (pcm3052)
+-	codec chip found in the latest Apple machines
+-	(most of those with digital audio output).
++	  This option enables support for the Onyx (pcm3052)
++	  codec chip found in the latest Apple machines
++	  (most of those with digital audio output).
+ 
+ #config SND_AOA_TOPAZ
+ #	tristate "support Topaz chips"
+@@ -20,13 +20,13 @@
+ 	select I2C
+ 	select I2C_POWERMAC
+ 	---help---
+-	This option enables support for the tas chips
+-	found in a lot of Apple Machines, especially
+-	iBooks and PowerBooks without digital.
++	  This option enables support for the tas chips
++	  found in a lot of Apple Machines, especially
++	  iBooks and PowerBooks without digital.
+ 
+ config SND_AOA_TOONIE
+ 	tristate "support Toonie chip"
+ 	---help---
+-	This option enables support for the toonie codec
+-	found in the Mac Mini. If you have a Mac Mini and
+-	want to hear sound, select this option.
++	  This option enables support for the toonie codec
++	  found in the Mac Mini. If you have a Mac Mini and
++	  want to hear sound, select this option.
+--- linux-2.6.28-gentoo/sound/aoa/Kconfig.orig	2009-01-26 13:55:55.000000000 +0800
++++ linux-2.6.28-gentoo/sound/aoa/Kconfig	2009-01-26 13:56:06.000000000 +0800
+@@ -3,8 +3,8 @@
+ 	depends on PPC_PMAC
+ 	select SND_PCM
+ 	---help---
+-	This option enables the new driver for the various
+-	Apple Onboard Audio components.
++	  This option enables the new driver for the various
++	  Apple Onboard Audio components.
+ 
+ if SND_AOA
+ 
+--- linux-2.6.28-gentoo/sound/soc/Kconfig.orig	2009-01-26 13:57:33.000000000 +0800
++++ linux-2.6.28-gentoo/sound/soc/Kconfig	2009-01-26 13:57:44.000000000 +0800
+@@ -7,7 +7,6 @@
+ 	select SND_PCM
+ 	select AC97_BUS if SND_SOC_AC97_BUS
+ 	---help---
+-
+ 	  If you want ASoC support, you should say Y here and also to the
+ 	  specific driver for your SoC platform below.
+ 	  
+--- linux-2.6.28-gentoo/drivers/md/Kconfig.orig	2009-01-26 13:34:20.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/md/Kconfig	2009-01-26 13:34:47.000000000 +0800
+@@ -278,16 +278,16 @@
+ 	tristate "I/O delaying target (EXPERIMENTAL)"
+ 	depends on BLK_DEV_DM && EXPERIMENTAL
+ 	---help---
+-	A target that delays reads and/or writes and can send
+-	them to different devices.  Useful for testing.
++	  A target that delays reads and/or writes and can send
++	  them to different devices.  Useful for testing.
+ 
+-	If unsure, say N.
++	  If unsure, say N.
+ 
+ config DM_UEVENT
+ 	bool "DM uevents (EXPERIMENTAL)"
+ 	depends on BLK_DEV_DM && EXPERIMENTAL
+ 	---help---
+-	Generate udev events for DM events.
++	  Generate udev events for DM events.
+ 
+ config BLK_DEV_DM_BBR
+ 	tristate "Bad Block Relocation Device Target (EXPERIMENTAL)"
+--- linux-2.6.28-gentoo/drivers/w1/Kconfig.orig	2009-01-26 13:46:39.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/w1/Kconfig	2009-01-26 13:49:15.000000000 +0800
+@@ -16,7 +16,7 @@
+ 	depends on CONNECTOR
+ 	bool "Userspace communication over connector"
+ 	default y
+-	--- help ---
++	---help---
+ 	  This allows to communicate with userspace using connector. For more
+ 	  information see <file:Documentation/connector/connector.txt>.
+ 	  There are three types of messages between w1 core and userspace:
+@@ -25,7 +25,7 @@
+ 	  2. Userspace commands. Includes read/write and search/alarm search commands.
+ 	  3. Replies to userspace commands.
+ 
+-source drivers/w1/masters/Kconfig
+-source drivers/w1/slaves/Kconfig
++source "drivers/w1/masters/Kconfig"
++source "drivers/w1/slaves/Kconfig"
+ 
+ endif # W1
+--- linux-2.6.28-gentoo/drivers/i2c/Kconfig.orig	2009-01-26 13:45:16.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/i2c/Kconfig	2009-01-26 13:45:35.000000000 +0800
+@@ -52,9 +52,9 @@
+ 
+ 	  In doubt, say Y.
+ 
+-source drivers/i2c/algos/Kconfig
+-source drivers/i2c/busses/Kconfig
+-source drivers/i2c/chips/Kconfig
++source "drivers/i2c/algos/Kconfig"
++source "drivers/i2c/busses/Kconfig"
++source "drivers/i2c/chips/Kconfig"
+ 
+ config I2C_DEBUG_CORE
+ 	bool "I2C Core debugging messages"
+--- linux-2.6.28-gentoo/drivers/gpu/drm/Kconfig.orig	2009-01-26 13:52:15.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/gpu/drm/Kconfig	2009-01-26 13:53:09.000000000 +0800
+@@ -52,7 +52,6 @@
+ choice
+ 	prompt "Intel 830M, 845G, 852GM, 855GM, 865G"
+ 	depends on DRM && AGP && AGP_INTEL
+-	optional
+ 
+ config DRM_I830
+ 	tristate "i830 driver"
+--- linux-2.6.28-gentoo/drivers/hid/Kconfig.orig	2009-01-26 13:58:04.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/hid/Kconfig	2009-01-26 13:59:46.000000000 +0800
+@@ -36,34 +36,34 @@
+ 	default y if !EMBEDDED
+ 	depends on HID
+ 	---help---
+-	This option lets the HID layer output diagnostics about its internal
+-	state, resolve HID usages, dump HID fields, etc. Individual HID drivers
+-	use this debugging facility to output information about individual HID
+-	devices, etc.
++	  This option lets the HID layer output diagnostics about its internal
++	  state, resolve HID usages, dump HID fields, etc. Individual HID drivers
++	  use this debugging facility to output information about individual HID
++	  devices, etc.
+ 
+-	This feature is useful for those who are either debugging the HID parser
+-	or any HID hardware device.
++	  This feature is useful for those who are either debugging the HID parser
++	  or any HID hardware device.
+ 
+-	If unsure, say N
++	  If unsure, say N
+ 
+ config HIDRAW
+ 	bool "/dev/hidraw raw HID device support"
+ 	depends on HID
+ 	---help---
+-	Say Y here if you want to support HID devices (from the USB
+-	specification standpoint) that aren't strictly user interface
+-	devices, like monitor controls and Uninterruptable Power Supplies.
+-
+-	This module supports these devices separately using a separate
+-	event interface on /dev/hidraw.
+-
+-	There is also a /dev/hiddev configuration option in the USB HID
+-	configuration menu. In comparison to hiddev, this device does not process
+-	the hid events at all (no parsing, no lookups). This lets applications
+-	to work on raw hid events when they want to, and avoid using transport-specific
+-	userspace libhid/libusb libraries.
++	  Say Y here if you want to support HID devices (from the USB
++	  specification standpoint) that aren't strictly user interface
++	  devices, like monitor controls and Uninterruptable Power Supplies.
++
++	  This module supports these devices separately using a separate
++	  event interface on /dev/hidraw.
++
++	  There is also a /dev/hiddev configuration option in the USB HID
++	  configuration menu. In comparison to hiddev, this device does not process
++	  the hid events at all (no parsing, no lookups). This lets applications
++	  to work on raw hid events when they want to, and avoid using transport-specific
++	  userspace libhid/libusb libraries.
+ 
+-	If unsure, say Y.
++	  If unsure, say Y.
+ 
+ source "drivers/hid/usbhid/Kconfig"
+ 
+@@ -74,95 +74,95 @@
+ 	bool "Load all HID drivers on hid core load"
+ 	default y
+ 	---help---
+-	Compatible option for older userspace. If you have system without udev
+-	support of module loading through aliases and also old
+-	module-init-tools which can't handle hid bus, choose Y here. Otherwise
+-	say N. If you say N and your userspace is old enough, the only
+-	functionality you lose is modules autoloading.
++	  Compatible option for older userspace. If you have system without udev
++	  support of module loading through aliases and also old
++	  module-init-tools which can't handle hid bus, choose Y here. Otherwise
++	  say N. If you say N and your userspace is old enough, the only
++	  functionality you lose is modules autoloading.
+ 
+-	If unsure, say Y.
++	  If unsure, say Y.
+ 
+ config HID_A4TECH
+ 	tristate "A4 tech" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for A4 tech X5 and WOP-35 / Trust 450L mice.
++	  Support for A4 tech X5 and WOP-35 / Trust 450L mice.
+ 
+ config HID_APPLE
+ 	tristate "Apple" if EMBEDDED
+ 	depends on (USB_HID || BT_HIDP)
+ 	default y
+ 	---help---
+-	Support for some Apple devices which less or more break
+-	HID specification.
++	  Support for some Apple devices which less or more break
++	  HID specification.
+ 
+-	Say Y here if you want support for keyboards of	Apple iBooks, PowerBooks,
+-	MacBooks, MacBook Pros and Apple Aluminum.
++	  Say Y here if you want support for keyboards of	Apple iBooks, PowerBooks,
++	  MacBooks, MacBook Pros and Apple Aluminum.
+ 
+ config HID_BELKIN
+ 	tristate "Belkin" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for Belkin Flip KVM and Wireless keyboard.
++	  Support for Belkin Flip KVM and Wireless keyboard.
+ 
+ config HID_BRIGHT
+ 	tristate "Bright" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for Bright ABNT-2 keyboard.
++	  Support for Bright ABNT-2 keyboard.
+ 
+ config HID_CHERRY
+ 	tristate "Cherry" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for Cherry Cymotion keyboard.
++	  Support for Cherry Cymotion keyboard.
+ 
+ config HID_CHICONY
+ 	tristate "Chicony" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for Chicony Tactical pad.
++	  Support for Chicony Tactical pad.
+ 
+ config HID_CYPRESS
+ 	tristate "Cypress" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for cypress mouse and barcode readers.
++	  Support for cypress mouse and barcode readers.
+ 
+ config HID_DELL
+ 	tristate "Dell" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for quirky Dell HID hardware that require
+-	special LED handling (W7658 and SK8115 models)
++	  Support for quirky Dell HID hardware that require
++	  special LED handling (W7658 and SK8115 models)
+ 
+ config HID_EZKEY
+ 	tristate "Ezkey" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for Ezkey BTC 8193 keyboard.
++	  Support for Ezkey BTC 8193 keyboard.
+ 
+ config HID_GYRATION
+ 	tristate "Gyration" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for Gyration remote control.
++	  Support for Gyration remote control.
+ 
+ config HID_LOGITECH
+ 	tristate "Logitech" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for Logitech devices that are not fully compliant with HID standard.
++	  Support for Logitech devices that are not fully compliant with HID standard.
+ 
+ config LOGITECH_FF
+ 	bool "Logitech force feedback"
+@@ -193,21 +193,21 @@
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for Microsoft devices that are not fully compliant with HID standard.
++	  Support for Microsoft devices that are not fully compliant with HID standard.
+ 
+ config HID_MONTEREY
+ 	tristate "Monterey" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for Monterey Genius KB29E.
++	  Support for Monterey Genius KB29E.
+ 
+ config HID_PANTHERLORD
+ 	tristate "Pantherlord devices support" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for PantherLord/GreenAsia based device support.
++	  Support for PantherLord/GreenAsia based device support.
+ 
+ config PANTHERLORD_FF
+ 	bool "Pantherlord force feedback support"
+@@ -222,28 +222,28 @@
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for Petalynx Maxter remote control.
++	  Support for Petalynx Maxter remote control.
+ 
+ config HID_SAMSUNG
+ 	tristate "Samsung" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for Samsung InfraRed remote control.
++	  Support for Samsung InfraRed remote control.
+ 
+ config HID_SONY
+ 	tristate "Sony" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for Sony PS3 controller.
++	  Support for Sony PS3 controller.
+ 
+ config HID_SUNPLUS
+ 	tristate "Sunplus" if EMBEDDED
+ 	depends on USB_HID
+ 	default y
+ 	---help---
+-	Support for Sunplus wireless desktop.
++	  Support for Sunplus wireless desktop.
+ 
+ config THRUSTMASTER_FF
+ 	tristate "ThrustMaster devices support"
+--- linux-2.6.28-gentoo/drivers/ide/Kconfig.orig	2009-01-26 13:27:39.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/ide/Kconfig	2009-01-26 13:28:16.000000000 +0800
+@@ -656,7 +656,7 @@
+ 	tristate "Toshiba TC86C001 support"
+ 	select BLK_DEV_IDEDMA_PCI
+ 	help
+-	This driver adds support for Toshiba TC86C001 GOKU-S chip.
++	  This driver adds support for Toshiba TC86C001 GOKU-S chip.
+ 
+ config BLK_DEV_CELLEB
+ 	tristate "Toshiba's Cell Reference Set IDE support"
+@@ -904,7 +904,6 @@
+ endif
+ 
+ config BLK_DEV_IDEDMA
+-	def_bool BLK_DEV_IDEDMA_SFF || \
+-		 BLK_DEV_IDEDMA_ICS || BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
++	def_bool BLK_DEV_IDEDMA_SFF || BLK_DEV_IDEDMA_ICS || BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
+ 
+ endif # IDE
+--- linux-2.6.28-gentoo/drivers/mfd/Kconfig.orig	2009-01-26 13:50:24.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/mfd/Kconfig	2009-01-26 13:50:42.000000000 +0800
+@@ -11,7 +11,7 @@
+ 
+ config MFD_SM501
+ 	tristate "Support for Silicon Motion SM501"
+-	 ---help---
++	---help---
+ 	  This is the core driver for the Silicon Motion SM501 multimedia
+ 	  companion chip. This device is a multifunction device which may
+ 	  provide numerous interfaces including USB host controller, USB gadget,
+@@ -22,7 +22,7 @@
+ config MFD_SM501_GPIO
+ 	bool "Export GPIO via GPIO layer"
+ 	depends on MFD_SM501 && GPIOLIB
+-	 ---help---
++	---help---
+ 	 This option uses the gpio library layer to export the 64 GPIO
+ 	 lines on the SM501. The platform data is used to supply the
+ 	 base number for the first GPIO line to register.
+@@ -30,7 +30,7 @@
+ config MFD_ASIC3
+ 	bool "Support for Compaq ASIC3"
+ 	depends on GENERIC_HARDIRQS && GPIOLIB && ARM
+-	 ---help---
++	---help---
+ 	  This driver supports the ASIC3 multifunction chip found on many
+ 	  PDAs (mainly iPAQ and HTC based ones)
+ 
+--- linux-2.6.28-gentoo/drivers/net/wireless/hostap/Kconfig.orig	2009-01-26 13:37:58.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/net/wireless/hostap/Kconfig	2009-01-26 13:38:53.000000000 +0800
+@@ -5,84 +5,84 @@
+ 	select IEEE80211
+ 	select IEEE80211_CRYPT_WEP
+ 	---help---
+-	Shared driver code for IEEE 802.11b wireless cards based on
+-	Intersil Prism2/2.5/3 chipset. This driver supports so called
+-	Host AP mode that allows the card to act as an IEEE 802.11
+-	access point.
+-
+-	See <http://hostap.epitest.fi/> for more information about the
+-	Host AP driver configuration and tools. This site includes
+-	information and tools (hostapd and wpa_supplicant) for WPA/WPA2
+-	support.
+-
+-	This option includes the base Host AP driver code that is shared by
+-	different hardware models. You will also need to enable support for
+-	PLX/PCI/CS version of the driver to actually use the driver.
++	  Shared driver code for IEEE 802.11b wireless cards based on
++	  Intersil Prism2/2.5/3 chipset. This driver supports so called
++	  Host AP mode that allows the card to act as an IEEE 802.11
++	  access point.
++
++	  See <http://hostap.epitest.fi/> for more information about the
++	  Host AP driver configuration and tools. This site includes
++	  information and tools (hostapd and wpa_supplicant) for WPA/WPA2
++	  support.
++
++	  This option includes the base Host AP driver code that is shared by
++	  different hardware models. You will also need to enable support for
++	  PLX/PCI/CS version of the driver to actually use the driver.
+ 
+-	The driver can be compiled as a module and it will be called
+-	"hostap.ko".
++	  The driver can be compiled as a module and it will be called
++	  "hostap.ko".
+ 
+ config HOSTAP_FIRMWARE
+ 	bool "Support downloading firmware images with Host AP driver"
+ 	depends on HOSTAP
+ 	---help---
+-	Configure Host AP driver to include support for firmware image
+-	download. This option by itself only enables downloading to the
+-	volatile memory, i.e. the card RAM. This option is required to
+-	support cards that don't have firmware in flash, such as D-Link
+-	DWL-520 rev E and D-Link DWL-650 rev P.
++	  Configure Host AP driver to include support for firmware image
++	  download. This option by itself only enables downloading to the
++	  volatile memory, i.e. the card RAM. This option is required to
++	  support cards that don't have firmware in flash, such as D-Link
++	  DWL-520 rev E and D-Link DWL-650 rev P.
+ 
+-	Firmware image downloading needs a user space tool, prism2_srec.
+-	It is available from http://hostap.epitest.fi/.
++	  Firmware image downloading needs a user space tool, prism2_srec.
++	  It is available from http://hostap.epitest.fi/.
+ 
+ config HOSTAP_FIRMWARE_NVRAM
+ 	bool "Support for non-volatile firmware download"
+ 	depends on HOSTAP_FIRMWARE
+ 	---help---
+-	Allow Host AP driver to write firmware images to the non-volatile
+-	card memory, i.e. flash memory that survives power cycling.
+-	Enable this option if you want to be able to change card firmware
+-	permanently.
++	  Allow Host AP driver to write firmware images to the non-volatile
++	  card memory, i.e. flash memory that survives power cycling.
++	  Enable this option if you want to be able to change card firmware
++	  permanently.
+ 
+-	Firmware image downloading needs a user space tool, prism2_srec.
+-	It is available from http://hostap.epitest.fi/.
++	  Firmware image downloading needs a user space tool, prism2_srec.
++	  It is available from http://hostap.epitest.fi/.
+ 
+ config HOSTAP_PLX
+ 	tristate "Host AP driver for Prism2/2.5/3 in PLX9052 PCI adaptors"
+ 	depends on PCI && HOSTAP
+ 	---help---
+-	Host AP driver's version for Prism2/2.5/3 PC Cards in PLX9052 based
+-	PCI adaptors.
++	  Host AP driver's version for Prism2/2.5/3 PC Cards in PLX9052 based
++	  PCI adaptors.
+ 
+-	"Host AP support for Prism2/2.5/3 IEEE 802.11b" is required for this
+-	driver and its help text includes more information about the Host AP
+-	driver.
++	  "Host AP support for Prism2/2.5/3 IEEE 802.11b" is required for this
++	  driver and its help text includes more information about the Host AP
++	  driver.
+ 
+-	The driver can be compiled as a module and will be named
+-	"hostap_plx.ko".
++	  The driver can be compiled as a module and will be named
++	  "hostap_plx.ko".
+ 
+ config HOSTAP_PCI
+ 	tristate "Host AP driver for Prism2.5 PCI adaptors"
+ 	depends on PCI && HOSTAP
+ 	---help---
+-	Host AP driver's version for Prism2.5 PCI adaptors.
++	  Host AP driver's version for Prism2.5 PCI adaptors.
+ 
+-	"Host AP support for Prism2/2.5/3 IEEE 802.11b" is required for this
+-	driver and its help text includes more information about the Host AP
+-	driver.
++	  "Host AP support for Prism2/2.5/3 IEEE 802.11b" is required for this
++	  driver and its help text includes more information about the Host AP
++	  driver.
+ 
+-	The driver can be compiled as a module and will be named
+-	"hostap_pci.ko".
++	  The driver can be compiled as a module and will be named
++	  "hostap_pci.ko".
+ 
+ config HOSTAP_CS
+ 	tristate "Host AP driver for Prism2/2.5/3 PC Cards"
+ 	depends on PCMCIA && HOSTAP
+ 	---help---
+-	Host AP driver's version for Prism2/2.5/3 PC Cards.
++	  Host AP driver's version for Prism2/2.5/3 PC Cards.
+ 
+-	"Host AP support for Prism2/2.5/3 IEEE 802.11b" is required for this
+-	driver and its help text includes more information about the Host AP
+-	driver.
++	  "Host AP support for Prism2/2.5/3 IEEE 802.11b" is required for this
++	  driver and its help text includes more information about the Host AP
++	  driver.
+ 
+-	The driver can be compiled as a module and will be named
+-	"hostap_cs.ko".
++	  The driver can be compiled as a module and will be named
++	  "hostap_cs.ko".
+--- linux-2.6.28-gentoo/drivers/net/wireless/Kconfig.orig	2009-01-26 13:36:39.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/net/wireless/Kconfig	2009-01-26 13:37:34.000000000 +0800
+@@ -428,7 +428,6 @@
+ 	tristate "Symbol Spectrum24 Trilogy PCMCIA card support"
+ 	depends on PCMCIA && HERMES
+ 	---help---
+-
+ 	  This is a driver for 802.11b cards using RAM-loadable Symbol
+ 	  firmware, such as Symbol Wireless Networker LA4100, CompactFlash
+ 	  cards by Socket Communications and Intel PRO/Wireless 2011B.
+@@ -443,7 +442,7 @@
+       select WIRELESS_EXT
+       select FW_LOADER
+       select CRC32
+-       ---help---
++      ---help---
+         A driver 802.11b wireless cards based on the Atmel fast-vnet
+         chips. This driver supports standard Linux wireless extensions.
+ 
+@@ -457,7 +456,7 @@
+ config PCI_ATMEL
+       tristate "Atmel at76c506 PCI cards"
+       depends on ATMEL && PCI
+-       ---help---
++      ---help---
+         Enable support for PCI and mini-PCI cards containing the
+         Atmel at76c506 chip.
+ 
+@@ -495,7 +494,7 @@
+       tristate "Planet WL3501 PCMCIA cards"
+       depends on EXPERIMENTAL && PCMCIA && WLAN_80211
+       select WIRELESS_EXT
+-       ---help---
++      ---help---
+          A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
+ 	 It has basic support for Linux wireless extensions and initial
+ 	 micro support for ethtool.
+--- linux-2.6.28-gentoo/drivers/net/Kconfig.orig	2009-01-26 13:35:29.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/net/Kconfig	2009-01-26 13:39:35.000000000 +0800
+@@ -515,9 +515,7 @@
+ 
+ config SH_ETH
+ 	tristate "Renesas SuperH Ethernet support"
+-	depends on SUPERH && \
+-		(CPU_SUBTYPE_SH7710 || CPU_SUBTYPE_SH7712 || CPU_SUBTYPE_SH7763 || \
+-		 CPU_SUBTYPE_SH7619)
++	depends on SUPERH && (CPU_SUBTYPE_SH7710 || CPU_SUBTYPE_SH7712 || CPU_SUBTYPE_SH7763 || CPU_SUBTYPE_SH7619)
+ 	select CRC32
+ 	select MII
+ 	select MDIO_BITBANG
+@@ -893,8 +891,7 @@
+ 	tristate "SMC 91C9x/91C1xxx support"
+ 	select CRC32
+ 	select MII
+-	depends on ARM || REDWOOD_5 || REDWOOD_6 || M32R || SUPERH || \
+-		MIPS || BLACKFIN || MN10300
++	depends on ARM || REDWOOD_5 || REDWOOD_6 || M32R || SUPERH || MIPS || BLACKFIN || MN10300
+ 	help
+ 	  This is a driver for SMC's 91x series of Ethernet chipsets,
+ 	  including the SMC91C94 and the SMC91C111. Say Y if you want it
+@@ -1392,8 +1389,7 @@
+ 
+ config CS89x0
+ 	tristate "CS89x0 support"
+-	depends on NET_ETHERNET && (ISA || EISA || MACH_IXDP2351 \
+-		|| ARCH_IXDP2X01 || ARCH_PNX010X || MACH_MX31ADS)
++	depends on NET_ETHERNET && (ISA || EISA || MACH_IXDP2351 || ARCH_IXDP2X01 || ARCH_PNX010X || MACH_MX31ADS)
+ 	---help---
+ 	  Support for CS89x0 chipset based Ethernet cards. If you have a
+ 	  network (Ethernet) card of this type, say Y and read the
+@@ -3013,8 +3009,8 @@
+ 	tristate "Network console logging support (EXPERIMENTAL)"
+ 	depends on EXPERIMENTAL
+ 	---help---
+-	If you want to log kernel messages over the network, enable this.
+-	See <file:Documentation/networking/netconsole.txt> for details.
++	  If you want to log kernel messages over the network, enable this.
++	  See <file:Documentation/networking/netconsole.txt> for details.
+ 
+ config NETCONSOLE_DYNAMIC
+ 	bool "Dynamic reconfiguration of logging targets (EXPERIMENTAL)"
+--- linux-2.6.28-gentoo/drivers/mtd/maps/Kconfig.orig	2009-01-26 13:22:37.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/mtd/maps/Kconfig	2009-01-26 13:23:00.000000000 +0800
+@@ -96,9 +96,7 @@
+ 
+ config MTD_PMC_MSP_RAMROOT
+ 	tristate "Embedded RAM block device for root on PMC-Sierra MSP"
+-	depends on PMC_MSP_EMBEDDED_ROOTFS && \
+-			(MTD_BLOCK || MTD_BLOCK_RO) && \
+-			MTD_RAM
++	depends on PMC_MSP_EMBEDDED_ROOTFS && (MTD_BLOCK || MTD_BLOCK_RO) && MTD_RAM
+ 	help
+ 	  This provides support for the embedded root file system
+           on PMC MSP devices.  This memory is mapped as a MTD block device.
+--- linux-2.6.28-gentoo/drivers/mtd/nand/Kconfig.orig	2009-01-26 13:23:16.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/mtd/nand/Kconfig	2009-01-26 13:25:19.000000000 +0800
+@@ -199,17 +199,17 @@
+         depends on MTD_NAND_DISKONCHIP
+         default "0"
+         ---help---
+-        By default, the probe for DiskOnChip devices will look for a
+-        DiskOnChip at every multiple of 0x2000 between 0xC8000 and 0xEE000.
+-        This option allows you to specify a single address at which to probe
+-        for the device, which is useful if you have other devices in that
+-        range which get upset when they are probed.
++          By default, the probe for DiskOnChip devices will look for a
++          DiskOnChip at every multiple of 0x2000 between 0xC8000 and 0xEE000.
++          This option allows you to specify a single address at which to probe
++          for the device, which is useful if you have other devices in that
++          range which get upset when they are probed.
+ 
+-        (Note that on PowerPC, the normal probe will only check at
+-        0xE4000000.)
++          (Note that on PowerPC, the normal probe will only check at
++          0xE4000000.)
+ 
+-        Normally, you should leave this set to zero, to allow the probe at
+-        the normal addresses.
++          Normally, you should leave this set to zero, to allow the probe at
++          the normal addresses.
+ 
+ config MTD_NAND_DISKONCHIP_PROBE_HIGH
+         bool "Probe high addresses"
+@@ -256,12 +256,12 @@
+           will be named "excite_nandflash.ko".
+ 
+ config MTD_NAND_CAFE
+-	tristate "NAND support for OLPC CAFÉ chip"
++	tristate "NAND support for OLPC CAFE chip"
+ 	depends on PCI
+ 	select REED_SOLOMON
+ 	select REED_SOLOMON_DEC16
+ 	help
+-	  Use NAND flash attached to the CAFÉ chip designed for the OLPC
++	  Use NAND flash attached to the CAFE chip designed for the OLPC
+ 	  laptop.
+ 
+ config MTD_NAND_CS553X
+--- linux-2.6.28-gentoo/drivers/spi/Kconfig.orig	2009-01-26 13:45:49.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/spi/Kconfig	2009-01-26 13:46:18.000000000 +0800
+@@ -40,7 +40,6 @@
+ #
+ 
+ config SPI_MASTER
+-#	boolean "SPI Master Support"
+ 	boolean
+ 	default SPI
+ 	help
+--- linux-2.6.28-gentoo/drivers/acpi/Kconfig.orig	2009-01-26 10:09:04.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/acpi/Kconfig	2009-01-26 10:09:46.000000000 +0800
+@@ -364,7 +364,7 @@
+ 	tristate "ACPI0004,PNP0A05 and PNP0A06 Container Driver (EXPERIMENTAL)"
+ 	depends on EXPERIMENTAL
+ 	default (ACPI_HOTPLUG_MEMORY || ACPI_HOTPLUG_CPU || ACPI_HOTPLUG_IO)
+-	 ---help---
++	---help---
+ 	  This allows _physical_ insertion and removal of CPUs and memory.
+ 	  This can be useful, for example, on NUMA machines that support
+ 	  ACPI based physical hotplug of nodes, or non-NUMA machines that
+--- linux-2.6.28-gentoo/drivers/char/Kconfig.orig	2009-01-26 13:44:44.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/char/Kconfig	2009-01-26 13:45:00.000000000 +0800
+@@ -765,8 +765,7 @@
+ 
+ config RTC
+ 	tristate "Enhanced Real Time Clock Support (legacy PC RTC driver)"
+-	depends on !PPC && !PARISC && !IA64 && !M68K && !SPARC && !FRV \
+-			&& !ARM && !SUPERH && !S390 && !AVR32
++	depends on !PPC && !PARISC && !IA64 && !M68K && !SPARC && !FRV && !ARM && !SUPERH && !S390 && !AVR32
+ 	---help---
+ 	  If you say Y here and create a character special file /dev/rtc with
+ 	  major number 10 and minor number 135 using mknod ("man mknod"), you
+--- linux-2.6.28-gentoo/drivers/idle/Kconfig.orig	2009-01-26 10:09:55.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/idle/Kconfig	2009-01-26 10:10:10.000000000 +0800
+@@ -1,6 +1,6 @@
+ 
+ menu "Memory power savings"
+-depends on X86_64
++	depends on X86_64
+ 
+ config I7300_IDLE_IOAT_CHANNEL
+ 	bool
+--- linux-2.6.28-gentoo/drivers/misc/Kconfig.orig	2009-01-26 13:26:45.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/misc/Kconfig	2009-01-26 13:27:34.000000000 +0800
+@@ -289,7 +289,7 @@
+ 	depends on X86 && ACPI
+ 	select BACKLIGHT_CLASS_DEVICE
+ 	depends on INPUT
+-	  ---help---
++	---help---
+ 	  This mini-driver drives the SNC and SPIC devices present in the ACPI
+ 	  BIOS of the Sony Vaio laptops.
+ 
+@@ -302,7 +302,7 @@
+ config SONYPI_COMPAT
+ 	bool "Sonypi compatibility"
+ 	depends on SONY_LAPTOP
+-	  ---help---
++	---help---
+ 	  Build the sonypi driver compatibility code into the sony-laptop driver.
+ 
+ config THINKPAD_ACPI
+@@ -481,22 +481,22 @@
+ 	default n
+ 	select MMU_NOTIFIER
+ 	---help---
+-	The GRU is a hardware resource located in the system chipset. The GRU
+-	contains memory that can be mmapped into the user address space. This memory is
+-	used to communicate with the GRU to perform functions such as load/store,
+-	scatter/gather, bcopy, AMOs, etc.  The GRU is directly accessed by user
+-	instructions using user virtual addresses. GRU instructions (ex., bcopy) use
+-	user virtual addresses for operands.
++	  The GRU is a hardware resource located in the system chipset. The GRU
++	  contains memory that can be mmapped into the user address space. This memory is
++	  used to communicate with the GRU to perform functions such as load/store,
++	  scatter/gather, bcopy, AMOs, etc.  The GRU is directly accessed by user
++	  instructions using user virtual addresses. GRU instructions (ex., bcopy) use
++	  user virtual addresses for operands.
+ 
+-	If you are not running on a SGI UV system, say N.
++	  If you are not running on a SGI UV system, say N.
+ 
+ config SGI_GRU_DEBUG
+ 	bool  "SGI GRU driver debug"
+ 	depends on SGI_GRU
+ 	default n
+ 	---help---
+-	This option enables addition debugging code for the SGI GRU driver. If
+-	you are unsure, say N.
++	  This option enables addition debugging code for the SGI GRU driver. If
++	  you are unsure, say N.
+ 
+ source "drivers/misc/c2port/Kconfig"
+ 
+--- linux-2.6.28-gentoo/drivers/scsi/qla2xxx/Kconfig.orig	2009-01-26 13:32:47.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/scsi/qla2xxx/Kconfig	2009-01-26 13:33:15.000000000 +0800
+@@ -4,24 +4,24 @@
+ 	select SCSI_FC_ATTRS
+ 	select FW_LOADER
+ 	---help---
+-	This qla2xxx driver supports all QLogic Fibre Channel
+-	PCI and PCIe host adapters.
++	  This qla2xxx driver supports all QLogic Fibre Channel
++	  PCI and PCIe host adapters.
+ 
+-	By default, firmware for the ISP parts will be loaded
+-	via the Firmware Loader interface.
++	  By default, firmware for the ISP parts will be loaded
++	  via the Firmware Loader interface.
+ 
+-	ISP               Firmware Filename
+-	----------        -----------------
+-	21xx              ql2100_fw.bin
+-	22xx              ql2200_fw.bin
+-	2300, 2312, 6312  ql2300_fw.bin
+-	2322, 6322        ql2322_fw.bin
+-	24xx, 54xx        ql2400_fw.bin
+-	25xx              ql2500_fw.bin
++	  ISP               Firmware Filename
++	  ----------        -----------------
++	  21xx              ql2100_fw.bin
++	  22xx              ql2200_fw.bin
++	  2300, 2312, 6312  ql2300_fw.bin
++	  2322, 6322        ql2322_fw.bin
++	  24xx, 54xx        ql2400_fw.bin
++	  25xx              ql2500_fw.bin
+ 
+-	Upon request, the driver caches the firmware image until
+-	the driver is unloaded.
++	  Upon request, the driver caches the firmware image until
++	  the driver is unloaded.
+ 
+-	Firmware images can be retrieved from:
++	  Firmware images can be retrieved from:
+ 
+-		ftp://ftp.qlogic.com/outgoing/linux/firmware/
++	  	ftp://ftp.qlogic.com/outgoing/linux/firmware/
+--- linux-2.6.28-gentoo/drivers/scsi/qla4xxx/Kconfig.orig	2009-01-26 13:33:30.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/scsi/qla4xxx/Kconfig	2009-01-26 13:33:39.000000000 +0800
+@@ -3,5 +3,5 @@
+ 	depends on PCI && SCSI && NET
+ 	select SCSI_ISCSI_ATTRS
+ 	---help---
+-	This driver supports the QLogic 40xx (ISP4XXX) iSCSI host
+-	adapter family.
++	  This driver supports the QLogic 40xx (ISP4XXX) iSCSI host
++	  adapter family.
+--- linux-2.6.28-gentoo/drivers/scsi/device_handler/Kconfig.orig	2009-01-26 13:33:51.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/scsi/device_handler/Kconfig	2009-01-26 13:34:07.000000000 +0800
+@@ -15,21 +15,21 @@
+ 	tristate "LSI RDAC Device Handler"
+ 	depends on SCSI_DH
+ 	help
+-	If you have a LSI RDAC select y. Otherwise, say N.
++	  If you have a LSI RDAC select y. Otherwise, say N.
+ 
+ config SCSI_DH_HP_SW
+ 	tristate "HP/COMPAQ MSA Device Handler"
+ 	depends on SCSI_DH
+ 	help
+-	If you have a HP/COMPAQ MSA device that requires START_STOP to
+-	be sent to start it and cannot upgrade the firmware then select y.
+-	Otherwise, say N.
++	  If you have a HP/COMPAQ MSA device that requires START_STOP to
++	  be sent to start it and cannot upgrade the firmware then select y.
++	  Otherwise, say N.
+ 
+ config SCSI_DH_EMC
+ 	tristate "EMC CLARiiON Device Handler"
+ 	depends on SCSI_DH
+ 	help
+-	If you have a EMC CLARiiON select y. Otherwise, say N.
++	  If you have a EMC CLARiiON select y. Otherwise, say N.
+ 
+ config SCSI_DH_ALUA
+ 	tristate "SPC-3 ALUA Device Handler (EXPERIMENTAL)"
+--- linux-2.6.28-gentoo/drivers/scsi/aic7xxx/Kconfig.aic79xx.orig	2009-01-26 13:30:12.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/scsi/aic7xxx/Kconfig.aic79xx	2009-01-26 13:31:04.000000000 +0800
+@@ -7,80 +7,80 @@
+ 	depends on PCI && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	help
+-	This driver supports all of Adaptec's Ultra 320 PCI-X
+-	based SCSI controllers.
++	  This driver supports all of Adaptec's Ultra 320 PCI-X
++	  based SCSI controllers.
+ 
+ config AIC79XX_CMDS_PER_DEVICE
+ 	int "Maximum number of TCQ commands per device"
+ 	depends on SCSI_AIC79XX
+ 	default "32"
+ 	---help---
+-	Specify the number of commands you would like to allocate per SCSI
+-	device when Tagged Command Queueing (TCQ) is enabled on that device.
++	  Specify the number of commands you would like to allocate per SCSI
++	  device when Tagged Command Queueing (TCQ) is enabled on that device.
+ 
+-	This is an upper bound value for the number of tagged transactions
+-	to be used for any device.  The aic7xxx driver will automatically
+-	vary this number based on device behavior.  For devices with a
+-	fixed maximum, the driver will eventually lock to this maximum
+-	and display a console message indicating this value.
+-
+-	Due to resource allocation issues in the Linux SCSI mid-layer, using
+-	a high number of commands per device may result in memory allocation
+-	failures when many devices are attached to the system.  For this reason,
+-	the default is set to 32.  Higher values may result in higher performance
+-	on some devices.  The upper bound is 253.  0 disables tagged queueing.
+-
+-	Per device tag depth can be controlled via the kernel command line
+-	"tag_info" option.  See drivers/scsi/aic7xxx/README.aic79xx
+-	for details.
++	  This is an upper bound value for the number of tagged transactions
++	  to be used for any device.  The aic7xxx driver will automatically
++	  vary this number based on device behavior.  For devices with a
++	  fixed maximum, the driver will eventually lock to this maximum
++	  and display a console message indicating this value.
++
++	  Due to resource allocation issues in the Linux SCSI mid-layer, using
++	  a high number of commands per device may result in memory allocation
++	  failures when many devices are attached to the system.  For this reason,
++	  the default is set to 32.  Higher values may result in higher performance
++	  on some devices.  The upper bound is 253.  0 disables tagged queueing.
++
++	  Per device tag depth can be controlled via the kernel command line
++	  "tag_info" option.  See drivers/scsi/aic7xxx/README.aic79xx
++	  for details.
+ 
+ config AIC79XX_RESET_DELAY_MS
+ 	int "Initial bus reset delay in milli-seconds"
+ 	depends on SCSI_AIC79XX
+ 	default "5000"
+ 	---help---
+-	The number of milliseconds to delay after an initial bus reset.
+-	The bus settle delay following all error recovery actions is
+-	dictated by the SCSI layer and is not affected by this value.
++	  The number of milliseconds to delay after an initial bus reset.
++	  The bus settle delay following all error recovery actions is
++	  dictated by the SCSI layer and is not affected by this value.
+ 
+-	Default: 5000 (5 seconds)
++	  Default: 5000 (5 seconds)
+ 
+ config AIC79XX_BUILD_FIRMWARE
+ 	bool "Build Adapter Firmware with Kernel Build"
+ 	depends on SCSI_AIC79XX && !PREVENT_FIRMWARE_BUILD
+ 	help
+-	This option should only be enabled if you are modifying the firmware
+-	source to the aic79xx driver and wish to have the generated firmware
+-	include files updated during a normal kernel build.  The assembler
+-	for the firmware requires lex and yacc or their equivalents, as well
+-	as the db v1 library.  You may have to install additional packages
+-	or modify the assembler Makefile or the files it includes if your
+-	build environment is different than that of the author.
++	  This option should only be enabled if you are modifying the firmware
++	  source to the aic79xx driver and wish to have the generated firmware
++	  include files updated during a normal kernel build.  The assembler
++	  for the firmware requires lex and yacc or their equivalents, as well
++	  as the db v1 library.  You may have to install additional packages
++	  or modify the assembler Makefile or the files it includes if your
++	  build environment is different than that of the author.
+ 
+ config AIC79XX_DEBUG_ENABLE
+ 	bool "Compile in Debugging Code"
+ 	depends on SCSI_AIC79XX
+ 	default y
+ 	help
+-	Compile in aic79xx debugging code that can be useful in diagnosing
+-	driver errors.
++	  Compile in aic79xx debugging code that can be useful in diagnosing
++	  driver errors.
+ 
+ config AIC79XX_DEBUG_MASK
+ 	int "Debug code enable mask (16383 for all debugging)"
+ 	depends on SCSI_AIC79XX
+ 	default "0"
+ 	help
+-	Bit mask of debug options that is only valid if the
+-	CONFIG_AIC79XX_DEBUG_ENBLE option is enabled.  The bits in this mask
+-	are defined in the drivers/scsi/aic7xxx/aic79xx.h - search for the
+-	variable ahd_debug in that file to find them.
++	  Bit mask of debug options that is only valid if the
++	  CONFIG_AIC79XX_DEBUG_ENBLE option is enabled.  The bits in this mask
++	  are defined in the drivers/scsi/aic7xxx/aic79xx.h - search for the
++	  variable ahd_debug in that file to find them.
+ 
+ config AIC79XX_REG_PRETTY_PRINT
+ 	bool "Decode registers during diagnostics"
+ 	depends on SCSI_AIC79XX
+ 	default y
+ 	help
+-	Compile in register value tables for the output of expanded register
+-	contents in diagnostics.  This make it much easier to understand debug
+-	output without having to refer to a data book and/or the aic7xxx.reg
+-	file.
++	  Compile in register value tables for the output of expanded register
++	  contents in diagnostics.  This make it much easier to understand debug
++	  output without having to refer to a data book and/or the aic7xxx.reg
++	  file.
+--- linux-2.6.28-gentoo/drivers/scsi/aic7xxx/Kconfig.aic7xxx.orig	2009-01-26 13:28:50.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/scsi/aic7xxx/Kconfig.aic7xxx	2009-01-26 13:29:55.000000000 +0800
+@@ -7,85 +7,85 @@
+ 	depends on (PCI || EISA) && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	---help---
+-	This driver supports all of Adaptec's Fast through Ultra 160 PCI
+-	based SCSI controllers as well as the aic7770 based EISA and VLB
+-	SCSI controllers (the 274x and 284x series).  For AAA and ARO based
+-	configurations, only SCSI functionality is provided.
++	  This driver supports all of Adaptec's Fast through Ultra 160 PCI
++	  based SCSI controllers as well as the aic7770 based EISA and VLB
++	  SCSI controllers (the 274x and 284x series).  For AAA and ARO based
++	  configurations, only SCSI functionality is provided.
+ 
+-	To compile this driver as a module, choose M here: the
+-	module will be called aic7xxx.
++	  To compile this driver as a module, choose M here: the
++	  module will be called aic7xxx.
+ 
+ config AIC7XXX_CMDS_PER_DEVICE
+ 	int "Maximum number of TCQ commands per device"
+ 	depends on SCSI_AIC7XXX
+ 	default "32"
+ 	---help---
+-	Specify the number of commands you would like to allocate per SCSI
+-	device when Tagged Command Queueing (TCQ) is enabled on that device.
++	  Specify the number of commands you would like to allocate per SCSI
++	  device when Tagged Command Queueing (TCQ) is enabled on that device.
+ 
+-	This is an upper bound value for the number of tagged transactions
+-	to be used for any device.  The aic7xxx driver will automatically
+-	vary this number based on device behavior.  For devices with a
+-	fixed maximum, the driver will eventually lock to this maximum
+-	and display a console message indicating this value.
+-
+-	Due to resource allocation issues in the Linux SCSI mid-layer, using
+-	a high number of commands per device may result in memory allocation
+-	failures when many devices are attached to the system.  For this reason,
+-	the default is set to 32.  Higher values may result in higher performance
+-	on some devices.  The upper bound is 253.  0 disables tagged queueing.
+-
+-	Per device tag depth can be controlled via the kernel command line
+-	"tag_info" option.  See drivers/scsi/aic7xxx/README.aic7xxx
+-	for details.
++	  This is an upper bound value for the number of tagged transactions
++	  to be used for any device.  The aic7xxx driver will automatically
++	  vary this number based on device behavior.  For devices with a
++	  fixed maximum, the driver will eventually lock to this maximum
++	  and display a console message indicating this value.
++
++	  Due to resource allocation issues in the Linux SCSI mid-layer, using
++	  a high number of commands per device may result in memory allocation
++	  failures when many devices are attached to the system.  For this reason,
++	  the default is set to 32.  Higher values may result in higher performance
++	  on some devices.  The upper bound is 253.  0 disables tagged queueing.
++
++	  Per device tag depth can be controlled via the kernel command line
++	  "tag_info" option.  See drivers/scsi/aic7xxx/README.aic7xxx
++	  for details.
+ 
+ config AIC7XXX_RESET_DELAY_MS
+ 	int "Initial bus reset delay in milli-seconds"
+ 	depends on SCSI_AIC7XXX
+ 	default "5000"
+ 	---help---
+-	The number of milliseconds to delay after an initial bus reset.
+-	The bus settle delay following all error recovery actions is
+-	dictated by the SCSI layer and is not affected by this value.
++	  The number of milliseconds to delay after an initial bus reset.
++	  The bus settle delay following all error recovery actions is
++	  dictated by the SCSI layer and is not affected by this value.
+ 
+-	Default: 5000 (5 seconds)
++	  Default: 5000 (5 seconds)
+ 
+ config AIC7XXX_BUILD_FIRMWARE
+ 	bool "Build Adapter Firmware with Kernel Build"
+ 	depends on SCSI_AIC7XXX && !PREVENT_FIRMWARE_BUILD
+ 	help
+-	This option should only be enabled if you are modifying the firmware
+-	source to the aic7xxx driver and wish to have the generated firmware
+-	include files updated during a normal kernel build.  The assembler
+-	for the firmware requires lex and yacc or their equivalents, as well
+-	as the db v1 library.  You may have to install additional packages
+-	or modify the assembler Makefile or the files it includes if your
+-	build environment is different than that of the author.
++	  This option should only be enabled if you are modifying the firmware
++	  source to the aic7xxx driver and wish to have the generated firmware
++	  include files updated during a normal kernel build.  The assembler
++	  for the firmware requires lex and yacc or their equivalents, as well
++	  as the db v1 library.  You may have to install additional packages
++	  or modify the assembler Makefile or the files it includes if your
++	  build environment is different than that of the author.
+ 
+ config AIC7XXX_DEBUG_ENABLE
+ 	bool "Compile in Debugging Code"
+ 	depends on SCSI_AIC7XXX
+ 	default y
+ 	help
+-	Compile in aic7xxx debugging code that can be useful in diagnosing
+-	driver errors.
++	  Compile in aic7xxx debugging code that can be useful in diagnosing
++	  driver errors.
+ 
+ config AIC7XXX_DEBUG_MASK
+         int "Debug code enable mask (2047 for all debugging)"
+         depends on SCSI_AIC7XXX
+         default "0"
+         help
+-	Bit mask of debug options that is only valid if the
+-	CONFIG_AIC7XXX_DEBUG_ENABLE option is enabled.  The bits in this mask
+-	are defined in the drivers/scsi/aic7xxx/aic7xxx.h - search for the
+-	variable ahc_debug in that file to find them.
++	  Bit mask of debug options that is only valid if the
++	  CONFIG_AIC7XXX_DEBUG_ENABLE option is enabled.  The bits in this mask
++	  are defined in the drivers/scsi/aic7xxx/aic7xxx.h - search for the
++	  variable ahc_debug in that file to find them.
+ 
+ config AIC7XXX_REG_PRETTY_PRINT
+         bool "Decode registers during diagnostics"
+         depends on SCSI_AIC7XXX
+ 	default y
+         help
+-	Compile in register value tables for the output of expanded register
+-	contents in diagnostics.  This make it much easier to understand debug
+-	output without having to refer to a data book and/or the aic7xxx.reg
+-	file.
++	  Compile in register value tables for the output of expanded register
++	  contents in diagnostics.  This make it much easier to understand debug
++	  output without having to refer to a data book and/or the aic7xxx.reg
++	  file.
+--- linux-2.6.28-gentoo/drivers/scsi/megaraid/Kconfig.megaraid.orig	2009-01-26 13:31:23.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/scsi/megaraid/Kconfig.megaraid	2009-01-26 13:32:29.000000000 +0800
+@@ -2,84 +2,84 @@
+ 	bool "LSI Logic New Generation RAID Device Drivers"
+ 	depends on PCI && SCSI
+ 	help
+-	LSI Logic RAID Device Drivers
++	  LSI Logic RAID Device Drivers
+ 
+ config MEGARAID_MM
+ 	tristate "LSI Logic Management Module (New Driver)"
+ 	depends on PCI && SCSI && MEGARAID_NEWGEN
+ 	help
+-	Management Module provides ioctl, sysfs support for LSI Logic
+-	RAID controllers.
+-	To compile this driver as a module, choose M here: the
+-	module will be called megaraid_mm
++	  Management Module provides ioctl, sysfs support for LSI Logic
++	  RAID controllers.
++	  To compile this driver as a module, choose M here: the
++	  module will be called megaraid_mm
+ 
+ 
+ config MEGARAID_MAILBOX
+ 	tristate "LSI Logic MegaRAID Driver (New Driver)"
+ 	depends on PCI && SCSI && MEGARAID_MM
+ 	help
+-	List of supported controllers
++	  List of supported controllers
+ 
+-	OEM	Product Name		VID :DID :SVID:SSID
+-	---	------------		---- ---- ---- ----
+-	Dell PERC3/QC			101E:1960:1028:0471
+-	Dell PERC3/DC			101E:1960:1028:0493
+-	Dell PERC3/SC			101E:1960:1028:0475
+-	Dell PERC3/Di			1028:000E:1028:0123
+-	Dell PERC4/SC			1000:1960:1028:0520
+-	Dell PERC4/DC			1000:1960:1028:0518
+-	Dell PERC4/QC			1000:0407:1028:0531
+-	Dell PERC4/Di			1028:000F:1028:014A
+-	Dell PERC 4e/Si			1028:0013:1028:016c
+-	Dell PERC 4e/Di			1028:0013:1028:016d
+-	Dell PERC 4e/Di			1028:0013:1028:016e
+-	Dell PERC 4e/Di			1028:0013:1028:016f
+-	Dell PERC 4e/Di			1028:0013:1028:0170
+-	Dell PERC 4e/DC			1000:0408:1028:0002
+-	Dell PERC 4e/SC			1000:0408:1028:0001
+-	LSI MegaRAID SCSI 320-0		1000:1960:1000:A520
+-	LSI MegaRAID SCSI 320-1		1000:1960:1000:0520
+-	LSI MegaRAID SCSI 320-2		1000:1960:1000:0518
+-	LSI MegaRAID SCSI 320-0X	1000:0407:1000:0530
+-	LSI MegaRAID SCSI 320-2X	1000:0407:1000:0532
+-	LSI MegaRAID SCSI 320-4X	1000:0407:1000:0531
+-	LSI MegaRAID SCSI 320-1E	1000:0408:1000:0001
+-	LSI MegaRAID SCSI 320-2E	1000:0408:1000:0002
+-	LSI MegaRAID SATA 150-4		1000:1960:1000:4523
+-	LSI MegaRAID SATA 150-6		1000:1960:1000:0523
+-	LSI MegaRAID SATA 300-4X	1000:0409:1000:3004
+-	LSI MegaRAID SATA 300-8X	1000:0409:1000:3008
+-	INTEL RAID Controller SRCU42X	1000:0407:8086:0532
+-	INTEL RAID Controller SRCS16	1000:1960:8086:0523
+-	INTEL RAID Controller SRCU42E	1000:0408:8086:0002
+-	INTEL RAID Controller SRCZCRX	1000:0407:8086:0530
+-	INTEL RAID Controller SRCS28X	1000:0409:8086:3008
+-	INTEL RAID Controller SROMBU42E	1000:0408:8086:3431
+-	INTEL RAID Controller SROMBU42E	1000:0408:8086:3499
+-	INTEL RAID Controller SRCU51L	1000:1960:8086:0520
+-	FSC MegaRAID PCI Express ROMB	1000:0408:1734:1065
+-	ACER MegaRAID ROMB-2E		1000:0408:1025:004D
+-	NEC MegaRAID PCI Express ROMB	1000:0408:1033:8287
++	  OEM	Product Name		VID :DID :SVID:SSID
++	  ---	------------		---- ---- ---- ----
++	  Dell PERC3/QC			101E:1960:1028:0471
++	  Dell PERC3/DC			101E:1960:1028:0493
++	  Dell PERC3/SC			101E:1960:1028:0475
++	  Dell PERC3/Di			1028:000E:1028:0123
++	  Dell PERC4/SC			1000:1960:1028:0520
++	  Dell PERC4/DC			1000:1960:1028:0518
++	  Dell PERC4/QC			1000:0407:1028:0531
++	  Dell PERC4/Di			1028:000F:1028:014A
++	  Dell PERC 4e/Si			1028:0013:1028:016c
++	  Dell PERC 4e/Di			1028:0013:1028:016d
++	  Dell PERC 4e/Di			1028:0013:1028:016e
++	  Dell PERC 4e/Di			1028:0013:1028:016f
++	  Dell PERC 4e/Di			1028:0013:1028:0170
++	  Dell PERC 4e/DC			1000:0408:1028:0002
++	  Dell PERC 4e/SC			1000:0408:1028:0001
++	  LSI MegaRAID SCSI 320-0		1000:1960:1000:A520
++	  LSI MegaRAID SCSI 320-1		1000:1960:1000:0520
++	  LSI MegaRAID SCSI 320-2		1000:1960:1000:0518
++	  LSI MegaRAID SCSI 320-0X	1000:0407:1000:0530
++	  LSI MegaRAID SCSI 320-2X	1000:0407:1000:0532
++	  LSI MegaRAID SCSI 320-4X	1000:0407:1000:0531
++	  LSI MegaRAID SCSI 320-1E	1000:0408:1000:0001
++	  LSI MegaRAID SCSI 320-2E	1000:0408:1000:0002
++	  LSI MegaRAID SATA 150-4		1000:1960:1000:4523
++	  LSI MegaRAID SATA 150-6		1000:1960:1000:0523
++	  LSI MegaRAID SATA 300-4X	1000:0409:1000:3004
++	  LSI MegaRAID SATA 300-8X	1000:0409:1000:3008
++	  INTEL RAID Controller SRCU42X	1000:0407:8086:0532
++	  INTEL RAID Controller SRCS16	1000:1960:8086:0523
++	  INTEL RAID Controller SRCU42E	1000:0408:8086:0002
++	  INTEL RAID Controller SRCZCRX	1000:0407:8086:0530
++	  INTEL RAID Controller SRCS28X	1000:0409:8086:3008
++	  INTEL RAID Controller SROMBU42E	1000:0408:8086:3431
++	  INTEL RAID Controller SROMBU42E	1000:0408:8086:3499
++	  INTEL RAID Controller SRCU51L	1000:1960:8086:0520
++	  FSC MegaRAID PCI Express ROMB	1000:0408:1734:1065
++	  ACER MegaRAID ROMB-2E		1000:0408:1025:004D
++	  NEC MegaRAID PCI Express ROMB	1000:0408:1033:8287
+ 
+-	To compile this driver as a module, choose M here: the
+-	module will be called megaraid_mbox
++	  To compile this driver as a module, choose M here: the
++	  module will be called megaraid_mbox
+ 
+ config MEGARAID_LEGACY
+ 	tristate "LSI Logic Legacy MegaRAID Driver"
+ 	depends on PCI && SCSI
+ 	help
+-	This driver supports the LSI MegaRAID 418, 428, 438, 466, 762, 490
+-	and 467 SCSI host adapters. This driver also support the all U320
+-	RAID controllers
++	  This driver supports the LSI MegaRAID 418, 428, 438, 466, 762, 490
++	  and 467 SCSI host adapters. This driver also support the all U320
++	  RAID controllers
+ 
+-	To compile this driver as a module, choose M here: the
+-	module will be called megaraid
++	  To compile this driver as a module, choose M here: the
++	  module will be called megaraid
+ 
+ config MEGARAID_SAS
+ 	tristate "LSI Logic MegaRAID SAS RAID Module"
+ 	depends on PCI && SCSI
+ 	help
+-	Module for LSI Logic's SAS based RAID controllers.
+-	To compile this driver as a module, choose 'm' here.
+-	Module will be called megaraid_sas
++	  Module for LSI Logic's SAS based RAID controllers.
++	  To compile this driver as a module, choose 'm' here.
++	  Module will be called megaraid_sas
+ 
+--- linux-2.6.28-gentoo/drivers/infiniband/hw/ehca/Kconfig.orig	2009-01-26 14:01:16.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/infiniband/hw/ehca/Kconfig	2009-01-26 14:01:23.000000000 +0800
+@@ -2,8 +2,8 @@
+ 	tristate "eHCA support"
+ 	depends on IBMEBUS
+ 	---help---
+-	This driver supports the IBM pSeries eHCA InfiniBand adapter.
++	  This driver supports the IBM pSeries eHCA InfiniBand adapter.
+ 
+-	To compile the driver as a module, choose M here. The module
+-	will be called ib_ehca.
++	  To compile the driver as a module, choose M here. The module
++	  will be called ib_ehca.
+ 
+--- linux-2.6.28-gentoo/drivers/infiniband/hw/ipath/Kconfig.orig	2009-01-26 14:00:56.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/infiniband/hw/ipath/Kconfig	2009-01-26 14:01:04.000000000 +0800
+@@ -2,8 +2,8 @@
+ 	tristate "QLogic InfiniPath Driver"
+ 	depends on 64BIT && NET
+ 	---help---
+-	This is a driver for QLogic InfiniPath host channel adapters,
+-	including InfiniBand verbs support.  This driver allows these
+-	devices to be used with both kernel upper level protocols such
+-	as IP-over-InfiniBand as well as with userspace applications
+-	(in conjunction with InfiniBand userspace access).
++	  This is a driver for QLogic InfiniPath host channel adapters,
++	  including InfiniBand verbs support.  This driver allows these
++	  devices to be used with both kernel upper level protocols such
++	  as IP-over-InfiniBand as well as with userspace applications
++	  (in conjunction with InfiniBand userspace access).
+--- linux-2.6.28-gentoo/drivers/block/Kconfig.orig	2009-01-26 13:26:24.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/block/Kconfig	2009-01-26 13:26:35.000000000 +0800
+@@ -400,8 +400,8 @@
+ 	tristate "ATA over Ethernet support"
+ 	depends on NET
+ 	help
+-	This driver provides Support for ATA over Ethernet block
+-	devices like the Coraid EtherDrive (R) Storage Blade.
++	  This driver provides Support for ATA over Ethernet block
++	  devices like the Coraid EtherDrive (R) Storage Blade.
+ 
+ config SUNVDC
+ 	tristate "Sun Virtual Disk Client support"
+--- linux-2.6.28-gentoo/drivers/hwmon/Kconfig.orig	2009-01-26 13:49:30.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/hwmon/Kconfig	2009-01-26 13:49:44.000000000 +0800
+@@ -294,7 +294,7 @@
+ 	  will be called f71882fg.
+ 
+ config SENSORS_F75375S
+-	tristate "Fintek F75375S/SP and F75373";
++	tristate "Fintek F75375S/SP and F75373"
+ 	depends on I2C && EXPERIMENTAL
+ 	help
+ 	  If you say yes here you get support for hardware monitoring
+--- linux-2.6.28-gentoo/drivers/media/dvb/frontends/Kconfig.orig	2009-01-26 13:51:47.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/media/dvb/frontends/Kconfig	2009-01-26 13:52:01.000000000 +0800
+@@ -54,7 +54,7 @@
+ 	tristate "ST STB6000 silicon tuner"
+ 	depends on DVB_CORE && I2C
+ 	default m if DVB_FE_CUSTOMISE
+-	  help
++	help
+ 	  A DVB-S silicon tuner module. Say Y when you want to support this tuner.
+ 
+ config DVB_STV0299
+--- linux-2.6.28-gentoo/drivers/media/video/pvrusb2/Kconfig.orig	2009-01-26 13:51:09.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/media/video/pvrusb2/Kconfig	2009-01-26 13:51:25.000000000 +0800
+@@ -45,7 +45,6 @@
+ 	select MEDIA_TUNER_SIMPLE if !MEDIA_TUNER_CUSTOMIZE
+ 	select MEDIA_TUNER_TDA8290 if !DVB_FE_CUSTOMIZE
+ 	---help---
+-
+ 	  This option enables a DVB interface for the pvrusb2 driver.
+ 	  If your device does not support digital television, this
+ 	  feature will have no affect on the driver's operation.
+--- linux-2.6.28-gentoo/drivers/video/Kconfig.orig	2009-01-26 13:54:02.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/video/Kconfig	2009-01-26 13:55:33.000000000 +0800
+@@ -298,7 +298,6 @@
+ 	  will be called amba-clcd.
+ 
+ choice
+-
+ 	depends on FB_ARMCLCD && (ARCH_LH7A40X || ARCH_LH7952X)
+ 	prompt "LCD Panel"
+ 	default FB_ARMCLCD_SHARP_LQ035Q7DB02
+@@ -739,8 +738,8 @@
+ 	bool "Hercules mono Acceleration functions (EXPERIMENTAL)"
+ 	depends on FB_HGA && EXPERIMENTAL
+ 	---help---
+-	This will compile the Hercules mono graphics with
+-	acceleration functions.
++	  This will compile the Hercules mono graphics with
++	  acceleration functions.
+ 
+ config FB_SGIVW
+ 	tristate "SGI Visual Workstation framebuffer support"
+@@ -1099,7 +1098,6 @@
+ 	bool "Enable DDC Support"
+ 	depends on FB_I810 && FB_I810_GTF
+ 	select FB_DDC
+-	help
+ 
+ config FB_LE80578
+ 	tristate "Intel LE80578 (Vermilion) support"
+@@ -1565,8 +1563,8 @@
+ 	bool "3Dfx Acceleration functions (EXPERIMENTAL)"
+ 	depends on FB_3DFX && EXPERIMENTAL
+ 	---help---
+-	This will compile the 3Dfx Banshee/Voodoo3/VSA-100 frame buffer
+-	device driver with acceleration functions.
++	  This will compile the 3Dfx Banshee/Voodoo3/VSA-100 frame buffer
++	  device driver with acceleration functions.
+ 
+ config FB_VOODOO1
+ 	tristate "3Dfx Voodoo Graphics (sst1) support"
+@@ -1648,8 +1646,8 @@
+ 	bool "Trident Acceleration functions (EXPERIMENTAL)"
+ 	depends on FB_TRIDENT && EXPERIMENTAL
+ 	---help---
+-	This will compile the Trident frame buffer device with
+-	acceleration functions.
++	  This will compile the Trident frame buffer device with
++	  acceleration functions.
+ 
+ config FB_ARK
+ 	tristate "ARK 2000PV support"
+@@ -2120,11 +2118,11 @@
+ source "drivers/video/display/Kconfig"
+ 
+ if VT
+-	source "drivers/video/console/Kconfig"
++source "drivers/video/console/Kconfig"
+ endif
+ 
+ if FB || SGI_NEWPORT_CONSOLE
+-	source "drivers/video/logo/Kconfig"
++source "drivers/video/logo/Kconfig"
+ endif
+ 
+ endmenu
+--- linux-2.6.28-gentoo/drivers/auxdisplay/Kconfig.orig	2009-01-26 14:01:40.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/auxdisplay/Kconfig	2009-01-26 14:02:03.000000000 +0800
+@@ -100,7 +100,7 @@
+ 	  If unsure, say N.
+ 
+ config CFAG12864B_RATE
+-       int "Refresh rate (hertz)"
++	int "Refresh rate (hertz)"
+ 	depends on CFAG12864B
+ 	default "20"
+ 	---help---
+--- linux-2.6.28-gentoo/drivers/message/fusion/Kconfig.orig	2009-01-26 13:35:04.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/message/fusion/Kconfig	2009-01-26 13:35:14.000000000 +0800
+@@ -3,11 +3,11 @@
+ 	bool "Fusion MPT device support"
+ 	depends on PCI
+ 	---help---
+-	Say Y here to get to see options for Fusion Message
+-	Passing Technology (MPT) drivers.
+-	This option alone does not add any kernel code.
++	  Say Y here to get to see options for Fusion Message
++	  Passing Technology (MPT) drivers.
++	  This option alone does not add any kernel code.
+ 
+-	If you say N, all options in this submenu will be skipped and disabled.
++	  If you say N, all options in this submenu will be skipped and disabled.
+ 
+ if FUSION
+ 
+--- linux-2.6.28-gentoo/drivers/firmware/Kconfig.orig	2009-01-26 14:02:15.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/firmware/Kconfig	2009-01-26 14:02:42.000000000 +0800
+@@ -104,9 +104,9 @@
+ 	  management software such as Dell OpenManage.
+ 
+ config DMIID
+-    bool "Export DMI identification via sysfs to userspace"
+-    depends on DMI
+-    default y
++	bool "Export DMI identification via sysfs to userspace"
++	depends on DMI
++	default y
+ 	help
+ 	  Say Y here if you want to query SMBIOS/DMI system identification
+ 	  information from userspace through /sys/class/dmi/id/ or if you want
+--- linux-2.6.28-gentoo/drivers/watchdog/Kconfig.orig	2009-01-26 13:50:00.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/watchdog/Kconfig	2009-01-26 13:50:10.000000000 +0800
+@@ -521,7 +521,6 @@
+ 	tristate "SBC8360 Watchdog Timer"
+ 	depends on X86
+ 	---help---
+-
+ 	  This is the driver for the hardware watchdog on the SBC8360 Single
+ 	  Board Computer produced by Axiomtek Co., Ltd. (www.axiomtek.com).
+ 
+--- linux-2.6.28-gentoo/drivers/pcmcia/Kconfig.orig	2009-01-26 10:10:33.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/pcmcia/Kconfig	2009-01-26 10:11:10.000000000 +0800
+@@ -215,9 +215,7 @@
+ config PCMCIA_PXA2XX
+ 	tristate "PXA2xx support"
+ 	depends on ARM && ARCH_PXA && PCMCIA
+-	depends on (ARCH_LUBBOCK || MACH_MAINSTONE || PXA_SHARPSL \
+-		    || MACH_ARMCORE || ARCH_PXA_PALM || TRIZEPS_PCMCIA \
+-		    || ARCH_VIPER)
++	depends on (ARCH_LUBBOCK || MACH_MAINSTONE || PXA_SHARPSL || MACH_ARMCORE || ARCH_PXA_PALM || TRIZEPS_PCMCIA || ARCH_VIPER)
+ 	help
+ 	  Say Y here to include support for the PXA2xx PCMCIA controller
+ 
+--- linux-2.6.28-gentoo/drivers/parport/Kconfig.orig	2009-01-26 13:25:46.000000000 +0800
++++ linux-2.6.28-gentoo/drivers/parport/Kconfig	2009-01-26 13:26:11.000000000 +0800
+@@ -35,8 +35,7 @@
+ 
+ config PARPORT_PC
+ 	tristate "PC-style hardware"
+-	depends on (!SPARC64 || PCI) && !SPARC32 && !M32R && !FRV && \
+-		(!M68K || ISA) && !MN10300 && !AVR32 && !BLACKFIN
++	depends on (!SPARC64 || PCI) && !SPARC32 && !M32R && !FRV && (!M68K || ISA) && !MN10300 && !AVR32 && !BLACKFIN
+ 	---help---
+ 	  You should say Y here if you have a PC-style parallel port. All
+ 	  IBM PC compatible computers and some Alphas have PC-style
+--- linux-2.6.28-gentoo/security/Kconfig.orig	2009-01-26 14:07:40.000000000 +0800
++++ linux-2.6.28-gentoo/security/Kconfig	2009-01-26 14:07:55.000000000 +0800
+@@ -123,8 +123,8 @@
+ 	  /proc/sys/vm/mmap_min_addr tunable.
+ 
+ 
+-source security/selinux/Kconfig
+-source security/smack/Kconfig
++source "security/selinux/Kconfig"
++source "security/smack/Kconfig"
+ 
+ endmenu
+ 
+--- linux-2.6.28-gentoo/kernel/power/Kconfig.orig	2009-01-26 10:07:06.000000000 +0800
++++ linux-2.6.28-gentoo/kernel/power/Kconfig	2009-01-26 10:08:44.000000000 +0800
+@@ -23,16 +23,16 @@
+ 	bool "Power Management Debug Support"
+ 	depends on PM
+ 	---help---
+-	This option enables various debugging support in the Power Management
+-	code. This is helpful when debugging and reporting PM bugs, like
+-	suspend support.
++	  This option enables various debugging support in the Power Management
++	  code. This is helpful when debugging and reporting PM bugs, like
++	  suspend support.
+ 
+ config PM_VERBOSE
+ 	bool "Verbose Power Management debugging"
+ 	depends on PM_DEBUG
+ 	default n
+ 	---help---
+-	This option enables verbose messages from the Power Management code.
++	  This option enables verbose messages from the Power Management code.
+ 
+ config CAN_PM_TRACE
+ 	def_bool y
+@@ -60,17 +60,17 @@
+ 	select PM_TRACE
+ 	default n
+ 	---help---
+-	This enables some cheesy code to save the last PM event point in the
+-	RTC across reboots, so that you can debug a machine that just hangs
+-	during suspend (or more commonly, during resume).
++	  This enables some cheesy code to save the last PM event point in the
++	  RTC across reboots, so that you can debug a machine that just hangs
++	  during suspend (or more commonly, during resume).
+ 
+-	To use this debugging feature you should attempt to suspend the
+-	machine, reboot it and then run
++	  To use this debugging feature you should attempt to suspend the
++	  machine, reboot it and then run
+ 
+ 		dmesg -s 1000000 | grep 'hash matches'
+ 
+-	CAUTION: this option will cause your machine's real-time clock to be
+-	set to an invalid time after a resume.
++	  CAUTION: this option will cause your machine's real-time clock to be
++	  set to an invalid time after a resume.
+ 
+ config PM_SLEEP_SMP
+ 	bool
+@@ -98,16 +98,15 @@
+ 	bool "Test suspend/resume and wakealarm during bootup"
+ 	depends on SUSPEND && PM_DEBUG && RTC_CLASS=y
+ 	---help---
+-	This option will let you suspend your machine during bootup, and
+-	make it wake up a few seconds later using an RTC wakeup alarm.
+-	Enable this with a kernel parameter like "test_suspend=mem".
++	  This option will let you suspend your machine during bootup, and
++	  make it wake up a few seconds later using an RTC wakeup alarm.
++	  Enable this with a kernel parameter like "test_suspend=mem".
+ 
+-	You probably want to have your system's RTC driver statically
+-	linked, ensuring that it's available when this test runs.
++	  You probably want to have your system's RTC driver statically
++	  linked, ensuring that it's available when this test runs.
+ 
+ config SUSPEND_FREEZER
+-	bool "Enable freezer for suspend to RAM/standby" \
+-		if ARCH_WANTS_FREEZER_CONTROL || BROKEN
++	bool "Enable freezer for suspend to RAM/standby" if ARCH_WANTS_FREEZER_CONTROL || BROKEN
+ 	depends on SUSPEND
+ 	default y
+ 	help
+--- linux-2.6.28-gentoo/kernel/Kconfig.hz.orig	2009-01-26 10:05:53.000000000 +0800
++++ linux-2.6.28-gentoo/kernel/Kconfig.hz	2009-01-26 10:06:44.000000000 +0800
+@@ -18,32 +18,32 @@
+ 
+ 	config HZ_100
+ 		bool "100 HZ"
+-	help
+-	  100 Hz is a typical choice for servers, SMP and NUMA systems
+-	  with lots of processors that may show reduced performance if
+-	  too many timer interrupts are occurring.
++		help
++		  100 Hz is a typical choice for servers, SMP and NUMA systems
++		  with lots of processors that may show reduced performance if
++		  too many timer interrupts are occurring.
+ 
+ 	config HZ_250
+ 		bool "250 HZ"
+-	help
+-	 250 Hz is a good compromise choice allowing server performance
+-	 while also showing good interactive responsiveness even
+-	 on SMP and NUMA systems. If you are going to be using NTSC video
+-	 or multimedia, selected 300Hz instead.
++		help
++		 250 Hz is a good compromise choice allowing server performance
++		 while also showing good interactive responsiveness even
++		 on SMP and NUMA systems. If you are going to be using NTSC video
++		 or multimedia, selected 300Hz instead.
+ 
+ 	config HZ_300
+ 		bool "300 HZ"
+-	help
+-	 300 Hz is a good compromise choice allowing server performance
+-	 while also showing good interactive responsiveness even
+-	 on SMP and NUMA systems and exactly dividing by both PAL and
+-	 NTSC frame rates for video and multimedia work.
++		help
++		 300 Hz is a good compromise choice allowing server performance
++		 while also showing good interactive responsiveness even
++		 on SMP and NUMA systems and exactly dividing by both PAL and
++		 NTSC frame rates for video and multimedia work.
+ 
+ 	config HZ_1000
+ 		bool "1000 HZ"
+-	help
+-	 1000 Hz is the preferred choice for desktop systems and other
+-	 systems requiring fast interactive responses to events.
++		help
++		 1000 Hz is the preferred choice for desktop systems and other
++		 systems requiring fast interactive responses to events.
+ 
+ endchoice
+ 

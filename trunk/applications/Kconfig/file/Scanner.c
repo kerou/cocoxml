@@ -36,7 +36,7 @@ static const CcsIndentInfo_t Scanner_IndentInfo = {
 static void CcsGetCh(CcsScanInput_t * si)
 {
     CcsIndent_t * indent = (CcsIndent_t *)(si + 1);
-    if (si->oldEols == 0 && si->ch == '\n') indent->lineStart = TRUE;
+    if (si->ch == '\n') indent->lineStart = TRUE;
     CcsScanInput_GetCh(si);
 }
 #else
@@ -358,15 +358,15 @@ CfScanner_Skip(void * scanner, CcsScanInput_t * input)
 	       || input->ch == ' '
 	       /*---- enable ----*/
 	       )  CcsGetCh(input);
-#ifdef CfScanner_INDENTATION
-	if ((t = CcsIndent_Generator((CcsIndent_t *)(input + 1), input)))
-	    return t;
-#endif
 	for (curComment = comments; curComment < commentsLast; ++curComment)
 	    if (input->ch == curComment->start[0] &&
 		CcsScanInput_Comment(input, curComment)) break;
 	if (curComment >= commentsLast) break;
     }
+#ifdef CfScanner_INDENTATION
+    if ((t = CcsIndent_Generator((CcsIndent_t *)(input + 1), input)))
+	return t;
+#endif
     return NULL;
 }
 
