@@ -89,7 +89,7 @@ ConfigDecl<KcSymbol_t ** sym>
  = ("config"         (. menuOrNot = FALSE; .)
     | "menuconfig"   (. menuOrNot = TRUE; .)
   ) ident            (. symname = CcsStrdup(self->t->val); .)
-  eol IndentIn { Property<&symtype, &props, &helpmsg> { eol } } IndentOut
+  eol { eol } IndentIn { Property<&symtype, &props, &helpmsg> { eol } } IndentOut
     (. if ((errmsg = KcSymbolTable_AppendSymbol(&self->symtab, sym, symname,
        	  	     				symtype, menuOrNot, props, helpmsg))) {
 	   if (props) KcPropertyList_Destruct(props);
@@ -184,13 +184,18 @@ MainMenuDecl<KcSymbol_t ** sym> =
   eol
 .
 
-Source             (. char * fname; .) =
-  "source" stringT (. if (!(fname = CcsUnescape(self->t->val)))
-  	   	          KcParser_SemErrT(self, "Not enough memroy."); .)
-  eol              (. if (fname) {
-    		          if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname, &self->la))
-  		              KcParser_SemErrT(self, "Can not include '%s'.", fname);
-  		          CcsFree(fname);
+Source             (. CcsToken_t * beg; CcsPosition_t * pos = NULL; char * fname = NULL; .) =
+  "source"         (. KcScanner_TokenIncRef(&self->scanner, beg = self->la); .)
+  ( stringT        (. if (!(fname = CcsUnescape(self->t->val)))
+  	   	          KcParser_SemErrT(self, "Not enough memory."); .)
+   | { ANY }       (. if (!(pos = KcScanner_GetPosition(&self->scanner, beg, self->la)))
+       	   	          KcParser_SemErrT(self, "Not enough memory."); .)
+  ) eol            (. KcScanner_TokenDecRef(&self->scanner, beg);
+		      if (fname || pos) {
+    		          if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname ? fname : pos->text, &self->la))
+  		              KcParser_SemErrT(self, "Can not include '%s'.", fname ? fname : pos->text);
+  		          if (fname) CcsFree(fname);
+			  if (pos) CcsPosition_Destruct(pos);
 		      } .)
 .
 
@@ -269,7 +274,7 @@ Option<KcProperty_t ** prop>     (. char * envname; .) =
 .
 
 Help<CcsPosition_t ** pos>	(. CcsToken_t * beg; .) =
-  ("help" | "--help---" | "---help---") eol IndentIn
+  ("help" | "--help---" | "---help---" | "--- help ---") eol { eol } IndentIn
   	    		  	(. KcScanner_IndentLimit(&self->scanner, self->t);
   	    		      	   KcScanner_TokenIncRef(&self->scanner, beg = self->la); .)
   { ANY } IndentOut             (. *pos = CcsPosition_Link(*pos, KcScanner_GetPosition(&self->scanner, beg, self->t));
