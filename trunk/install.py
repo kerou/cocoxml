@@ -94,7 +94,8 @@ def install_temp(destroot, tgtdir, srcfile,
 # Real installations.
 install(destroot, cfgmap['bindir'], execname('Coco'))
 install(destroot, cfgmap['libdir'], 'libcoco.a')
-for hdr in ['Buffer.h', 'CDefs.h', 'ErrorPool.h', 'Position.h', 'Token.h']:
+for hdr in ['CDefs.h', 'ErrorPool.h', 'Buffer.h', 'Token.h', 'Position.h',
+            'IncPathList.h', 'Indent.h', 'ScanInput.h']:
     install(destroot,
             os.path.join(cfgmap['includedir'], 'Coco', 'c'),
             os.path.join('schemes', 'c', hdr))
