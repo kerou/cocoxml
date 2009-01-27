@@ -194,6 +194,8 @@ Source             (. CcsToken_t * beg; CcsPosition_t * pos = NULL; char * fname
 		      if (fname || pos) {
     		          if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname ? fname : pos->text, &self->la))
   		              KcParser_SemErrT(self, "Can not include '%s'.", fname ? fname : pos->text);
+			  else
+			      printf("Source: %s\n", fname ? fname : pos->text);
   		          if (fname) CcsFree(fname);
 			  if (pos) CcsPosition_Destruct(pos);
 		      } .)
@@ -273,7 +275,10 @@ Option<KcProperty_t ** prop>     (. char * envname; .) =
   eol
 .
 
-Help<CcsPosition_t ** pos>	(. CcsBool_t IndentIn_ornot; CcsToken_t * beg; .) =
+Help<CcsPosition_t ** pos> =
+  Help0<pos> | IndentIn Help0<pos> IndentOut.
+
+Help0<CcsPosition_t ** pos>	(. CcsBool_t IndentIn_ornot; CcsToken_t * beg; .) =
   ( "help" | "--help---" | "---help---" | "--- help ---" ) eol { eol }
   ANY                           (. IndentIn_ornot = (self->t->kind == KcScanner_INDENT_IN); 
       				   KcScanner_IndentLimit(&self->scanner, self->t);

@@ -68,64 +68,6 @@
 +	def_bool BLK_DEV_IDEDMA_SFF || BLK_DEV_IDEDMA_ICS || BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
  
  endif # IDE
---- linux-2.6.28-gentoo/drivers/mfd/Kconfig.orig	2009-01-26 13:50:24.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/mfd/Kconfig	2009-01-26 13:50:42.000000000 +0800
-@@ -11,7 +11,7 @@
- 
- config MFD_SM501
- 	tristate "Support for Silicon Motion SM501"
--	 ---help---
-+	---help---
- 	  This is the core driver for the Silicon Motion SM501 multimedia
- 	  companion chip. This device is a multifunction device which may
- 	  provide numerous interfaces including USB host controller, USB gadget,
-@@ -22,7 +22,7 @@
- config MFD_SM501_GPIO
- 	bool "Export GPIO via GPIO layer"
- 	depends on MFD_SM501 && GPIOLIB
--	 ---help---
-+	---help---
- 	 This option uses the gpio library layer to export the 64 GPIO
- 	 lines on the SM501. The platform data is used to supply the
- 	 base number for the first GPIO line to register.
-@@ -30,7 +30,7 @@
- config MFD_ASIC3
- 	bool "Support for Compaq ASIC3"
- 	depends on GENERIC_HARDIRQS && GPIOLIB && ARM
--	 ---help---
-+	---help---
- 	  This driver supports the ASIC3 multifunction chip found on many
- 	  PDAs (mainly iPAQ and HTC based ones)
- 
---- linux-2.6.28-gentoo/drivers/net/wireless/Kconfig.orig	2009-01-26 13:36:39.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/net/wireless/Kconfig	2009-01-26 15:19:51.000000000 +0800
-@@ -443,7 +443,7 @@
-       select WIRELESS_EXT
-       select FW_LOADER
-       select CRC32
--       ---help---
-+      ---help---
-         A driver 802.11b wireless cards based on the Atmel fast-vnet
-         chips. This driver supports standard Linux wireless extensions.
- 
-@@ -457,7 +457,7 @@
- config PCI_ATMEL
-       tristate "Atmel at76c506 PCI cards"
-       depends on ATMEL && PCI
--       ---help---
-+      ---help---
-         Enable support for PCI and mini-PCI cards containing the
-         Atmel at76c506 chip.
- 
-@@ -495,7 +495,7 @@
-       tristate "Planet WL3501 PCMCIA cards"
-       depends on EXPERIMENTAL && PCMCIA && WLAN_80211
-       select WIRELESS_EXT
--       ---help---
-+      ---help---
-          A driver for WL3501 PCMCIA 802.11 wireless cards made by Planet.
- 	 It has basic support for Linux wireless extensions and initial
- 	 micro support for ethtool.
 --- linux-2.6.28-gentoo/drivers/net/Kconfig.orig	2009-01-26 13:35:29.000000000 +0800
 +++ linux-2.6.28-gentoo/drivers/net/Kconfig	2009-01-26 18:27:54.000000000 +0800
 @@ -515,9 +515,7 @@
@@ -189,17 +131,6 @@
  	  laptop.
  
  config MTD_NAND_CS553X
---- linux-2.6.28-gentoo/drivers/acpi/Kconfig.orig	2009-01-26 10:09:04.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/acpi/Kconfig	2009-01-26 10:09:46.000000000 +0800
-@@ -364,7 +364,7 @@
- 	tristate "ACPI0004,PNP0A05 and PNP0A06 Container Driver (EXPERIMENTAL)"
- 	depends on EXPERIMENTAL
- 	default (ACPI_HOTPLUG_MEMORY || ACPI_HOTPLUG_CPU || ACPI_HOTPLUG_IO)
--	 ---help---
-+	---help---
- 	  This allows _physical_ insertion and removal of CPUs and memory.
- 	  This can be useful, for example, on NUMA machines that support
- 	  ACPI based physical hotplug of nodes, or non-NUMA machines that
 --- linux-2.6.28-gentoo/drivers/char/Kconfig.orig	2009-01-26 13:44:44.000000000 +0800
 +++ linux-2.6.28-gentoo/drivers/char/Kconfig	2009-01-26 13:45:00.000000000 +0800
 @@ -765,8 +765,7 @@
@@ -222,26 +153,6 @@
  
  config I7300_IDLE_IOAT_CHANNEL
  	bool
---- linux-2.6.28-gentoo/drivers/misc/Kconfig.orig	2009-01-26 13:26:45.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/misc/Kconfig	2009-01-26 18:29:12.000000000 +0800
-@@ -289,7 +289,7 @@
- 	depends on X86 && ACPI
- 	select BACKLIGHT_CLASS_DEVICE
- 	depends on INPUT
--	  ---help---
-+	---help---
- 	  This mini-driver drives the SNC and SPIC devices present in the ACPI
- 	  BIOS of the Sony Vaio laptops.
- 
-@@ -302,7 +302,7 @@
- config SONYPI_COMPAT
- 	bool "Sonypi compatibility"
- 	depends on SONY_LAPTOP
--	  ---help---
-+	---help---
- 	  Build the sonypi driver compatibility code into the sony-laptop driver.
- 
- config THINKPAD_ACPI
 --- linux-2.6.28-gentoo/drivers/hwmon/Kconfig.orig	2009-01-26 13:49:30.000000000 +0800
 +++ linux-2.6.28-gentoo/drivers/hwmon/Kconfig	2009-01-26 13:49:44.000000000 +0800
 @@ -294,7 +294,7 @@
@@ -253,17 +164,6 @@
  	depends on I2C && EXPERIMENTAL
  	help
  	  If you say yes here you get support for hardware monitoring
---- linux-2.6.28-gentoo/drivers/media/dvb/frontends/Kconfig.orig	2009-01-26 13:51:47.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/media/dvb/frontends/Kconfig	2009-01-26 13:52:01.000000000 +0800
-@@ -54,7 +54,7 @@
- 	tristate "ST STB6000 silicon tuner"
- 	depends on DVB_CORE && I2C
- 	default m if DVB_FE_CUSTOMISE
--	  help
-+	help
- 	  A DVB-S silicon tuner module. Say Y when you want to support this tuner.
- 
- config DVB_STV0299
 --- linux-2.6.28-gentoo/drivers/video/Kconfig.orig	2009-01-26 13:54:02.000000000 +0800
 +++ linux-2.6.28-gentoo/drivers/video/Kconfig	2009-01-26 18:18:31.000000000 +0800
 @@ -298,7 +298,6 @@
@@ -307,21 +207,6 @@
  	depends on CFAG12864B
  	default "20"
  	---help---
---- linux-2.6.28-gentoo/drivers/firmware/Kconfig.orig	2009-01-26 14:02:15.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/firmware/Kconfig	2009-01-26 14:02:42.000000000 +0800
-@@ -104,9 +104,9 @@
- 	  management software such as Dell OpenManage.
- 
- config DMIID
--    bool "Export DMI identification via sysfs to userspace"
--    depends on DMI
--    default y
-+	bool "Export DMI identification via sysfs to userspace"
-+	depends on DMI
-+	default y
- 	help
- 	  Say Y here if you want to query SMBIOS/DMI system identification
- 	  information from userspace through /sys/class/dmi/id/ or if you want
 --- linux-2.6.28-gentoo/drivers/pcmcia/Kconfig.orig	2009-01-26 10:10:33.000000000 +0800
 +++ linux-2.6.28-gentoo/drivers/pcmcia/Kconfig	2009-01-26 10:11:10.000000000 +0800
 @@ -215,9 +215,7 @@
