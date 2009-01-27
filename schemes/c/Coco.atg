@@ -129,7 +129,8 @@ Coco                            (. CcSymbol_t  * sym;
     { ANY }			(. self->syntax->destructor = CcsScanner_GetPosition(&self->scanner, beg, self->la);
       	  			   CcsScanner_TokenDecRef(&self->scanner, beg); .)
     ]
-  [ "OPTIONS" { ident           (. CcLexical_SetOption(self->lexical, self->t); .) } ]
+  [ "OPTIONS" { ident           (. CcLexical_SetOption(self->lexical, self->t, TRUE); .)
+    	        | string        (. CcLexical_SetOption(self->lexical, self->t, FALSE); .) } ]
   [ "TERMINALS" { ident         (. CcLexical_AddTerminal(self->lexical, self->t); .) } ]
   [ "CHARACTERS" { SetDecl }]
   [ "TOKENS"  { TokenDecl<symbol_t> }]

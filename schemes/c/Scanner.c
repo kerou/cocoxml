@@ -57,8 +57,12 @@ static const CcsIndentInfo_t Scanner_IndentInfo = {
 };
 static void CcsGetCh(CcsScanInput_t * si)
 {
+    CcsBool_t lineStart;
     CcsIndent_t * indent = (CcsIndent_t *)(si + 1);
-    if (si->ch == '\n') indent->lineStart = TRUE;
+    /*---- checkLineStart ----*/
+    lineStart = (si->ch == '\n')
+    /*---- enable ----*/
+    if (lineStart) indent->lineStart = TRUE;
     CcsScanInput_GetCh(si);
 }
 #else
@@ -206,7 +210,7 @@ void
 CcsScanner_IndentLimit(CcsScanner_t * self, const CcsToken_t * indentIn)
 {
     CcsAssert(indentIn->input == self->cur);
-    CcsAssert(indentIn->kind == CcsScanner_INDENT_IN);
+    /*CcsAssert(indentIn->kind == CcsScanner_INDENT_IN);*/
     CcsIndent_SetLimit((CcsIndent_t *)(self->cur + 1), indentIn);
 }
 #endif

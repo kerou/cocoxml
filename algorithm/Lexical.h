@@ -47,6 +47,7 @@ struct CcLexical_s {
     CcsBool_t       ignoreCase;
     CcsBool_t       indentUsed;
     CcsBool_t       spaceUsed;
+    CcsBool_t       backslashNewline;
     /* User added terminals. */
     CcHashTable_t   addedTerminals;
     CcArrayList_t   states;
@@ -70,11 +71,14 @@ extern const char * IndentErrName;
 CcLexical_t * CcLexical(CcLexical_t * self, CcGlobals_t * globals);
 void CcLexical_Destruct(CcLexical_t * self);
 
-void CcLexical_SetOption(CcLexical_t * self, const CcsToken_t * t);
+void
+CcLexical_SetOption(CcLexical_t * self, const CcsToken_t * t,
+		    CcsBool_t isIndent);
 void CcLexical_AddTerminal(CcLexical_t * self, const CcsToken_t * t);
 
 CcGraph_t *
-CcLexical_StrToGraph(CcLexical_t * self, const char * str, const CcsToken_t * t);
+CcLexical_StrToGraph(CcLexical_t * self, const char * str,
+		     const CcsToken_t * t);
 void CcLexical_SetContextTrans(CcLexical_t * self, CcNode_t * p);
 
 CcCharClass_t *
