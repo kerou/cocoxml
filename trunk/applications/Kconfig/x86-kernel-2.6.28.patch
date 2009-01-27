@@ -1,38 +1,3 @@
---- linux-2.6.28-gentoo/fs/Kconfig.orig	2009-01-26 14:03:01.000000000 +0800
-+++ linux-2.6.28-gentoo/fs/Kconfig	2009-01-26 18:00:38.000000000 +0800
-@@ -726,8 +726,7 @@
- 
- config HUGETLBFS
- 	bool "HugeTLB file system support"
--	depends on X86 || IA64 || PPC64 || SPARC64 || (SUPERH && MMU) || \
--		   (S390 && 64BIT) || BROKEN
-+	depends on X86 || IA64 || PPC64 || SPARC64 || (SUPERH && MMU) || (S390 && 64BIT) || BROKEN
- 	help
- 	  hugetlbfs is a filesystem backing for HugeTLB pages, based on
- 	  ramfs. For architectures that support it, say Y here and read
---- linux-2.6.28-gentoo/lib/Kconfig.debug.orig	2009-01-26 15:15:27.000000000 +0800
-+++ linux-2.6.28-gentoo/lib/Kconfig.debug	2009-01-26 18:02:01.000000000 +0800
-@@ -465,8 +465,7 @@
- config DEBUG_BUGVERBOSE
- 	bool "Verbose BUG() reporting (adds 70K)" if DEBUG_KERNEL && EMBEDDED
- 	depends on BUG
--	depends on ARM || AVR32 || M32R || M68K || SPARC32 || SPARC64 || \
--		   FRV || SUPERH || GENERIC_BUG || BLACKFIN || MN10300
-+	depends on ARM || AVR32 || M32R || M68K || SPARC32 || SPARC64 || FRV || SUPERH || GENERIC_BUG || BLACKFIN || MN10300
- 	default !EMBEDDED
- 	help
- 	  Say Y here to make BUG() panics output the file name and line number
-@@ -547,9 +546,7 @@
- 
- config FRAME_POINTER
- 	bool "Compile the kernel with frame pointers"
--	depends on DEBUG_KERNEL && \
--		(X86 || CRIS || M68K || M68KNOMMU || FRV || UML || S390 || \
--		 AVR32 || SUPERH || BLACKFIN || MN10300)
-+	depends on DEBUG_KERNEL && (X86 || CRIS || M68K || M68KNOMMU || FRV || UML || S390 || AVR32 || SUPERH || BLACKFIN || MN10300)
- 	default y if DEBUG_INFO && UML
- 	help
- 	  If you say Y here the resulting kernel image will be slightly larger
 --- linux-2.6.28-gentoo/arch/x86/Kconfig.orig	2009-01-26 18:26:12.000000000 +0800
 +++ linux-2.6.28-gentoo/arch/x86/Kconfig	2009-01-26 18:26:35.000000000 +0800
 @@ -290,9 +290,9 @@
@@ -57,63 +22,6 @@
  
  config DRM_I830
  	tristate "i830 driver"
---- linux-2.6.28-gentoo/drivers/ide/Kconfig.orig	2009-01-26 13:27:39.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/ide/Kconfig	2009-01-26 18:09:03.000000000 +0800
-@@ -904,7 +904,6 @@
- endif
- 
- config BLK_DEV_IDEDMA
--	def_bool BLK_DEV_IDEDMA_SFF || \
--		 BLK_DEV_IDEDMA_ICS || BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
-+	def_bool BLK_DEV_IDEDMA_SFF || BLK_DEV_IDEDMA_ICS || BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
- 
- endif # IDE
---- linux-2.6.28-gentoo/drivers/net/Kconfig.orig	2009-01-26 13:35:29.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/net/Kconfig	2009-01-26 18:27:54.000000000 +0800
-@@ -515,9 +515,7 @@
- 
- config SH_ETH
- 	tristate "Renesas SuperH Ethernet support"
--	depends on SUPERH && \
--		(CPU_SUBTYPE_SH7710 || CPU_SUBTYPE_SH7712 || CPU_SUBTYPE_SH7763 || \
--		 CPU_SUBTYPE_SH7619)
-+	depends on SUPERH && (CPU_SUBTYPE_SH7710 || CPU_SUBTYPE_SH7712 || CPU_SUBTYPE_SH7763 || CPU_SUBTYPE_SH7619)
- 	select CRC32
- 	select MII
- 	select MDIO_BITBANG
-@@ -893,8 +891,7 @@
- 	tristate "SMC 91C9x/91C1xxx support"
- 	select CRC32
- 	select MII
--	depends on ARM || REDWOOD_5 || REDWOOD_6 || M32R || SUPERH || \
--		MIPS || BLACKFIN || MN10300
-+	depends on ARM || REDWOOD_5 || REDWOOD_6 || M32R || SUPERH || MIPS || BLACKFIN || MN10300
- 	help
- 	  This is a driver for SMC's 91x series of Ethernet chipsets,
- 	  including the SMC91C94 and the SMC91C111. Say Y if you want it
-@@ -1392,8 +1389,7 @@
- 
- config CS89x0
- 	tristate "CS89x0 support"
--	depends on NET_ETHERNET && (ISA || EISA || MACH_IXDP2351 \
--		|| ARCH_IXDP2X01 || ARCH_PNX010X || MACH_MX31ADS)
-+	depends on NET_ETHERNET && (ISA || EISA || MACH_IXDP2351 || ARCH_IXDP2X01 || ARCH_PNX010X || MACH_MX31ADS)
- 	---help---
- 	  Support for CS89x0 chipset based Ethernet cards. If you have a
- 	  network (Ethernet) card of this type, say Y and read the
---- linux-2.6.28-gentoo/drivers/mtd/maps/Kconfig.orig	2009-01-26 13:22:37.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/mtd/maps/Kconfig	2009-01-26 13:23:00.000000000 +0800
-@@ -96,9 +96,7 @@
- 
- config MTD_PMC_MSP_RAMROOT
- 	tristate "Embedded RAM block device for root on PMC-Sierra MSP"
--	depends on PMC_MSP_EMBEDDED_ROOTFS && \
--			(MTD_BLOCK || MTD_BLOCK_RO) && \
--			MTD_RAM
-+	depends on PMC_MSP_EMBEDDED_ROOTFS && (MTD_BLOCK || MTD_BLOCK_RO) && MTD_RAM
- 	help
- 	  This provides support for the embedded root file system
-           on PMC MSP devices.  This memory is mapped as a MTD block device.
 --- linux-2.6.28-gentoo/drivers/mtd/nand/Kconfig.orig	2009-01-26 13:23:16.000000000 +0800
 +++ linux-2.6.28-gentoo/drivers/mtd/nand/Kconfig	2009-01-26 18:11:34.000000000 +0800
 @@ -256,12 +256,12 @@
@@ -131,18 +39,6 @@
  	  laptop.
  
  config MTD_NAND_CS553X
---- linux-2.6.28-gentoo/drivers/char/Kconfig.orig	2009-01-26 13:44:44.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/char/Kconfig	2009-01-26 13:45:00.000000000 +0800
-@@ -765,8 +765,7 @@
- 
- config RTC
- 	tristate "Enhanced Real Time Clock Support (legacy PC RTC driver)"
--	depends on !PPC && !PARISC && !IA64 && !M68K && !SPARC && !FRV \
--			&& !ARM && !SUPERH && !S390 && !AVR32
-+	depends on !PPC && !PARISC && !IA64 && !M68K && !SPARC && !FRV && !ARM && !SUPERH && !S390 && !AVR32
- 	---help---
- 	  If you say Y here and create a character special file /dev/rtc with
- 	  major number 10 and minor number 135 using mknod ("man mknod"), you
 --- linux-2.6.28-gentoo/drivers/idle/Kconfig.orig	2009-01-26 10:09:55.000000000 +0800
 +++ linux-2.6.28-gentoo/drivers/idle/Kconfig	2009-01-26 10:10:10.000000000 +0800
 @@ -1,6 +1,6 @@
@@ -207,43 +103,6 @@
  	depends on CFAG12864B
  	default "20"
  	---help---
---- linux-2.6.28-gentoo/drivers/pcmcia/Kconfig.orig	2009-01-26 10:10:33.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/pcmcia/Kconfig	2009-01-26 10:11:10.000000000 +0800
-@@ -215,9 +215,7 @@
- config PCMCIA_PXA2XX
- 	tristate "PXA2xx support"
- 	depends on ARM && ARCH_PXA && PCMCIA
--	depends on (ARCH_LUBBOCK || MACH_MAINSTONE || PXA_SHARPSL \
--		    || MACH_ARMCORE || ARCH_PXA_PALM || TRIZEPS_PCMCIA \
--		    || ARCH_VIPER)
-+	depends on (ARCH_LUBBOCK || MACH_MAINSTONE || PXA_SHARPSL || MACH_ARMCORE || ARCH_PXA_PALM || TRIZEPS_PCMCIA || ARCH_VIPER)
- 	help
- 	  Say Y here to include support for the PXA2xx PCMCIA controller
- 
---- linux-2.6.28-gentoo/drivers/parport/Kconfig.orig	2009-01-26 13:25:46.000000000 +0800
-+++ linux-2.6.28-gentoo/drivers/parport/Kconfig	2009-01-26 13:26:11.000000000 +0800
-@@ -35,8 +35,7 @@
- 
- config PARPORT_PC
- 	tristate "PC-style hardware"
--	depends on (!SPARC64 || PCI) && !SPARC32 && !M32R && !FRV && \
--		(!M68K || ISA) && !MN10300 && !AVR32 && !BLACKFIN
-+	depends on (!SPARC64 || PCI) && !SPARC32 && !M32R && !FRV && (!M68K || ISA) && !MN10300 && !AVR32 && !BLACKFIN
- 	---help---
- 	  You should say Y here if you have a PC-style parallel port. All
- 	  IBM PC compatible computers and some Alphas have PC-style
---- linux-2.6.28-gentoo/kernel/power/Kconfig.orig	2009-01-26 18:21:29.000000000 +0800
-+++ linux-2.6.28-gentoo/kernel/power/Kconfig	2009-01-26 18:22:18.000000000 +0800
-@@ -106,8 +106,7 @@
- 	linked, ensuring that it's available when this test runs.
- 
- config SUSPEND_FREEZER
--	bool "Enable freezer for suspend to RAM/standby" \
--		if ARCH_WANTS_FREEZER_CONTROL || BROKEN
-+	bool "Enable freezer for suspend to RAM/standby" if ARCH_WANTS_FREEZER_CONTROL || BROKEN
- 	depends on SUSPEND
- 	default y
- 	help
 --- linux-2.6.28-gentoo/kernel/Kconfig.hz.orig	2009-01-26 10:05:53.000000000 +0800
 +++ linux-2.6.28-gentoo/kernel/Kconfig.hz	2009-01-26 10:06:44.000000000 +0800
 @@ -18,32 +18,32 @@

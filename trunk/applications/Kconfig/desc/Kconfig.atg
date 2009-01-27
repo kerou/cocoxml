@@ -39,7 +39,7 @@ DESTRUCTOR
     KcSymbolTable_Destruct(&self->symtab);
     if (self->mainmenu)  CcsFree(self->mainmenu);
 
-OPTIONS indentation
+OPTIONS indentation "backslash newline"
 
 CHARACTERS
     letter    = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_".
@@ -56,6 +56,7 @@ TOKENS
     stringT   = ( '"' { string0Ch | '\\' printable } '"' |
     	      	  '\'' { string1Ch | '\\' printable } '\'' ).
     eol       = (cr lf) | lf.
+    bseol     = '\\' { ' ' | '\t' } (cr lf | lf).
 
 COMMENTS FROM "#" TO lf
 
@@ -222,7 +223,8 @@ TypeDefine<KcSymbolType_t * symtype, KcProperty_t ** prop>
   | "hex"              (. *symtype = KcstHex; .)
   | "int"              (. *symtype = KcstInt; .)
   ) [ stringT          (. prompt = CcsEscape(self->t->val); .)
-  [ "if" Expr<&expr> ] (. if (prompt) {
+  [ [ bseol ] "if" Expr<&expr> ]
+      	      	       (. if (prompt) {
   		     	      KcProperty_AppendPrompt(prop, prompt, expr);
 			      CcsFree(prompt);
 			  } .)
@@ -302,30 +304,33 @@ Expr0<KcExpr_t ** expr> =           (. KcExpr_t * expr0; .)
 .
 
 Expr1<KcExpr_t ** expr>             (. KcExpr_t * expr0; .) =
-  Expr2<expr> | '!' Expr2<&expr0>   (. *expr = KcExpr(KcetNotExpr, NULL, NULL, expr0, NULL); .)
+  [ bseol ] ( Expr2<expr> |
+              '!' Expr2<&expr0>     (. *expr = KcExpr(KcetNotExpr, NULL, NULL, expr0, NULL); .)
+	    )
 .
 
 Expr2<KcExpr_t ** expr> = 
   Expr3<expr> | '(' Expr<expr> ')'
 .
 
-Expr3<KcExpr_t ** expr> = (. char op = 0; KcSymbol_t * sym0 = NULL, * sym1 = NULL; .)
-  (Symbol<&sym0> [ ("="   (. op = '='; .)
-                 | "!="   (. op = '!'; .)
-  ) Symbol<&sym1> ])      (. switch (op) {
-    			     case 0: *expr = KcExpr(KcetSymbol, sym0, NULL, NULL, NULL); break;
-			     case '=': *expr = KcExpr(KcetSymbolEqual, sym0, sym1, NULL, NULL); break;
-			     case '!': *expr = KcExpr(KcetSymbolNotEqual, sym0, sym1, NULL, NULL); break;
-			     } .)
+Expr3<KcExpr_t ** expr> =   (. char op = 0; KcSymbol_t * sym0 = NULL, * sym1 = NULL; .)
+  Symbol<&sym0> [ ("="      (. op = '='; .)
+                | "!="      (. op = '!'; .)
+                )
+  [ bseol ] Symbol<&sym1> ] (. switch (op) {
+    			       case 0: *expr = KcExpr(KcetSymbol, sym0, NULL, NULL, NULL); break;
+			       case '=': *expr = KcExpr(KcetSymbolEqual, sym0, sym1, NULL, NULL); break;
+			       case '!': *expr = KcExpr(KcetSymbolNotEqual, sym0, sym1, NULL, NULL); break;
+			       } .)
 .
 
-Symbol<KcSymbol_t ** sym> (. const char * errmsg; char * unescaped; .) =
-  ident     (. *sym = KcSymbolTable_Get(&self->symtab, self->t->val); .)
-  | stringT (. unescaped = CcsUnescape(self->t->val);
-    	       if ((errmsg = KcSymbolTable_AddConst(&self->symtab, sym, unescaped))) {
-	           KcParser_SemErrT(self, "Add const %s failed: %s", self->t->val, errmsg);
-		   CcsFree(unescaped);
-	       } .)
+Symbol<KcSymbol_t ** sym>  (. const char * errmsg; char * unescaped; .) =
+  ident [ bseol ]          (. *sym = KcSymbolTable_Get(&self->symtab, self->t->val); .)
+  | stringT [ bseol ]      (. unescaped = CcsUnescape(self->t->val);
+    	       	       	      if ((errmsg = KcSymbolTable_AddConst(&self->symtab, sym, unescaped))) {
+				  KcParser_SemErrT(self, "Add const %s failed: %s", self->t->val, errmsg);
+				  CcsFree(unescaped);
+			      } .)
 .
 
 END Kconfig.
