@@ -92,6 +92,7 @@ static void KcParser_Range(KcParser_t * self, KcProperty_t ** prop);
 static void KcParser_Option(KcParser_t * self, KcProperty_t ** prop);
 static void KcParser_Help(KcParser_t * self, CcsPosition_t ** pos);
 static void KcParser_Symbol(KcParser_t * self, KcSymbol_t ** sym);
+static void KcParser_Help0(KcParser_t * self, CcsPosition_t ** pos);
 static void KcParser_Expr0(KcParser_t * self, KcExpr_t ** expr);
 static void KcParser_Expr1(KcParser_t * self, KcExpr_t ** expr);
 static void KcParser_Expr2(KcParser_t * self, KcExpr_t ** expr);
@@ -270,6 +271,8 @@ KcParser_Source(KcParser_t * self)
     if (fname || pos) {
 	if (!KcScanner_IncludeByName(&self->scanner, self->incdirs, fname ? fname : pos->text, &self->la))
 	    KcParser_SemErrT(self, "Can not include '%s'.", fname ? fname : pos->text);
+	else
+	    printf("Source: %s\n", fname ? fname : pos->text);
 	if (fname) CcsFree(fname);
 	if (pos) CcsPosition_Destruct(pos);
     } 
@@ -488,7 +491,7 @@ KcParser_Property(KcParser_t * self, KcSymbolType_t * symtype, KcProperty_t ** p
 	KcParser_Option(self, prop);
 	break;
     }
-    case 36: case 37: case 38: case 39: {
+    case 1: case 36: case 37: case 38: case 39: {
 	KcParser_Help(self, helpmsg);
 	break;
     }
@@ -676,34 +679,13 @@ KcParser_Option(KcParser_t * self, KcProperty_t ** prop)
 static void
 KcParser_Help(KcParser_t * self, CcsPosition_t ** pos)
 {
-    CcsBool_t IndentIn_ornot; CcsToken_t * beg; 
-    if (self->la->kind == 36) {
+    if (KcParser_StartOf(self, 7)) {
+	KcParser_Help0(self, pos);
+    } else if (self->la->kind == 1) {
 	KcParser_Get(self);
-    } else if (self->la->kind == 37) {
-	KcParser_Get(self);
-    } else if (self->la->kind == 38) {
-	KcParser_Get(self);
-    } else if (self->la->kind == 39) {
-	KcParser_Get(self);
+	KcParser_Help0(self, pos);
+	KcParser_Expect(self, 2);
     } else KcParser_SynErr(self, 55);
-    KcParser_Expect(self, 6);
-    while (self->la->kind == 6) {
-	KcParser_Get(self);
-    }
-    KcParser_Get(self);
-    IndentIn_ornot = (self->t->kind == KcScanner_INDENT_IN); 
-    KcScanner_IndentLimit(&self->scanner, self->t);
-    KcScanner_TokenIncRef(&self->scanner,
-			  beg = IndentIn_ornot ? self->la : self->t); 
-    while (KcParser_StartOf(self, 7)) {
-	KcParser_Get(self);
-    }
-    KcParser_Expect(self, 2);
-    *pos = CcsPosition_Link(*pos, KcScanner_GetPosition(&self->scanner, beg, self->t));
-    KcScanner_TokenDecRef(&self->scanner, beg);
-    if (!IndentIn_ornot)
-	KcScanner_InsertExpect(&self->scanner, KcScanner_INDENT_OUT,
-			       NULL, 0, &self->la); 
 }
 
 static void
@@ -721,6 +703,39 @@ KcParser_Symbol(KcParser_t * self, KcSymbol_t ** sym)
 	    CcsFree(unescaped);
 	} 
     } else KcParser_SynErr(self, 56);
+}
+
+static void
+KcParser_Help0(KcParser_t * self, CcsPosition_t ** pos)
+{
+    CcsBool_t IndentIn_ornot; CcsToken_t * beg; 
+    if (self->la->kind == 36) {
+	KcParser_Get(self);
+    } else if (self->la->kind == 37) {
+	KcParser_Get(self);
+    } else if (self->la->kind == 38) {
+	KcParser_Get(self);
+    } else if (self->la->kind == 39) {
+	KcParser_Get(self);
+    } else KcParser_SynErr(self, 57);
+    KcParser_Expect(self, 6);
+    while (self->la->kind == 6) {
+	KcParser_Get(self);
+    }
+    KcParser_Get(self);
+    IndentIn_ornot = (self->t->kind == KcScanner_INDENT_IN); 
+    KcScanner_IndentLimit(&self->scanner, self->t);
+    KcScanner_TokenIncRef(&self->scanner,
+			  beg = IndentIn_ornot ? self->la : self->t); 
+    while (KcParser_StartOf(self, 8)) {
+	KcParser_Get(self);
+    }
+    KcParser_Expect(self, 2);
+    *pos = CcsPosition_Link(*pos, KcScanner_GetPosition(&self->scanner, beg, self->t));
+    KcScanner_TokenDecRef(&self->scanner, beg);
+    if (!IndentIn_ornot)
+	KcScanner_InsertExpect(&self->scanner, KcScanner_INDENT_OUT,
+			       NULL, 0, &self->la); 
 }
 
 static void
@@ -745,7 +760,7 @@ KcParser_Expr1(KcParser_t * self, KcExpr_t ** expr)
 	KcParser_Get(self);
 	KcParser_Expr2(self, &expr0);
 	*expr = KcExpr(KcetNotExpr, NULL, NULL, expr0, NULL); 
-    } else KcParser_SynErr(self, 57);
+    } else KcParser_SynErr(self, 58);
 }
 
 static void
@@ -757,7 +772,7 @@ KcParser_Expr2(KcParser_t * self, KcExpr_t ** expr)
 	KcParser_Get(self);
 	KcParser_Expr(self, expr);
 	KcParser_Expect(self, 44);
-    } else KcParser_SynErr(self, 58);
+    } else KcParser_SynErr(self, 59);
 }
 
 static void
@@ -847,8 +862,9 @@ KcParser_SynErr(KcParser_t * self, int n)
     case 54: s = "this symbol not expected in \"" "Option" "\""; break;
     case 55: s = "this symbol not expected in \"" "Help" "\""; break;
     case 56: s = "this symbol not expected in \"" "Symbol" "\""; break;
-    case 57: s = "this symbol not expected in \"" "Expr1" "\""; break;
-    case 58: s = "this symbol not expected in \"" "Expr2" "\""; break;
+    case 57: s = "this symbol not expected in \"" "Help0" "\""; break;
+    case 58: s = "this symbol not expected in \"" "Expr1" "\""; break;
+    case 59: s = "this symbol not expected in \"" "Expr2" "\""; break;
     /*---- enable ----*/
     default:
 	snprintf(format, sizeof(format), "error %d", n);
@@ -866,8 +882,9 @@ static const char * set[] = {
     ".......***.*.**.*...............................", /* 2 */
     ".****.*****************************************.", /* 3 */
     ".****..****************************************.", /* 4 */
-    "..................***********.***...****........", /* 5 */
+    ".*................***********.***...****........", /* 5 */
     "......****.****.**..............................", /* 6 */
-    ".*.********************************************."  /* 7 */
+    "....................................****........", /* 7 */
+    ".*.********************************************."  /* 8 */
     /*---- enable ----*/
 };
