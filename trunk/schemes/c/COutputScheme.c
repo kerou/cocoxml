@@ -117,9 +117,9 @@ COS_CheckLineStart(CcCOutputScheme_t * self, CcOutput_t * output)
 {
     CcLexical_t * lexical = self->base.base.globals->lexical;
 
-    CcPrintfIL(output, "lineStart = (si->ch == '\\n'%s)",
+    CcPrintfIL(output, "lineStart = (si->ch == '\\n'%s);",
 	       lexical->backslashNewline ?
-	       " && si->chLashNonblack != '\\\\'" : "");
+	       " && si->chLastNonblank != '\\\\'" : "");
     return TRUE;
 }
 
