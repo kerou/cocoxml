@@ -38,29 +38,29 @@ $ Coco {{Options}} Grammar.atg/Grammar.xatg
 }}}
 
 The possible options are:
- * -s <SCHEME>
+ * -s SCHEME
 Commonly the scheme is specified by atg/xatg, but sometimes the user want to
 switch to another output scheme temporarily, such as use 'dump' scheme to
 check the symbol table and so on. So the user can use '-s dump' for this
 purpose.
- * -o <OUTPUT-METHOD>
-Sometimes user might want to modify the generated sources (not suggested) for
-some special purpose. So 'Coco' won't to override the already exists sources
-automatically. There output method are provided: 'auto', 'generate', 'update'.
-For 'generate', 'Coco' always generate the sources by searching the templates
-and atg/xatg, any changes in the current sources are over written. For
-'update', 'Coco' only refresh the generated part but not touch any template
-sources. By default, 'auto' is used, which will check whether the target
-sources are present, if present, update them, otherwise generate them from
-installed templates.
+ * -o OUTPUT-METHOD
+    Sometimes user might want to modify the generated sources (not suggested)
+    for some special purpose. So 'Coco' won't to override the already exists
+    sources automatically. There output method are provided: 'auto',
+    'generate', 'update'. For 'generate', 'Coco' always generate the sources by
+    searching the templates and atg/xatg, any changes in the current sources
+    are over written. For 'update', 'Coco' only refresh the generated part but
+    not touch any template sources. By default, 'auto' is used, which will
+    check whether the target sources are present, if present, update them,
+    otherwise generate them from installed templates.
  * -g
-Shortcut of '-o generate' for the users who never change the generated sources
-mannually.
- * -d <OUTPUT-DIR>
-Specify the directory which the output sources located. By default, it is the
-atg/xatg located directory.
- * -t <TEMPLATE-DIR>
-Tell 'Coco' where to find the template sources.
+    Shortcut of '-o generate' for the users who never change the generated
+    sources mannually.
+ * -d OUTPUT-DIR
+    Specify the directory which the output sources located. By default, it is
+    the atg/xatg located directory.
+ * -t TEMPLATE-DIR
+    Tell 'Coco' where to find the template sources.
 
 So the commonly usage of 'Coco' is to write an atg/xatg, and run:
 {{{
