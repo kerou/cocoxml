@@ -66,14 +66,17 @@ struct CcsScanInput_s {
     CcsToken_t         * readyPeek;
     CcsToken_t         * readyLast;
 
+    /* Current status: Basic set. */
     int                  ch;
     int                  chBytes;
     int                  pos;
     int                  line;
     int                  col;
+    /* Current status: supplement set. */
     CcsBool_t            inComment;
     int                  numCommentEols;
     int                  chAfterComment;
+    int                  chLastNonblank;
 };
 
 CcsScanInput_t *
