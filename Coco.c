@@ -32,7 +32,7 @@
 #include  "dump/DumpOutputScheme.h"
 
 static const char * UsageHeadFormat =
-    "Usage: %s {{Options}} Grammar.atg/Grammer.xatg\n"
+    "Usage: %s {{Options}} Grammar.atg/Grammar.xatg\n"
     "Options:\n";
 static const char * UsageTail =
     "If '--' is encountered, all the following arguments are not treated as any options.\n";
