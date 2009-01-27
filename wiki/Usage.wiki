@@ -17,6 +17,14 @@ Now CocoXml implement three scheme now:
 To integrate multiple generated scanner/parser into one binary, prefix
 replacement has to be supported.
 
+The original syntax/semantic of atg file is defined by Hanspeter Moessenboeck,
+and the detail documentation about it is located at:
+http://www.ssw.uni-linz.ac.at/coco/Doc/UserManual.pdf
+
+In the using of 'Coco', I found some enhancements are required to support the
+real usage, these enhancements are introduced at:
+http://code.google.com/p/cocoxml/wiki/Enhancements.
+
 In every atg/xatg, SCHEME is used to specify the required scheme and the
 scanner/parser prefix.
 
