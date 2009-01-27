@@ -270,9 +270,14 @@ CcsParser_Coco(CcsParser_t * self)
     }
     if (self->la->kind == 10) {
 	CcsParser_Get(self);
-	while (self->la->kind == 1) {
-	    CcsParser_Get(self);
-	    CcLexical_SetOption(self->lexical, self->t); 
+	while (self->la->kind == 1 || self->la->kind == 3) {
+	    if (self->la->kind == 1) {
+		CcsParser_Get(self);
+		CcLexical_SetOption(self->lexical, self->t, TRUE); 
+	    } else {
+		CcsParser_Get(self);
+		CcLexical_SetOption(self->lexical, self->t, FALSE); 
+	    }
 	}
     }
     if (self->la->kind == 11) {

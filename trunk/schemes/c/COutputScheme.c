@@ -113,6 +113,17 @@ COS_Declarations(CcCOutputScheme_t * self, CcOutput_t * output)
 }
 
 static CcsBool_t
+COS_CheckLineStart(CcCOutputScheme_t * self, CcOutput_t * output)
+{
+    CcLexical_t * lexical = self->base.base.globals->lexical;
+
+    CcPrintfIL(output, "lineStart = (si->ch == '\\n'%s)",
+	       lexical->backslashNewline ?
+	       " && si->chLashNonblack != '\\\\'" : "");
+    return TRUE;
+}
+
+static CcsBool_t
 COS_Chars2States(CcCOutputScheme_t * self, CcOutput_t * output)
 {
     int numEle;
@@ -262,6 +273,8 @@ CcCOutputScheme_write(CcOutputScheme_t * self, CcOutput_t * output,
 	return COS_Defines(ccself, output);
     } else if (!strcmp(func, "declarations")) {
 	return COS_Declarations(ccself, output);
+    } else if (!strcmp(func, "checkLineStart")) {
+	return COS_CheckLineStart(ccself, output);
     } else if (!strcmp(func, "chars2states")) {
 	return COS_Chars2States(ccself, output);
     } else if (!strcmp(func, "identifiers2keywordkinds")) {

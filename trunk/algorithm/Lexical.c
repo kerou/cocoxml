@@ -67,6 +67,7 @@ CcLexical(CcLexical_t * self, CcGlobals_t * globals)
     self->ignoreCase = FALSE;
     self->indentUsed = FALSE;
     self->spaceUsed = FALSE;
+    self->backslashNewline = FALSE;
     CcHashTable(&self->addedTerminals, SZ_ADDED_TERMINALS);
     CcArrayList(&self->states);
     CcArrayList(&self->classes);
@@ -100,22 +101,29 @@ CcLexical_Destruct(CcLexical_t * self)
     CcEBNF_Destruct(&self->base);
 }
 
-void CcLexical_SetOption(CcLexical_t * self, const CcsToken_t * t)
+void
+CcLexical_SetOption(CcLexical_t * self, const CcsToken_t * t, CcsBool_t isIdent)
 {
+    const char * value;
     CcSymbolTable_t * symtab = &self->globals->symtab;
-    if (!strcasecmp(t->val, "ignore case")) {
+
+    value = isIdent ? t->val : CcUnescape(t->val);
+    if (!strcasecmp(value, "ignore case")) {
 	self->ignoreCase = TRUE;
-    } else if (!strcasecmp(t->val, "indentation")) {
+    } else if (!strcasecmp(value, "indentation")) {
 	self->indentUsed = TRUE;
 	CcSymbolTable_NewTerminal(symtab, IndentInName, t->loc.line);
 	CcSymbolTable_NewTerminal(symtab, IndentOutName, t->loc.line);
 	CcSymbolTable_NewTerminal(symtab, IndentErrName, t->loc.line);
-    } else if (!strcasecmp(t->val, "space")) {
+    } else if (!strcasecmp(value, "space")) {
 	self->spaceUsed = TRUE;
+    } else if (!strcasecmp(value, "backslash newline")) {
+	self->backslashNewline = TRUE;
     } else {
 	CcsErrorPool_Error(self->globals->errpool, &t->loc,
-			   "Unsupported option '%s' encountered.", t->val);
+			   "Unsupported option '%s' encountered.", value);
     }
+    if (!isIdent) CcFree((char *)value);
 }
 
 void CcLexical_AddTerminal(CcLexical_t * self, const CcsToken_t * t)
