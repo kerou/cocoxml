@@ -43,6 +43,7 @@ CcsScanInput_Init(CcsScanInput_t * self, void * scanner,
     self->inComment = FALSE;
     self->numCommentEols = 0;
     self->chAfterComment = NoChr;
+    self->chLastNonblank = NoChr;
     if (info->additionalInit && !info->additionalInit(self + 1, scanner))
 	goto errquit1;
     return TRUE;
@@ -123,6 +124,9 @@ CcsScanInput_GetCh(CcsScanInput_t * self)
 	} else if (self->chAfterComment != NoChr) {
 	    self->ch = self->chAfterComment;
 	    self->chAfterComment = NoChr;
+	    if (self->ch != ' ' && self->ch != '\t' &&
+		self->ch != '\r' && self->ch != '\n')
+		self->chLastNonblank = self->ch;
 	    return;
 	}
     }
@@ -138,6 +142,9 @@ CcsScanInput_GetCh(CcsScanInput_t * self)
     }
     self->ch = CcsBuffer_Read(&self->buffer, &self->chBytes);
     self->pos = CcsBuffer_GetPos(&self->buffer);
+    if (self->ch != ' ' && self->ch != '\t' &&
+	self->ch != '\r' && self->ch != '\n')
+	self->chLastNonblank = self->ch;
 }
 
 CcsToken_t *
