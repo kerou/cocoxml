@@ -285,6 +285,9 @@ CcCOutputScheme_write(CcOutputScheme_t * self, CcOutput_t * output,
 	return COS_Scan1(ccself, output);
     } else if (!strcmp(func, "scan3")) {
 	return COS_Scan3(ccself, output);
+    } else if (!strcmp(func, "SubScanners")) {
+	/* SubScanners section is not presented, omit it. */
+	return TRUE;
     }
     return CcCBaseOutputScheme_write(self, output, func, param);
 }

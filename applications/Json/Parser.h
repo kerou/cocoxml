@@ -33,7 +33,6 @@ struct JsonParser_s {
     CcsToken_t      * la;
     int               maxT;
     /*---- members ----*/
-    
     /*---- enable ----*/
 };
 

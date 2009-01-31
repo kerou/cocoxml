@@ -172,6 +172,13 @@ PatchParser_Destruct(PatchParser_t * self)
     CcsErrorPool_Destruct(&self->errpool);
 }
 
+/*---- SubScanners ----*/
+CcsToken_t * PatchParser_PieceLines(PatchParser_t * self)
+{
+    return NULL;
+}
+/*---- enable ----*/
+
 /*---- ProductionsBody ----*/
 static void
 PatchParser_Patch(PatchParser_t * self)

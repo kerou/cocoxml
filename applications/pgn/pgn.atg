@@ -28,9 +28,6 @@ SECTION hIncludes
 #endif
 END.
 
-SECTION cIncludes
-END.
-
 COMPILER Pgn
 
 MEMBERS

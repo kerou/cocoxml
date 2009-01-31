@@ -22,20 +22,13 @@ END.
 
 SCHEME c CExpr
 
-SECTION hIncludes
-END.
-
-SECTION cIncludes
-END.
-
 COMPILER CExpr
 
 MEMBERS
     int value;
 
 CONSTRUCTOR
-
-DESTRUCTOR
+    self->value = 0;
 
 CHARACTERS
     digit     = "0123456789".

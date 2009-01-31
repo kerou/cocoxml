@@ -134,7 +134,7 @@ CExprParser_Init(CExprParser_t * self)
     self->t = self->la = NULL;
     /*---- constructor ----*/
     self->maxT = 24;
-    
+    self->value = 0;
     /*---- enable ----*/
     return TRUE;
 }
@@ -174,13 +174,15 @@ void
 CExprParser_Destruct(CExprParser_t * self)
 {
     /*---- destructor ----*/
-    
     /*---- enable ----*/
     if (self->la) CExprScanner_TokenDecRef(&self->scanner, self->la);
     if (self->t) CExprScanner_TokenDecRef(&self->scanner, self->t);
     CExprScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }
+
+/*---- SubScanners ----*/
+/*---- enable ----*/
 
 /*---- ProductionsBody ----*/
 static void

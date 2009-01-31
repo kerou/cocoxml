@@ -444,6 +444,12 @@ CcCBaseOutputScheme_write(CcOutputScheme_t * self, CcOutput_t * output,
 	return COS_SynErrors(ccself, output);
     } else if (!strcmp(func, "InitSet")) {
 	return COS_InitSet(ccself, output);
+    } else if (!strcmp(func, "hIncludes")) {
+	/* hInclude section is not presented, omit it. */
+	return TRUE;
+    } else if (!strcmp(func, "cIncludes")) {
+	/* cInclude section is not presented, omit it. */
+	return TRUE;
     }
     fprintf(stderr, "Unknown section '%s' encountered.\n", func);
     return TRUE;

@@ -115,7 +115,6 @@ JsonParser_Init(JsonParser_t * self)
     self->t = self->la = NULL;
     /*---- constructor ----*/
     self->maxT = 12;
-    
     /*---- enable ----*/
     return TRUE;
 }
@@ -155,13 +154,15 @@ void
 JsonParser_Destruct(JsonParser_t * self)
 {
     /*---- destructor ----*/
-    
     /*---- enable ----*/
     if (self->la) JsonScanner_TokenDecRef(&self->scanner, self->la);
     if (self->t) JsonScanner_TokenDecRef(&self->scanner, self->t);
     JsonScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }
+
+/*---- SubScanners ----*/
+/*---- enable ----*/
 
 /*---- ProductionsBody ----*/
 static void

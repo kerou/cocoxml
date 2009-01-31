@@ -160,6 +160,9 @@ CfParser_Destruct(CfParser_t * self)
     CcsErrorPool_Destruct(&self->errpool);
 }
 
+/*---- SubScanners ----*/
+/*---- enable ----*/
+
 /*---- ProductionsBody ----*/
 static void
 CfParser_Cfile(CfParser_t * self)

@@ -9,19 +9,7 @@ END.
 
 SCHEME c Json
 
-SECTION hIncludes
-END.
-
-SECTION cIncludes
-END.
-
 COMPILER Json
-
-MEMBERS
-
-CONSTRUCTOR
-
-DESTRUCTOR
 
 CHARACTERS
     digit    = "0123456789".
