@@ -272,6 +272,7 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self,
     char lnbuf[4096], * eol; CcsBool_t enabled;
     char Command[128], ParamStr[128];
     CcOutput_t output;
+    CcArrayListIter_t iter;
     const CcsPosition_t * pos;
     const CommentMark_t * srcCM = Path2CommentMark(srcPath);
     const CcOutputSchemeType_t * type =
@@ -320,8 +321,12 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self,
 	fputs(lnbuf, tgtfp);
 	if (!strcmp(Command, "enable")) {
 	    enabled = TRUE;
-	} else if ((pos = CcGlobals_GetSection(self->globals, Command))) {
+	} else if ((pos = CcGlobals_FirstSection(self->globals,
+						 Command, &iter))) {
 	    CcPrintf(&output, "%s", pos->text);
+	    while ((pos = CcGlobals_NextSection(self->globals,
+						Command, &iter)))
+		CcPrintf(&output, "%s", pos->text);
 	    enabled = FALSE;
 	} else {
 	    if (!type->write(self, &output, Command, ParamStr))

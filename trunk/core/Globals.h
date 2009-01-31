@@ -66,7 +66,11 @@ CcsBool_t CcGlobals_Finish(CcGlobals_t * self);
 void CcGlobals_NewSection(CcGlobals_t * self, const char * secname,
 			  CcsPosition_t * pos);
 const CcsPosition_t *
-CcGlobals_GetSection(const CcGlobals_t * self, const char * secname);
+CcGlobals_FirstSection(const CcGlobals_t * self, const char * secname,
+		       CcArrayListIter_t * iter);
+const CcsPosition_t *
+CcGlobals_NextSection(const CcGlobals_t * self, const char * secname,
+		      CcArrayListIter_t * iter);
 
 EXTC_END
 
