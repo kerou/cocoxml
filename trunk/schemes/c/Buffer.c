@@ -26,7 +26,14 @@
 /* CcsBuffer_t private members. */
 /*#define BUFSTEP  8*/
 #define BUFSTEP 4096
+/* Return 0 for success, -1 for error. */
 static int CcsBuffer_Load(CcsBuffer_t * self);
+
+/* Return 0 for success, EoF for end of file, ErrorChr for error. */
+static int CcsBuffer_LoadMore(CcsBuffer_t * self);
+
+/* Return 0 for sucess, -1 for error.
+ * The returned character is saved in *value */
 static int CcsBuffer_ReadByte(CcsBuffer_t * self, int * value);
 
 CcsBuffer_t *
@@ -105,15 +112,67 @@ CcsBuffer_Read(CcsBuffer_t * self, int * retBytes)
     return ch;
 }
 
+long
+CcsBuffer_StringTo(CcsBuffer_t * self, size_t * len, const char * needle)
+{
+    int loadret;
+    char * cur; long curpos;
+    size_t nlen = strlen(needle);
+
+    for (cur = self->next; (cur + nlen) - self->next <= *len; ++cur) {
+	while ((cur + nlen) > self->loaded) {
+	    /* There is not enough data in the buffer. */
+	    curpos = self->start + (cur - self->buf);
+	    loadret = CcsBuffer_LoadMore(self);
+	    cur = self->buf + (curpos - self->start);
+	    if (loadret == ErrorChr) return -1;
+	    if (loadret == EoF) {
+		cur = self->loaded; goto done;
+	    }
+	}
+	if (*cur == *needle && !memcmp(cur + 1, needle + 1, nlen - 1)) {
+	    /* needle found. */
+	    cur += nlen; break;
+	}
+    }
+ done:
+    CcsAssert(cur - self->next <= *len);
+    *len = cur - self->next;
+    return self->start + (self->next - self->buf);
+}
 const char *
 CcsBuffer_GetString(CcsBuffer_t * self, long start, size_t size)
 {
     if (size == 0) return NULL;
-    if (start < self->start || start >= self->start + (self->cur - self->buf)){
-	fprintf(stderr, "start is out of range!\n");
-	exit(-1);
+    if (start < self->start) goto errquit0;
+    if (start < self->start + (self->cur - self->buf)) {
+	if (start + size > self->start + (self->cur - self->buf))
+	    goto errquit1;
+    } else if (start < self->start + (self->next - self->buf)) {
+	goto errquit0;
+    } else if (start + size >= self->start + (self->loaded - self->buf)) {
+	goto errquit1;
     }
     return self->buf + (start - self->start);
+ errquit0:
+    fprintf(stderr, "start is out of range.\n");
+    exit(-1);
+ errquit1:
+    fprintf(stderr, "start + size is out of range.\n");
+    exit(-1);
+}
+void
+CcsBuffer_Consume(CcsBuffer_t * self, long start, size_t size)
+{
+    if (start != self->start + (self->next - self->buf)) {
+	fprintf(stderr, "Consume must started from the current characters.\n");
+	exit(-1);
+    }
+    if (self->next + size >= self->loaded) {
+	fprintf(stderr, "Consume too many characters.\n");
+	exit(-1);
+    }
+    self->next += size;
 }
 
 void
@@ -164,50 +223,54 @@ CcsBuffer_Load(CcsBuffer_t * self)
 }
 
 static int
-CcsBuffer_ReadByte(CcsBuffer_t * self, int * value)
+CcsBuffer_LoadMore(CcsBuffer_t * self)
 {
     int delta; char * keptFirst, * newbuf;
-    while (self->next >= self->loaded) {
-	/* Calculate keptFirst */
-	keptFirst = self->cur;
-	if (self->busyFirst && self->busyFirst < keptFirst)
-	    keptFirst = self->busyFirst;
-	if (self->lockCur && self->lockCur < keptFirst)
-	    keptFirst = self->lockCur;
-	if (self->buf < keptFirst) { /* Remove the unprotected data. */
-	    delta = keptFirst - self->buf;
-	    memmove(self->buf, keptFirst, self->loaded - keptFirst);
-	    self->start += delta;
-	    if (self->busyFirst) self->busyFirst -= delta;
-	    if (self->lockCur) {
-		self->lockCur -= delta; self->lockNext -= delta;
-	    }
-	    self->cur -= delta;
-	    self->next -= delta;
-	    self->loaded -= delta;
+    /* Calculate keptFirst */
+    keptFirst = self->cur;
+    if (self->busyFirst && self->busyFirst < keptFirst)
+	keptFirst = self->busyFirst;
+    if (self->lockCur && self->lockCur < keptFirst)
+	keptFirst = self->lockCur;
+    if (self->buf < keptFirst) { /* Remove the unprotected data. */
+	delta = keptFirst - self->buf;
+	memmove(self->buf, keptFirst, self->loaded - keptFirst);
+	self->start += delta;
+	if (self->busyFirst) self->busyFirst -= delta;
+	if (self->lockCur) {
+	    self->lockCur -= delta; self->lockNext -= delta;
 	}
-	if (feof(self->fp)) { *value = EoF; return -1; }
-	/* Try to extend the storage space */
-	while (self->loaded >= self->last) {
-	    if (!(newbuf =
-		  CcsRealloc(self->buf, self->last - self->buf + BUFSTEP))) {
-		*value = ErrorChr;
-		return -1;
-	    }
-	    if (self->busyFirst)
-		self->busyFirst = newbuf + (self->busyFirst - self->buf);
-	    if (self->lockCur) {
-		self->lockCur = newbuf + (self->lockCur - self->buf);
-		self->lockNext = newbuf + (self->lockNext - self->buf);
-	    }
-	    self->cur = newbuf + (self->cur - self->buf);
-	    self->next = newbuf + (self->next - self->buf);
-	    self->loaded = newbuf + (self->loaded - self->buf);
-	    self->last = newbuf + (self->last - self->buf + BUFSTEP);
-	    self->buf = newbuf;
-	}
-	if (CcsBuffer_Load(self) < 0) { *value = ErrorChr; return -1; }
+	self->cur -= delta;
+	self->next -= delta;
+	self->loaded -= delta;
     }
+    if (feof(self->fp)) return EoF;
+    /* Try to extend the storage space */
+    while (self->loaded >= self->last) {
+	if (!(newbuf =
+	      CcsRealloc(self->buf, self->last - self->buf + BUFSTEP)))
+	    return ErrorChr;
+	if (self->busyFirst)
+	    self->busyFirst = newbuf + (self->busyFirst - self->buf);
+	if (self->lockCur) {
+	    self->lockCur = newbuf + (self->lockCur - self->buf);
+	    self->lockNext = newbuf + (self->lockNext - self->buf);
+	}
+	self->cur = newbuf + (self->cur - self->buf);
+	self->next = newbuf + (self->next - self->buf);
+	self->loaded = newbuf + (self->loaded - self->buf);
+	self->last = newbuf + (self->last - self->buf + BUFSTEP);
+	self->buf = newbuf;
+    }
+    if (CcsBuffer_Load(self) < 0) return ErrorChr;
+    return 0;
+}
+
+static int
+CcsBuffer_ReadByte(CcsBuffer_t * self, int * value)
+{
+    while (self->next >= self->loaded)
+	if ((*value = CcsBuffer_LoadMore(self))) return -1;
     *value = *self->next++;
     return 0;
 }

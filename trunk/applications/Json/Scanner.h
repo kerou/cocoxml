@@ -43,8 +43,11 @@ CcsToken_t * JsonScanner_Scan(JsonScanner_t * self);
 void JsonScanner_TokenIncRef(JsonScanner_t * self, CcsToken_t * token);
 void JsonScanner_TokenDecRef(JsonScanner_t * self, CcsToken_t * token);
 
-const char *
-JsonScanner_GetString(JsonScanner_t * self, const CcsToken_t * begin, size_t len);
+long
+JsonScanner_StringTo(JsonScanner_t * self, size_t * len, const char * needle);
+const char * JsonScanner_GetString(JsonScanner_t * self, long start, size_t len);
+void JsonScanner_Consume(JsonScanner_t * self, long start, size_t len);
+
 CcsPosition_t *
 JsonScanner_GetPosition(JsonScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end);

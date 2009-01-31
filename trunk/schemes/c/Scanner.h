@@ -66,8 +66,11 @@ CcsToken_t * CcsScanner_Scan(CcsScanner_t * self);
 void CcsScanner_TokenIncRef(CcsScanner_t * self, CcsToken_t * token);
 void CcsScanner_TokenDecRef(CcsScanner_t * self, CcsToken_t * token);
 
-const char *
-CcsScanner_GetString(CcsScanner_t * self, const CcsToken_t * begin, size_t len);
+long
+CcsScanner_StringTo(CcsScanner_t * self, size_t * len, const char * needle);
+const char * CcsScanner_GetString(CcsScanner_t * self, long start, size_t len);
+void CcsScanner_Consume(CcsScanner_t * self, long start, size_t len);
+
 CcsPosition_t *
 CcsScanner_GetPosition(CcsScanner_t * self, const CcsToken_t * begin,
 		       const CcsToken_t * end);
