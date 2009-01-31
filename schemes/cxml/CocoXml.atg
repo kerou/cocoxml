@@ -150,6 +150,7 @@ CocoXml                         (. CcSymbol_t  * sym;
 				   CcGraph_Destruct(g); .)
                                 WEAK
     '.'
+  | SectionDecl
   }
   "END" ident                   (. if (strcmp(gramName, self->t->val))
 				       CcsXmlParser_SemErrT(self, "name does not match grammar name");
