@@ -190,6 +190,9 @@ KcParser_Destruct(KcParser_t * self)
     CcsErrorPool_Destruct(&self->errpool);
 }
 
+/*---- SubScanners ----*/
+/*---- enable ----*/
+
 /*---- ProductionsBody ----*/
 static void
 KcParser_Kconfig(KcParser_t * self)

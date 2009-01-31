@@ -178,6 +178,9 @@ PgnParser_Destruct(PgnParser_t * self)
     CcsErrorPool_Destruct(&self->errpool);
 }
 
+/*---- SubScanners ----*/
+/*---- enable ----*/
+
 /*---- ProductionsBody ----*/
 static void
 PgnParser_Pgn(PgnParser_t * self)

@@ -328,6 +328,9 @@ CcOutputScheme_ApplyTemplate(CcOutputScheme_t * self,
 						Command, &iter)))
 		CcPrintf(&output, "%s", pos->text);
 	    enabled = FALSE;
+	} else if (!strcmp(Command, "license")) {
+	    /* license section is not presented. omit it */
+	    enabled = FALSE;
 	} else {
 	    if (!type->write(self, &output, Command, ParamStr))
 		goto errquit2;

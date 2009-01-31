@@ -15,9 +15,6 @@ SECTION hIncludes
 #endif
 END.
 
-SECTION cIncludes
-END.
-
 COMPILER Patch
 
 MEMBERS
@@ -121,6 +118,13 @@ Piece<PatchPiece_t ** piece> (. int subStart, subNum, addStart, addNum;
        	      		   firstLine, subLastEol, addLastEol);
        PatchLineList_Destruct(firstLine); .)
 .
+
+SECTION SubScanners
+CcsToken_t * PatchParser_PieceLines(PatchParser_t * self)
+{
+    return NULL;
+}
+END.
 
 PieceTitle<int * subStart, int * subNum, int * addStart, int * addNum> =
   "@@" ' ' { ' ' } '-' number     (. self->subStart = *subStart = atoi(self->t->val);
