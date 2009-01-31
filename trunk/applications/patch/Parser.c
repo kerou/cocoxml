@@ -15,10 +15,31 @@
 static void PatchParser_SynErr(PatchParser_t * self, int n);
 static const char * set[];
 
+#ifdef PatchParser_SUBSCANNER_USED
+static void
+PatchParser_TokenIncRef(PatchParser_t * self, CcsToken_t * token)
+{
+    if (token->destructor) ++token->refcnt;
+    else PatchScanner_TokenIncRef(&self->scanner, token);
+}
+
+static void
+PatchParser_TokenDecRef(PatchParser_t * self, CcsToken_t * token)
+{
+    if (token->destructor) token->destructor(token);
+    else PatchScanner_TokenDecRef(&self->scanner, token);
+}
+#else
+#define PatchParser_TokenIncRef(self, token) \
+    PatchScanner_TokenIncRef(&((self)->scanner), token)
+#define PatchParser_TokenDecRef(self, token) \
+    PatchScanner_TokenDecRef(&((self)->scanner), token)
+#endif
+
 static void
 PatchParser_Get(PatchParser_t * self)
 {
-    if (self->t) PatchScanner_TokenDecRef(&self->scanner, self->t);
+    if (self->t) PatchParser_TokenDecRef(self, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = PatchScanner_Scan(&self->scanner);
@@ -42,6 +63,29 @@ PatchParser_Expect(PatchParser_t * self, int n)
     if (self->la->kind == n) PatchParser_Get(self);
     else PatchParser_SynErr(self, n);
 }
+
+#ifdef PatchParser_SUBSCANNER_USED
+typedef CcsToken_t *
+(* SubScanner_t)(PatchParser_t * self, const char * fname,
+		 int pos, int line, line col);
+static void
+PatchParser_GetSS(PatchParser_t * self, SubScanner_t subscanner)
+{
+    if (self->t) PatchParser_TokenDecRef(self, self->t);
+    self->t = self->la;
+    self->la = subscanner(self, self->scanner.cur->fname,
+			  self->scanner.cur->pos,
+			  self->scanner.cur->line,
+			  self->scanner.cur->col);
+}
+
+static void
+PatchParser_ExpectSS(PatchParser_t * self, int n, SubScanner_t subscanner)
+{
+    if (self->la->kind == n) PatchParser_GetSS(self, subscanner);
+    else PatchParser_SynErr(self, n);
+}
+#endif
 
 #ifdef PatchParser_WEAK_USED
 static void
@@ -166,17 +210,14 @@ PatchParser_Destruct(PatchParser_t * self)
 	}
     }
     /*---- enable ----*/
-    if (self->la) PatchScanner_TokenDecRef(&self->scanner, self->la);
-    if (self->t) PatchScanner_TokenDecRef(&self->scanner, self->t);
+    if (self->la) PatchParser_TokenDecRef(self, self->la);
+    if (self->t) PatchParser_TokenDecRef(self, self->t);
     PatchScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }
 
 /*---- SubScanners ----*/
-CcsToken_t * PatchParser_PieceLines(PatchParser_t * self)
-{
-    return NULL;
-}
+CcsToken_t * PatchParser_PieceLines(PatchParser_t * self);
 /*---- enable ----*/
 
 /*---- ProductionsBody ----*/

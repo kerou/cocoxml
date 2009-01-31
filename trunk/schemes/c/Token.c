@@ -30,6 +30,7 @@ CcsToken(CcsScanInput_t * input, int kind, const char * fname, int pos,
     CcsToken_t * self;
     if (!(self = CcsMalloc(sizeof(CcsToken_t) + vallen + 1))) return NULL;
     self->next = NULL;
+    self->destructor = NULL;
     self->input = input;
     self->refcnt = 1;
     self->kind = kind;

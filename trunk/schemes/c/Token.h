@@ -33,6 +33,7 @@ EXTC_BEGIN
 struct CcsToken_s
 {
     CcsToken_t     * next;
+    void          (* destructor)(CcsToken_t * self);
     CcsScanInput_t * input;
     int              refcnt;
     int              kind;

@@ -40,10 +40,31 @@
 static void CcsXmlParser_SynErr(CcsXmlParser_t * self, int n);
 static const char * set[];
 
+#ifdef CcsXmlParser_SUBSCANNER_USED
+static void
+CcsXmlParser_TokenIncRef(CcsXmlParser_t * self, CcsToken_t * token)
+{
+    if (token->destructor) ++token->refcnt;
+    else CcsXmlScanner_TokenIncRef(&self->scanner, token);
+}
+
+static void
+CcsXmlParser_TokenDecRef(CcsXmlParser_t * self, CcsToken_t * token)
+{
+    if (token->destructor) token->destructor(token);
+    else CcsXmlScanner_TokenDecRef(&self->scanner, token);
+}
+#else
+#define CcsXmlParser_TokenIncRef(self, token) \
+    CcsXmlScanner_TokenIncRef(&((self)->scanner), token)
+#define CcsXmlParser_TokenDecRef(self, token) \
+    CcsXmlScanner_TokenDecRef(&((self)->scanner), token)
+#endif
+
 static void
 CcsXmlParser_Get(CcsXmlParser_t * self)
 {
-    if (self->t) CcsXmlScanner_TokenDecRef(&self->scanner, self->t);
+    if (self->t) CcsXmlParser_TokenDecRef(self, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = CcsXmlScanner_Scan(&self->scanner);
@@ -67,6 +88,29 @@ CcsXmlParser_Expect(CcsXmlParser_t * self, int n)
     if (self->la->kind == n) CcsXmlParser_Get(self);
     else CcsXmlParser_SynErr(self, n);
 }
+
+#ifdef CcsXmlParser_SUBSCANNER_USED
+typedef CcsToken_t *
+(* SubScanner_t)(CcsXmlParser_t * self, const char * fname,
+		 int pos, int line, line col);
+static void
+CcsXmlParser_GetSS(CcsXmlParser_t * self, SubScanner_t subscanner)
+{
+    if (self->t) CcsXmlParser_TokenDecRef(self, self->t);
+    self->t = self->la;
+    self->la = subscanner(self, self->scanner.cur->fname,
+			  self->scanner.cur->pos,
+			  self->scanner.cur->line,
+			  self->scanner.cur->col);
+}
+
+static void
+CcsXmlParser_ExpectSS(CcsXmlParser_t * self, int n, SubScanner_t subscanner)
+{
+    if (self->la->kind == n) CcsXmlParser_GetSS(self, subscanner);
+    else CcsXmlParser_SynErr(self, n);
+}
+#endif
 
 #ifdef CcsXmlParser_WEAK_USED
 static void
@@ -196,11 +240,14 @@ CcsXmlParser_Destruct(CcsXmlParser_t * self)
     /*---- destructor ----*/
     CcGlobals_Destruct(&self->globals);
     /*---- enable ----*/
-    if (self->la) CcsXmlScanner_TokenDecRef(&self->scanner, self->la);
-    if (self->t) CcsXmlScanner_TokenDecRef(&self->scanner, self->t);
+    if (self->la) CcsXmlParser_TokenDecRef(self, self->la);
+    if (self->t) CcsXmlParser_TokenDecRef(self, self->t);
     CcsXmlScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }
+
+/*---- SubScanners ----*/
+/*---- enable ----*/
 
 /*---- ProductionsBody ----*/
 static void

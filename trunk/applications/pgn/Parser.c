@@ -28,10 +28,31 @@ Author: Charles Wang <charlesw123456@gmail.com>
 static void PgnParser_SynErr(PgnParser_t * self, int n);
 static const char * set[];
 
+#ifdef PgnParser_SUBSCANNER_USED
+static void
+PgnParser_TokenIncRef(PgnParser_t * self, CcsToken_t * token)
+{
+    if (token->destructor) ++token->refcnt;
+    else PgnScanner_TokenIncRef(&self->scanner, token);
+}
+
+static void
+PgnParser_TokenDecRef(PgnParser_t * self, CcsToken_t * token)
+{
+    if (token->destructor) token->destructor(token);
+    else PgnScanner_TokenDecRef(&self->scanner, token);
+}
+#else
+#define PgnParser_TokenIncRef(self, token) \
+    PgnScanner_TokenIncRef(&((self)->scanner), token)
+#define PgnParser_TokenDecRef(self, token) \
+    PgnScanner_TokenDecRef(&((self)->scanner), token)
+#endif
+
 static void
 PgnParser_Get(PgnParser_t * self)
 {
-    if (self->t) PgnScanner_TokenDecRef(&self->scanner, self->t);
+    if (self->t) PgnParser_TokenDecRef(self, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = PgnScanner_Scan(&self->scanner);
@@ -55,6 +76,29 @@ PgnParser_Expect(PgnParser_t * self, int n)
     if (self->la->kind == n) PgnParser_Get(self);
     else PgnParser_SynErr(self, n);
 }
+
+#ifdef PgnParser_SUBSCANNER_USED
+typedef CcsToken_t *
+(* SubScanner_t)(PgnParser_t * self, const char * fname,
+		 int pos, int line, line col);
+static void
+PgnParser_GetSS(PgnParser_t * self, SubScanner_t subscanner)
+{
+    if (self->t) PgnParser_TokenDecRef(self, self->t);
+    self->t = self->la;
+    self->la = subscanner(self, self->scanner.cur->fname,
+			  self->scanner.cur->pos,
+			  self->scanner.cur->line,
+			  self->scanner.cur->col);
+}
+
+static void
+PgnParser_ExpectSS(PgnParser_t * self, int n, SubScanner_t subscanner)
+{
+    if (self->la->kind == n) PgnParser_GetSS(self, subscanner);
+    else PgnParser_SynErr(self, n);
+}
+#endif
 
 #ifdef PgnParser_WEAK_USED
 static void
@@ -172,8 +216,8 @@ PgnParser_Destruct(PgnParser_t * self)
 	PgnGame_Destruct(cur);
     }
     /*---- enable ----*/
-    if (self->la) PgnScanner_TokenDecRef(&self->scanner, self->la);
-    if (self->t) PgnScanner_TokenDecRef(&self->scanner, self->t);
+    if (self->la) PgnParser_TokenDecRef(self, self->la);
+    if (self->t) PgnParser_TokenDecRef(self, self->t);
     PgnScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }
