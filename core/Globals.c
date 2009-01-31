@@ -121,13 +121,24 @@ CcGlobals_NewSection(CcGlobals_t * self, const char * secname,
 }
 
 const CcsPosition_t *
-CcGlobals_GetSection(const CcGlobals_t * self, const char * secname)
+CcGlobals_FirstSection(const CcGlobals_t * self, const char * secname,
+		       CcArrayListIter_t * iter)
 {
-    CcArrayListIter_t iter; const CcSection_t * section;
-
-    for (section = (const CcSection_t *)CcArrayList_FirstC(&self->sections, &iter);
-	 section;
-	 section = (const CcSection_t *)CcArrayList_NextC(&self->sections, &iter))
-	if (!strcmp(section->name, secname)) return section->pos;
+    const CcSection_t * sec;
+    for (sec = (const CcSection_t *)CcArrayList_FirstC(&self->sections, iter);
+	 sec;
+	 sec = (const CcSection_t *)CcArrayList_NextC(&self->sections, iter))
+	if (!strcmp(sec->name, secname)) return sec->pos;
+    return NULL;
+}
+const CcsPosition_t *
+CcGlobals_NextSection(const CcGlobals_t * self, const char * secname,
+		      CcArrayListIter_t * iter)
+{
+    const CcSection_t * sec;
+    for (sec = (const CcSection_t *)CcArrayList_NextC(&self->sections, iter);
+	 sec;
+	 sec = (const CcSection_t *)CcArrayList_NextC(&self->sections, iter))
+	if (!strcmp(sec->name, secname)) return sec->pos;
     return NULL;
 }
