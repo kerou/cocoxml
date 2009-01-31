@@ -26,6 +26,7 @@ License: LGPLv2
 EXTC_BEGIN
 
 /*---- SynDefines ----*/
+#define KcParser_USE_StartOf
 /*---- enable ----*/
 
 typedef struct KcParser_s KcParser_t;

@@ -28,7 +28,11 @@ Author: Charles Wang <charlesw123456@gmail.com>
 static void PgnParser_SynErr(PgnParser_t * self, int n);
 static const char * set[];
 
-#ifdef PgnParser_SUBSCANNER_USED
+#if defined(PgnParser_USE_GetSS) || defined(PgnParser_USE_ExpectSS)
+typedef CcsToken_t *
+(* SubScanner_t)(PgnParser_t * self, const char * fname,
+		 int pos, int line, line col);
+
 static void
 PgnParser_TokenIncRef(PgnParser_t * self, CcsToken_t * token)
 {
@@ -43,11 +47,13 @@ PgnParser_TokenDecRef(PgnParser_t * self, CcsToken_t * token)
     else PgnScanner_TokenDecRef(&self->scanner, token);
 }
 #else
+
 #define PgnParser_TokenIncRef(self, token) \
     PgnScanner_TokenIncRef(&((self)->scanner), token)
 #define PgnParser_TokenDecRef(self, token) \
     PgnScanner_TokenDecRef(&((self)->scanner), token)
-#endif
+
+#endif /* PgnParser_USE_GetSS || PgnParser_USE_ExpectSS */
 
 static void
 PgnParser_Get(PgnParser_t * self)
@@ -64,11 +70,13 @@ PgnParser_Get(PgnParser_t * self)
     }
 }
 
+#ifdef PgnParser_USE_StartOf
 static CcsBool_t
 PgnParser_StartOf(PgnParser_t * self, int s)
 {
     return set[s][self->la->kind] == '*';
 }
+#endif
 
 static void
 PgnParser_Expect(PgnParser_t * self, int n)
@@ -77,10 +85,7 @@ PgnParser_Expect(PgnParser_t * self, int n)
     else PgnParser_SynErr(self, n);
 }
 
-#ifdef PgnParser_SUBSCANNER_USED
-typedef CcsToken_t *
-(* SubScanner_t)(PgnParser_t * self, const char * fname,
-		 int pos, int line, line col);
+#ifdef PgnParser_USE_GetSS
 static void
 PgnParser_GetSS(PgnParser_t * self, SubScanner_t subscanner)
 {
@@ -91,7 +96,9 @@ PgnParser_GetSS(PgnParser_t * self, SubScanner_t subscanner)
 			  self->scanner.cur->line,
 			  self->scanner.cur->col);
 }
+#endif
 
+#ifdef PgnParser_USE_ExpectSS
 static void
 PgnParser_ExpectSS(PgnParser_t * self, int n, SubScanner_t subscanner)
 {
@@ -100,7 +107,7 @@ PgnParser_ExpectSS(PgnParser_t * self, int n, SubScanner_t subscanner)
 }
 #endif
 
-#ifdef PgnParser_WEAK_USED
+#ifdef PgnParser_USE_ExpectWeak
 static void
 PgnParser_ExpectWeak(PgnParser_t * self, int n, int follow)
 {
@@ -110,7 +117,9 @@ PgnParser_ExpectWeak(PgnParser_t * self, int n, int follow)
 	while (!PgnParser_StartOf(self, follow)) PgnParser_Get(self);
     }
 }
+#endif
 
+#ifdef PgnParser_USE_WeakSeparator
 static CcsBool_t
 PgnParser_WeakSeparator(PgnParser_t * self, int n, int syFol, int repFol)
 {
@@ -123,7 +132,7 @@ PgnParser_WeakSeparator(PgnParser_t * self, int n, int syFol, int repFol)
 	PgnParser_Get(self);
     return PgnParser_StartOf(self, syFol);
 }
-#endif /* PgnParser_WEAK_USED */
+#endif /* PgnParser_USE_WeakSeparator */
 
 /*---- ProductionsHeader ----*/
 static void PgnParser_Pgn(PgnParser_t * self);
@@ -422,9 +431,11 @@ PgnParser_SynErr(PgnParser_t * self, int n)
     PgnParser_SemErr(self, self->la, "%s", s);
 }
 
+#ifdef PgnParser_USE_StartOf
 static const char * set[] = {
     /*---- InitSet ----*/
     /*    5    0    5    0    */
     "*........................"  /* 0 */
     /*---- enable ----*/
 };
+#endif /* PgnParser_USE_StartOf */

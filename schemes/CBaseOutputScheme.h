@@ -40,6 +40,12 @@ typedef struct {
     const char * prefix;
     CcSyntaxSymSet_t symSet;
     const CcSymbol_t * curSy;
+
+    CcsBool_t useStartOf;
+    CcsBool_t useGetSS;
+    CcsBool_t useExpectSS;
+    CcsBool_t useExpectWeak;
+    CcsBool_t useWeakSeparator;
 }  CcCBaseOutputScheme_t;
 
 CcCBaseOutputScheme_t *

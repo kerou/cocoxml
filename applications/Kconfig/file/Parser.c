@@ -15,7 +15,11 @@ License: LGPLv2
 static void CfParser_SynErr(CfParser_t * self, int n);
 static const char * set[];
 
-#ifdef CfParser_SUBSCANNER_USED
+#if defined(CfParser_USE_GetSS) || defined(CfParser_USE_ExpectSS)
+typedef CcsToken_t *
+(* SubScanner_t)(CfParser_t * self, const char * fname,
+		 int pos, int line, line col);
+
 static void
 CfParser_TokenIncRef(CfParser_t * self, CcsToken_t * token)
 {
@@ -30,11 +34,13 @@ CfParser_TokenDecRef(CfParser_t * self, CcsToken_t * token)
     else CfScanner_TokenDecRef(&self->scanner, token);
 }
 #else
+
 #define CfParser_TokenIncRef(self, token) \
     CfScanner_TokenIncRef(&((self)->scanner), token)
 #define CfParser_TokenDecRef(self, token) \
     CfScanner_TokenDecRef(&((self)->scanner), token)
-#endif
+
+#endif /* CfParser_USE_GetSS || CfParser_USE_ExpectSS */
 
 static void
 CfParser_Get(CfParser_t * self)
@@ -51,11 +57,13 @@ CfParser_Get(CfParser_t * self)
     }
 }
 
+#ifdef CfParser_USE_StartOf
 static CcsBool_t
 CfParser_StartOf(CfParser_t * self, int s)
 {
     return set[s][self->la->kind] == '*';
 }
+#endif
 
 static void
 CfParser_Expect(CfParser_t * self, int n)
@@ -64,10 +72,7 @@ CfParser_Expect(CfParser_t * self, int n)
     else CfParser_SynErr(self, n);
 }
 
-#ifdef CfParser_SUBSCANNER_USED
-typedef CcsToken_t *
-(* SubScanner_t)(CfParser_t * self, const char * fname,
-		 int pos, int line, line col);
+#ifdef CfParser_USE_GetSS
 static void
 CfParser_GetSS(CfParser_t * self, SubScanner_t subscanner)
 {
@@ -78,7 +83,9 @@ CfParser_GetSS(CfParser_t * self, SubScanner_t subscanner)
 			  self->scanner.cur->line,
 			  self->scanner.cur->col);
 }
+#endif
 
+#ifdef CfParser_USE_ExpectSS
 static void
 CfParser_ExpectSS(CfParser_t * self, int n, SubScanner_t subscanner)
 {
@@ -87,7 +94,7 @@ CfParser_ExpectSS(CfParser_t * self, int n, SubScanner_t subscanner)
 }
 #endif
 
-#ifdef CfParser_WEAK_USED
+#ifdef CfParser_USE_ExpectWeak
 static void
 CfParser_ExpectWeak(CfParser_t * self, int n, int follow)
 {
@@ -97,7 +104,9 @@ CfParser_ExpectWeak(CfParser_t * self, int n, int follow)
 	while (!CfParser_StartOf(self, follow)) CfParser_Get(self);
     }
 }
+#endif
 
+#ifdef CfParser_USE_WeakSeparator
 static CcsBool_t
 CfParser_WeakSeparator(CfParser_t * self, int n, int syFol, int repFol)
 {
@@ -110,7 +119,7 @@ CfParser_WeakSeparator(CfParser_t * self, int n, int syFol, int repFol)
 	CfParser_Get(self);
     return CfParser_StartOf(self, syFol);
 }
-#endif /* CfParser_WEAK_USED */
+#endif /* CfParser_USE_WeakSeparator */
 
 /*---- ProductionsHeader ----*/
 static void CfParser_Cfile(CfParser_t * self);
@@ -309,6 +318,7 @@ CfParser_SynErr(CfParser_t * self, int n)
     CfParser_SemErr(self, self->la, "%s", s);
 }
 
+#ifdef CfParser_USE_StartOf
 static const char * set[] = {
     /*---- InitSet ----*/
     /*    5    0    */
@@ -317,3 +327,4 @@ static const char * set[] = {
     "..***.********."  /* 2 */
     /*---- enable ----*/
 };
+#endif /* CfParser_USE_StartOf */

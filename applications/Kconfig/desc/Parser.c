@@ -16,7 +16,11 @@ License: LGPLv2
 static void KcParser_SynErr(KcParser_t * self, int n);
 static const char * set[];
 
-#ifdef KcParser_SUBSCANNER_USED
+#if defined(KcParser_USE_GetSS) || defined(KcParser_USE_ExpectSS)
+typedef CcsToken_t *
+(* SubScanner_t)(KcParser_t * self, const char * fname,
+		 int pos, int line, line col);
+
 static void
 KcParser_TokenIncRef(KcParser_t * self, CcsToken_t * token)
 {
@@ -31,11 +35,13 @@ KcParser_TokenDecRef(KcParser_t * self, CcsToken_t * token)
     else KcScanner_TokenDecRef(&self->scanner, token);
 }
 #else
+
 #define KcParser_TokenIncRef(self, token) \
     KcScanner_TokenIncRef(&((self)->scanner), token)
 #define KcParser_TokenDecRef(self, token) \
     KcScanner_TokenDecRef(&((self)->scanner), token)
-#endif
+
+#endif /* KcParser_USE_GetSS || KcParser_USE_ExpectSS */
 
 static void
 KcParser_Get(KcParser_t * self)
@@ -52,11 +58,13 @@ KcParser_Get(KcParser_t * self)
     }
 }
 
+#ifdef KcParser_USE_StartOf
 static CcsBool_t
 KcParser_StartOf(KcParser_t * self, int s)
 {
     return set[s][self->la->kind] == '*';
 }
+#endif
 
 static void
 KcParser_Expect(KcParser_t * self, int n)
@@ -65,10 +73,7 @@ KcParser_Expect(KcParser_t * self, int n)
     else KcParser_SynErr(self, n);
 }
 
-#ifdef KcParser_SUBSCANNER_USED
-typedef CcsToken_t *
-(* SubScanner_t)(KcParser_t * self, const char * fname,
-		 int pos, int line, line col);
+#ifdef KcParser_USE_GetSS
 static void
 KcParser_GetSS(KcParser_t * self, SubScanner_t subscanner)
 {
@@ -79,7 +84,9 @@ KcParser_GetSS(KcParser_t * self, SubScanner_t subscanner)
 			  self->scanner.cur->line,
 			  self->scanner.cur->col);
 }
+#endif
 
+#ifdef KcParser_USE_ExpectSS
 static void
 KcParser_ExpectSS(KcParser_t * self, int n, SubScanner_t subscanner)
 {
@@ -88,7 +95,7 @@ KcParser_ExpectSS(KcParser_t * self, int n, SubScanner_t subscanner)
 }
 #endif
 
-#ifdef KcParser_WEAK_USED
+#ifdef KcParser_USE_ExpectWeak
 static void
 KcParser_ExpectWeak(KcParser_t * self, int n, int follow)
 {
@@ -98,7 +105,9 @@ KcParser_ExpectWeak(KcParser_t * self, int n, int follow)
 	while (!KcParser_StartOf(self, follow)) KcParser_Get(self);
     }
 }
+#endif
 
+#ifdef KcParser_USE_WeakSeparator
 static CcsBool_t
 KcParser_WeakSeparator(KcParser_t * self, int n, int syFol, int repFol)
 {
@@ -111,7 +120,7 @@ KcParser_WeakSeparator(KcParser_t * self, int n, int syFol, int repFol)
 	KcParser_Get(self);
     return KcParser_StartOf(self, syFol);
 }
-#endif /* KcParser_WEAK_USED */
+#endif /* KcParser_USE_WeakSeparator */
 
 /*---- ProductionsHeader ----*/
 static void KcParser_Kconfig(KcParser_t * self);
@@ -937,6 +946,7 @@ KcParser_SynErr(KcParser_t * self, int n)
     KcParser_SemErr(self, self->la, "%s", s);
 }
 
+#ifdef KcParser_USE_StartOf
 static const char * set[] = {
     /*---- InitSet ----*/
     /*    5    0    5    0    5    0    5    0    5   */
@@ -951,3 +961,4 @@ static const char * set[] = {
     ".*.*********************************************."  /* 8 */
     /*---- enable ----*/
 };
+#endif /* KcParser_USE_StartOf */

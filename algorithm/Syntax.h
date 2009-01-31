@@ -46,7 +46,6 @@ struct CcSyntax_s {
     CcsPosition_t * constructor;
     CcsPosition_t * destructor;
 
-    CcsBool_t       weakUsed;
     char          * schemeName;
     char          * grammarPrefix;
     CcSymbol_t    * gramSy;

@@ -34,7 +34,6 @@ CcSyntax(CcSyntax_t * self, CcGlobals_t * globals)
     self->members = NULL;
     self->constructor = NULL;
     self->destructor = NULL;
-    self->weakUsed = FALSE;
     self->schemeName = NULL;
     self->grammarPrefix = NULL;
     self->gramSy = NULL;
@@ -66,7 +65,6 @@ CcSyntax_NodeFromSymbol(CcSyntax_t * self, const CcSymbol_t * sym, int line,
 			CcsBool_t weak)
 {
     if (sym->base.type == symbol_t && weak) {
-	self->weakUsed = TRUE;
 	return (CcNode_t *)CcEBNF_NewNode(&self->base, CcNodeWT(line, sym));
     } else if (sym->base.type == symbol_t) {
 	return (CcNode_t *)CcEBNF_NewNode(&self->base, CcNodeT(line, sym));

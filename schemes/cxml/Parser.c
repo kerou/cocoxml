@@ -40,7 +40,11 @@
 static void CcsXmlParser_SynErr(CcsXmlParser_t * self, int n);
 static const char * set[];
 
-#ifdef CcsXmlParser_SUBSCANNER_USED
+#if defined(CcsXmlParser_USE_GetSS) || defined(CcsXmlParser_USE_ExpectSS)
+typedef CcsToken_t *
+(* SubScanner_t)(CcsXmlParser_t * self, const char * fname,
+		 int pos, int line, line col);
+
 static void
 CcsXmlParser_TokenIncRef(CcsXmlParser_t * self, CcsToken_t * token)
 {
@@ -55,11 +59,13 @@ CcsXmlParser_TokenDecRef(CcsXmlParser_t * self, CcsToken_t * token)
     else CcsXmlScanner_TokenDecRef(&self->scanner, token);
 }
 #else
+
 #define CcsXmlParser_TokenIncRef(self, token) \
     CcsXmlScanner_TokenIncRef(&((self)->scanner), token)
 #define CcsXmlParser_TokenDecRef(self, token) \
     CcsXmlScanner_TokenDecRef(&((self)->scanner), token)
-#endif
+
+#endif /* CcsXmlParser_USE_GetSS || CcsXmlParser_USE_ExpectSS */
 
 static void
 CcsXmlParser_Get(CcsXmlParser_t * self)
@@ -76,11 +82,13 @@ CcsXmlParser_Get(CcsXmlParser_t * self)
     }
 }
 
+#ifdef CcsXmlParser_USE_StartOf
 static CcsBool_t
 CcsXmlParser_StartOf(CcsXmlParser_t * self, int s)
 {
     return set[s][self->la->kind] == '*';
 }
+#endif
 
 static void
 CcsXmlParser_Expect(CcsXmlParser_t * self, int n)
@@ -89,10 +97,7 @@ CcsXmlParser_Expect(CcsXmlParser_t * self, int n)
     else CcsXmlParser_SynErr(self, n);
 }
 
-#ifdef CcsXmlParser_SUBSCANNER_USED
-typedef CcsToken_t *
-(* SubScanner_t)(CcsXmlParser_t * self, const char * fname,
-		 int pos, int line, line col);
+#ifdef CcsXmlParser_USE_GetSS
 static void
 CcsXmlParser_GetSS(CcsXmlParser_t * self, SubScanner_t subscanner)
 {
@@ -103,7 +108,9 @@ CcsXmlParser_GetSS(CcsXmlParser_t * self, SubScanner_t subscanner)
 			  self->scanner.cur->line,
 			  self->scanner.cur->col);
 }
+#endif
 
+#ifdef CcsXmlParser_USE_ExpectSS
 static void
 CcsXmlParser_ExpectSS(CcsXmlParser_t * self, int n, SubScanner_t subscanner)
 {
@@ -112,7 +119,7 @@ CcsXmlParser_ExpectSS(CcsXmlParser_t * self, int n, SubScanner_t subscanner)
 }
 #endif
 
-#ifdef CcsXmlParser_WEAK_USED
+#ifdef CcsXmlParser_USE_ExpectWeak
 static void
 CcsXmlParser_ExpectWeak(CcsXmlParser_t * self, int n, int follow)
 {
@@ -122,7 +129,9 @@ CcsXmlParser_ExpectWeak(CcsXmlParser_t * self, int n, int follow)
 	while (!CcsXmlParser_StartOf(self, follow)) CcsXmlParser_Get(self);
     }
 }
+#endif
 
+#ifdef CcsXmlParser_USE_WeakSeparator
 static CcsBool_t
 CcsXmlParser_WeakSeparator(CcsXmlParser_t * self, int n, int syFol, int repFol)
 {
@@ -135,7 +144,7 @@ CcsXmlParser_WeakSeparator(CcsXmlParser_t * self, int n, int syFol, int repFol)
 	CcsXmlParser_Get(self);
     return CcsXmlParser_StartOf(self, syFol);
 }
-#endif /* CcsXmlParser_WEAK_USED */
+#endif /* CcsXmlParser_USE_WeakSeparator */
 
 /*---- ProductionsHeader ----*/
 static void CcsXmlParser_CocoXml(CcsXmlParser_t * self);
@@ -810,6 +819,7 @@ CcsXmlParser_SynErr(CcsXmlParser_t * self, int n)
     CcsXmlParser_SemErr(self, self->la, "%s", s);
 }
 
+#ifdef CcsXmlParser_USE_StartOf
 static const char * set[] = {
     /*---- InitSet ----*/
     /*    5    0    5    0    5    0    5     */
@@ -834,3 +844,4 @@ static const char * set[] = {
     ".****************************.**********."  /* 18 */
     /*---- enable ----*/
 };
+#endif /* CcsXmlParser_USE_StartOf */
