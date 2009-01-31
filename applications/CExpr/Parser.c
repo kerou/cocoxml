@@ -28,10 +28,31 @@ Author: Charles Wang <charlesw123456@gmail.com>
 static void CExprParser_SynErr(CExprParser_t * self, int n);
 static const char * set[];
 
+#ifdef CExprParser_SUBSCANNER_USED
+static void
+CExprParser_TokenIncRef(CExprParser_t * self, CcsToken_t * token)
+{
+    if (token->destructor) ++token->refcnt;
+    else CExprScanner_TokenIncRef(&self->scanner, token);
+}
+
+static void
+CExprParser_TokenDecRef(CExprParser_t * self, CcsToken_t * token)
+{
+    if (token->destructor) token->destructor(token);
+    else CExprScanner_TokenDecRef(&self->scanner, token);
+}
+#else
+#define CExprParser_TokenIncRef(self, token) \
+    CExprScanner_TokenIncRef(&((self)->scanner), token)
+#define CExprParser_TokenDecRef(self, token) \
+    CExprScanner_TokenDecRef(&((self)->scanner), token)
+#endif
+
 static void
 CExprParser_Get(CExprParser_t * self)
 {
-    if (self->t) CExprScanner_TokenDecRef(&self->scanner, self->t);
+    if (self->t) CExprParser_TokenDecRef(self, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = CExprScanner_Scan(&self->scanner);
@@ -55,6 +76,29 @@ CExprParser_Expect(CExprParser_t * self, int n)
     if (self->la->kind == n) CExprParser_Get(self);
     else CExprParser_SynErr(self, n);
 }
+
+#ifdef CExprParser_SUBSCANNER_USED
+typedef CcsToken_t *
+(* SubScanner_t)(CExprParser_t * self, const char * fname,
+		 int pos, int line, line col);
+static void
+CExprParser_GetSS(CExprParser_t * self, SubScanner_t subscanner)
+{
+    if (self->t) CExprParser_TokenDecRef(self, self->t);
+    self->t = self->la;
+    self->la = subscanner(self, self->scanner.cur->fname,
+			  self->scanner.cur->pos,
+			  self->scanner.cur->line,
+			  self->scanner.cur->col);
+}
+
+static void
+CExprParser_ExpectSS(CExprParser_t * self, int n, SubScanner_t subscanner)
+{
+    if (self->la->kind == n) CExprParser_GetSS(self, subscanner);
+    else CExprParser_SynErr(self, n);
+}
+#endif
 
 #ifdef CExprParser_WEAK_USED
 static void
@@ -175,8 +219,8 @@ CExprParser_Destruct(CExprParser_t * self)
 {
     /*---- destructor ----*/
     /*---- enable ----*/
-    if (self->la) CExprScanner_TokenDecRef(&self->scanner, self->la);
-    if (self->t) CExprScanner_TokenDecRef(&self->scanner, self->t);
+    if (self->la) CExprParser_TokenDecRef(self, self->la);
+    if (self->t) CExprParser_TokenDecRef(self, self->t);
     CExprScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }

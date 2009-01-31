@@ -15,10 +15,31 @@ License: LGPLv2
 static void JsonParser_SynErr(JsonParser_t * self, int n);
 static const char * set[];
 
+#ifdef JsonParser_SUBSCANNER_USED
+static void
+JsonParser_TokenIncRef(JsonParser_t * self, CcsToken_t * token)
+{
+    if (token->destructor) ++token->refcnt;
+    else JsonScanner_TokenIncRef(&self->scanner, token);
+}
+
+static void
+JsonParser_TokenDecRef(JsonParser_t * self, CcsToken_t * token)
+{
+    if (token->destructor) token->destructor(token);
+    else JsonScanner_TokenDecRef(&self->scanner, token);
+}
+#else
+#define JsonParser_TokenIncRef(self, token) \
+    JsonScanner_TokenIncRef(&((self)->scanner), token)
+#define JsonParser_TokenDecRef(self, token) \
+    JsonScanner_TokenDecRef(&((self)->scanner), token)
+#endif
+
 static void
 JsonParser_Get(JsonParser_t * self)
 {
-    if (self->t) JsonScanner_TokenDecRef(&self->scanner, self->t);
+    if (self->t) JsonParser_TokenDecRef(self, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = JsonScanner_Scan(&self->scanner);
@@ -42,6 +63,29 @@ JsonParser_Expect(JsonParser_t * self, int n)
     if (self->la->kind == n) JsonParser_Get(self);
     else JsonParser_SynErr(self, n);
 }
+
+#ifdef JsonParser_SUBSCANNER_USED
+typedef CcsToken_t *
+(* SubScanner_t)(JsonParser_t * self, const char * fname,
+		 int pos, int line, line col);
+static void
+JsonParser_GetSS(JsonParser_t * self, SubScanner_t subscanner)
+{
+    if (self->t) JsonParser_TokenDecRef(self, self->t);
+    self->t = self->la;
+    self->la = subscanner(self, self->scanner.cur->fname,
+			  self->scanner.cur->pos,
+			  self->scanner.cur->line,
+			  self->scanner.cur->col);
+}
+
+static void
+JsonParser_ExpectSS(JsonParser_t * self, int n, SubScanner_t subscanner)
+{
+    if (self->la->kind == n) JsonParser_GetSS(self, subscanner);
+    else JsonParser_SynErr(self, n);
+}
+#endif
 
 #ifdef JsonParser_WEAK_USED
 static void
@@ -155,8 +199,8 @@ JsonParser_Destruct(JsonParser_t * self)
 {
     /*---- destructor ----*/
     /*---- enable ----*/
-    if (self->la) JsonScanner_TokenDecRef(&self->scanner, self->la);
-    if (self->t) JsonScanner_TokenDecRef(&self->scanner, self->t);
+    if (self->la) JsonParser_TokenDecRef(self, self->la);
+    if (self->t) JsonParser_TokenDecRef(self, self->t);
     JsonScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }

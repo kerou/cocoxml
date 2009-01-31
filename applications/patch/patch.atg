@@ -120,10 +120,7 @@ Piece<PatchPiece_t ** piece> (. int subStart, subNum, addStart, addNum;
 .
 
 SECTION SubScanners
-CcsToken_t * PatchParser_PieceLines(PatchParser_t * self)
-{
-    return NULL;
-}
+CcsToken_t * PatchParser_PieceLines(PatchParser_t * self);
 END.
 
 PieceTitle<int * subStart, int * subNum, int * addStart, int * addNum> =

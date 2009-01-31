@@ -15,10 +15,31 @@ License: LGPLv2
 static void CfParser_SynErr(CfParser_t * self, int n);
 static const char * set[];
 
+#ifdef CfParser_SUBSCANNER_USED
+static void
+CfParser_TokenIncRef(CfParser_t * self, CcsToken_t * token)
+{
+    if (token->destructor) ++token->refcnt;
+    else CfScanner_TokenIncRef(&self->scanner, token);
+}
+
+static void
+CfParser_TokenDecRef(CfParser_t * self, CcsToken_t * token)
+{
+    if (token->destructor) token->destructor(token);
+    else CfScanner_TokenDecRef(&self->scanner, token);
+}
+#else
+#define CfParser_TokenIncRef(self, token) \
+    CfScanner_TokenIncRef(&((self)->scanner), token)
+#define CfParser_TokenDecRef(self, token) \
+    CfScanner_TokenDecRef(&((self)->scanner), token)
+#endif
+
 static void
 CfParser_Get(CfParser_t * self)
 {
-    if (self->t) CfScanner_TokenDecRef(&self->scanner, self->t);
+    if (self->t) CfParser_TokenDecRef(self, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = CfScanner_Scan(&self->scanner);
@@ -42,6 +63,29 @@ CfParser_Expect(CfParser_t * self, int n)
     if (self->la->kind == n) CfParser_Get(self);
     else CfParser_SynErr(self, n);
 }
+
+#ifdef CfParser_SUBSCANNER_USED
+typedef CcsToken_t *
+(* SubScanner_t)(CfParser_t * self, const char * fname,
+		 int pos, int line, line col);
+static void
+CfParser_GetSS(CfParser_t * self, SubScanner_t subscanner)
+{
+    if (self->t) CfParser_TokenDecRef(self, self->t);
+    self->t = self->la;
+    self->la = subscanner(self, self->scanner.cur->fname,
+			  self->scanner.cur->pos,
+			  self->scanner.cur->line,
+			  self->scanner.cur->col);
+}
+
+static void
+CfParser_ExpectSS(CfParser_t * self, int n, SubScanner_t subscanner)
+{
+    if (self->la->kind == n) CfParser_GetSS(self, subscanner);
+    else CfParser_SynErr(self, n);
+}
+#endif
 
 #ifdef CfParser_WEAK_USED
 static void
@@ -154,8 +198,8 @@ CfParser_Destruct(CfParser_t * self)
     /*---- destructor ----*/
     CfValueMap_Destruct(&self->valmap);
     /*---- enable ----*/
-    if (self->la) CfScanner_TokenDecRef(&self->scanner, self->la);
-    if (self->t) CfScanner_TokenDecRef(&self->scanner, self->t);
+    if (self->la) CfParser_TokenDecRef(self, self->la);
+    if (self->t) CfParser_TokenDecRef(self, self->t);
     CfScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }

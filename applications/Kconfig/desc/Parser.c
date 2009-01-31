@@ -16,10 +16,31 @@ License: LGPLv2
 static void KcParser_SynErr(KcParser_t * self, int n);
 static const char * set[];
 
+#ifdef KcParser_SUBSCANNER_USED
+static void
+KcParser_TokenIncRef(KcParser_t * self, CcsToken_t * token)
+{
+    if (token->destructor) ++token->refcnt;
+    else KcScanner_TokenIncRef(&self->scanner, token);
+}
+
+static void
+KcParser_TokenDecRef(KcParser_t * self, CcsToken_t * token)
+{
+    if (token->destructor) token->destructor(token);
+    else KcScanner_TokenDecRef(&self->scanner, token);
+}
+#else
+#define KcParser_TokenIncRef(self, token) \
+    KcScanner_TokenIncRef(&((self)->scanner), token)
+#define KcParser_TokenDecRef(self, token) \
+    KcScanner_TokenDecRef(&((self)->scanner), token)
+#endif
+
 static void
 KcParser_Get(KcParser_t * self)
 {
-    if (self->t) KcScanner_TokenDecRef(&self->scanner, self->t);
+    if (self->t) KcParser_TokenDecRef(self, self->t);
     self->t = self->la;
     for (;;) {
 	self->la = KcScanner_Scan(&self->scanner);
@@ -43,6 +64,29 @@ KcParser_Expect(KcParser_t * self, int n)
     if (self->la->kind == n) KcParser_Get(self);
     else KcParser_SynErr(self, n);
 }
+
+#ifdef KcParser_SUBSCANNER_USED
+typedef CcsToken_t *
+(* SubScanner_t)(KcParser_t * self, const char * fname,
+		 int pos, int line, line col);
+static void
+KcParser_GetSS(KcParser_t * self, SubScanner_t subscanner)
+{
+    if (self->t) KcParser_TokenDecRef(self, self->t);
+    self->t = self->la;
+    self->la = subscanner(self, self->scanner.cur->fname,
+			  self->scanner.cur->pos,
+			  self->scanner.cur->line,
+			  self->scanner.cur->col);
+}
+
+static void
+KcParser_ExpectSS(KcParser_t * self, int n, SubScanner_t subscanner)
+{
+    if (self->la->kind == n) KcParser_GetSS(self, subscanner);
+    else KcParser_SynErr(self, n);
+}
+#endif
 
 #ifdef KcParser_WEAK_USED
 static void
@@ -184,8 +228,8 @@ KcParser_Destruct(KcParser_t * self)
     KcSymbolTable_Destruct(&self->symtab);
     if (self->mainmenu)  CcsFree(self->mainmenu);
     /*---- enable ----*/
-    if (self->la) KcScanner_TokenDecRef(&self->scanner, self->la);
-    if (self->t) KcScanner_TokenDecRef(&self->scanner, self->t);
+    if (self->la) KcParser_TokenDecRef(self, self->la);
+    if (self->t) KcParser_TokenDecRef(self, self->t);
     KcScanner_Destruct(&self->scanner);
     CcsErrorPool_Destruct(&self->errpool);
 }

@@ -209,11 +209,22 @@ SCOS_GenCode(CcCBaseOutputScheme_t * self, CcOutput_t * output,
 	    }
 	} else if (p->base.type == node_t) {
 	    pt = (CcNodeT_t *)p;
-	    if (CcBitArray_Get(&isChecked, pt->sym->kind))
-		CcPrintfIL(output, "%sParser_Get(self);", self->prefix);
-	    else
-		CcPrintfIL(output, "%sParser_Expect(self, %d);",
-			   self->prefix, pt->sym->kind);
+	    if (CcBitArray_Get(&isChecked, pt->sym->kind)) {
+		if (pt->pos) {
+		    CcPrintfIL(output, "%sParser_GetSS(self, %sSubScanner_%s);",
+			       self->prefix, self->prefix, pt->pos->text);
+		} else {
+		    CcPrintfIL(output, "%sParser_Get(self);", self->prefix);
+		}
+	    } else {
+		if (pt->pos) {
+		    CcPrintfIL(output, "%sParser_ExpectSS(self, %d, %sSubScanner_%s);",
+			       self->prefix, self->prefix, pt->sym->kind, pt->pos->text);
+		} else {
+		    CcPrintfIL(output, "%sParser_Expect(self, %d);",
+			       self->prefix, pt->sym->kind);
+		}
+	    }
 	} else if (p->base.type == node_wt) {
 	    pwt = (CcNodeWT_t *)p;
 	    CcSyntax_Expected(syntax, &s1, p->next, self->curSy);
