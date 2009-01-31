@@ -109,11 +109,25 @@ void CcsScanInput_TokenIncRef(CcsScanInput_t * self, CcsToken_t * token);
  * CcsScanInput_TokenDecRef. */
 void CcsScanInput_TokenDecRef(CcsScanInput_t * self, CcsToken_t * token);
 
-/* Get original text for the provided tokens. This is a shortcut of
- * CcsScanInput_GetPosition which can avoid needless memory duplication. */
+/* StringToV is used to get the string from current position to the provided
+ * needle, if the provided needle is not encountered, return when maximum
+ * length is reached or the end of file is reached.
+ * The start position is returned with its length.
+ *
+ * The available needles are is provided by needle array.
+ * The maximum length is set to *len, and the returned string length is
+ * saved to *len too. */
+long
+CcsScanInput_StringTo(CcsScanInput_t * self, size_t * len, const char * needle);
+/* Return the requested string from the return value of StringToV.
+ * The returned string is not terminated by '\0'. */
 const char *
-CcsScanInput_GetString(CcsScanInput_t * self, const CcsToken_t * begin,
-		       size_t len);
+CcsScanInput_GetString(CcsScanInput_t * self, long start, size_t len);
+/* Consume the StringTo returned string with the provided length, the characters
+ * in this scope is not be parsed by Scanner anymore. The line number and column
+ * number is calculated automatically in Consume too. */
+void CcsScanInput_Consume(CcsScanInput_t * self, long start, size_t len);
+
 /* Get original text between the provided tokens. Both of these tokens
  * must be located in busyList. */
 CcsPosition_t *

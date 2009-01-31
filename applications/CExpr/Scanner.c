@@ -154,10 +154,20 @@ CExprScanner_TokenDecRef(CExprScanner_t * self, CcsToken_t * token)
     else CcsScanInput_TokenDecRef(token->input, token);
 }
 
-const char *
-CExprScanner_GetString(CExprScanner_t * self, const CcsToken_t * begin, size_t len)
+long
+CExprScanner_StringTo(CExprScanner_t * self, size_t * len, const char * needle)
 {
-    return CcsScanInput_GetString(begin->input, begin, len);
+    return CcsScanInput_StringTo(self->cur, len, needle);
+}
+const char *
+CExprScanner_GetString(CExprScanner_t * self, long start, size_t len)
+{
+    return CcsScanInput_GetString(self->cur, start, len);
+}
+void
+CExprScanner_Consume(CExprScanner_t * self, long start, size_t len)
+{
+    CcsScanInput_Consume(self->cur, start, len);
 }
 
 CcsPosition_t *
