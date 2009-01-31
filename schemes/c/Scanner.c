@@ -60,7 +60,7 @@ static void CcsGetCh(CcsScanInput_t * si)
     CcsBool_t lineStart;
     CcsIndent_t * indent = (CcsIndent_t *)(si + 1);
     /*---- checkLineStart ----*/
-    lineStart = (si->ch == '\n')
+    lineStart = (si->ch == '\n');
     /*---- enable ----*/
     if (lineStart) indent->lineStart = TRUE;
     CcsScanInput_GetCh(si);
