@@ -36,6 +36,7 @@ Author: Charles Wang <charlesw123456@gmail.com>
 EXTC_BEGIN
 
 /*---- SynDefines ----*/
+#define CExprParser_USE_StartOf
 /*---- enable ----*/
 
 typedef struct CExprParser_s CExprParser_t;

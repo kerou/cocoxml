@@ -296,7 +296,7 @@ static const CcOutputSchemeType_t COutputSchemeType = {
     { sizeof(CcCOutputScheme_t), "COutputScheme",
       CcCBaseOutputScheme_Destruct },
     /* If the following lists are modified, modify install.py too. */
-    "Scanner.h\0Scanner.c\0Parser.h\0Parser.c\0\0",
+    "Parser.c\0Scanner.c\0Parser.h\0Scanner.h\0\0",
     CcCOutputScheme_write
 };
 

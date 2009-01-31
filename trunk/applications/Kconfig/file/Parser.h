@@ -26,6 +26,7 @@ License: LGPLv2
 EXTC_BEGIN
 
 /*---- SynDefines ----*/
+#define CfParser_USE_StartOf
 /*---- enable ----*/
 
 typedef struct CfParser_s CfParser_t;

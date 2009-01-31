@@ -48,7 +48,9 @@
 EXTC_BEGIN
 
 /*---- SynDefines ----*/
-#define CcsParser_WEAK_USED
+#define CcsParser_USE_StartOf
+#define CcsParser_USE_ExpectWeak
+#define CcsParser_USE_WeakSeparator
 /*---- enable ----*/
 
 typedef struct CcsParser_s CcsParser_t;

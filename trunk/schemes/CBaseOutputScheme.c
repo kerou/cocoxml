@@ -38,14 +38,27 @@ CcCBaseOutputScheme(const CcOutputSchemeType_t * type, CcGlobals_t * globals,
     if (self->prefix == NULL) self->prefix = "";
     CcSyntaxSymSet(&self->symSet);
     CcSyntaxSymSet_New(&self->symSet, self->base.globals->syntax.allSyncSets);
+    self->useStartOf = FALSE;
+    self->useGetSS = FALSE;
+    self->useExpectSS = FALSE;
+    self->useExpectWeak = FALSE;
+    self->useWeakSeparator = FALSE;
     return self;
 }
 
 static CcsBool_t
 COS_SynDefines(CcCBaseOutputScheme_t * self, CcOutput_t * output)
 {
-    if (self->base.globals->syntax.weakUsed)
-	CcPrintfIL(output, "#define %sParser_WEAK_USED", self->prefix);
+    if (self->useStartOf)
+	CcPrintfIL(output, "#define %sParser_USE_StartOf", self->prefix);
+    if (self->useGetSS)
+	CcPrintfIL(output, "#define %sParser_USE_GetSS", self->prefix);
+    if (self->useExpectSS)
+	CcPrintfIL(output, "#define %sParser_USE_ExpectSS", self->prefix);
+    if (self->useExpectWeak)
+	CcPrintfIL(output, "#define %sParser_USE_ExpectWeak", self->prefix);
+    if (self->useWeakSeparator)
+	CcPrintfIL(output, "#define %sParser_USE_WeakSeparator", self->prefix);
     return TRUE;
 }
 
@@ -151,6 +164,7 @@ SCOS_GenCond(CcCBaseOutputScheme_t * self, CcOutput_t * output,
 	    }
 	CcPrintfL(output, "%s", suffix);
     } else {
+	self->useStartOf = TRUE;
 	CcPrintfIL(output, "%s%sParser_StartOf(self, %d)%s",
 		   prefix, self->prefix,
 		   CcSyntaxSymSet_New(&self->symSet, s), suffix);
@@ -211,6 +225,7 @@ SCOS_GenCode(CcCBaseOutputScheme_t * self, CcOutput_t * output,
 	    pt = (CcNodeT_t *)p;
 	    if (CcBitArray_Get(&isChecked, pt->sym->kind)) {
 		if (pt->pos) {
+		    self->useGetSS = TRUE;
 		    CcPrintfIL(output, "%sParser_GetSS(self, %sSubScanner_%s);",
 			       self->prefix, self->prefix, pt->pos->text);
 		} else {
@@ -218,6 +233,7 @@ SCOS_GenCode(CcCBaseOutputScheme_t * self, CcOutput_t * output,
 		}
 	    } else {
 		if (pt->pos) {
+		    self->useExpectSS = TRUE;
 		    CcPrintfIL(output, "%sParser_ExpectSS(self, %d, %sSubScanner_%s);",
 			       self->prefix, self->prefix, pt->sym->kind, pt->pos->text);
 		} else {
@@ -229,6 +245,7 @@ SCOS_GenCode(CcCBaseOutputScheme_t * self, CcOutput_t * output,
 	    pwt = (CcNodeWT_t *)p;
 	    CcSyntax_Expected(syntax, &s1, p->next, self->curSy);
 	    CcBitArray_Or(&s1, syntax->allSyncSets);
+	    self->useExpectWeak = TRUE;
 	    CcPrintfIL(output, "%sParser_ExpectWeak(self, %d, %d);",
 		       self->prefix, pwt->sym->kind,
 		       CcSyntaxSymSet_New(&self->symSet, &s1));
@@ -303,6 +320,7 @@ SCOS_GenCode(CcCBaseOutputScheme_t * self, CcOutput_t * output,
 	    if (p2->base.type == node_wt) {
 		CcSyntax_Expected(syntax, &s1, p2->next, self->curSy);
 		CcSyntax_Expected(syntax, &s2, p->next, self->curSy);
+		self->useWeakSeparator = TRUE;
 		CcPrintfIL(output,
 			   "while (%sParser_WeakSeparator(self, %d, %d, %d)) {",
 			   self->prefix, ((CcNodeWT_t *)p2)->sym->kind,

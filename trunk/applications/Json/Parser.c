@@ -15,7 +15,11 @@ License: LGPLv2
 static void JsonParser_SynErr(JsonParser_t * self, int n);
 static const char * set[];
 
-#ifdef JsonParser_SUBSCANNER_USED
+#if defined(JsonParser_USE_GetSS) || defined(JsonParser_USE_ExpectSS)
+typedef CcsToken_t *
+(* SubScanner_t)(JsonParser_t * self, const char * fname,
+		 int pos, int line, line col);
+
 static void
 JsonParser_TokenIncRef(JsonParser_t * self, CcsToken_t * token)
 {
@@ -30,11 +34,13 @@ JsonParser_TokenDecRef(JsonParser_t * self, CcsToken_t * token)
     else JsonScanner_TokenDecRef(&self->scanner, token);
 }
 #else
+
 #define JsonParser_TokenIncRef(self, token) \
     JsonScanner_TokenIncRef(&((self)->scanner), token)
 #define JsonParser_TokenDecRef(self, token) \
     JsonScanner_TokenDecRef(&((self)->scanner), token)
-#endif
+
+#endif /* JsonParser_USE_GetSS || JsonParser_USE_ExpectSS */
 
 static void
 JsonParser_Get(JsonParser_t * self)
@@ -51,11 +57,13 @@ JsonParser_Get(JsonParser_t * self)
     }
 }
 
+#ifdef JsonParser_USE_StartOf
 static CcsBool_t
 JsonParser_StartOf(JsonParser_t * self, int s)
 {
     return set[s][self->la->kind] == '*';
 }
+#endif
 
 static void
 JsonParser_Expect(JsonParser_t * self, int n)
@@ -64,10 +72,7 @@ JsonParser_Expect(JsonParser_t * self, int n)
     else JsonParser_SynErr(self, n);
 }
 
-#ifdef JsonParser_SUBSCANNER_USED
-typedef CcsToken_t *
-(* SubScanner_t)(JsonParser_t * self, const char * fname,
-		 int pos, int line, line col);
+#ifdef JsonParser_USE_GetSS
 static void
 JsonParser_GetSS(JsonParser_t * self, SubScanner_t subscanner)
 {
@@ -78,7 +83,9 @@ JsonParser_GetSS(JsonParser_t * self, SubScanner_t subscanner)
 			  self->scanner.cur->line,
 			  self->scanner.cur->col);
 }
+#endif
 
+#ifdef JsonParser_USE_ExpectSS
 static void
 JsonParser_ExpectSS(JsonParser_t * self, int n, SubScanner_t subscanner)
 {
@@ -87,7 +94,7 @@ JsonParser_ExpectSS(JsonParser_t * self, int n, SubScanner_t subscanner)
 }
 #endif
 
-#ifdef JsonParser_WEAK_USED
+#ifdef JsonParser_USE_ExpectWeak
 static void
 JsonParser_ExpectWeak(JsonParser_t * self, int n, int follow)
 {
@@ -97,7 +104,9 @@ JsonParser_ExpectWeak(JsonParser_t * self, int n, int follow)
 	while (!JsonParser_StartOf(self, follow)) JsonParser_Get(self);
     }
 }
+#endif
 
+#ifdef JsonParser_USE_WeakSeparator
 static CcsBool_t
 JsonParser_WeakSeparator(JsonParser_t * self, int n, int syFol, int repFol)
 {
@@ -110,7 +119,7 @@ JsonParser_WeakSeparator(JsonParser_t * self, int n, int syFol, int repFol)
 	JsonParser_Get(self);
     return JsonParser_StartOf(self, syFol);
 }
-#endif /* JsonParser_WEAK_USED */
+#endif /* JsonParser_USE_WeakSeparator */
 
 /*---- ProductionsHeader ----*/
 static void JsonParser_Json(JsonParser_t * self);
@@ -330,6 +339,7 @@ JsonParser_SynErr(JsonParser_t * self, int n)
     JsonParser_SemErr(self, self->la, "%s", s);
 }
 
+#ifdef JsonParser_USE_StartOf
 static const char * set[] = {
     /*---- InitSet ----*/
     /*    5    0   */
@@ -337,3 +347,4 @@ static const char * set[] = {
     ".***...*.***.."  /* 1 */
     /*---- enable ----*/
 };
+#endif /* JsonParser_USE_StartOf */

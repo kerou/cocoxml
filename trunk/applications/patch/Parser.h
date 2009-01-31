@@ -26,6 +26,7 @@
 EXTC_BEGIN
 
 /*---- SynDefines ----*/
+#define PatchParser_USE_StartOf
 /*---- enable ----*/
 
 typedef struct PatchParser_s PatchParser_t;

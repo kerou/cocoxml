@@ -28,7 +28,11 @@ Author: Charles Wang <charlesw123456@gmail.com>
 static void CExprParser_SynErr(CExprParser_t * self, int n);
 static const char * set[];
 
-#ifdef CExprParser_SUBSCANNER_USED
+#if defined(CExprParser_USE_GetSS) || defined(CExprParser_USE_ExpectSS)
+typedef CcsToken_t *
+(* SubScanner_t)(CExprParser_t * self, const char * fname,
+		 int pos, int line, line col);
+
 static void
 CExprParser_TokenIncRef(CExprParser_t * self, CcsToken_t * token)
 {
@@ -43,11 +47,13 @@ CExprParser_TokenDecRef(CExprParser_t * self, CcsToken_t * token)
     else CExprScanner_TokenDecRef(&self->scanner, token);
 }
 #else
+
 #define CExprParser_TokenIncRef(self, token) \
     CExprScanner_TokenIncRef(&((self)->scanner), token)
 #define CExprParser_TokenDecRef(self, token) \
     CExprScanner_TokenDecRef(&((self)->scanner), token)
-#endif
+
+#endif /* CExprParser_USE_GetSS || CExprParser_USE_ExpectSS */
 
 static void
 CExprParser_Get(CExprParser_t * self)
@@ -64,11 +70,13 @@ CExprParser_Get(CExprParser_t * self)
     }
 }
 
+#ifdef CExprParser_USE_StartOf
 static CcsBool_t
 CExprParser_StartOf(CExprParser_t * self, int s)
 {
     return set[s][self->la->kind] == '*';
 }
+#endif
 
 static void
 CExprParser_Expect(CExprParser_t * self, int n)
@@ -77,10 +85,7 @@ CExprParser_Expect(CExprParser_t * self, int n)
     else CExprParser_SynErr(self, n);
 }
 
-#ifdef CExprParser_SUBSCANNER_USED
-typedef CcsToken_t *
-(* SubScanner_t)(CExprParser_t * self, const char * fname,
-		 int pos, int line, line col);
+#ifdef CExprParser_USE_GetSS
 static void
 CExprParser_GetSS(CExprParser_t * self, SubScanner_t subscanner)
 {
@@ -91,7 +96,9 @@ CExprParser_GetSS(CExprParser_t * self, SubScanner_t subscanner)
 			  self->scanner.cur->line,
 			  self->scanner.cur->col);
 }
+#endif
 
+#ifdef CExprParser_USE_ExpectSS
 static void
 CExprParser_ExpectSS(CExprParser_t * self, int n, SubScanner_t subscanner)
 {
@@ -100,7 +107,7 @@ CExprParser_ExpectSS(CExprParser_t * self, int n, SubScanner_t subscanner)
 }
 #endif
 
-#ifdef CExprParser_WEAK_USED
+#ifdef CExprParser_USE_ExpectWeak
 static void
 CExprParser_ExpectWeak(CExprParser_t * self, int n, int follow)
 {
@@ -110,7 +117,9 @@ CExprParser_ExpectWeak(CExprParser_t * self, int n, int follow)
 	while (!CExprParser_StartOf(self, follow)) CExprParser_Get(self);
     }
 }
+#endif
 
+#ifdef CExprParser_USE_WeakSeparator
 static CcsBool_t
 CExprParser_WeakSeparator(CExprParser_t * self, int n, int syFol, int repFol)
 {
@@ -123,7 +132,7 @@ CExprParser_WeakSeparator(CExprParser_t * self, int n, int syFol, int repFol)
 	CExprParser_Get(self);
     return CExprParser_StartOf(self, syFol);
 }
-#endif /* CExprParser_WEAK_USED */
+#endif /* CExprParser_USE_WeakSeparator */
 
 /*---- ProductionsHeader ----*/
 static void CExprParser_CExpr(CExprParser_t * self);
@@ -474,6 +483,7 @@ CExprParser_SynErr(CExprParser_t * self, int n)
     CExprParser_SemErr(self, self->la, "%s", s);
 }
 
+#ifdef CExprParser_USE_StartOf
 static const char * set[] = {
     /*---- InitSet ----*/
     /*    5    0    5    0     */
@@ -481,3 +491,4 @@ static const char * set[] = {
     "...........****..........."  /* 1 */
     /*---- enable ----*/
 };
+#endif /* CExprParser_USE_StartOf */

@@ -23,6 +23,7 @@ License: LGPLv2
 EXTC_BEGIN
 
 /*---- SynDefines ----*/
+#define JsonParser_USE_StartOf
 /*---- enable ----*/
 
 typedef struct JsonParser_s JsonParser_t;

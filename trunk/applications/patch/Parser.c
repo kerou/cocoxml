@@ -15,7 +15,11 @@
 static void PatchParser_SynErr(PatchParser_t * self, int n);
 static const char * set[];
 
-#ifdef PatchParser_SUBSCANNER_USED
+#if defined(PatchParser_USE_GetSS) || defined(PatchParser_USE_ExpectSS)
+typedef CcsToken_t *
+(* SubScanner_t)(PatchParser_t * self, const char * fname,
+		 int pos, int line, line col);
+
 static void
 PatchParser_TokenIncRef(PatchParser_t * self, CcsToken_t * token)
 {
@@ -30,11 +34,13 @@ PatchParser_TokenDecRef(PatchParser_t * self, CcsToken_t * token)
     else PatchScanner_TokenDecRef(&self->scanner, token);
 }
 #else
+
 #define PatchParser_TokenIncRef(self, token) \
     PatchScanner_TokenIncRef(&((self)->scanner), token)
 #define PatchParser_TokenDecRef(self, token) \
     PatchScanner_TokenDecRef(&((self)->scanner), token)
-#endif
+
+#endif /* PatchParser_USE_GetSS || PatchParser_USE_ExpectSS */
 
 static void
 PatchParser_Get(PatchParser_t * self)
@@ -51,11 +57,13 @@ PatchParser_Get(PatchParser_t * self)
     }
 }
 
+#ifdef PatchParser_USE_StartOf
 static CcsBool_t
 PatchParser_StartOf(PatchParser_t * self, int s)
 {
     return set[s][self->la->kind] == '*';
 }
+#endif
 
 static void
 PatchParser_Expect(PatchParser_t * self, int n)
@@ -64,10 +72,7 @@ PatchParser_Expect(PatchParser_t * self, int n)
     else PatchParser_SynErr(self, n);
 }
 
-#ifdef PatchParser_SUBSCANNER_USED
-typedef CcsToken_t *
-(* SubScanner_t)(PatchParser_t * self, const char * fname,
-		 int pos, int line, line col);
+#ifdef PatchParser_USE_GetSS
 static void
 PatchParser_GetSS(PatchParser_t * self, SubScanner_t subscanner)
 {
@@ -78,7 +83,9 @@ PatchParser_GetSS(PatchParser_t * self, SubScanner_t subscanner)
 			  self->scanner.cur->line,
 			  self->scanner.cur->col);
 }
+#endif
 
+#ifdef PatchParser_USE_ExpectSS
 static void
 PatchParser_ExpectSS(PatchParser_t * self, int n, SubScanner_t subscanner)
 {
@@ -87,7 +94,7 @@ PatchParser_ExpectSS(PatchParser_t * self, int n, SubScanner_t subscanner)
 }
 #endif
 
-#ifdef PatchParser_WEAK_USED
+#ifdef PatchParser_USE_ExpectWeak
 static void
 PatchParser_ExpectWeak(PatchParser_t * self, int n, int follow)
 {
@@ -97,7 +104,9 @@ PatchParser_ExpectWeak(PatchParser_t * self, int n, int follow)
 	while (!PatchParser_StartOf(self, follow)) PatchParser_Get(self);
     }
 }
+#endif
 
+#ifdef PatchParser_USE_WeakSeparator
 static CcsBool_t
 PatchParser_WeakSeparator(PatchParser_t * self, int n, int syFol, int repFol)
 {
@@ -110,7 +119,7 @@ PatchParser_WeakSeparator(PatchParser_t * self, int n, int syFol, int repFol)
 	PatchParser_Get(self);
     return PatchParser_StartOf(self, syFol);
 }
-#endif /* PatchParser_WEAK_USED */
+#endif /* PatchParser_USE_WeakSeparator */
 
 /*---- ProductionsHeader ----*/
 static void PatchParser_Patch(PatchParser_t * self);
@@ -494,6 +503,7 @@ PatchParser_SynErr(PatchParser_t * self, int n)
     PatchParser_SemErr(self, self->la, "%s", s);
 }
 
+#ifdef PatchParser_USE_StartOf
 static const char * set[] = {
     /*---- InitSet ----*/
     /*    5    0    5    */
@@ -502,3 +512,4 @@ static const char * set[] = {
     ".**..**************."  /* 2 */
     /*---- enable ----*/
 };
+#endif /* PatchParser_USE_StartOf */
