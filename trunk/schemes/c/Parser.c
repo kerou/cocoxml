@@ -44,7 +44,9 @@ static const char * noString = "~none~";
 /*---- enable ----*/
 
 static void CcsParser_SynErr(CcsParser_t * self, int n);
+#ifdef CcsParser_USE_StartOf
 static const char * set[];
+#endif /* CcsParser_USE_StartOf */
 
 #if defined(CcsParser_USE_GetSS) || defined(CcsParser_USE_ExpectSS)
 typedef CcsToken_t *

@@ -26,7 +26,9 @@ Author: Charles Wang <charlesw123456@gmail.com>
 /*---- enable ----*/
 
 static void CExprParser_SynErr(CExprParser_t * self, int n);
+#ifdef CExprParser_USE_StartOf
 static const char * set[];
+#endif /* CExprParser_USE_StartOf */
 
 #if defined(CExprParser_USE_GetSS) || defined(CExprParser_USE_ExpectSS)
 typedef CcsToken_t *

@@ -26,7 +26,9 @@ Author: Charles Wang <charlesw123456@gmail.com>
 /*---- enable ----*/
 
 static void PgnParser_SynErr(PgnParser_t * self, int n);
+#ifdef PgnParser_USE_StartOf
 static const char * set[];
+#endif /* PgnParser_USE_StartOf */
 
 #if defined(PgnParser_USE_GetSS) || defined(PgnParser_USE_ExpectSS)
 typedef CcsToken_t *

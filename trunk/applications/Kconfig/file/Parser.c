@@ -13,7 +13,9 @@ License: LGPLv2
 /*---- enable ----*/
 
 static void CfParser_SynErr(CfParser_t * self, int n);
+#ifdef CfParser_USE_StartOf
 static const char * set[];
+#endif /* CfParser_USE_StartOf */
 
 #if defined(CfParser_USE_GetSS) || defined(CfParser_USE_ExpectSS)
 typedef CcsToken_t *

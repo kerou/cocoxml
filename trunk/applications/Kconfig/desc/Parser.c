@@ -14,7 +14,9 @@ License: LGPLv2
 /*---- enable ----*/
 
 static void KcParser_SynErr(KcParser_t * self, int n);
+#ifdef KcParser_USE_StartOf
 static const char * set[];
+#endif /* KcParser_USE_StartOf */
 
 #if defined(KcParser_USE_GetSS) || defined(KcParser_USE_ExpectSS)
 typedef CcsToken_t *
