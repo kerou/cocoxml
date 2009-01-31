@@ -261,42 +261,46 @@ CcsXmlParser_CocoXml(CcsXmlParser_t * self)
     CcsXmlParser_Expect(self, 10);
     CcXmlSpecMap_MakeTerminals(self->xmlspecmap, &self->globals);
     CcEBNF_Clear(&self->syntax->base); 
-    while (self->la->kind == 1) {
-	CcsXmlParser_Get(self);
-	sym = CcSymbolTable_FindSym(self->symtab, self->t->val);
-	undef = (sym == NULL);
-	if (undef) {
-	    sym = CcSymbolTable_NewNonTerminal(self->symtab,
-					       self->t->val, self->t->loc.line);
-	} else {
-	    if (sym->base.type == symbol_nt) {
-		if (((CcSymbolNT_t *)sym)->graph != NULL)
-		    CcsXmlParser_SemErrT(self, "name declared twice");
+    while (self->la->kind == 1 || self->la->kind == 15) {
+	if (self->la->kind == 1) {
+	    CcsXmlParser_Get(self);
+	    sym = CcSymbolTable_FindSym(self->symtab, self->t->val);
+	    undef = (sym == NULL);
+	    if (undef) {
+		sym = CcSymbolTable_NewNonTerminal(self->symtab,
+						   self->t->val, self->t->loc.line);
 	    } else {
-		CcsXmlParser_SemErrT(self, "this symbol kind not allowed on left side of production");
+		if (sym->base.type == symbol_nt) {
+		    if (((CcSymbolNT_t *)sym)->graph != NULL)
+			CcsXmlParser_SemErrT(self, "name declared twice");
+		} else {
+		    CcsXmlParser_SemErrT(self, "this symbol kind not allowed on left side of production");
+		}
+		sym->line = self->t->loc.line;
 	    }
-	    sym->line = self->t->loc.line;
+	    CcsAssert(sym->base.type == symbol_nt);
+	    noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
+	    if (!noAttrs) {
+		CcsPosition_Destruct(((CcSymbolNT_t *)sym)->attrPos);
+		((CcSymbolNT_t *)sym)->attrPos = NULL; 
+	    } 
+	    if (self->la->kind == 22 || self->la->kind == 24) {
+		CcsXmlParser_AttrDecl(self, (CcSymbolNT_t *)sym);
+	    }
+	    if (!undef && noAttrs != (((CcSymbolNT_t *)sym)->attrPos == NULL))
+		CcsXmlParser_SemErrT(self, "attribute mismatch between declaration and use of this symbol"); 
+	    if (self->la->kind == 37) {
+		CcsXmlParser_SemText(self, &((CcSymbolNT_t *)sym)->semPos);
+	    }
+	    CcsXmlParser_ExpectWeak(self, 11, 4);
+	    CcsXmlParser_Expression(self, &g);
+	    ((CcSymbolNT_t *)sym)->graph = g->head;
+	    CcGraph_Finish(g);
+	    CcGraph_Destruct(g); 
+	    CcsXmlParser_ExpectWeak(self, 12, 5);
+	} else {
+	    CcsXmlParser_SectionDecl(self);
 	}
-	CcsAssert(sym->base.type == symbol_nt);
-	noAttrs = (((CcSymbolNT_t *)sym)->attrPos == NULL);
-	if (!noAttrs) {
-	    CcsPosition_Destruct(((CcSymbolNT_t *)sym)->attrPos);
-	    ((CcSymbolNT_t *)sym)->attrPos = NULL; 
-	} 
-	if (self->la->kind == 22 || self->la->kind == 24) {
-	    CcsXmlParser_AttrDecl(self, (CcSymbolNT_t *)sym);
-	}
-	if (!undef && noAttrs != (((CcSymbolNT_t *)sym)->attrPos == NULL))
-	    CcsXmlParser_SemErrT(self, "attribute mismatch between declaration and use of this symbol"); 
-	if (self->la->kind == 37) {
-	    CcsXmlParser_SemText(self, &((CcSymbolNT_t *)sym)->semPos);
-	}
-	CcsXmlParser_ExpectWeak(self, 11, 4);
-	CcsXmlParser_Expression(self, &g);
-	((CcSymbolNT_t *)sym)->graph = g->head;
-	CcGraph_Finish(g);
-	CcGraph_Destruct(g); 
-	CcsXmlParser_ExpectWeak(self, 12, 5);
     }
     CcsXmlParser_Expect(self, 13);
     CcsXmlParser_Expect(self, 1);
@@ -767,7 +771,7 @@ static const char * set[] = {
     ".********..*****......******************.", /* 2 */
     ".*********.*****......******************.", /* 3 */
     "**........*.*.............***.*.*.****...", /* 4 */
-    "**........*..*...........................", /* 5 */
+    "**........*..*.*.........................", /* 5 */
     ".************.**************************.", /* 6 */
     ".**********************.****************.", /* 7 */
     ".***.******************.****************.", /* 8 */
