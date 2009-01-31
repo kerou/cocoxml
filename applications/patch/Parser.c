@@ -13,7 +13,9 @@
 /*---- enable ----*/
 
 static void PatchParser_SynErr(PatchParser_t * self, int n);
+#ifdef PatchParser_USE_StartOf
 static const char * set[];
+#endif /* PatchParser_USE_StartOf */
 
 #if defined(PatchParser_USE_GetSS) || defined(PatchParser_USE_ExpectSS)
 typedef CcsToken_t *

@@ -38,7 +38,9 @@
 /*---- enable ----*/
 
 static void CcsXmlParser_SynErr(CcsXmlParser_t * self, int n);
+#ifdef CcsXmlParser_USE_StartOf
 static const char * set[];
+#endif /* CcsXmlParser_USE_StartOf */
 
 #if defined(CcsXmlParser_USE_GetSS) || defined(CcsXmlParser_USE_ExpectSS)
 typedef CcsToken_t *

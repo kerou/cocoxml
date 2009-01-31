@@ -13,7 +13,9 @@ License: LGPLv2
 /*---- enable ----*/
 
 static void JsonParser_SynErr(JsonParser_t * self, int n);
+#ifdef JsonParser_USE_StartOf
 static const char * set[];
+#endif /* JsonParser_USE_StartOf */
 
 #if defined(JsonParser_USE_GetSS) || defined(JsonParser_USE_ExpectSS)
 typedef CcsToken_t *
