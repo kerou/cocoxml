@@ -5,12 +5,6 @@
  * Released under the terms of the GNU GPL v2.0.
  *
  */
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#include "lkc.h"
 #include "images.c"
 
 #include <glade/glade.h>
