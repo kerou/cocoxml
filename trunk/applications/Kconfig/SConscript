@@ -18,11 +18,12 @@ env.Command(fileTargets, [os.path.join('file', 'Cfile.atg')],
             '"%s" -g $SOURCES' % str(cocoexe[0]))
 env.Depends(fileTargets, cocoexe)
 
-env.Program('TestKconfig', ['main.c',
-                            os.path.join('desc', 'KcData.c'),
-                            os.path.join('desc', 'Parser.c'),
-                            os.path.join('desc', 'Scanner.c'),
-                            os.path.join('file', 'CfData.c'),
-                            os.path.join('file', 'Parser.c'),
-                            os.path.join('file', 'Scanner.c'),
-                            lib])
+srcs = []
+srcs.extend(map(lambda f: os.path.join('desc', f),
+                ['KcData.c', 'Parser.c', 'Scanner.c']))
+srcs.extend(map(lambda f: os.path.join('file', f),
+                ['CfData.c', 'Parser.c', 'Scanner.c']))
+objs = []
+objs.extend(map(lambda f: env.Object(f), srcs))
+
+env.Program('TestKconfig', ['main.c'] + objs + lib)
