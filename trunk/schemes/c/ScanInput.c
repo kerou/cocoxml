@@ -312,7 +312,7 @@ CcsScanInput_Consume(CcsScanInput_t * self, long start, size_t len)
 	} else {
 	    ++self->col;
 	}
-	++last;
+	++cur;
     }
     CcsBuffer_Consume(&self->buffer, start, len);
 }
