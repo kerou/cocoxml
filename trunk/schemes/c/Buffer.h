@@ -38,8 +38,8 @@ struct CcsBuffer_s {
     char * busyFirst; /* The first char used by Token_t. */
     char * lockCur;   /* The value of of cur when locked. */
     char * lockNext;  /* The value of next when locked. */
-    char * cur;       /* The first char of the current char in Scanner_t. */
-    char * next;      /* The first char of the next char in Scanner_t. */
+    char * cur;       /* The first char of the current char in ScanInput_t. */
+    char * next;      /* The first char of the next char in ScanInput_t. */
     char * loaded;
     char * last;
 };
