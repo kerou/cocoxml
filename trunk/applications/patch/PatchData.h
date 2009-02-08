@@ -34,16 +34,14 @@ typedef struct PatchFile_s PatchFile_t;
 
 struct PatchLine_s {
     PatchLine_t * next;
-    PatchScanner_t * scanner;
-    CcsToken_t * beginToken;
-    CcsToken_t * endToken;
+    char * content;
 };
 
 struct PatchPiece_s {
     PatchPiece_t * next;
     int subStart, subNum;
     int addStart, addNum;
-    char * first, * last;
+    PatchLine_t * lines;
     CcsBool_t subLastEol;
     CcsBool_t addLastEol;
 };
@@ -57,9 +55,8 @@ struct PatchFile_s {
 };
 
 PatchLine_t *
-PatchLine(PatchScanner_t * scanner, CcsToken_t * beginToken,
-	  CcsToken_t * endToken);
-void PatchLine_Destruct(PatchLine_t * self);
+PatchLineList(PatchScanner_t * scanner, int subStart, int subNum, int addStart,
+	      int addNum, CcsBool_t * subLastEol, CcsBool_t * addLastEol);
 void PatchLineList_Destruct(PatchLine_t * self);
 
 PatchPiece_t *

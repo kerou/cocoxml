@@ -27,6 +27,8 @@ EXTC_BEGIN
 
 /*---- SynDefines ----*/
 #define PatchParser_USE_StartOf
+#define PatchParser_USE_GetSS
+#define PatchParser_USE_ExpectSS
 /*---- enable ----*/
 
 typedef struct PatchParser_s PatchParser_t;
@@ -37,8 +39,8 @@ struct PatchParser_s {
     CcsToken_t      * la;
     int               maxT;
     /*---- members ----*/
-    int subStart, subNum;
-    int addStart, addNum;
+    int subStart, subNum; CcsBool_t subLastEol;
+    int addStart, addNum; CcsBool_t addLastEol;
     PatchFile_t * first, * last;
     /*---- enable ----*/
 };
