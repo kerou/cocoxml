@@ -119,7 +119,7 @@ CcsBuffer_StringTo(CcsBuffer_t * self, size_t * len, const char * needle)
     char * cur; long curpos;
     size_t nlen = strlen(needle);
 
-    for (cur = self->next; (cur + nlen) - self->next <= *len; ++cur) {
+    for (cur = self->cur; (cur + nlen) - self->cur <= *len; ++cur) {
 	while ((cur + nlen) > self->loaded) {
 	    /* There is not enough data in the buffer. */
 	    curpos = self->start + (cur - self->buf);
@@ -136,9 +136,9 @@ CcsBuffer_StringTo(CcsBuffer_t * self, size_t * len, const char * needle)
 	}
     }
  done:
-    CcsAssert(cur - self->next <= *len);
-    *len = cur - self->next;
-    return self->start + (self->next - self->buf);
+    CcsAssert(cur - self->cur <= *len);
+    *len = cur - self->cur;
+    return self->start + (self->cur - self->buf);
 }
 const char *
 CcsBuffer_GetString(CcsBuffer_t * self, long start, size_t size)
@@ -148,9 +148,7 @@ CcsBuffer_GetString(CcsBuffer_t * self, long start, size_t size)
     if (start < self->start + (self->cur - self->buf)) {
 	if (start + size > self->start + (self->cur - self->buf))
 	    goto errquit1;
-    } else if (start < self->start + (self->next - self->buf)) {
-	goto errquit0;
-    } else if (start + size >= self->start + (self->loaded - self->buf)) {
+    } else if (start + size > self->start + (self->loaded - self->buf)) {
 	goto errquit1;
     }
     return self->buf + (start - self->start);
@@ -164,15 +162,16 @@ CcsBuffer_GetString(CcsBuffer_t * self, long start, size_t size)
 void
 CcsBuffer_Consume(CcsBuffer_t * self, long start, size_t size)
 {
-    if (start != self->start + (self->next - self->buf)) {
+    if (start != self->start + (self->cur - self->buf)) {
 	fprintf(stderr, "Consume must started from the current characters.\n");
 	exit(-1);
     }
-    if (self->next + size >= self->loaded) {
+    if (self->cur + size > self->loaded) {
 	fprintf(stderr, "Consume too many characters.\n");
 	exit(-1);
     }
-    self->next += size;
+    self->cur += size;
+    self->next = self->cur;
 }
 
 void
