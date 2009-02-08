@@ -8,6 +8,9 @@ License: LGPLv2
 /*---- enable ----*/
 #include  "Parser.h"
 #include  "c/Token.h"
+#if defined(JsonParser_USE_GetSS)
+#include  "c/ScanInput.h"
+#endif
 
 /*---- cIncludes ----*/
 /*---- enable ----*/
@@ -20,7 +23,7 @@ static const char * set[];
 #if defined(JsonParser_USE_GetSS) || defined(JsonParser_USE_ExpectSS)
 typedef CcsToken_t *
 (* SubScanner_t)(JsonParser_t * self, const char * fname,
-		 int pos, int line, line col);
+		 int pos, int line, int col);
 
 static void
 JsonParser_TokenIncRef(JsonParser_t * self, CcsToken_t * token)

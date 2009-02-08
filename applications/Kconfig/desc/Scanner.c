@@ -104,6 +104,45 @@ KcScanner_Destruct(KcScanner_t * self)
     CcsToken_Destruct(self->dummyToken);
 }
 
+void
+KcScanner_Warning(KcScanner_t * self, const char * format, ...)
+{
+    va_list ap;
+    CcsLocation_t loc;
+    loc.fname = self->cur->fname;
+    loc.line = self->cur->line;
+    loc.col = self->cur->col;
+    va_start(ap, format);
+    CcsErrorPool_VWarning(self->errpool, &loc, format, ap);
+    va_end(ap);
+}
+
+void
+KcScanner_Error(KcScanner_t * self, const char * format, ...)
+{
+    va_list ap;
+    CcsLocation_t loc;
+    loc.fname = self->cur->fname;
+    loc.line = self->cur->line;
+    loc.col = self->cur->col;
+    va_start(ap, format);
+    CcsErrorPool_VError(self->errpool, &loc, format, ap);
+    va_end(ap);
+}
+
+void
+KcScanner_Fatal(KcScanner_t * self, const char * format, ...)
+{
+    va_list ap;
+    CcsLocation_t loc;
+    loc.fname = self->cur->fname;
+    loc.line = self->cur->line;
+    loc.col = self->cur->col;
+    va_start(ap, format);
+    CcsErrorPool_VFatal(self->errpool, &loc, format, ap);
+    va_end(ap);
+}
+
 CcsToken_t *
 KcScanner_GetDummy(KcScanner_t * self)
 {

@@ -50,6 +50,11 @@ PgnScanner_t *
 PgnScanner_ByName(PgnScanner_t * self, CcsErrorPool_t * errpool,
 		  const char * infn);
 void PgnScanner_Destruct(PgnScanner_t * self);
+
+void PgnScanner_Warning(PgnScanner_t * self, const char * format, ...);
+void PgnScanner_Error(PgnScanner_t * self, const char * format, ...);
+void PgnScanner_Fatal(PgnScanner_t * self, const char * format, ...);
+
 CcsToken_t * PgnScanner_GetDummy(PgnScanner_t * self);
 
 CcsToken_t * PgnScanner_Scan(PgnScanner_t * self);
