@@ -50,6 +50,11 @@ CExprScanner_t *
 CExprScanner_ByName(CExprScanner_t * self, CcsErrorPool_t * errpool,
 		  const char * infn);
 void CExprScanner_Destruct(CExprScanner_t * self);
+
+void CExprScanner_Warning(CExprScanner_t * self, const char * format, ...);
+void CExprScanner_Error(CExprScanner_t * self, const char * format, ...);
+void CExprScanner_Fatal(CExprScanner_t * self, const char * format, ...);
+
 CcsToken_t * CExprScanner_GetDummy(CExprScanner_t * self);
 
 CcsToken_t * CExprScanner_Scan(CExprScanner_t * self);

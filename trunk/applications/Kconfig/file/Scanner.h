@@ -37,6 +37,11 @@ CfScanner_t *
 CfScanner_ByName(CfScanner_t * self, CcsErrorPool_t * errpool,
 		  const char * infn);
 void CfScanner_Destruct(CfScanner_t * self);
+
+void CfScanner_Warning(CfScanner_t * self, const char * format, ...);
+void CfScanner_Error(CfScanner_t * self, const char * format, ...);
+void CfScanner_Fatal(CfScanner_t * self, const char * format, ...);
+
 CcsToken_t * CfScanner_GetDummy(CfScanner_t * self);
 
 CcsToken_t * CfScanner_Scan(CfScanner_t * self);

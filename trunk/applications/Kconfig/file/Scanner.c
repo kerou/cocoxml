@@ -104,6 +104,45 @@ CfScanner_Destruct(CfScanner_t * self)
     CcsToken_Destruct(self->dummyToken);
 }
 
+void
+CfScanner_Warning(CfScanner_t * self, const char * format, ...)
+{
+    va_list ap;
+    CcsLocation_t loc;
+    loc.fname = self->cur->fname;
+    loc.line = self->cur->line;
+    loc.col = self->cur->col;
+    va_start(ap, format);
+    CcsErrorPool_VWarning(self->errpool, &loc, format, ap);
+    va_end(ap);
+}
+
+void
+CfScanner_Error(CfScanner_t * self, const char * format, ...)
+{
+    va_list ap;
+    CcsLocation_t loc;
+    loc.fname = self->cur->fname;
+    loc.line = self->cur->line;
+    loc.col = self->cur->col;
+    va_start(ap, format);
+    CcsErrorPool_VError(self->errpool, &loc, format, ap);
+    va_end(ap);
+}
+
+void
+CfScanner_Fatal(CfScanner_t * self, const char * format, ...)
+{
+    va_list ap;
+    CcsLocation_t loc;
+    loc.fname = self->cur->fname;
+    loc.line = self->cur->line;
+    loc.col = self->cur->col;
+    va_start(ap, format);
+    CcsErrorPool_VFatal(self->errpool, &loc, format, ap);
+    va_end(ap);
+}
+
 CcsToken_t *
 CfScanner_GetDummy(CfScanner_t * self)
 {

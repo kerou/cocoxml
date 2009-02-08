@@ -37,6 +37,11 @@ JsonScanner_t *
 JsonScanner_ByName(JsonScanner_t * self, CcsErrorPool_t * errpool,
 		  const char * infn);
 void JsonScanner_Destruct(JsonScanner_t * self);
+
+void JsonScanner_Warning(JsonScanner_t * self, const char * format, ...);
+void JsonScanner_Error(JsonScanner_t * self, const char * format, ...);
+void JsonScanner_Fatal(JsonScanner_t * self, const char * format, ...);
+
 CcsToken_t * JsonScanner_GetDummy(JsonScanner_t * self);
 
 CcsToken_t * JsonScanner_Scan(JsonScanner_t * self);

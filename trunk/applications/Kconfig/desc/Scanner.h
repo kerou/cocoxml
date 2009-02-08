@@ -42,6 +42,11 @@ KcScanner_t *
 KcScanner_ByName(KcScanner_t * self, CcsErrorPool_t * errpool,
 		  const char * infn);
 void KcScanner_Destruct(KcScanner_t * self);
+
+void KcScanner_Warning(KcScanner_t * self, const char * format, ...);
+void KcScanner_Error(KcScanner_t * self, const char * format, ...);
+void KcScanner_Fatal(KcScanner_t * self, const char * format, ...);
+
 CcsToken_t * KcScanner_GetDummy(KcScanner_t * self);
 
 CcsToken_t * KcScanner_Scan(KcScanner_t * self);

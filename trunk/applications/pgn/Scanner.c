@@ -117,6 +117,45 @@ PgnScanner_Destruct(PgnScanner_t * self)
     CcsToken_Destruct(self->dummyToken);
 }
 
+void
+PgnScanner_Warning(PgnScanner_t * self, const char * format, ...)
+{
+    va_list ap;
+    CcsLocation_t loc;
+    loc.fname = self->cur->fname;
+    loc.line = self->cur->line;
+    loc.col = self->cur->col;
+    va_start(ap, format);
+    CcsErrorPool_VWarning(self->errpool, &loc, format, ap);
+    va_end(ap);
+}
+
+void
+PgnScanner_Error(PgnScanner_t * self, const char * format, ...)
+{
+    va_list ap;
+    CcsLocation_t loc;
+    loc.fname = self->cur->fname;
+    loc.line = self->cur->line;
+    loc.col = self->cur->col;
+    va_start(ap, format);
+    CcsErrorPool_VError(self->errpool, &loc, format, ap);
+    va_end(ap);
+}
+
+void
+PgnScanner_Fatal(PgnScanner_t * self, const char * format, ...)
+{
+    va_list ap;
+    CcsLocation_t loc;
+    loc.fname = self->cur->fname;
+    loc.line = self->cur->line;
+    loc.col = self->cur->col;
+    va_start(ap, format);
+    CcsErrorPool_VFatal(self->errpool, &loc, format, ap);
+    va_end(ap);
+}
+
 CcsToken_t *
 PgnScanner_GetDummy(PgnScanner_t * self)
 {

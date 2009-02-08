@@ -21,6 +21,9 @@ Author: Charles Wang <charlesw123456@gmail.com>
 /*---- enable ----*/
 #include  "Parser.h"
 #include  "c/Token.h"
+#if defined(PgnParser_USE_GetSS)
+#include  "c/ScanInput.h"
+#endif
 
 /*---- cIncludes ----*/
 /*---- enable ----*/
@@ -33,7 +36,7 @@ static const char * set[];
 #if defined(PgnParser_USE_GetSS) || defined(PgnParser_USE_ExpectSS)
 typedef CcsToken_t *
 (* SubScanner_t)(PgnParser_t * self, const char * fname,
-		 int pos, int line, line col);
+		 int pos, int line, int col);
 
 static void
 PgnParser_TokenIncRef(PgnParser_t * self, CcsToken_t * token)
