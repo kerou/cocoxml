@@ -3,7 +3,11 @@ CocoXml is inspired by Coco/R and modified from it.
 Coco/R is released under GPLv2 and written by Hanspeter Moessenboeck,
 University of Linz. Its homepage is http://www.ssw.uni-linz.act.at/coco/ .
 
-CocoXml is released under GPLv2 too.
+The main part of CocoXml is released under GPLv2 too.
+In order to let the user of CocoXml constructor their own parser, scanner
+from the sample applications in 'applications' subdirs, the code in libcoco.a
+is released under LGPLv2. And the code in 'applications' dir is released under
+BSD-4. For the detail, please read the comments in the head of each sources.
 
 Coco/R can read an atg file and frame files, then generate scanner and parser
 for user. Different versions are implemented for different languages, such as
