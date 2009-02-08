@@ -233,9 +233,9 @@ SCOS_GenCode(CcCBaseOutputScheme_t * self, CcOutput_t * output,
 		}
 	    } else {
 		if (pt->pos) {
-		    self->useExpectSS = TRUE;
+		    self->useGetSS = self->useExpectSS = TRUE;
 		    CcPrintfIL(output, "%sParser_ExpectSS(self, %d, %sSubScanner_%s);",
-			       self->prefix, self->prefix, pt->sym->kind, pt->pos->text);
+			       self->prefix, pt->sym->kind, self->prefix, pt->pos->text);
 		} else {
 		    CcPrintfIL(output, "%sParser_Expect(self, %d);",
 			       self->prefix, pt->sym->kind);
