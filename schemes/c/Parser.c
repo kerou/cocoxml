@@ -30,6 +30,9 @@
 /*---- enable ----*/
 #include  "Parser.h"
 #include  "c/Token.h"
+#if defined(CcsParser_USE_GetSS)
+#include  "c/ScanInput.h"
+#endif
 
 /*---- cIncludes ----*/
 #include  <ctype.h>
@@ -51,7 +54,7 @@ static const char * set[];
 #if defined(CcsParser_USE_GetSS) || defined(CcsParser_USE_ExpectSS)
 typedef CcsToken_t *
 (* SubScanner_t)(CcsParser_t * self, const char * fname,
-		 int pos, int line, line col);
+		 int pos, int line, int col);
 
 static void
 CcsParser_TokenIncRef(CcsParser_t * self, CcsToken_t * token)
