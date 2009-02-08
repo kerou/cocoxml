@@ -243,12 +243,11 @@ PatchSubScanner_LineList(PatchParser_t * self, const char * fname,
 			 int pos, int line, int col)
 {
     PatchLine_t * lines;
-    CcsBool_t subLastEol, addLastEol;
     PatchToken_t * token;
 
-    subLastEol = addLastEol = TRUE;
+    self->subLastEol = self->addLastEol = TRUE;
     lines = PatchLineList(&self->scanner, self->subStart, self->subNum,
-    	    		  self->addStart, self->addNum, &subLastEol, &addLastEol);
+    	    		  self->addStart, self->addNum, &self->subLastEol, &self->addLastEol);
     token = CcsMalloc(sizeof(PatchToken_t));
     token->base.next = NULL;
     token->base.destructor = PatchToken_Destruct;
@@ -294,7 +293,7 @@ PatchParser_FilePatch(PatchParser_t * self, PatchFile_t ** filepatch)
     }
     PatchParser_FileSubLine(self, &subfname);
     PatchParser_FileAddLine(self, &addfname);
-    fprintf(stderr, "Scanning: %s %s\n", subfname->text, addfname->text);
+    printf("Scanning: %s %s\n", subfname->text, addfname->text);
     if (!(*filepatch = PatchFile(subfname->text, addfname->text)))
        PatchParser_SemErrT(self, "Not enough memory");
     CcsPosition_Destruct(subfname);
@@ -395,6 +394,9 @@ PatchParser_Piece(PatchParser_t * self, PatchPiece_t ** piece)
     }
     PatchParser_ExpectSS(self, 4, PatchSubScanner_LineList);
     PatchParser_Expect(self, 1);
+    printf("  Piece: %d, %d %s  %d, %d %s\n",
+	   self->subStart, self->subNum, self->subLastEol ? "TRUE" : "FALSE",
+	   self->addStart, self->addNum, self->addLastEol ? "TRUE" : "FALSE");
     *piece = PatchPiece(self->subStart, self->subNum, self->addStart, self->addNum,
 			((PatchToken_t *)(self->t))->lines, self->subLastEol, self->addLastEol);
     ((PatchToken_t *)(self->t))->lines = NULL; 

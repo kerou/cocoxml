@@ -68,7 +68,7 @@ FilePatch<PatchFile_t ** filepatch>
     (. CcsPosition_t * subfname, * addfname;
        PatchPiece_t * newPiece; .)
  = { HeadLine } FileSubLine<&subfname> FileAddLine<&addfname>
-    (. fprintf(stderr, "Scanning: %s %s\n", subfname->text, addfname->text);
+    (. printf("Scanning: %s %s\n", subfname->text, addfname->text);
        if (!(*filepatch = PatchFile(subfname->text, addfname->text)))
           PatchParser_SemErrT(self, "Not enough memory");
        CcsPosition_Destruct(subfname);
@@ -110,12 +110,11 @@ PatchSubScanner_LineList(PatchParser_t * self, const char * fname,
 			 int pos, int line, int col)
 {
     PatchLine_t * lines;
-    CcsBool_t subLastEol, addLastEol;
     PatchToken_t * token;
 
-    subLastEol = addLastEol = TRUE;
+    self->subLastEol = self->addLastEol = TRUE;
     lines = PatchLineList(&self->scanner, self->subStart, self->subNum,
-    	    		  self->addStart, self->addNum, &subLastEol, &addLastEol);
+    	    		  self->addStart, self->addNum, &self->subLastEol, &self->addLastEol);
     token = CcsMalloc(sizeof(PatchToken_t));
     token->base.next = NULL;
     token->base.destructor = PatchToken_Destruct;
@@ -138,7 +137,10 @@ Piece<PatchPiece_t ** piece> =
   ] ' ' { ' ' } '+' number        (. self->addStart = atoi(self->t->val); self->addNum = 0; .)
   [',' number                     (. self->addNum = atoi(self->t->val); .)
   ] ' ' { ' ' } "@@" { ANY } eol<LineList> piecelines
-    (. *piece = PatchPiece(self->subStart, self->subNum, self->addStart, self->addNum,
+    (. printf("  Piece: %d, %d %s  %d, %d %s\n",
+              self->subStart, self->subNum, self->subLastEol ? "TRUE" : "FALSE",
+              self->addStart, self->addNum, self->addLastEol ? "TRUE" : "FALSE");
+       *piece = PatchPiece(self->subStart, self->subNum, self->addStart, self->addNum,
        	      		   ((PatchToken_t *)(self->t))->lines, self->subLastEol, self->addLastEol);
        ((PatchToken_t *)(self->t))->lines = NULL; .)
 .
