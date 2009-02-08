@@ -315,6 +315,11 @@ CcsScanInput_Consume(CcsScanInput_t * self, long start, size_t len)
 	++cur;
     }
     CcsBuffer_Consume(&self->buffer, start, len);
+    self->ch = CcsBuffer_Read(&self->buffer, &self->chBytes);
+    self->pos = CcsBuffer_GetPos(&self->buffer);
+    if (self->ch != ' ' && self->ch != '\t' &&
+	self->ch != '\r' && self->ch != '\n')
+	self->chLastNonblank = self->ch;
 }
 
 CcsPosition_t *
