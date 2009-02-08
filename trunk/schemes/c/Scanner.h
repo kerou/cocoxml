@@ -60,6 +60,11 @@ CcsScanner_t *
 CcsScanner_ByName(CcsScanner_t * self, CcsErrorPool_t * errpool,
 		  const char * infn);
 void CcsScanner_Destruct(CcsScanner_t * self);
+
+void CcsScanner_Warning(CcsScanner_t * self, const char * format, ...);
+void CcsScanner_Error(CcsScanner_t * self, const char * format, ...);
+void CcsScanner_Fatal(CcsScanner_t * self, const char * format, ...);
+
 CcsToken_t * CcsScanner_GetDummy(CcsScanner_t * self);
 
 CcsToken_t * CcsScanner_Scan(CcsScanner_t * self);
