@@ -1,9 +1,9 @@
 /*---- license ----*/
 /*-------------------------------------------------------------------------
-Kconfig.atg
-Copyright (C) 2008, Charles Wang
-Author: Charles Wang  <charlesw123456@gmail.com>
-License: LGPLv2
+  Kconfig.atg -- atg for Kconfig grammar.
+  Copyright (C) 2008, Charles Wang
+  Author: Charles Wang  <charlesw123456@gmail.com>
+  License: BSD (see LICENSE-BSD)
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
 #ifndef COCO_KcScanner_H

@@ -1,9 +1,9 @@
 /*---- license ----*/
 /*-------------------------------------------------------------------------
-Kconfig.atg
-Copyright (C) 2008, Charles Wang
-Author: Charles Wang  <charlesw123456@gmail.com>
-License: LGPLv2
+  Json.atg -- atg for json parser.
+  Copyright (C) 2008, Charles Wang
+  Author: Charles Wang  <charlesw123456@gmail.com>
+  License: BSD (see LICENSE-BSD)
 -------------------------------------------------------------------------*/
 /*---- enable ----*/
 #ifndef  COCO_JsonParser_H

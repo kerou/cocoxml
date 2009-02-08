@@ -1,9 +1,9 @@
 SECTION license
 /*-------------------------------------------------------------------------
- patch.atg
- Copyright (C) 2008, Charles Wang
- Author: Charles Wang  <charlesw123456@gmail.com>
- License: LGPLv2
+  patch.atg -- atg for patch.
+  Copyright (C) 2008, Charles Wang
+  Author: Charles Wang  <charlesw123456@gmail.com>
+  License: BSD (see LICENSE-BSD)
 -------------------------------------------------------------------------*/
 END.
 
