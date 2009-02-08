@@ -23,7 +23,7 @@ EXTC_BEGIN
 #define PatchScanner_MAX_KEYWORD_LEN 1
 #define PatchScanner_CASE_SENSITIVE
 #define PatchScanner_KEYWORD_USED
-#define PatchScanner_InPiece 1
+#define PatchScanner_piecelines 1
 /*---- enable ----*/
 
 typedef struct PatchScanner_s PatchScanner_t;
@@ -39,6 +39,11 @@ PatchScanner_t *
 PatchScanner_ByName(PatchScanner_t * self, CcsErrorPool_t * errpool,
 		  const char * infn);
 void PatchScanner_Destruct(PatchScanner_t * self);
+
+void PatchScanner_Warning(PatchScanner_t * self, const char * format, ...);
+void PatchScanner_Error(PatchScanner_t * self, const char * format, ...);
+void PatchScanner_Fatal(PatchScanner_t * self, const char * format, ...);
+
 CcsToken_t * PatchScanner_GetDummy(PatchScanner_t * self);
 
 CcsToken_t * PatchScanner_Scan(PatchScanner_t * self);

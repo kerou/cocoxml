@@ -17,25 +17,80 @@
 -------------------------------------------------------------------------*/
 #include  "PatchData.h"
 
-PatchLine_t *
-PatchLine(PatchScanner_t * scanner, CcsToken_t * beginToken,
-	  CcsToken_t * endToken)
+static PatchLine_t *
+PatchLine(const char * content, size_t clen)
 {
     PatchLine_t * self;
-    if (!(self = CcsMalloc(sizeof(PatchLine_t)))) return NULL;
+    if (!(self = CcsMalloc(sizeof(PatchLine_t) + clen + 1))) return NULL;
     self->next = NULL;
-    self->scanner = scanner;
-    PatchScanner_TokenIncRef(self->scanner, self->beginToken = beginToken);
-    PatchScanner_TokenIncRef(self->scanner, self->endToken = endToken);
+    self->content = (char *)(self + 1);
+    memcpy(self->content, content, clen);
+    self->content[clen] = 0;
     return self;
 }
 
-void
+static void
 PatchLine_Destruct(PatchLine_t * self)
 {
-    PatchScanner_TokenDecRef(self->scanner, self->beginToken);
-    PatchScanner_TokenDecRef(self->scanner, self->endToken);
     CcsFree(self);
+}
+
+PatchLine_t *
+PatchLineList(PatchScanner_t * scanner, int subStart, int subNum, int addStart,
+	      int addNum, CcsBool_t * subLastEol, CcsBool_t * addLastEol)
+{
+    long start; size_t len;
+    PatchLine_t * first, * last;
+    const char * line; PatchLine_t * patchline;
+
+    *subLastEol = *addLastEol = TRUE;
+    first = last = NULL;
+    while (subNum > 0 || addNum > 0) {
+	len = 65536;
+	start = PatchScanner_StringTo(scanner, &len, "\n");
+	if (start < 0) {
+	    PatchScanner_Fatal(scanner, "Error encountered");
+	} else if (len == 0) {
+	    PatchScanner_Error(scanner, "Broken patch");
+	    break;
+	}
+	line = PatchScanner_GetString(scanner, start, len);
+	switch (*line) {
+	case ' ':
+	    if (subNum > 0 && addNum > 0) { --subNum; --addNum; break; }
+	    PatchScanner_Error(scanner, "Broken patch");
+	    return first;
+	case '-':
+	    if (subNum > 0) { --subNum; break; }
+	    PatchScanner_Error(scanner, "Broken patch");
+	    return first;
+	case '+':
+	    if (addNum > 0) { --addNum; break; }
+	    PatchScanner_Error(scanner, "Broken patch");
+	    return first;
+	case '\\':
+	    if (subNum == 0) { *subLastEol = FALSE; break; }
+	    PatchScanner_Error(scanner, "Broken patch");
+	    return first;
+	}
+	if (!(patchline = PatchLine(line, len)))
+	    PatchScanner_Fatal(scanner, "Not enough memory");
+	PatchScanner_Consume(scanner, start, len);
+	if (first == NULL) first = last = patchline;
+	else { last->next = patchline; last = patchline; }
+    }
+    start = PatchScanner_StringTo(scanner, &len, "\n");
+    if (start < 0) PatchScanner_Fatal(scanner, "Error encountered");
+    if (len > 0 && (line = PatchScanner_GetString(scanner, start, len)) &&
+	*line == '\\') {
+	*addLastEol = FALSE;
+	if (!(patchline = PatchLine(line, len)))
+	    PatchScanner_Fatal(scanner, "Not enough memory");
+	PatchScanner_Consume(scanner, start, len);
+	if (first == NULL) first = last = patchline;
+	else { last->next = patchline; last = patchline; }
+    }
+    return first;
 }
 
 void
@@ -53,38 +108,23 @@ PatchPiece_t *
 PatchPiece(int subStart, int subNum, int addStart, int addNum,
 	   PatchLine_t * lines, CcsBool_t subLastEol, CcsBool_t addLastEol)
 {
-    size_t len, totallen;
-    PatchLine_t * curline;
-    char * cur; const char * cursrc;
     PatchPiece_t * self;
-
-    totallen = 0;
-    for (curline = lines; curline; curline = curline->next)
-	totallen += curline->endToken->pos - curline->beginToken->pos + 1;
-    if (!(self = CcsMalloc(sizeof(PatchPiece_t) + totallen))) return NULL;
+    if (!(self = CcsMalloc(sizeof(PatchPiece_t)))) return NULL;
     self->next = NULL;
     self->subStart = subStart;
     self->subNum = subNum;
     self->addStart = addStart;
     self->addNum = addNum;
-    self->first = cur = (char *)(self + 1);
+    self->lines = lines;
     self->subLastEol = subLastEol;
     self->addLastEol = addLastEol;
-    for (curline = lines; curline; curline = curline->next) {
-	len = curline->endToken->pos - curline->beginToken->pos;
-	cursrc = PatchScanner_GetString(curline->scanner,
-					curline->beginToken->pos, len);
-	memcpy(cur, cursrc, len);
-	cur += len;
-	*cur++ = 0;
-    }
-    self->last = cur;
     return self;
 }
 
 void
 PatchPiece_Destruct(PatchPiece_t * self)
 {
+    PatchLineList_Destruct(self->lines);
     CcsFree(self);
 }
 

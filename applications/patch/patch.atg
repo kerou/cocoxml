@@ -18,13 +18,11 @@ END.
 COMPILER Patch
 
 MEMBERS
-    int subStart, subNum;
-    int addStart, addNum;
+    int subStart, subNum; CcsBool_t subLastEol;
+    int addStart, addNum; CcsBool_t addLastEol;
     PatchFile_t * first, * last;
 
 CONSTRUCTOR
-    self->subNum = 0;
-    self->addNum = 0;
     self->first = self->last = NULL;
 
 DESTRUCTOR
@@ -38,7 +36,7 @@ DESTRUCTOR
 
 OPTIONS space
 
-TERMINALS InPiece
+TERMINALS piecelines
 
 CHARACTERS
     digit  = "0123456789".
@@ -95,69 +93,54 @@ FileAddLine<CcsPosition_t ** addfname> (. CcsToken_t * beg; .) =
   [ tab { ANY }] eol
 .
 
-Piece<PatchPiece_t ** piece> (. int subStart, subNum, addStart, addNum;
-		      	     	CcsBool_t subLastEol, addLastEol;
-				PatchLine_t * firstLine, * lastLine, * newLine;
-				subLastEol = addLastEol = TRUE;
-				firstLine = lastLine = NULL; .) =
-  PieceTitle<&subStart, &subNum, &addStart, &addNum>
-  PieceLine<&newLine, &subLastEol, &addLastEol>
-    (. if (newLine) {
-	   if (lastLine) { lastLine->next = newLine; lastLine = newLine; } else
-	   { firstLine = lastLine = newLine; }
-       } .)
-  { PieceLine<&newLine, &subLastEol, &addLastEol>
-    (. if (newLine) {
-	   if (lastLine) { lastLine->next = newLine; lastLine = newLine; } else
-	   { firstLine = lastLine = newLine; }
-       } .)
-  }
-    (. if (self->subNum != 0 || self->addNum != 0)
-           PatchParser_SemErrT(self, "Patch format corrupt.");
-       *piece = PatchPiece(subStart, subNum, addStart, addNum,
-       	      		   firstLine, subLastEol, addLastEol);
-       PatchLineList_Destruct(firstLine); .)
-.
-
 SECTION SubScanners
-CcsToken_t * PatchParser_PieceLines(PatchParser_t * self);
+typedef struct {
+    CcsToken_t base;
+    PatchLine_t * lines;
+}  PatchToken_t;
+static void PatchToken_Destruct(CcsToken_t * self)
+{
+    PatchToken_t * pself = (PatchToken_t *)self;
+    if (pself->lines) PatchLineList_Destruct(pself->lines);
+    CcsFree(self);
+}
+
+static CcsToken_t *
+PatchSubScanner_LineList(PatchParser_t * self, const char * fname,
+			 int pos, int line, int col)
+{
+    PatchLine_t * lines;
+    CcsBool_t subLastEol, addLastEol;
+    PatchToken_t * token;
+
+    subLastEol = addLastEol = TRUE;
+    lines = PatchLineList(&self->scanner, self->subStart, self->subNum,
+    	    		  self->addStart, self->addNum, &subLastEol, &addLastEol);
+    token = CcsMalloc(sizeof(PatchToken_t));
+    token->base.next = NULL;
+    token->base.destructor = PatchToken_Destruct;
+    token->base.input = self->scanner.cur;
+    token->base.refcnt = 1;
+    token->base.kind = PatchScanner_piecelines;
+    token->base.loc.fname = fname;
+    token->base.loc.line = line;
+    token->base.loc.col = col;
+    token->base.pos = pos;
+    token->base.val = NULL;
+    token->lines = lines;
+    return &token->base;
+}
 END.
 
-PieceTitle<int * subStart, int * subNum, int * addStart, int * addNum> =
-  "@@" ' ' { ' ' } '-' number     (. self->subStart = *subStart = atoi(self->t->val);
-       	       	       		     self->subNum = *subNum = 0; .)
-  [',' number                     (. self->subNum = *subNum = atoi(self->t->val); .)
-  ] ' ' { ' ' } '+' number        (. self->addStart = *addStart = atoi(self->t->val);
-      	      	    		     self->addNum = *addNum = 0; .)
-  [',' number                     (. self->addNum = *addNum = atoi(self->t->val); .)
-  ] ' ' { ' ' } "@@" { ANY } eol  (. PatchScanner_InsertExpect(&self->scanner, PatchScanner_InPiece,
-      	    	       	      	 			       NULL, 0, &self->la); .)
-.
-
-PieceLine<PatchLine_t ** line, CcsBool_t * subLineEol, CcsBool_t * addLineEol>
-    (. char op; CcsToken_t * beginToken; .) =
-  InPiece ('+' | '-' | ' ' | "++" | "--" | "+++" | "---" | "\\ No newline at end of file")
-    (. op = *self->t->val;
-       PatchScanner_TokenIncRef(&self->scanner, beginToken = self->t); .)
-  { ANY } eol
-    (. switch (op) {
-       case '+': --self->addNum; break;
-       case '-': --self->subNum; break;
-       case ' ': --self->addNum; --self->subNum; break;
-       case '\\':
-           if (self->subNum > 0) PatchParser_SemErrT(self, "Patch format corrupt.");
-           else  *subLineEol = TRUE;
-	   break;
-       }
-       *line = op != '\\' ? PatchLine(&self->scanner, beginToken, self->t) : NULL;
-       if (self->subNum < 0 || self->addNum < 0)
-           PatchParser_SemErrT(self, "Patch format corrupt.");
-       PatchScanner_TokenDecRef(&self->scanner, beginToken);
-       if (self->subNum > 0 || self->addNum > 0)
-           PatchScanner_InsertExpect(&self->scanner, PatchScanner_InPiece,
-				     NULL, 0, &self->la); .)
-  | "\\ No newline at end of file" { ' ' } eol
-    (. *addLineEol = TRUE; *line = NULL; .)
+Piece<PatchPiece_t ** piece> =
+  "@@" ' ' { ' ' } '-' number     (. self->subStart = atoi(self->t->val); self->subNum = 0; .)
+  [',' number                     (. self->subNum = atoi(self->t->val); .)
+  ] ' ' { ' ' } '+' number        (. self->addStart = atoi(self->t->val); self->addNum = 0; .)
+  [',' number                     (. self->addNum = atoi(self->t->val); .)
+  ] ' ' { ' ' } "@@" { ANY } eol<LineList> piecelines
+    (. *piece = PatchPiece(self->subStart, self->subNum, self->addStart, self->addNum,
+       	      		   ((PatchToken_t *)(self->t))->lines, self->subLastEol, self->addLastEol);
+       ((PatchToken_t *)(self->t))->lines = NULL; .)
 .
 
 END Patch.

@@ -20,8 +20,8 @@ static const CcsSI_Info_t Scanner_Info = {
     /*---- declarations ----*/
     0, /* additionalSpace */
     0, /* eofSym */
-    18, /* maxT */
-    18, /* noSym */
+    13, /* maxT */
+    13, /* noSym */
     /*---- enable ----*/
     PatchScanner_AddInit,
     PatchScanner_AddDestruct,
@@ -102,6 +102,45 @@ PatchScanner_Destruct(PatchScanner_t * self)
     /* May be trigged by .atg semantic code. */
     CcsAssert(self->dummyToken->refcnt == 1);
     CcsToken_Destruct(self->dummyToken);
+}
+
+void
+PatchScanner_Warning(PatchScanner_t * self, const char * format, ...)
+{
+    va_list ap;
+    CcsLocation_t loc;
+    loc.fname = self->cur->fname;
+    loc.line = self->cur->line;
+    loc.col = self->cur->col;
+    va_start(ap, format);
+    CcsErrorPool_VWarning(self->errpool, &loc, format, ap);
+    va_end(ap);
+}
+
+void
+PatchScanner_Error(PatchScanner_t * self, const char * format, ...)
+{
+    va_list ap;
+    CcsLocation_t loc;
+    loc.fname = self->cur->fname;
+    loc.line = self->cur->line;
+    loc.col = self->cur->col;
+    va_start(ap, format);
+    CcsErrorPool_VError(self->errpool, &loc, format, ap);
+    va_end(ap);
+}
+
+void
+PatchScanner_Fatal(PatchScanner_t * self, const char * format, ...)
+{
+    va_list ap;
+    CcsLocation_t loc;
+    loc.fname = self->cur->fname;
+    loc.line = self->cur->line;
+    loc.col = self->cur->col;
+    va_start(ap, format);
+    CcsErrorPool_VFatal(self->errpool, &loc, format, ap);
+    va_end(ap);
 }
 
 CcsToken_t *
@@ -259,16 +298,14 @@ static const Char2State_t c2sArr[] = {
     { 11, 12, 5 },	/* '\v' '\f' */
     { 13, 13, 3 },	/* '\r' '\r' */
     { 14, 42, 5 },	/* 14 '*' */
-    { 43, 43, 36 },	/* '+' '+' */
+    { 43, 43, 14 },	/* '+' '+' */
     { 44, 44, 5 },	/* ',' ',' */
-    { 45, 45, 35 },	/* '-' '-' */
+    { 45, 45, 13 },	/* '-' '-' */
     { 46, 47, 5 },	/* '.' '/' */
     { 48, 57, 1 },	/* '0' '9' */
     { 58, 63, 5 },	/* ':' '?' */
-    { 64, 64, 37 },	/* '@' '@' */
-    { 65, 91, 5 },	/* 'A' '[' */
-    { 92, 92, 38 },	/* '\\' '\\' */
-    { 93, 65535, 5 },	/* ']' 65535 */
+    { 64, 64, 15 },	/* '@' '@' */
+    { 65, 65535, 5 },	/* 'A' 65535 */
     /*---- enable ----*/
 };
 static const int c2sNum = sizeof(c2sArr) / sizeof(c2sArr[0]);
@@ -417,145 +454,39 @@ static int PatchScanner_Kind(void * scanner, CcsScanInput_t * input)
     case 5:
 	{ kind = GetKWKind(input, pos, input->pos, 5); break; }
     case 6: case_6:
-	{ kind = 6; break; }
+	if (input->ch == '-') {
+	    CcsGetCh(input); goto case_7;
+	} else { kind = Scanner_Info.noSym; break; }
     case 7: case_7:
-	{ kind = 7; break; }
+	if (input->ch == ' ') {
+	    CcsGetCh(input); goto case_8;
+	} else { kind = Scanner_Info.noSym; break; }
     case 8: case_8:
-	{ kind = 8; break; }
+	{ kind = 6; break; }
     case 9: case_9:
-	if (input->ch == 'N') {
+	if (input->ch == '+') {
 	    CcsGetCh(input); goto case_10;
 	} else { kind = Scanner_Info.noSym; break; }
     case 10: case_10:
-	if (input->ch == 'o') {
+	if (input->ch == ' ') {
 	    CcsGetCh(input); goto case_11;
 	} else { kind = Scanner_Info.noSym; break; }
     case 11: case_11:
-	if (input->ch == ' ') {
-	    CcsGetCh(input); goto case_12;
-	} else { kind = Scanner_Info.noSym; break; }
+	{ kind = 7; break; }
     case 12: case_12:
-	if (input->ch == 'n') {
-	    CcsGetCh(input); goto case_13;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 13: case_13:
-	if (input->ch == 'e') {
-	    CcsGetCh(input); goto case_14;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 14: case_14:
-	if (input->ch == 'w') {
-	    CcsGetCh(input); goto case_15;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 15: case_15:
-	if (input->ch == 'l') {
-	    CcsGetCh(input); goto case_16;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 16: case_16:
-	if (input->ch == 'i') {
-	    CcsGetCh(input); goto case_17;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 17: case_17:
-	if (input->ch == 'n') {
-	    CcsGetCh(input); goto case_18;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 18: case_18:
-	if (input->ch == 'e') {
-	    CcsGetCh(input); goto case_19;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 19: case_19:
-	if (input->ch == ' ') {
-	    CcsGetCh(input); goto case_20;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 20: case_20:
-	if (input->ch == 'a') {
-	    CcsGetCh(input); goto case_21;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 21: case_21:
-	if (input->ch == 't') {
-	    CcsGetCh(input); goto case_22;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 22: case_22:
-	if (input->ch == ' ') {
-	    CcsGetCh(input); goto case_23;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 23: case_23:
-	if (input->ch == 'e') {
-	    CcsGetCh(input); goto case_24;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 24: case_24:
-	if (input->ch == 'n') {
-	    CcsGetCh(input); goto case_25;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 25: case_25:
-	if (input->ch == 'd') {
-	    CcsGetCh(input); goto case_26;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 26: case_26:
-	if (input->ch == ' ') {
-	    CcsGetCh(input); goto case_27;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 27: case_27:
-	if (input->ch == 'o') {
-	    CcsGetCh(input); goto case_28;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 28: case_28:
-	if (input->ch == 'f') {
-	    CcsGetCh(input); goto case_29;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 29: case_29:
-	if (input->ch == ' ') {
-	    CcsGetCh(input); goto case_30;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 30: case_30:
-	if (input->ch == 'f') {
-	    CcsGetCh(input); goto case_31;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 31: case_31:
-	if (input->ch == 'i') {
-	    CcsGetCh(input); goto case_32;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 32: case_32:
-	if (input->ch == 'l') {
-	    CcsGetCh(input); goto case_33;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 33: case_33:
-	if (input->ch == 'e') {
-	    CcsGetCh(input); goto case_34;
-	} else { kind = Scanner_Info.noSym; break; }
-    case 34: case_34:
-	{ kind = 17; break; }
-    case 35:
+	{ kind = 8; break; }
+    case 13:
 	if (input->ch == '-') {
-	    CcsGetCh(input); goto case_39;
+	    CcsGetCh(input); goto case_6;
 	} else { kind = GetKWKind(input, pos, input->pos, 5); break; }
-    case 36:
+    case 14:
 	if (input->ch == '+') {
-	    CcsGetCh(input); goto case_40;
-	} else { kind = GetKWKind(input, pos, input->pos, 5); break; }
-    case 37:
-	if (input->ch == '@') {
-	    CcsGetCh(input); goto case_8;
-	} else { kind = GetKWKind(input, pos, input->pos, 5); break; }
-    case 38:
-	if (input->ch == ' ') {
 	    CcsGetCh(input); goto case_9;
 	} else { kind = GetKWKind(input, pos, input->pos, 5); break; }
-    case 39: case_39:
-	if (input->ch == '-') {
-	    CcsGetCh(input); goto case_41;
-	} else { kind = 14; break; }
-    case 40: case_40:
-	if (input->ch == '+') {
-	    CcsGetCh(input); goto case_42;
-	} else { kind = 13; break; }
-    case 41: case_41:
-	if (input->ch == ' ') {
-	    CcsGetCh(input); goto case_6;
-	} else { kind = 16; break; }
-    case 42: case_42:
-	if (input->ch == ' ') {
-	    CcsGetCh(input); goto case_7;
-	} else { kind = 15; break; }
+    case 15:
+	if (input->ch == '@') {
+	    CcsGetCh(input); goto case_12;
+	} else { kind = GetKWKind(input, pos, input->pos, 5); break; }
     /*---- enable ----*/
     }
     return kind;
